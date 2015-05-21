@@ -653,6 +653,7 @@ mips
 mn10300
 moxie
 msp430
+riscv
 rl78
 rx
 sh64
@@ -3759,6 +3760,13 @@ subdirs="$subdirs arm"
 
   sim_arch=msp430
   subdirs="$subdirs msp430"
+
+
+       ;;
+   riscv*-*-*)
+
+  sim_arch=riscv
+  subdirs="$subdirs riscv"
 
 
        ;;
