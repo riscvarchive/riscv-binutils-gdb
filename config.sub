@@ -340,6 +340,9 @@ case $basic_machine in
 	ms1)
 		basic_machine=mt-unknown
 		;;
+	riscv)
+		basic_machine=riscv-ucb
+		;;
 
 	strongarm | thumb | xscale)
 		basic_machine=arm-unknown
