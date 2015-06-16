@@ -1027,6 +1027,66 @@ pc_set (sim_cpu *cpu, sim_cia pc)
   cpu->pc = pc;
 }
 
+static int
+reg_fetch (sim_cpu *cpu, int rn, unsigned char *buf, int len)
+{
+  if (len <= 0 || len > sizeof (unsigned_word))
+    return -1;
+
+  switch (rn)
+    {
+    case SIM_RISCV_RA_REGNUM ... SIM_RISCV_T6_REGNUM:
+      memcpy (buf, &cpu->regs[rn], len);
+      return len;
+    case SIM_RISCV_FIRST_FP_REGNUM ... SIM_RISCV_LAST_FP_REGNUM:
+      memcpy (buf, &cpu->fpregs[rn], len);
+      return len;
+    case SIM_RISCV_PC_REGNUM:
+      memcpy (buf, &cpu->pc, len);
+      return len;
+
+#define DECLARE_CSR(name, num) \
+    case SIM_RISCV_ ## num ## _REGNUM: \
+      memcpy (buf, &cpu->csr.name, len); \
+      return len;
+#include "opcode/riscv-opc.h"
+#undef DECLARE_CSR
+
+    default:
+      return -1;
+    }
+}
+
+static int
+reg_store (sim_cpu *cpu, int rn, unsigned char *buf, int len)
+{
+  if (len <= 0 || len > sizeof (unsigned_word))
+    return -1;
+
+  switch (rn)
+    {
+    case SIM_RISCV_RA_REGNUM ... SIM_RISCV_T6_REGNUM:
+      memcpy (&cpu->regs[rn], buf, len);
+      return len;
+    case SIM_RISCV_FIRST_FP_REGNUM ... SIM_RISCV_LAST_FP_REGNUM:
+      memcpy (&cpu->fpregs[rn], buf, len);
+      return len;
+    case SIM_RISCV_PC_REGNUM:
+      memcpy (&cpu->pc, buf, len);
+      return len;
+
+#define DECLARE_CSR(name, num) \
+    case SIM_RISCV_ ## num ## _REGNUM: \
+      memcpy (&cpu->csr.name, buf, len); \
+      return len;
+#include "opcode/riscv-opc.h"
+#undef DECLARE_CSR
+
+    default:
+      return -1;
+    }
+}
+
 /* Initialize the state for a single cpu.  Usuaully this involves clearing all
    registers back to their reset state.  Should also hook up the fetch/store
    helper functions too.  */
@@ -1039,6 +1099,8 @@ void initialize_cpu (SIM_DESC sd, SIM_CPU *cpu, int mhartid)
 
   CPU_PC_FETCH (cpu) = pc_get;
   CPU_PC_STORE (cpu) = pc_set;
+  CPU_REG_FETCH (cpu) = reg_fetch;
+  CPU_REG_STORE (cpu) = reg_store;
 
   if (!riscv_hash[0])
     {
