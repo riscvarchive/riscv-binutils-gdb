@@ -464,6 +464,7 @@ s390*-*-linux*)
 riscv*-*-*)
 	# Target: RISC-V architecture
 	gdb_target_obs="riscv-tdep.o"
+	gdb_sim=../sim/riscv/libsim.a
 	;;
 
 rl78-*-elf)
