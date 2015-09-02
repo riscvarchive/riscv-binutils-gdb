@@ -158,12 +158,6 @@ static const struct register_alias riscv_register_aliases[] =
   { "ft11", 64 },
 };
 
-static inline int
-riscv_isa_regsize (struct gdbarch *gdbarch)
-{
-  return gdbarch_tdep (gdbarch)->register_size;
-}
-
 static const gdb_byte *
 riscv_breakpoint_from_pc (struct gdbarch *gdbarch,
 			  CORE_ADDR      *bp_addr,
