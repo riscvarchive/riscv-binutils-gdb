@@ -1157,7 +1157,7 @@ riscv_gdbarch_init (struct gdbarch_info  info,
       tdesc_data = tdesc_data_alloc ();
 
       valid_p = 1;
-      for (i = RISCV_ZERO_REGNUM; i <= RISCV_LAST_REGNUM; ++i)
+      for (i = RISCV_ZERO_REGNUM; i < RISCV_LAST_REGNUM; ++i)
 	valid_p &= tdesc_numbered_register (feature, tdesc_data, i, riscv_gdb_reg_names[i]);
 
       if (!valid_p)
