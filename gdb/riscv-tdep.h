@@ -90,4 +90,10 @@ struct gdbarch_tdep
   int register_size;
 };
 
+static inline int
+riscv_isa_regsize (struct gdbarch *gdbarch)
+{
+  return gdbarch_tdep (gdbarch)->register_size;
+}
+
 #endif /* RISCV_TDEP_H */

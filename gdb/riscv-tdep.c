@@ -158,12 +158,6 @@ static const struct register_alias riscv_register_aliases[] =
   { "ft11", 64 },
 };
 
-static inline int
-riscv_isa_regsize (struct gdbarch *gdbarch)
-{
-  return gdbarch_tdep (gdbarch)->register_size;
-}
-
 static const gdb_byte *
 riscv_breakpoint_from_pc (struct gdbarch *gdbarch,
 			  CORE_ADDR      *bp_addr,
@@ -1163,7 +1157,7 @@ riscv_gdbarch_init (struct gdbarch_info  info,
       tdesc_data = tdesc_data_alloc ();
 
       valid_p = 1;
-      for (i = RISCV_ZERO_REGNUM; i <= RISCV_LAST_REGNUM; ++i)
+      for (i = RISCV_ZERO_REGNUM; i < RISCV_LAST_REGNUM; ++i)
 	valid_p &= tdesc_numbered_register (feature, tdesc_data, i, riscv_gdb_reg_names[i]);
 
       if (!valid_p)
