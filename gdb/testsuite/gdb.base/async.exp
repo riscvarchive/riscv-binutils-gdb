@@ -59,6 +59,9 @@ proc test_background {command before_prompt after_prompt {message ""}} {
 	    pass "$message"
 	    return 0
 	}
+	-re "Asynchronous execution not supported on this target\.\r\n" {
+	    unsupported "$message"
+	}
 	-re "$gdb_prompt.*completed\.\r\n" {
 	    fail "$message"
 	}

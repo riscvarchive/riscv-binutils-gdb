@@ -87,8 +87,9 @@ typedef unsigned64 unsigned_8;
 typedef unsigned128 unsigned_16;
 
 
-/* Macros for printf.  Usage is restricted to this header.  */
-#define SIM_PRI_TB(t, b)	XCONCAT3 (PRI,t,b)
+/* Macros for printf.  */
+#define _SIM_PRI_TB(t, b)	__SIM_PRI_TB(t, b)
+#define __SIM_PRI_TB(t, b)	PRI##t##b
 
 
 /* for general work, the following are defined */
@@ -111,9 +112,9 @@ typedef unsigned16 unsigned_word;
 typedef signed16 signed_word;
 #endif
 
-#define PRI_TW(t)	SIM_PRI_TB (t, WITH_TARGET_WORD_BITSIZE)
-#define PRIiTW	PRI_TW (i)
-#define PRIxTW	PRI_TW (x)
+#define PRI_TW(t)	_SIM_PRI_TB(t, WITH_TARGET_WORD_BITSIZE)
+#define PRIiTW	PRI_TW(i)
+#define PRIxTW	PRI_TW(x)
 
 
 /* Other instructions */
@@ -131,9 +132,9 @@ typedef signed16 signed_address;
 #endif
 typedef unsigned_address address_word;
 
-#define PRI_TA(t)	SIM_PRI_TB (t, WITH_TARGET_ADDRESS_BITSIZE)
-#define PRIiTA	PRI_TA (i)
-#define PRIxTA	PRI_TA (x)
+#define PRI_TA(t)	_SIM_PRI_TB(t, WITH_TARGET_ADDRESS_BITSIZE)
+#define PRIiTA	PRI_TA(i)
+#define PRIxTA	PRI_TA(x)
 
 
 /* IEEE 1275 cell size */
@@ -147,9 +148,9 @@ typedef signed32 signed_cell;
 #endif
 typedef signed_cell cell_word; /* cells are normally signed */
 
-#define PRI_TC(t)	SIM_PRI_TB (t, WITH_TARGET_CELL_BITSIZE)
-#define PRIiTC	PRI_TC (i)
-#define PRIxTC	PRI_TC (x)
+#define PRI_TC(t)	_SIM_PRI_TB(t, WITH_TARGET_CELL_BITSIZE)
+#define PRIiTC	PRI_TC(i)
+#define PRIxTC	PRI_TC(x)
 
 
 /* Floating point registers */
@@ -160,8 +161,8 @@ typedef unsigned64 fp_word;
 typedef unsigned32 fp_word;
 #endif
 
-#define PRI_TF(t)	SIM_PRI_TB (t, WITH_TARGET_FLOATING_POINT_BITSIZE)
-#define PRIiTF	PRI_TF (i)
-#define PRIxTF	PRI_TF (x)
+#define PRI_TF(t)	_SIM_PRI_TB(t, WITH_TARGET_FLOATING_POINT_BITSIZE)
+#define PRIiTF	PRI_TF(i)
+#define PRIxTF	PRI_TF(x)
 
 #endif

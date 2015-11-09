@@ -795,6 +795,8 @@ extern const bfd_target powerpc_pe_le_vec;
 extern const bfd_target powerpc_pei_vec;
 extern const bfd_target powerpc_pei_le_vec;
 extern const bfd_target powerpc_xcoff_vec;
+extern const bfd_target riscv_elf32_vec;
+extern const bfd_target riscv_elf64_vec;
 extern const bfd_target rl78_elf32_vec;
 extern const bfd_target rs6000_xcoff64_vec;
 extern const bfd_target rs6000_xcoff64_aix_vec;
