@@ -21,6 +21,10 @@
 #include "config.h"
 
 #include "sim-main.h"
+#include "gdb/sim-riscv.h"
+#include "bfd.h"
+
+#include "sim-hw.h"
 
 static void
 riscv_model_init (SIM_CPU *cpu)
