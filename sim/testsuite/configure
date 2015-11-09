@@ -1886,6 +1886,9 @@ case "${target}" in
    msp430*-*-*)
        sim_arch=msp430
        ;;
+   riscv*-*-*)
+       sim_arch=riscv
+       ;;
    rl78-*-*)
        sim_arch=rl78
        ;;
