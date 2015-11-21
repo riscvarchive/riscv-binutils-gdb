@@ -86,6 +86,8 @@ riscv_set_rvc (bfd_boolean rvc_value)
 {
   if (rvc_value)
     elf_flags |= EF_RISCV_RVC;
+  else
+    elf_flags &= ~EF_RISCV_RVC;
 
   riscv_opts.rvc = rvc_value;
 }
