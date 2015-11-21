@@ -245,12 +245,12 @@ const char line_comment_chars[] = "#";
 /* This array holds machine specific line separator characters.  */
 const char line_separator_chars[] = ";";
 
-/* Chars that can be used to separate mant from exp in floating point nums */
+/* Chars that can be used to separate mant from exp in floating point nums.  */
 const char EXP_CHARS[] = "eE";
 
-/* Chars that mean this number is a floating point constant */
-/* As in 0f12.456 */
-/* or    0d1.2345e12 */
+/* Chars that mean this number is a floating point constant.
+   As in 0f12.456
+   or    0d1.2345e12  */
 const char FLT_CHARS[] = "rRsSfFdDxXpP";
 
 /* Macros for encoding relaxation state for RVC branches and far jumps.  */
@@ -384,9 +384,9 @@ relaxed_branch_length (fragS *fragp, asection *sec, int update)
       bfd_vma rvc_range = jump ? RVC_JUMP_REACH : RVC_BRANCH_REACH;
       val -= fragp->fr_address + fragp->fr_fix;
 
-      if (rvc && (bfd_vma)(val + rvc_range/2) < rvc_range)
+      if (rvc && (bfd_vma)(val + rvc_range / 2) < rvc_range)
 	length = 2;
-      else if ((bfd_vma)(val + RISCV_BRANCH_REACH/2) < RISCV_BRANCH_REACH)
+      else if ((bfd_vma)(val + RISCV_BRANCH_REACH / 2) < RISCV_BRANCH_REACH)
 	length = 4;
       else if (!jump && rvc)
 	length = 6;
@@ -1643,8 +1643,8 @@ alu_op:
 		  normalize_constant_expr (imm_expr);
 		  if (imm_expr->X_op != O_constant
 		      || (*args == '0' && imm_expr->X_add_number != 0)
-		      || imm_expr->X_add_number >= (signed)RISCV_IMM_REACH/2
-		      || imm_expr->X_add_number < -(signed)RISCV_IMM_REACH/2)
+		      || imm_expr->X_add_number >= (signed)RISCV_IMM_REACH / 2
+		      || imm_expr->X_add_number < -(signed)RISCV_IMM_REACH / 2)
 		    break;
 		}
 
