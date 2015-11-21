@@ -12,7 +12,7 @@ elf32*) ELFSIZE=32; LIBPATH_SUFFIX=32 ;;
 elf64*) ELFSIZE=64; LIBPATH_SUFFIX=   ;;
 esac
 
-if test `echo "$host" | sed -e s/64//` = `echo "$target" | sed -e s/64//`; then
+if [ "x${host}" = "x${target}" ]; then
   case " $EMULATION_LIBPATH " in
     *" ${EMULATION_NAME} "*)
       NATIVE=yes
