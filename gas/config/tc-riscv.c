@@ -71,14 +71,14 @@ static unsigned elf_flags = 0;
 
 struct riscv_set_options
 {
-  int pic; /* Generate position-independent code.  */
-  int rvc; /* Generate RVC code.  */
+  bfd_boolean pic; /* Generate position-independent code.  */
+  bfd_boolean rvc; /* Generate RVC code.  */
 };
 
 static struct riscv_set_options riscv_opts =
 {
-  0,	/* pic */
-  0,	/* rvc */
+  FALSE,	/* pic */
+  FALSE,	/* rvc */
 };
 
 static void
@@ -142,7 +142,7 @@ riscv_set_arch (const char *arg)
   char *p = uppercase;
   const char *all_subsets = "IMAFDC";
   const char *extension = NULL;
-  int rvc = 0;
+  bfd_boolean rvc = FALSE;
   int i;
 
   for (i = 0; uppercase[i]; i++)
@@ -208,7 +208,7 @@ riscv_set_arch (const char *arg)
 	  const char subset[] = {*p, 0};
 	  riscv_add_subset (subset);
 	  if (*p == 'C')
-	    rvc = 1;
+	    rvc = TRUE;
 	  all_subsets++;
 	  p++;
 	}
