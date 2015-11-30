@@ -144,15 +144,6 @@ sim_open (SIM_OPEN_KIND kind, host_callback *callback,
   return sd;
 }
 
-/* Called when the simulation is being shut down entirely.  Think of it as
-   removing power from the entire hardware platform (not just a cpu).  */
-
-void
-sim_close (SIM_DESC sd, int quitting)
-{
-  /* Nothing to do.  */
-}
-
 /* Prepare to run a program that has already been loaded into memory.
 
    Usually you do not need to change things here.  */
