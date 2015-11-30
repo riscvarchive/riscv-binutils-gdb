@@ -2325,8 +2325,8 @@ RISC-V options:\n\
   -m32           assemble RV32 code\n\
   -m64           assemble RV64 code (default)\n\
   -march=[FLAGS] set the ISA string (available extensions)\n\
-  -mrvc          generate RVC (compressed) code\n\n
-  -mno-rvc       don't generate RVC (compressed) code\n\n
+  -mrvc          generate RVC (compressed) code\n\
+  -mno-rvc       don't generate RVC (compressed) code\n\
   -fpic          generate position-independent code\n\
   -fno-pic       don't generate position-independent code (default)\n\
   -msoft-float   use soft float ABI\n\
