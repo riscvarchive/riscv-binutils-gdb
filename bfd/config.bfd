@@ -1360,15 +1360,14 @@ case "${targ}" in
   riscv32-*-*)
     targ_defvec=riscv_elf32_vec
     targ_selvecs="riscv_elf32_vec"
+    want64=true
     ;;
 
-#ifdef BFD64
   riscv64-*-*)
     targ_defvec=riscv_elf64_vec
     targ_selvecs="riscv_elf32_vec riscv_elf64_vec"
     want64=true
     ;;
-#endif
 
   rx-*-elf)
     targ_defvec=rx_elf32_le_vec
