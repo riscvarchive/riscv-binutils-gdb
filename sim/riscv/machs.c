@@ -41,7 +41,7 @@ riscv_prepare_run (SIM_CPU *cpu)
 {
 }
 
-static const MACH_IMP_PROPERTIES riscv_imp_properties =
+static const SIM_MACH_IMP_PROPERTIES riscv_imp_properties =
 {
   sizeof (SIM_CPU),
   0,
@@ -49,9 +49,9 @@ static const MACH_IMP_PROPERTIES riscv_imp_properties =
 
 #if WITH_TARGET_WORD_BITSIZE >= 32
 
-static const MACH rv32i_mach;
+static const SIM_MACH rv32i_mach;
 
-static const MODEL rv32_models[] =
+static const SIM_MODEL rv32_models[] =
 {
 #define M(ext) { "RV32"#ext, &rv32i_mach, MODEL_RV32##ext, NULL, riscv_model_init },
 #include "model_list.def"
@@ -59,7 +59,7 @@ static const MODEL rv32_models[] =
   { 0, NULL, 0, NULL, NULL, }
 };
 
-static const MACH rv32i_mach =
+static const SIM_MACH rv32i_mach =
 {
   "rv32i", "riscv", MACH_RV32I,
   32, 32, &rv32_models[0], &riscv_imp_properties,
@@ -71,9 +71,9 @@ static const MACH rv32i_mach =
 
 #if WITH_TARGET_WORD_BITSIZE >= 64
 
-static const MACH rv64i_mach;
+static const SIM_MACH rv64i_mach;
 
-static const MODEL rv64_models[] =
+static const SIM_MODEL rv64_models[] =
 {
 #define M(ext) { "RV64"#ext, &rv64i_mach, MODEL_RV64##ext, NULL, riscv_model_init },
 #include "model_list.def"
@@ -81,7 +81,7 @@ static const MODEL rv64_models[] =
   { 0, NULL, 0, NULL, NULL, }
 };
 
-static const MACH rv64i_mach =
+static const SIM_MACH rv64i_mach =
 {
   "rv64i", "riscv", MACH_RV64I,
   64, 64, &rv64_models[0], &riscv_imp_properties,
@@ -93,9 +93,9 @@ static const MACH rv64i_mach =
 
 #if WITH_TARGET_WORD_BITSIZE >= 128
 
-static const MACH rv128i_mach;
+static const SIM_MACH rv128i_mach;
 
-static const MODEL rv128_models[] =
+static const SIM_MODEL rv128_models[] =
 {
 #define M(ext) { "RV128"#ext, &rv128i_mach, MODEL_RV128##ext, NULL, riscv_model_init },
 #include "model_list.def"
@@ -103,7 +103,7 @@ static const MODEL rv128_models[] =
   { 0, NULL, 0, NULL, NULL, }
 };
 
-static const MACH rv128i_mach =
+static const SIM_MACH rv128i_mach =
 {
   "rv128i", "riscv", MACH_RV128I,
   128, 128, &rv128_models[0], &riscv_imp_properties,
@@ -114,7 +114,7 @@ static const MACH rv128i_mach =
 #endif
 
 /* Order matters here.  */
-const MACH *sim_machs[] =
+const SIM_MACH *sim_machs[] =
 {
 #if WITH_TARGET_WORD_BITSIZE >= 128
   &rv128i_mach,
