@@ -599,7 +599,7 @@ riscv_print_registers_info (struct gdbarch    *gdbarch,
     {
       /* Print one specified register.  */
       gdb_assert (regnum < RISCV_LAST_REGNUM);
-      if ('\0' == *(riscv_register_name (gdbarch, regnum)))
+      if (NULL == riscv_register_name (gdbarch, regnum))
 	error (_("Not a valid register for the current processor type"));
       riscv_print_register_formatted (file, frame, regnum);
       fprintf_filtered (file, "\n");
@@ -607,7 +607,7 @@ riscv_print_registers_info (struct gdbarch    *gdbarch,
   else
     for (regnum = 0; regnum < RISCV_LAST_REGNUM; ++regnum)
       {
-	if ('\0' == *(riscv_register_name (gdbarch, regnum)))
+	if (NULL == riscv_register_name (gdbarch, regnum))
 	  error (_("Not a valid register for the current processor type"));
 
 	/* Zero never changes, so might as well hide by default.  */
