@@ -72,13 +72,13 @@ enum {
   RISCV_LAST_FP_REGNUM = 64,	/* Last Floating Point Register */
 
 #define RISCV_FIRST_CSR_REGNUM RISCV_LAST_FP_REGNUM + 1
-#define DECLARE_CSR(name, num) RISCV_ ## num ## _REGNUM,
+#define DECLARE_CSR(name, num) RISCV_ ## num ## _REGNUM = RISCV_LAST_FP_REGNUM + 1 + num,
 #include "opcode/riscv-opc.h"
 #undef DECLARE_CSR
 #define RISCV_LAST_CSR_REGNUM RISCV_LAST_REGNUM - 1
 
   /* Leave this as the last enum.  */
-  RISCV_LAST_REGNUM
+  RISCV_LAST_REGNUM = RISCV_LAST_FP_REGNUM+4097
 };
 
 #define RISCV_NUM_REGS (RISCV_LAST_REGNUM)
