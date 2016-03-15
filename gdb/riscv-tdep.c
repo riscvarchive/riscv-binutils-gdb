@@ -65,7 +65,7 @@ struct riscv_frame_cache
   struct trad_frame_saved_reg *saved_regs;
 };
 
-static const char * const riscv_gdb_reg_names[RISCV_NUM_REGS] =
+static const char * const riscv_gdb_reg_names[RISCV_LAST_FP_REGNUM+1] =
 {
   "x0",  "x1",  "x2",  "x3",  "x4",  "x5",  "x6",  "x7",
   "x8",  "x9",  "x10", "x11", "x12", "x13", "x14", "x15",
@@ -76,10 +76,6 @@ static const char * const riscv_gdb_reg_names[RISCV_NUM_REGS] =
   "f8",  "f9",  "f10", "f11", "f12", "f13", "f14", "f15",
   "f16", "f17", "f18", "f19", "f20", "f21", "f22", "f23",
   "f24", "f25", "f26", "f27", "f28", "f29", "f30", "f31",
-
-#define DECLARE_CSR(name, num) #name,
-#include "opcode/riscv-opc.h"
-#undef DECLARE_CSR
 };
 
 struct register_alias
@@ -156,6 +152,9 @@ static const struct register_alias riscv_register_aliases[] =
   { "ft9", 62 },
   { "ft10", 63 },
   { "ft11", 64 },
+#define DECLARE_CSR(name, num) { #name, (num)+65 },
+#include "opcode/riscv-opc.h"
+#undef DECLARE_CSR
 };
 
 static const gdb_byte *
@@ -193,18 +192,27 @@ riscv_register_name (struct gdbarch *gdbarch,
 		     int             regnum)
 {
   int i;
+  static char buf[20];
 
   if (tdesc_has_registers (gdbarch_target_desc (gdbarch)))
     return tdesc_register_name (gdbarch, regnum);
-  else if (regnum >= 0 && regnum < RISCV_LAST_REGNUM)
+  if (regnum >= RISCV_ZERO_REGNUM && regnum <= RISCV_LAST_REGNUM)
     {
       for (i = 0; i < ARRAY_SIZE (riscv_register_aliases); ++i)
 	if (regnum == riscv_register_aliases[i].regnum)
 	  return riscv_register_aliases[i].name;
-      return riscv_gdb_reg_names[regnum];
     }
-  else
-    return NULL;
+
+  if (regnum >= RISCV_ZERO_REGNUM && regnum <= RISCV_LAST_FP_REGNUM)
+      return riscv_gdb_reg_names[regnum];
+
+  if (regnum >= RISCV_FIRST_CSR_REGNUM && regnum <= RISCV_LAST_CSR_REGNUM)
+    {
+      sprintf(buf, "csr%d", regnum - RISCV_FIRST_CSR_REGNUM);
+      return buf;
+    }
+
+  return NULL;
 }
 
 static void
@@ -595,32 +603,18 @@ riscv_print_registers_info (struct gdbarch    *gdbarch,
 			    int                regnum,
 			    int                all)
 {
-  if (regnum != -1)
+  if (regnum == -1)
     {
-      /* Print one specified register.  */
-      gdb_assert (regnum < RISCV_LAST_REGNUM);
-      if ('\0' == *(riscv_register_name (gdbarch, regnum)))
-	error (_("Not a valid register for the current processor type"));
-      riscv_print_register_formatted (file, frame, regnum);
-      fprintf_filtered (file, "\n");
+      error (_("riscv_print_registers_info shouldn't be asked to print all registers."));
+      error (_("That should be handled by register groups."));
     }
-  else
-    for (regnum = 0; regnum < RISCV_LAST_REGNUM; ++regnum)
-      {
-	if ('\0' == *(riscv_register_name (gdbarch, regnum)))
-	  error (_("Not a valid register for the current processor type"));
 
-	/* Zero never changes, so might as well hide by default.  */
-	if (regnum == RISCV_ZERO_REGNUM && !all)
-	  continue;
-
-	/* Only show the main integer register set by default.  */
-	if (all || regnum < RISCV_FIRST_FP_REGNUM)
-	  {
-	    riscv_print_register_formatted (file, frame, regnum);
-	    fprintf_filtered (file, "\n");
-	  }
-      }
+  /* Print one specified register.  */
+  gdb_assert (regnum < RISCV_LAST_REGNUM);
+  if (NULL == riscv_register_name (gdbarch, regnum))
+    error (_("Not a valid register for the current processor type"));
+  riscv_print_register_formatted (file, frame, regnum);
+  fprintf_filtered (file, "\n");
 }
 
 static int
@@ -630,14 +624,22 @@ riscv_register_reggroup_p (struct gdbarch  *gdbarch,
 {
   int float_p;
   int raw_p;
+  unsigned int i;
 
   if (gdbarch_register_name (gdbarch, regnum) == NULL
       || gdbarch_register_name (gdbarch, regnum)[0] == '\0')
     return 0;
 
-  if (reggroup == all_reggroup)
-    return 1;
-  else if (reggroup == float_reggroup)
+  if (reggroup == all_reggroup) {
+    if (regnum < RISCV_FIRST_CSR_REGNUM)
+      return 1;
+    /* Only include CSRs that have aliases. */
+    for (i = 0; i < ARRAY_SIZE (riscv_register_aliases); ++i) {
+	if (regnum == riscv_register_aliases[i].regnum)
+          return 1;
+    }
+    return 0;
+  } else if (reggroup == float_reggroup)
     return (regnum >= RISCV_FIRST_FP_REGNUM && regnum <= RISCV_LAST_FP_REGNUM)
 	    || (regnum == RISCV_CSR_FCSR_REGNUM
 	        || regnum == RISCV_CSR_FFLAGS_REGNUM
@@ -646,9 +648,16 @@ riscv_register_reggroup_p (struct gdbarch  *gdbarch,
     return regnum < RISCV_FIRST_FP_REGNUM;
   else if (reggroup == restore_reggroup || reggroup == save_reggroup)
     return regnum <= RISCV_LAST_FP_REGNUM;
-  else if (reggroup == system_reggroup)
-    return regnum >= RISCV_FIRST_CSR_REGNUM && regnum <= RISCV_LAST_CSR_REGNUM;
-  else if (reggroup == vector_reggroup)
+  else if (reggroup == system_reggroup) {
+    /* Only include CSRs that have aliases. */
+    if (regnum < RISCV_FIRST_CSR_REGNUM || regnum > RISCV_LAST_CSR_REGNUM)
+      return 0;
+    for (i = 0; i < ARRAY_SIZE (riscv_register_aliases); ++i) {
+	if (regnum == riscv_register_aliases[i].regnum)
+          return 1;
+    }
+    return 0;
+  } else if (reggroup == vector_reggroup)
     return 0;
   else
     internal_error (__FILE__, __LINE__, _("unhandled reggroup"));
@@ -1149,6 +1158,7 @@ riscv_gdbarch_init (struct gdbarch_info  info,
       const struct tdesc_feature *feature;
       struct tdesc_arch_data *tdesc_data;
       int valid_p;
+      char buf[20];
 
       feature = tdesc_find_feature (info.target_desc, "org.gnu.gdb.riscv.cpu");
       if (feature == NULL)
@@ -1157,8 +1167,14 @@ riscv_gdbarch_init (struct gdbarch_info  info,
       tdesc_data = tdesc_data_alloc ();
 
       valid_p = 1;
-      for (i = RISCV_ZERO_REGNUM; i < RISCV_LAST_REGNUM; ++i)
-	valid_p &= tdesc_numbered_register (feature, tdesc_data, i, riscv_gdb_reg_names[i]);
+      for (i = RISCV_ZERO_REGNUM; i <= RISCV_LAST_FP_REGNUM; ++i)
+        valid_p &= tdesc_numbered_register (feature, tdesc_data, i,
+            riscv_gdb_reg_names[i]);
+      for (i = RISCV_FIRST_CSR_REGNUM; i <= RISCV_LAST_CSR_REGNUM; ++i)
+        {
+          sprintf(buf, "csr%d", i - RISCV_FIRST_CSR_REGNUM);
+          valid_p &= tdesc_numbered_register (feature, tdesc_data, i, buf);
+        }
 
       if (!valid_p)
 	tdesc_data_cleanup (tdesc_data);
