@@ -518,7 +518,7 @@ riscv_print_register_formatted (struct ui_file *file, struct frame_info *frame,
 
       if (!deprecated_frame_register_read (frame, regnum, raw_buffer))
 	{
-	  fprintf_filtered (file, "%-15s[Invalid]",
+	  fprintf_filtered (file, "%-15s[Invalid]\n",
 			    riscv_register_name (gdbarch, regnum));
 	  return;
 	}
@@ -594,26 +594,6 @@ riscv_print_register_formatted (struct ui_file *file, struct frame_info *frame,
 				  &opts, 0, file);
 	}
     }
-}
-
-static void
-riscv_print_registers_info (struct gdbarch    *gdbarch,
-			    struct ui_file    *file,
-			    struct frame_info *frame,
-			    int                regnum,
-			    int                all)
-{
-  if (regnum == -1)
-    {
-      error (_("riscv_print_registers_info shouldn't be asked to print all registers."));
-      error (_("That should be handled by register groups."));
-    }
-
-  /* Print one specified register.  */
-  gdb_assert (regnum < RISCV_LAST_REGNUM);
-  if (NULL == riscv_register_name (gdbarch, regnum))
-    error (_("Not a valid register for the current processor type"));
-  riscv_print_register_formatted (file, frame, regnum);
   fprintf_filtered (file, "\n");
 }
 
@@ -625,6 +605,8 @@ riscv_register_reggroup_p (struct gdbarch  *gdbarch,
   int float_p;
   int raw_p;
   unsigned int i;
+
+  /* Used by 'info registers' and 'info registers <groupname>'. */
 
   if (gdbarch_register_name (gdbarch, regnum) == NULL
       || gdbarch_register_name (gdbarch, regnum)[0] == '\0')
@@ -661,6 +643,40 @@ riscv_register_reggroup_p (struct gdbarch  *gdbarch,
     return 0;
   else
     internal_error (__FILE__, __LINE__, _("unhandled reggroup"));
+}
+
+static void
+riscv_print_registers_info (struct gdbarch    *gdbarch,
+			    struct ui_file    *file,
+			    struct frame_info *frame,
+			    int                regnum,
+			    int                all)
+{
+  /* Use by 'info all-registers'. */
+  struct reggroup *reggroup;
+
+  if (regnum != -1)
+    {
+      /* Print one specified register.  */
+      gdb_assert (regnum < RISCV_LAST_REGNUM);
+      if (NULL == riscv_register_name (gdbarch, regnum))
+        error (_("Not a valid register for the current processor type"));
+      riscv_print_register_formatted (file, frame, regnum);
+      return;
+    }
+
+  if (all)
+    reggroup = all_reggroup;
+  else
+    reggroup = general_reggroup;
+  for (regnum = 0; regnum <= RISCV_LAST_REGNUM; ++regnum)
+    {
+      /* Zero never changes, so might as well hide by default.  */
+      if (regnum == RISCV_ZERO_REGNUM && !all)
+        continue;
+      if (riscv_register_reggroup_p(gdbarch, regnum, reggroup))
+        riscv_print_register_formatted (file, frame, regnum);
+    }
 }
 
 static ULONGEST
