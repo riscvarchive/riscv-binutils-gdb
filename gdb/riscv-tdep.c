@@ -188,8 +188,9 @@ value_of_riscv_user_reg (struct frame_info *frame, const void *baton)
 }
 
 static const char *
-riscv_register_name (struct gdbarch *gdbarch,
-		     int             regnum)
+register_name (struct gdbarch *gdbarch,
+	       int             regnum,
+               int             prefer_alias)
 {
   int i;
   static char buf[20];
@@ -197,7 +198,8 @@ riscv_register_name (struct gdbarch *gdbarch,
   if (tdesc_has_registers (gdbarch_target_desc (gdbarch)))
     return tdesc_register_name (gdbarch, regnum);
   /* Prefer to use the alias. */
-  if (regnum >= RISCV_ZERO_REGNUM && regnum <= RISCV_LAST_REGNUM)
+  if (prefer_alias &&
+      regnum >= RISCV_ZERO_REGNUM && regnum <= RISCV_LAST_REGNUM)
     {
       for (i = 0; i < ARRAY_SIZE (riscv_register_aliases); ++i)
 	if (regnum == riscv_register_aliases[i].regnum)
@@ -212,6 +214,13 @@ riscv_register_name (struct gdbarch *gdbarch,
     }
 
   return NULL;
+}
+
+static const char *
+riscv_register_name (struct gdbarch *gdbarch,
+		     int             regnum)
+{
+  return register_name(gdbarch, regnum, 0);
 }
 
 static void
@@ -518,11 +527,11 @@ riscv_print_register_formatted (struct ui_file *file, struct frame_info *frame,
       if (!deprecated_frame_register_read (frame, regnum, raw_buffer))
 	{
 	  fprintf_filtered (file, "%-15s[Invalid]\n",
-			    riscv_register_name (gdbarch, regnum));
+			    register_name (gdbarch, regnum, 1));
 	  return;
 	}
 
-      fprintf_filtered (file, "%-15s", riscv_register_name (gdbarch, regnum));
+      fprintf_filtered (file, "%-15s", register_name (gdbarch, regnum, 1));
       if (gdbarch_byte_order (gdbarch) == BFD_ENDIAN_BIG)
 	offset = register_size (gdbarch, regnum) - register_size (gdbarch, regnum);
       else
@@ -658,7 +667,7 @@ riscv_print_registers_info (struct gdbarch    *gdbarch,
     {
       /* Print one specified register.  */
       gdb_assert (regnum < RISCV_LAST_REGNUM);
-      if (NULL == riscv_register_name (gdbarch, regnum))
+      if (NULL == register_name (gdbarch, regnum, 1))
         error (_("Not a valid register for the current processor type"));
       riscv_print_register_formatted (file, frame, regnum);
       return;
