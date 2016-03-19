@@ -1148,7 +1148,7 @@ riscv_gdbarch_init (struct gdbarch_info  info,
   set_gdbarch_sp_regnum (gdbarch, RISCV_SP_REGNUM);
   set_gdbarch_pc_regnum (gdbarch, RISCV_PC_REGNUM);
   set_gdbarch_ps_regnum (gdbarch, RISCV_FP_REGNUM);
-  set_gdbarch_deprecated_fp_regnum (gdbarch, RISCV_FIRST_FP_REGNUM);
+  set_gdbarch_deprecated_fp_regnum (gdbarch, RISCV_FP_REGNUM);
 
   /* Functions to supply register information.  */
   set_gdbarch_register_name (gdbarch, riscv_register_name);
