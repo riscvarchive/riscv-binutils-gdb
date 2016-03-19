@@ -197,7 +197,7 @@ register_name (struct gdbarch *gdbarch,
 
   if (tdesc_has_registers (gdbarch_target_desc (gdbarch)))
     return tdesc_register_name (gdbarch, regnum);
-  /* Prefer to use the alias. */
+
   if (prefer_alias &&
       regnum >= RISCV_ZERO_REGNUM && regnum <= RISCV_LAST_REGNUM)
     {
@@ -205,8 +205,10 @@ register_name (struct gdbarch *gdbarch,
 	if (regnum == riscv_register_aliases[i].regnum)
 	  return riscv_register_aliases[i].name;
     }
+
   if (regnum >= RISCV_ZERO_REGNUM && regnum <= RISCV_LAST_FP_REGNUM)
       return riscv_gdb_reg_names[regnum];
+
   if (regnum >= RISCV_FIRST_CSR_REGNUM && regnum <= RISCV_LAST_CSR_REGNUM)
     {
       sprintf(buf, "csr%d", regnum - RISCV_FIRST_CSR_REGNUM);
