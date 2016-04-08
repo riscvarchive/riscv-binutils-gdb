@@ -65,7 +65,7 @@ struct riscv_frame_cache
   struct trad_frame_saved_reg *saved_regs;
 };
 
-static const char * const riscv_gdb_reg_names[RISCV_LAST_FP_REGNUM+1] =
+static const char * const riscv_gdb_reg_names[RISCV_LAST_FP_REGNUM + 1] =
 {
   "x0",  "x1",  "x2",  "x3",  "x4",  "x5",  "x6",  "x7",
   "x8",  "x9",  "x10", "x11", "x12", "x13", "x14", "x15",
@@ -152,7 +152,7 @@ static const struct register_alias riscv_register_aliases[] =
   { "ft9", 62 },
   { "ft10", 63 },
   { "ft11", 64 },
-#define DECLARE_CSR(name, num) { #name, (num)+65 },
+#define DECLARE_CSR(name, num) { #name, (num) + 65 },
 #include "opcode/riscv-opc.h"
 #undef DECLARE_CSR
 };
@@ -616,7 +616,7 @@ riscv_register_reggroup_p (struct gdbarch  *gdbarch,
   int raw_p;
   unsigned int i;
 
-  /* Used by 'info registers' and 'info registers <groupname>'. */
+  /* Used by 'info registers' and 'info registers <groupname>'.  */
 
   if (gdbarch_register_name (gdbarch, regnum) == NULL
       || gdbarch_register_name (gdbarch, regnum)[0] == '\0')
@@ -625,7 +625,7 @@ riscv_register_reggroup_p (struct gdbarch  *gdbarch,
   if (reggroup == all_reggroup) {
     if (regnum < RISCV_FIRST_CSR_REGNUM)
       return 1;
-    /* Only include CSRs that have aliases. */
+    /* Only include CSRs that have aliases.  */
     for (i = 0; i < ARRAY_SIZE (riscv_register_aliases); ++i) {
 	if (regnum == riscv_register_aliases[i].regnum)
           return 1;
@@ -641,7 +641,7 @@ riscv_register_reggroup_p (struct gdbarch  *gdbarch,
   else if (reggroup == restore_reggroup || reggroup == save_reggroup)
     return regnum <= RISCV_LAST_FP_REGNUM;
   else if (reggroup == system_reggroup) {
-    /* Only include CSRs that have aliases. */
+    /* Only include CSRs that have aliases.  */
     if (regnum < RISCV_FIRST_CSR_REGNUM || regnum > RISCV_LAST_CSR_REGNUM)
       return 0;
     for (i = 0; i < ARRAY_SIZE (riscv_register_aliases); ++i) {
@@ -662,7 +662,7 @@ riscv_print_registers_info (struct gdbarch    *gdbarch,
 			    int                regnum,
 			    int                all)
 {
-  /* Use by 'info all-registers'. */
+  /* Use by 'info all-registers'.  */
   struct reggroup *reggroup;
 
   if (regnum != -1)
@@ -753,7 +753,7 @@ riscv_scan_prologue (struct gdbarch *gdbarch,
   int seen_sp_adjust = 0;
   int load_immediate_bytes = 0;
 
-  /* Can be called when there's no process, and hence when there's no THIS_FRAME. */
+  /* Can be called when there's no process, and hence when there's no THIS_FRAME.  */
   if (this_frame != NULL)
     sp = get_frame_register_signed (this_frame, RISCV_SP_REGNUM);
   else
@@ -1184,7 +1184,6 @@ riscv_gdbarch_init (struct gdbarch_info  info,
       const struct tdesc_feature *feature;
       struct tdesc_arch_data *tdesc_data;
       int valid_p;
-      char buf[20];
 
       feature = tdesc_find_feature (info.target_desc, "org.gnu.gdb.riscv.cpu");
       if (feature == NULL)
@@ -1195,10 +1194,11 @@ riscv_gdbarch_init (struct gdbarch_info  info,
       valid_p = 1;
       for (i = RISCV_ZERO_REGNUM; i <= RISCV_LAST_FP_REGNUM; ++i)
         valid_p &= tdesc_numbered_register (feature, tdesc_data, i,
-            riscv_gdb_reg_names[i]);
+                                            riscv_gdb_reg_names[i]);
       for (i = RISCV_FIRST_CSR_REGNUM; i <= RISCV_LAST_CSR_REGNUM; ++i)
         {
-          sprintf(buf, "csr%d", i - RISCV_FIRST_CSR_REGNUM);
+          char buf[20];
+          sprintf (buf, "csr%d", i - RISCV_FIRST_CSR_REGNUM);
           valid_p &= tdesc_numbered_register (feature, tdesc_data, i, buf);
         }
 
