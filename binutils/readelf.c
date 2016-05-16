@@ -124,6 +124,7 @@
 #include "elf/metag.h"
 #include "elf/microblaze.h"
 #include "elf/mips.h"
+#include "elf/riscv.h"
 #include "elf/mmix.h"
 #include "elf/mn10200.h"
 #include "elf/mn10300.h"
@@ -775,6 +776,7 @@ guess_is_rela (unsigned int e_machine)
     case EM_OR1K:
     case EM_PPC64:
     case EM_PPC:
+    case EM_RISCV:
     case EM_RL78:
     case EM_RX:
     case EM_S390:
@@ -1311,6 +1313,10 @@ dump_relocations (FILE * file,
 	case EM_MIPS:
 	case EM_MIPS_RS3_LE:
 	  rtype = elf_mips_reloc_type (type);
+	  break;
+
+	case EM_RISCV:
+	  rtype = elf_riscv_reloc_type (type);
 	  break;
 
 	case EM_ALPHA:
@@ -2325,6 +2331,7 @@ get_machine_name (unsigned e_machine)
     case EM_CR16:
     case EM_MICROBLAZE:
     case EM_MICROBLAZE_OLD:	return "Xilinx MicroBlaze";
+    case EM_RISCV:		return "RISC-V";
     case EM_RL78:		return "Renesas RL78";
     case EM_RX:			return "Renesas RX";
     case EM_METAG:		return "Imagination Technologies Meta processor architecture";
@@ -3281,6 +3288,13 @@ get_machine_flags (unsigned e_flags, unsigned e_machine)
 
 	case EM_NDS32:
 	  decode_NDS32_machine_flags (e_flags, buf, sizeof buf);
+	  break;
+
+	case EM_RISCV:
+	  if (e_flags & EF_RISCV_RVC)
+	    strcat (buf, ", RVC");
+	  if (e_flags & EF_RISCV_SOFT_FLOAT)
+	    strcat (buf, ", soft-float ABI");
 	  break;
 
 	case EM_SH:
@@ -11610,6 +11624,8 @@ is_32bit_abs_reloc (unsigned int reloc_type)
       return reloc_type == 1; /* R_PPC64_ADDR32.  */
     case EM_PPC:
       return reloc_type == 1; /* R_PPC_ADDR32.  */
+    case EM_RISCV:
+      return reloc_type == 1; /* R_RISCV_32.  */
     case EM_RL78:
       return reloc_type == 1; /* R_RL78_DIR32.  */
     case EM_RX:
@@ -11763,6 +11779,8 @@ is_64bit_abs_reloc (unsigned int reloc_type)
       return reloc_type == 80; /* R_PARISC_DIR64.  */
     case EM_PPC64:
       return reloc_type == 38; /* R_PPC64_ADDR64.  */
+    case EM_RISCV:
+      return reloc_type == 2; /* R_RISCV_64.  */
     case EM_SPARC32PLUS:
     case EM_SPARCV9:
     case EM_SPARC:
@@ -11914,6 +11932,9 @@ is_none_reloc (unsigned int reloc_type)
     case EM_ADAPTEVA_EPIPHANY:
     case EM_ALPHA:   /* R_ALPHA_NONE.  */
     case EM_ALTERA_NIOS2: /* R_NIOS2_NONE.  */
+    case EM_PPC:     /* R_PPC_NONE.  */
+    case EM_PPC64:   /* R_PPC64_NONE.  */
+    case EM_RISCV:   /* R_RISCV_NONE.  */
     case EM_ARC:     /* R_ARC_NONE.  */
     case EM_ARC_COMPACT2: /* R_ARC_NONE.  */
     case EM_ARC_COMPACT: /* R_ARC_NONE.  */
