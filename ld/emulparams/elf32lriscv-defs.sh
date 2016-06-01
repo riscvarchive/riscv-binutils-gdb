@@ -1,18 +1,12 @@
 # This is an ELF platform.
 SCRIPT_NAME=elf
 ARCH=riscv
-OUTPUT_FORMAT="elf32-littleriscv"
 NO_REL_RELOCS=yes
 
 TEMPLATE_NAME=elf32
 EXTRA_EM_FILE=riscvelf
 
-case x"$EMULATION_NAME" in
-xelf32*) ELFSIZE=32; LIBPATH_SUFFIX=32 ;;
-xelf64*) ELFSIZE=64; LIBPATH_SUFFIX=   ;;
-x) ;;
-*) echo $0: unhandled emulation $EMULATION_NAME >&2; exit 1 ;;
-esac
+ELFSIZE=32
 
 if test `echo "$host" | sed -e s/64//` = `echo "$target" | sed -e s/64//`; then
   case " $EMULATION_LIBPATH " in

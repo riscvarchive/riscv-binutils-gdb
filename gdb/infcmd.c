@@ -3342,8 +3342,9 @@ otherwise all the threads in the program are stopped.  To \n\
 interrupt all running threads in non-stop mode, use the -a option."));
 
   c = add_info ("registers", nofp_registers_info, _("\
-List of integer registers and their contents, for selected stack frame.\n\
-Register name as argument means describe only that register."));
+Display registers and their contents, for the selected stack frame.\n\
+Usage: info registers [all|register|register group] ...\n\
+By default, the general register group will be shown."));
   add_info_alias ("r", "registers", 1);
   set_cmd_completer (c, reg_or_group_completer);
 
