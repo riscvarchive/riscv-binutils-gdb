@@ -2981,6 +2981,93 @@ fail:
   return ret;
 }
 
+#if ARCH_SIZE == 32
+# define PRSTATUS_SIZE			0 /* FIXME */
+# define PRSTATUS_OFFSET_PR_CURSIG	12
+# define PRSTATUS_OFFSET_PR_PID		24
+# define PRSTATUS_OFFSET_PR_REG		72
+# define ELF_GREGSET_T_SIZE		128
+# define PRPSINFO_SIZE			128
+# define PRPSINFO_OFFSET_PR_PID		16
+# define PRPSINFO_OFFSET_PR_FNAME	32
+# define PRPSINFO_OFFSET_PR_PSARGS	48
+#else
+# define PRSTATUS_SIZE			376
+# define PRSTATUS_OFFSET_PR_CURSIG	12
+# define PRSTATUS_OFFSET_PR_PID		32
+# define PRSTATUS_OFFSET_PR_REG		112
+# define ELF_GREGSET_T_SIZE		256
+# define PRPSINFO_SIZE			136
+# define PRPSINFO_OFFSET_PR_PID		24
+# define PRPSINFO_OFFSET_PR_FNAME	40
+# define PRPSINFO_OFFSET_PR_PSARGS	56
+#endif
+
+/* Support for core dump NOTE sections.  */
+
+static bfd_boolean
+riscv_elf_grok_prstatus (bfd *abfd, Elf_Internal_Note *note)
+{
+  switch (note->descsz)
+    {
+      default:
+	return FALSE;
+
+      case PRSTATUS_SIZE:  /* sizeof(struct elf_prstatus) on Linux/RISC-V.  */
+	/* pr_cursig */
+	elf_tdata (abfd)->core->signal
+	  = bfd_get_16 (abfd, note->descdata + PRSTATUS_OFFSET_PR_CURSIG);
+
+	/* pr_pid */
+	elf_tdata (abfd)->core->lwpid
+	  = bfd_get_32 (abfd, note->descdata + PRSTATUS_OFFSET_PR_PID);
+	break;
+    }
+
+  /* Make a ".reg/999" section.  */
+  return _bfd_elfcore_make_pseudosection (abfd, ".reg", ELF_GREGSET_T_SIZE,
+					  note->descpos + PRSTATUS_OFFSET_PR_REG);
+}
+
+static bfd_boolean
+riscv_elf_grok_psinfo (bfd *abfd, Elf_Internal_Note *note)
+{
+  switch (note->descsz)
+    {
+      default:
+	return FALSE;
+
+      case PRPSINFO_SIZE: /* sizeof(struct elf_prpsinfo) on Linux/RISC-V.  */
+	/* pr_pid */
+	elf_tdata (abfd)->core->pid
+	  = bfd_get_32 (abfd, note->descdata + PRPSINFO_OFFSET_PR_PID);
+
+	/* pr_fname */
+	elf_tdata (abfd)->core->program = _bfd_elfcore_strndup
+	  (abfd, note->descdata + PRPSINFO_OFFSET_PR_FNAME, 16);
+
+	/* pr_psargs */
+	elf_tdata (abfd)->core->command = _bfd_elfcore_strndup
+	  (abfd, note->descdata + PRPSINFO_OFFSET_PR_PSARGS, 80);
+	break;
+    }
+
+  /* Note that for some reason, a spurious space is tacked
+     onto the end of the args in some (at least one anyway)
+     implementations, so strip it off if it exists.  */
+
+  {
+    char *command = elf_tdata (abfd)->core->command;
+    int n = strlen (command);
+
+    if (0 < n && command[n - 1] == ' ')
+      command[n - 1] = '\0';
+  }
+
+  return TRUE;
+}
+
+
 #define TARGET_LITTLE_SYM		riscv_elfNN_vec
 #define TARGET_LITTLE_NAME		"elfNN-littleriscv"
 
@@ -3003,6 +3090,8 @@ fail:
 #define elf_backend_gc_mark_hook	     riscv_elf_gc_mark_hook
 #define elf_backend_gc_sweep_hook	     riscv_elf_gc_sweep_hook
 #define elf_backend_plt_sym_val		     riscv_elf_plt_sym_val
+#define elf_backend_grok_prstatus            riscv_elf_grok_prstatus
+#define elf_backend_grok_psinfo              riscv_elf_grok_psinfo
 #define elf_info_to_howto_rel		     NULL
 #define elf_info_to_howto		     riscv_info_to_howto_rela
 #define bfd_elfNN_bfd_relax_section	     _bfd_riscv_relax_section
