@@ -32,7 +32,6 @@
 #include "elf/riscv.h"
 #include "opcode/riscv.h"
 
-#include <execinfo.h>
 #include <stdint.h>
 
 /* Information about an instruction, including its format, operands
