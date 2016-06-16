@@ -35,6 +35,12 @@
 
 #include "targ-vals.h"
 
+/* I don't know where these are supposed to come from. Presumably they are
+ * valid in whatever sourcebase this code actually came from. */
+#define PRIxTW  PRIx64
+#define PRIiTW  PRIi64
+#define PRIxTA  PRIx64
+
 #define TRACE_REG(cpu, reg) TRACE_REGISTER (cpu, "wrote %s = %#"PRIxTW, riscv_gpr_names_abi[reg], cpu->regs[reg])
 
 static const struct riscv_opcode *riscv_hash[OP_MASK_OP + 1];
@@ -78,18 +84,12 @@ fetch_csr (SIM_CPU *cpu, const char *name, int csr, unsigned_word *reg)
     {
     /* Allow certain registers only in respective modes.  */
     case CSR_CYCLEH:
-    case CSR_CYCLEHW:
     case CSR_INSTRETH:
-    case CSR_INSTRETHW:
-    case CSR_MTIMEH:
-    case CSR_STIMEH:
-    case CSR_STIMEHW:
       RISCV_ASSERT_RV32 (cpu, "CSR: %s", name);
       break;
 
     /* Load time regs on demand.  */
     case CSR_TIMEH:
-    case CSR_TIMEHW:
       RISCV_ASSERT_RV32 (cpu, "CSR: %s", name);
     case CSR_TIME:
       {
@@ -138,14 +138,8 @@ store_csr (SIM_CPU *cpu, const char *name, int csr, unsigned_word *reg,
 
     /* Allow certain registers only in respective modes.  */
     case CSR_CYCLEH:
-    case CSR_CYCLEHW:
     case CSR_INSTRETH:
-    case CSR_INSTRETHW:
     case CSR_TIMEH:
-    case CSR_TIMEHW:
-    case CSR_MTIMEH:
-    case CSR_STIMEH:
-    case CSR_STIMEHW:
       RISCV_ASSERT_RV32 (cpu, "CSR: %s", name);
 
     /* All the rest are immutable.  */
@@ -1111,10 +1105,10 @@ void initialize_cpu (SIM_DESC sd, SIM_CPU *cpu, int mhartid)
 	  riscv_hash[OP_HASH_IDX (op->match)] = op;
     }
 
-  cpu->csr.mcpuid = 0;
+  cpu->csr.misa = 0;
   /* RV32 sets this field to 0, and we don't really support RV128 yet.  */
   if (RISCV_XLEN (cpu) == 64)
-    cpu->csr.mcpuid |= (unsigned64)2 << 62;
+    cpu->csr.misa |= (unsigned64)2 << 62;
 
   /* Skip the leading "rv" prefix and the two numbers.  */
   extensions = MODEL_NAME (CPU_MODEL (cpu)) + 4;
@@ -1127,9 +1121,9 @@ void initialize_cpu (SIM_DESC sd, SIM_CPU *cpu, int mhartid)
       else if (strchr (extensions, ext) != NULL)
 	{
 	  if (ext == 'G')
-	    cpu->csr.mcpuid |= 0x1129;  /* G = IMAFD.  */
+	    cpu->csr.misa |= 0x1129;  /* G = IMAFD.  */
 	  else
-	    cpu->csr.mcpuid |= (1 << i);
+	    cpu->csr.misa |= (1 << i);
 	}
     }
 
