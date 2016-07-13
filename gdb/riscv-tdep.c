@@ -1078,11 +1078,13 @@ riscv_gdbarch_init (struct gdbarch_info  info,
 {
   struct gdbarch *gdbarch;
   struct gdbarch_tdep *tdep;
-  const struct bfd_arch_info *binfo;
+  const struct bfd_arch_info *binfo = info.bfd_arch_info;
 
   int abi, i;
 
   /* For now, base the abi on the elf class.  */
+  /* Allow the ELF class to override the register size. Ideally the target
+   * (OpenOCD/spike/...) would communicate the register size to gdb instead. */
   abi = RISCV_ABI_FLAG_RV32I;
   if (info.abfd && bfd_get_flavour (info.abfd) == bfd_target_elf_flavour)
     {
@@ -1092,6 +1094,18 @@ riscv_gdbarch_init (struct gdbarch_info  info,
 	abi = RISCV_ABI_FLAG_RV32I;
       else if (eclass == ELFCLASS64)
 	abi = RISCV_ABI_FLAG_RV64I;
+      else
+        internal_error (__FILE__, __LINE__, _("unknown ELF header class %d"), eclass);
+    }
+  else
+    {
+      if (binfo->bits_per_word == 32)
+        abi = RISCV_ABI_FLAG_RV32I;
+      else if (binfo->bits_per_word == 64)
+        abi = RISCV_ABI_FLAG_RV64I;
+      else
+        internal_error (__FILE__, __LINE__, _("unknown bits_per_word %d"),
+            binfo->bits_per_word);
     }
 
   /* Find a candidate among the list of pre-declared architectures.  */
@@ -1105,23 +1119,21 @@ riscv_gdbarch_init (struct gdbarch_info  info,
      Can't initialize all the target dependencies until we actually know which
      target we are talking to, but put in some defaults for now.  */
 
-  binfo = info.bfd_arch_info;
   tdep = xmalloc (sizeof *tdep);
   gdbarch = gdbarch_alloc (&info, tdep);
 
   tdep->riscv_abi = abi;
-  tdep->register_size = 4;
   switch (abi)
     {
-    case RISCV_ABI_FLAG_RV128I:
-      tdep->register_size <<= 1;
-    case RISCV_ABI_FLAG_RV64I:
-      tdep->register_size <<= 1;
     case RISCV_ABI_FLAG_RV32I:
-    case RISCV_ABI_FLAG_RV32E:
+      tdep->register_size = 4;
+      break;
+    case RISCV_ABI_FLAG_RV64I:
+      tdep->register_size = 8;
       break;
     default:
       internal_error (__FILE__, __LINE__, _("unknown abi %i"), abi);
+      tdep->register_size = 4;
       break;
     }
 
