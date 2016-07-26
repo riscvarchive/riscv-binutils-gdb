@@ -999,13 +999,13 @@ riscv_frame_align (struct gdbarch *gdbarch, CORE_ADDR addr)
 static CORE_ADDR
 riscv_unwind_pc (struct gdbarch *gdbarch, struct frame_info *next_frame)
 {
-  return frame_unwind_register_signed (next_frame, RISCV_PC_REGNUM);
+  return frame_unwind_register_unsigned (next_frame, RISCV_PC_REGNUM);
 }
 
 static CORE_ADDR
 riscv_unwind_sp (struct gdbarch *gdbarch, struct frame_info *next_frame)
 {
-  return frame_unwind_register_signed (next_frame, RISCV_SP_REGNUM);
+  return frame_unwind_register_unsigned (next_frame, RISCV_SP_REGNUM);
 }
 
 static struct frame_id
