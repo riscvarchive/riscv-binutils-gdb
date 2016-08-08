@@ -215,6 +215,11 @@ register_name (struct gdbarch *gdbarch,
       return buf;
     }
 
+  if (regnum == RISCV_PRIV_REGNUM)
+    {
+      return "priv";
+    }
+
   return NULL;
 }
 
@@ -404,6 +409,10 @@ riscv_register_type (struct gdbarch  *gdbarch,
 	  internal_error (__FILE__, __LINE__,
 			  _("unknown isa regsize %i"), regsize);
 	}
+    }
+  else if (regnum == RISCV_PRIV_REGNUM)
+    {
+      return builtin_type (gdbarch)->builtin_int8;
     }
   else
     {
@@ -596,6 +605,24 @@ riscv_print_register_formatted (struct ui_file *file, struct frame_info *frame,
 	      fprintf_filtered (file, "FRM:%i [%s]", frm, sfrm[frm]);
 	    }
 	}
+      else if (regnum == RISCV_PRIV_REGNUM)
+        {
+          uint8_t priv = raw_buffer[0];
+          if (priv >= 0 && priv < 4)
+            {
+              static const char * const sprv[] = {
+                "User/Application",
+                "Supervisor",
+                "Hypervisor",
+                "Machine"
+              };
+              fprintf_filtered (file, "prv:%d [%s]", priv, sprv[priv]);
+            }
+          else
+            {
+              fprintf_filtered (file, "prv:%d [INVALID]", priv);
+            }
+        }
       else
 	{
 	  get_formatted_print_options (&opts, 'd');
@@ -623,7 +650,7 @@ riscv_register_reggroup_p (struct gdbarch  *gdbarch,
     return 0;
 
   if (reggroup == all_reggroup) {
-    if (regnum < RISCV_FIRST_CSR_REGNUM)
+    if (regnum < RISCV_FIRST_CSR_REGNUM || regnum == RISCV_PRIV_REGNUM)
       return 1;
     /* Only include CSRs that have aliases.  */
     for (i = 0; i < ARRAY_SIZE (riscv_register_aliases); ++i) {
@@ -641,9 +668,11 @@ riscv_register_reggroup_p (struct gdbarch  *gdbarch,
   else if (reggroup == restore_reggroup || reggroup == save_reggroup)
     return regnum <= RISCV_LAST_FP_REGNUM;
   else if (reggroup == system_reggroup) {
-    /* Only include CSRs that have aliases.  */
+    if (regnum == RISCV_PRIV_REGNUM)
+      return 1;
     if (regnum < RISCV_FIRST_CSR_REGNUM || regnum > RISCV_LAST_CSR_REGNUM)
       return 0;
+    /* Only include CSRs that have aliases.  */
     for (i = 0; i < ARRAY_SIZE (riscv_register_aliases); ++i) {
 	if (regnum == riscv_register_aliases[i].regnum)
           return 1;
@@ -668,7 +697,7 @@ riscv_print_registers_info (struct gdbarch    *gdbarch,
   if (regnum != -1)
     {
       /* Print one specified register.  */
-      gdb_assert (regnum < RISCV_LAST_REGNUM);
+      gdb_assert (regnum <= RISCV_LAST_REGNUM);
       if (NULL == register_name (gdbarch, regnum, 1))
         error (_("Not a valid register for the current processor type"));
       riscv_print_register_formatted (file, frame, regnum);
@@ -999,13 +1028,13 @@ riscv_frame_align (struct gdbarch *gdbarch, CORE_ADDR addr)
 static CORE_ADDR
 riscv_unwind_pc (struct gdbarch *gdbarch, struct frame_info *next_frame)
 {
-  return frame_unwind_register_signed (next_frame, RISCV_PC_REGNUM);
+  return frame_unwind_register_unsigned (next_frame, RISCV_PC_REGNUM);
 }
 
 static CORE_ADDR
 riscv_unwind_sp (struct gdbarch *gdbarch, struct frame_info *next_frame)
 {
-  return frame_unwind_register_signed (next_frame, RISCV_SP_REGNUM);
+  return frame_unwind_register_unsigned (next_frame, RISCV_SP_REGNUM);
 }
 
 static struct frame_id
@@ -1078,11 +1107,13 @@ riscv_gdbarch_init (struct gdbarch_info  info,
 {
   struct gdbarch *gdbarch;
   struct gdbarch_tdep *tdep;
-  const struct bfd_arch_info *binfo;
+  const struct bfd_arch_info *binfo = info.bfd_arch_info;
 
   int abi, i;
 
   /* For now, base the abi on the elf class.  */
+  /* Allow the ELF class to override the register size. Ideally the target
+   * (OpenOCD/spike/...) would communicate the register size to gdb instead. */
   abi = RISCV_ABI_FLAG_RV32I;
   if (info.abfd && bfd_get_flavour (info.abfd) == bfd_target_elf_flavour)
     {
@@ -1092,6 +1123,18 @@ riscv_gdbarch_init (struct gdbarch_info  info,
 	abi = RISCV_ABI_FLAG_RV32I;
       else if (eclass == ELFCLASS64)
 	abi = RISCV_ABI_FLAG_RV64I;
+      else
+        internal_error (__FILE__, __LINE__, _("unknown ELF header class %d"), eclass);
+    }
+  else
+    {
+      if (binfo->bits_per_word == 32)
+        abi = RISCV_ABI_FLAG_RV32I;
+      else if (binfo->bits_per_word == 64)
+        abi = RISCV_ABI_FLAG_RV64I;
+      else
+        internal_error (__FILE__, __LINE__, _("unknown bits_per_word %d"),
+            binfo->bits_per_word);
     }
 
   /* Find a candidate among the list of pre-declared architectures.  */
@@ -1105,23 +1148,21 @@ riscv_gdbarch_init (struct gdbarch_info  info,
      Can't initialize all the target dependencies until we actually know which
      target we are talking to, but put in some defaults for now.  */
 
-  binfo = info.bfd_arch_info;
   tdep = xmalloc (sizeof *tdep);
   gdbarch = gdbarch_alloc (&info, tdep);
 
   tdep->riscv_abi = abi;
-  tdep->register_size = 4;
   switch (abi)
     {
-    case RISCV_ABI_FLAG_RV128I:
-      tdep->register_size <<= 1;
-    case RISCV_ABI_FLAG_RV64I:
-      tdep->register_size <<= 1;
     case RISCV_ABI_FLAG_RV32I:
-    case RISCV_ABI_FLAG_RV32E:
+      tdep->register_size = 4;
+      break;
+    case RISCV_ABI_FLAG_RV64I:
+      tdep->register_size = 8;
       break;
     default:
       internal_error (__FILE__, __LINE__, _("unknown abi %i"), abi);
+      tdep->register_size = 4;
       break;
     }
 
@@ -1201,6 +1242,8 @@ riscv_gdbarch_init (struct gdbarch_info  info,
           sprintf (buf, "csr%d", i - RISCV_FIRST_CSR_REGNUM);
           valid_p &= tdesc_numbered_register (feature, tdesc_data, i, buf);
         }
+
+      valid_p &= tdesc_numbered_register (feature, tdesc_data, i++, "priv");
 
       if (!valid_p)
 	tdesc_data_cleanup (tdesc_data);

@@ -77,6 +77,8 @@ enum {
 #undef DECLARE_CSR
   RISCV_LAST_CSR_REGNUM = 4160,
 
+  RISCV_PRIV_REGNUM = 4161,
+
   /* Leave this as the last enum.  */
   RISCV_NUM_REGS
 };
