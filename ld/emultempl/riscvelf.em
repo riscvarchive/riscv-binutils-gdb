@@ -28,6 +28,10 @@ fragment <<EOF
 static void
 riscv_elf_before_allocation (void)
 {
+  bfd_boolean all_inputs_binary = TRUE;
+  bfd* abfd;
+  extern const bfd_target binary_vec;
+
   gld${EMULATION_NAME}_before_allocation ();
 
   if (link_info.discard == discard_sec_merge)
@@ -39,7 +43,16 @@ riscv_elf_before_allocation (void)
   else
     ENABLE_RELAXATION;
 
-  link_info.relax_pass = 2;
+  /* check if all of input files are binary blob.
+     If true, I skip relaxation pass. */
+  for (abfd = link_info.input_bfds; abfd != NULL; abfd = abfd->link.next) {
+    if (abfd->xvec != &binary_vec) {
+      all_inputs_binary = FALSE;
+      break;
+    }
+  }
+
+  link_info.relax_pass = all_inputs_binary == TRUE? 0: 2;
 }
 
 static void
