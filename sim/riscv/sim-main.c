@@ -648,9 +648,11 @@ execute_m (SIM_CPU *cpu, unsigned_word iw, const struct riscv_opcode *op)
   const char *rs1_name = riscv_gpr_names_abi[rs1];
   const char *rs2_name = riscv_gpr_names_abi[rs2];
   unsigned_word tmp, dividend_max;
+  signed_word dividend32_max;
   sim_cia pc = cpu->pc + 4;
 
   dividend_max = -((unsigned_word)1 << (WITH_TARGET_WORD_BITSIZE - 1));
+  dividend32_max = INT32_MIN;
 
   switch (op->match)
     {
@@ -669,7 +671,8 @@ execute_m (SIM_CPU *cpu, unsigned_word iw, const struct riscv_opcode *op)
       TRACE_INSN (cpu, "divw %s, %s, %s;  // %s = %s / %s",
 		  rd_name, rs1_name, rs2_name, rd_name, rs1_name, rs2_name);
       RISCV_ASSERT_RV64 (cpu, "insn: %s", op->name);
-      if (EXTEND32 (cpu->regs[rs2]) == -1)
+      if (EXTEND32 (cpu->regs[rs1]) == dividend32_max
+	  && EXTEND32 (cpu->regs[rs2]) == -1)
 	tmp = 1 << 31;
       else if (EXTEND32 (cpu->regs[rs2]))
 	tmp = EXTEND32 (cpu->regs[rs1]) / EXTEND32 (cpu->regs[rs2]);
@@ -750,7 +753,8 @@ execute_m (SIM_CPU *cpu, unsigned_word iw, const struct riscv_opcode *op)
       TRACE_INSN (cpu, "remw %s, %s, %s;  // %s = %s %% %s",
 		  rd_name, rs1_name, rs2_name, rd_name, rs1_name, rs2_name);
       RISCV_ASSERT_RV64 (cpu, "insn: %s", op->name);
-      if (EXTEND32 (cpu->regs[rs2]) == -1)
+      if (EXTEND32 (cpu->regs[rs1]) == dividend32_max
+	  && EXTEND32 (cpu->regs[rs2]) == -1)
 	tmp = 0;
       else if (EXTEND32 (cpu->regs[rs2]))
 	tmp = EXTEND32 (cpu->regs[rs1]) % EXTEND32 (cpu->regs[rs2]);
