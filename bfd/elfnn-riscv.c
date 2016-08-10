@@ -1670,9 +1670,10 @@ riscv_resolve_pcrel_lo_relocs (riscv_pcrel_relocs *p)
       riscv_pcrel_hi_reloc search = {r->addr, 0};
       riscv_pcrel_hi_reloc *entry = htab_find (p->hi_relocs, &search);
       if (entry == NULL)
-	return ((*r->info->callbacks->reloc_overflow)
-		 (r->info, NULL, r->name, r->howto->name, (bfd_vma) 0,
-		  input_bfd, r->input_section, r->reloc->r_offset));
+	((*r->info->callbacks->reloc_overflow)
+	 (r->info, NULL, r->name, r->howto->name, (bfd_vma) 0,
+	  input_bfd, r->input_section, r->reloc->r_offset));
+	return TRUE;
 
       perform_relocation (r->howto, r->reloc, entry->value, r->input_section,
 			  input_bfd, r->contents);
@@ -2205,13 +2206,13 @@ riscv_elf_relocate_section (bfd *output_bfd, struct bfd_link_info *info,
 	  continue;
 
 	case bfd_reloc_overflow:
-	  r = info->callbacks->reloc_overflow
+	  info->callbacks->reloc_overflow
 	    (info, (h ? &h->root : NULL), name, howto->name,
 	     (bfd_vma) 0, input_bfd, input_section, rel->r_offset);
 	  break;
 
 	case bfd_reloc_undefined:
-	  r = info->callbacks->undefined_symbol
+	  info->callbacks->undefined_symbol
 	    (info, name, input_bfd, input_section, rel->r_offset,
 	     TRUE);
 	  break;
@@ -2234,7 +2235,7 @@ riscv_elf_relocate_section (bfd *output_bfd, struct bfd_link_info *info,
 	}
 
       if (msg)
-	r = info->callbacks->warning
+	info->callbacks->warning
 	  (info, msg, name, input_bfd, input_section, rel->r_offset);
       goto out;
     }
