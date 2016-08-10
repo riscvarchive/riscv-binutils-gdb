@@ -73,7 +73,7 @@ free_state (SIM_DESC sd)
 
 SIM_DESC
 sim_open (SIM_OPEN_KIND kind, host_callback *callback,
-	  struct bfd *abfd, char **argv)
+	  struct bfd *abfd, char * const *argv)
 {
   char c;
   int i;
@@ -159,7 +159,7 @@ sim_close (SIM_DESC sd, int quitting)
 
 SIM_RC
 sim_create_inferior (SIM_DESC sd, struct bfd *abfd,
-		     char **argv, char **env)
+		     char * const *argv, char * const *env)
 {
   SIM_CPU *cpu = STATE_CPU (sd, 0);
   sim_cia addr;
