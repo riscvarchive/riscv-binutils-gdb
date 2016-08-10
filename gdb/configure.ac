@@ -518,6 +518,9 @@ esac
 # We might need to link with -lm; most simulators need it.
 AC_CHECK_LIB(m, main)
 
+# The RISC-V simulator needs clock_gettime()
+AC_SEARCH_LIBS([clock_gettime], [rt])
+
 # We need to link with -lw to get `wctype' on Solaris before Solaris
 # 2.6.  Solaris 2.6 and beyond have this function in libc, and have a
 # libw that some versions of the GNU linker cannot hanle (GNU ld 2.9.1
