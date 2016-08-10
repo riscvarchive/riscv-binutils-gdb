@@ -11932,9 +11932,6 @@ is_none_reloc (unsigned int reloc_type)
     case EM_ADAPTEVA_EPIPHANY:
     case EM_ALPHA:   /* R_ALPHA_NONE.  */
     case EM_ALTERA_NIOS2: /* R_NIOS2_NONE.  */
-    case EM_PPC:     /* R_PPC_NONE.  */
-    case EM_PPC64:   /* R_PPC64_NONE.  */
-    case EM_RISCV:   /* R_RISCV_NONE.  */
     case EM_ARC:     /* R_ARC_NONE.  */
     case EM_ARC_COMPACT2: /* R_ARC_NONE.  */
     case EM_ARC_COMPACT: /* R_ARC_NONE.  */
@@ -11954,6 +11951,7 @@ is_none_reloc (unsigned int reloc_type)
     case EM_PARISC:  /* R_PARISC_NONE.  */
     case EM_PPC64:   /* R_PPC64_NONE.  */
     case EM_PPC:     /* R_PPC_NONE.  */
+    case EM_RISCV:   /* R_RISCV_NONE.  */
     case EM_S390:    /* R_390_NONE.  */
     case EM_S390_OLD:
     case EM_SH:      /* R_SH_NONE.  */
