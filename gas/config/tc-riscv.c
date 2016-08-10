@@ -1733,7 +1733,7 @@ md_assemble (char *str)
     append_insn (&insn, &imm_expr, imm_reloc);
 }
 
-char *
+const char *
 md_atof (int type, char *litP, int *sizeP)
 {
   return ieee_md_atof (type, litP, sizeP, TARGET_BYTES_BIG_ENDIAN);
@@ -1786,7 +1786,7 @@ enum float_mode {
 static enum float_mode marg_float_mode = FLOAT_MODE_DEFAULT;
 
 int
-md_parse_option (int c, char *arg)
+md_parse_option (int c, const char *arg)
 {
   switch (c)
     {
