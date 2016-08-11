@@ -779,11 +779,13 @@ execute_a (SIM_CPU *cpu, unsigned_word iw, const struct riscv_opcode *op)
   const char *rs1_name = riscv_gpr_names_abi[rs1];
   const char *rs2_name = riscv_gpr_names_abi[rs2];
   struct atomic_mem_reserved_list *amo_prev, *amo_curr;
+  insn_t aqrl_mask = (OP_MASK_AQ << OP_SH_AQ) | (OP_MASK_RL << OP_SH_RL);
   unsigned_word tmp;
+  unsigned_word rs2_val = cpu->regs[rs2];
   sim_cia pc = cpu->pc + 4;
 
   /* Handle these two load/store operations specifically.  */
-  switch (op->match)
+  switch (op->match & ~aqrl_mask)
     {
     case MATCH_LR_W:
       TRACE_INSN (cpu, "%s %s, (%s);", op->name, rd_name, rs1_name);
@@ -838,49 +840,50 @@ execute_a (SIM_CPU *cpu, unsigned_word iw, const struct riscv_opcode *op)
   TRACE_INSN (cpu, "%s %s, %s, (%s);",
 	      op->name, rd_name, rs2_name, rs1_name);
   if (op->subset[0] == '6')
-    store_rd (cpu, rd,
-      sim_core_read_unaligned_8 (cpu, cpu->pc, read_map, cpu->regs[rs1]));
+    tmp = sim_core_read_unaligned_8 (cpu, cpu->pc, read_map, cpu->regs[rs1]);
   else
-    store_rd (cpu, rd, EXTEND32 (
-      sim_core_read_unaligned_4 (cpu, cpu->pc, read_map, cpu->regs[rs1])));
+    tmp = EXTEND32 (sim_core_read_unaligned_4 (cpu, cpu->pc,
+					       read_map, cpu->regs[rs1]));
 
-  switch (op->match)
+  store_rd (cpu, rd, tmp);
+
+  switch (op->match & ~aqrl_mask)
     {
     case MATCH_AMOADD_D:
     case MATCH_AMOADD_W:
-      tmp = cpu->regs[rd] + cpu->regs[rs2];
+      tmp = tmp + cpu->regs[rs2];
       break;
     case MATCH_AMOAND_D:
     case MATCH_AMOAND_W:
-      tmp = cpu->regs[rd] & cpu->regs[rs2];
+      tmp = tmp & cpu->regs[rs2];
       break;
     case MATCH_AMOMAX_D:
     case MATCH_AMOMAX_W:
-      tmp = MAX ((signed_word)cpu->regs[rd], (signed_word)cpu->regs[rs2]);
+      tmp = MAX ((signed_word)tmp, (signed_word)cpu->regs[rs2]);
       break;
     case MATCH_AMOMAXU_D:
     case MATCH_AMOMAXU_W:
-      tmp = MAX ((unsigned_word)cpu->regs[rd], (unsigned_word)cpu->regs[rs2]);
+      tmp = MAX ((unsigned_word)tmp, (unsigned_word)cpu->regs[rs2]);
       break;
     case MATCH_AMOMIN_D:
     case MATCH_AMOMIN_W:
-      tmp = MIN ((signed_word)cpu->regs[rd], (signed_word)cpu->regs[rs2]);
+      tmp = MIN ((signed_word)tmp, (signed_word)cpu->regs[rs2]);
       break;
     case MATCH_AMOMINU_D:
     case MATCH_AMOMINU_W:
-      tmp = MIN ((unsigned_word)cpu->regs[rd], (unsigned_word)cpu->regs[rs2]);
+      tmp = MIN ((unsigned_word)tmp, (unsigned_word)cpu->regs[rs2]);
       break;
     case MATCH_AMOOR_D:
     case MATCH_AMOOR_W:
-      tmp = cpu->regs[rd] | cpu->regs[rs2];
+      tmp = tmp | cpu->regs[rs2];
       break;
     case MATCH_AMOSWAP_D:
     case MATCH_AMOSWAP_W:
-      tmp = cpu->regs[rs2];
+      tmp = rs2_val;
       break;
     case MATCH_AMOXOR_D:
     case MATCH_AMOXOR_W:
-      tmp = cpu->regs[rd] ^ cpu->regs[rs2];
+      tmp = tmp ^ cpu->regs[rs2];
       break;
     default:
       TRACE_INSN (cpu, "UNHANDLED INSN: %s", op->name);
