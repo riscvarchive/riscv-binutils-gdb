@@ -2401,6 +2401,24 @@ riscv_elf_final_processing (void)
   elf_elfheader (stdoutput)->e_flags |= elf_flags;
 }
 
+/* Parse the .sleb128 and .uleb128 pseudos.  Only allow constant expressions,
+   since these directives break relaxation when used with symbol deltas.  */
+
+static void
+s_riscv_leb128 (int sign)
+{
+  expressionS exp;
+  char *save_in = input_line_pointer;
+
+  expression (&exp);
+  if (exp.X_op != O_constant)
+    as_bad (_("non-constant .%cleb128 is not supported"), sign ? 's' : 'u');
+  demand_empty_rest_of_line ();
+
+  input_line_pointer = save_in;
+  return s_leb128 (sign);
+}
+
 /* Pseudo-op table.  */
 
 static const pseudo_typeS riscv_pseudo_table[] =
@@ -2416,10 +2434,8 @@ static const pseudo_typeS riscv_pseudo_table[] =
   {"align", s_align, 0},
   {"p2align", s_align, 0},
   {"balign", s_align, 1},
-
-  /* leb128 doesn't work with relaxation; disallow it */
-  {"uleb128", s_err, 0},
-  {"sleb128", s_err, 0},
+  {"uleb128", s_riscv_leb128, 0},
+  {"sleb128", s_riscv_leb128, 1},
 
   { NULL, NULL, 0 },
 };
