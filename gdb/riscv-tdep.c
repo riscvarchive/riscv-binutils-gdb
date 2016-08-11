@@ -1091,14 +1091,14 @@ riscv_frame_prev_register (struct frame_info *this_frame,
 
 static const struct frame_unwind riscv_frame_unwind =
 {
-  .type          = NORMAL_FRAME,
-  .stop_reason   = default_frame_unwind_stop_reason,
-  .this_id       = riscv_frame_this_id,
-  .prev_register = riscv_frame_prev_register,
-  .unwind_data   = NULL,
-  .sniffer       = default_frame_sniffer,
-  .dealloc_cache = NULL,
-  .prev_arch     = NULL,
+  /*.type          =*/ NORMAL_FRAME,
+  /*.stop_reason   =*/ default_frame_unwind_stop_reason,
+  /*.this_id       =*/ riscv_frame_this_id,
+  /*.prev_register =*/ riscv_frame_prev_register,
+  /*.unwind_data   =*/ NULL,
+  /*.sniffer       =*/ default_frame_sniffer,
+  /*.dealloc_cache =*/ NULL,
+  /*.prev_arch     =*/ NULL,
 };
 
 static struct gdbarch *
