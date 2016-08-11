@@ -182,7 +182,7 @@ riscv_remote_breakpoint_from_pc (struct gdbarch *gdbarch, CORE_ADDR *pcptr, int 
 static struct value *
 value_of_riscv_user_reg (struct frame_info *frame, const void *baton)
 {
-  const int *reg_p = baton;
+  const int *reg_p = (const int *)baton;
 
   return value_of_register (*reg_p, frame);
 }
@@ -432,7 +432,7 @@ riscv_read_fp_register_single (struct frame_info *frame, int regno,
 {
   struct gdbarch *gdbarch = get_frame_arch (frame);
   int raw_size = register_size (gdbarch, regno);
-  gdb_byte *raw_buffer = alloca (raw_size);
+  gdb_byte *raw_buffer = (gdb_byte *) alloca (raw_size);
 
   if (!deprecated_frame_register_read (frame, regno, raw_buffer))
     error (_("can't read register %d (%s)"), regno,
@@ -482,7 +482,7 @@ riscv_print_fp_register (struct ui_file *file, struct frame_info *frame,
   int inv;
   const char *regname;
 
-  raw_buffer = alloca (2 * register_size (gdbarch, RISCV_FIRST_FP_REGNUM));
+  raw_buffer = (gdb_byte *) alloca (2 * register_size (gdbarch, RISCV_FIRST_FP_REGNUM));
 
   fprintf_filtered (file, "%-15s", gdbarch_register_name (gdbarch, regnum));
 
@@ -1148,7 +1148,7 @@ riscv_gdbarch_init (struct gdbarch_info  info,
      Can't initialize all the target dependencies until we actually know which
      target we are talking to, but put in some defaults for now.  */
 
-  tdep = xmalloc (sizeof *tdep);
+  tdep = (struct gdbarch_tdep *) xmalloc (sizeof *tdep);
   gdbarch = gdbarch_alloc (&info, tdep);
 
   tdep->riscv_abi = abi;
