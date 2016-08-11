@@ -728,7 +728,7 @@ riscv_fetch_instruction (struct gdbarch *gdbarch, CORE_ADDR addr)
   /* All insns are at least 16 bits.  */
   status = target_read_memory (addr, buf, 2);
   if (status)
-    memory_error (status, addr);
+    memory_error (TARGET_XFER_E_IO, addr);
 
   /* If we need more, grab it now.  */
   instlen = riscv_insn_length (buf[0]);
@@ -739,7 +739,7 @@ riscv_fetch_instruction (struct gdbarch *gdbarch, CORE_ADDR addr)
     {
       status = target_read_memory (addr + 2, buf + 2, instlen - 2);
       if (status)
-	memory_error (status, addr + 2);
+	memory_error (TARGET_XFER_E_IO, addr + 2);
     }
 
   return extract_unsigned_integer (buf, instlen, byte_order);
