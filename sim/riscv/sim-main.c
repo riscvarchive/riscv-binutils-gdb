@@ -35,11 +35,6 @@
 
 #include "targ-vals.h"
 
-/* I don't know where these are supposed to come from. Presumably they are
- * valid in whatever sourcebase this code actually came from. */
-#define PRIxTW  PRIx64
-#define PRIiTW  PRIi64
-#define PRIxTA  PRIx64
 
 #define TRACE_REG(cpu, reg) TRACE_REGISTER (cpu, "wrote %s = %#"PRIxTW, riscv_gpr_names_abi[reg], cpu->regs[reg])
 
