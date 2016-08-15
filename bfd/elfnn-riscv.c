@@ -1670,10 +1670,12 @@ riscv_resolve_pcrel_lo_relocs (riscv_pcrel_relocs *p)
       riscv_pcrel_hi_reloc search = {r->addr, 0};
       riscv_pcrel_hi_reloc *entry = htab_find (p->hi_relocs, &search);
       if (entry == NULL)
-	((*r->info->callbacks->reloc_overflow)
-	 (r->info, NULL, r->name, r->howto->name, (bfd_vma) 0,
-	  input_bfd, r->input_section, r->reloc->r_offset));
-	return TRUE;
+        {
+	  ((*r->info->callbacks->reloc_overflow)
+	   (r->info, NULL, r->name, r->howto->name, (bfd_vma) 0,
+	    input_bfd, r->input_section, r->reloc->r_offset));
+	  return TRUE;
+        }
 
       perform_relocation (r->howto, r->reloc, entry->value, r->input_section,
 			  input_bfd, r->contents);
