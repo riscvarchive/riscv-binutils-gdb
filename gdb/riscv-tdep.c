@@ -533,7 +533,7 @@ riscv_print_register_formatted (struct ui_file *file, struct frame_info *frame,
     {
       /* Integer type.  */
       int offset, size;
-      long long d;
+      unsigned long long d;
 
       if (!deprecated_frame_register_read (frame, regnum, raw_buffer))
 	{
@@ -573,6 +573,30 @@ riscv_print_register_formatted (struct ui_file *file, struct frame_info *frame,
 			    (int)((d >> 1) & 0x1),
 			    (int)((d >> 0) & 0x1));
 	}
+      else if (regnum == RISCV_CSR_MISA_REGNUM)
+        {
+          int base;
+          if (size == 4) {
+            d = unpack_long (builtin_type (gdbarch)->builtin_uint32, raw_buffer);
+            base = d >> 30;
+          } else if (size == 8) {
+            d = unpack_long (builtin_type (gdbarch)->builtin_uint64, raw_buffer);
+            base = d >> 62;
+          } else {
+            internal_error (__FILE__, __LINE__, _("unknown size for misa"));
+          }
+          unsigned xlen = 16;
+          for (; base > 0; base--) {
+            xlen *= 2;
+          }
+	  fprintf_filtered (file, "RV%d", xlen);
+
+          for (unsigned i = 0; i < 26; i++) {
+            if (d & (1<<i)) {
+              fprintf_filtered (file, "%c", 'A' + i);
+            }
+          }
+        }
       else if (regnum == RISCV_CSR_FCSR_REGNUM
 	       || regnum == RISCV_CSR_FFLAGS_REGNUM
 	       || regnum == RISCV_CSR_FRM_REGNUM)
