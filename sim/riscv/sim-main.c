@@ -603,9 +603,6 @@ execute_i (SIM_CPU *cpu, unsigned_word iw, const struct riscv_opcode *op)
 static unsigned64
 mulhu (unsigned64 a, unsigned64 b)
 {
-#ifdef __GNUC__
-  return ((__int128)a * b) >> 64;
-#else
   uint64_t t;
   uint32_t y1, y2, y3;
   uint64_t a0 = (uint32_t)a, a1 = a >> 32;
@@ -623,7 +620,6 @@ mulhu (unsigned64 a, unsigned64 b)
   y3 = t >> 32;
 
   return ((uint64_t)y3 << 32) | y2;
-#endif
 }
 
 static unsigned64
