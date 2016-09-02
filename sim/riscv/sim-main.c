@@ -90,7 +90,12 @@ fetch_csr (SIM_CPU *cpu, const char *name, int csr, unsigned_word *reg)
       {
 	struct timespec ts;
 
+#if defined(CLOCK_BOOTTIME)
 	if (clock_gettime (CLOCK_BOOTTIME, &ts) == 0)
+#else
+	if (clock_gettime (CLOCK_MONOTONIC, &ts) == 0)
+#endif
+
 	  {
 	    uint64_t time = (uint64_t)ts.tv_sec * 1000 * 1000 + ts.tv_nsec;
 	    *reg = (csr == CSR_TIME) ? time : (time >> 32);
