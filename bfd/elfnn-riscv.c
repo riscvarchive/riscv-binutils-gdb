@@ -2660,6 +2660,7 @@ _bfd_riscv_relax_call (bfd *abfd, asection *sec, asection *sym_sec,
 		       struct bfd_link_info *link_info,
 		       Elf_Internal_Rela *rel,
 		       bfd_vma symval,
+		       unsigned int max_alignment ATTRIBUTE_UNUSED,
 		       bfd_boolean *again)
 {
   bfd_byte *contents = elf_section_data (sec)->this_hdr.contents;
@@ -2716,6 +2717,23 @@ _bfd_riscv_relax_call (bfd *abfd, asection *sec, asection *sym_sec,
   return riscv_relax_delete_bytes (abfd, sec, rel->r_offset + len, 8 - len);
 }
 
+/* Traverse all output sections and return the max alignment.  */
+
+static unsigned int
+_bfd_riscv_get_max_alignment (asection *sec)
+{
+  unsigned int max_alignment_power = 0;
+  asection *o;
+
+  for (o = sec->output_section->owner->sections; o != NULL; o = o->next)
+    {
+      if (o->alignment_power > max_alignment_power)
+	max_alignment_power = o->alignment_power;
+    }
+
+  return 1 << max_alignment_power;
+}
+
 /* Relax non-PIC global variable references.  */
 
 static bfd_boolean
@@ -2723,6 +2741,7 @@ _bfd_riscv_relax_lui (bfd *abfd, asection *sec, asection *sym_sec,
 		      struct bfd_link_info *link_info,
 		      Elf_Internal_Rela *rel,
 		      bfd_vma symval,
+		      unsigned int max_alignment,
 		      bfd_boolean *again)
 {
   bfd_byte *contents = elf_section_data (sec)->this_hdr.contents;
@@ -2735,8 +2754,11 @@ _bfd_riscv_relax_lui (bfd *abfd, asection *sec, asection *sym_sec,
 
   BFD_ASSERT (rel->r_offset + 4 <= sec->size);
 
-  /* Is the reference in range of x0 or gp?  */
-  if (VALID_ITYPE_IMM (symval) || VALID_ITYPE_IMM (symval - gp))
+  /* Is the reference in range of x0 or gp?
+     Valid gp range conservatively because of alignment issue.  */
+  if (VALID_ITYPE_IMM (symval)
+      || (symval >= gp && VALID_ITYPE_IMM (symval - gp + max_alignment))
+      || (symval < gp && VALID_ITYPE_IMM (symval - gp - max_alignment)))
     {
       unsigned sym = ELFNN_R_SYM (rel->r_info);
       switch (ELFNN_R_TYPE (rel->r_info))
@@ -2793,6 +2815,7 @@ _bfd_riscv_relax_tls_le (bfd *abfd, asection *sec,
 			 struct bfd_link_info *link_info,
 			 Elf_Internal_Rela *rel,
 			 bfd_vma symval,
+			 unsigned int max_alignment ATTRIBUTE_UNUSED,
 			 bfd_boolean *again)
 {
   /* See if this symbol is in range of tp.  */
@@ -2816,6 +2839,7 @@ _bfd_riscv_relax_align (bfd *abfd, asection *sec,
 			struct bfd_link_info *link_info ATTRIBUTE_UNUSED,
 			Elf_Internal_Rela *rel,
 			bfd_vma symval,
+			unsigned int max_alignment ATTRIBUTE_UNUSED,
 			bfd_boolean *again ATTRIBUTE_UNUSED)
 {
   bfd_byte *contents = elf_section_data (sec)->this_hdr.contents;
@@ -2867,6 +2891,7 @@ _bfd_riscv_relax_section (bfd *abfd, asection *sec,
   Elf_Internal_Rela *relocs;
   bfd_boolean ret = FALSE;
   unsigned int i;
+  unsigned int max_alignment;
 
   *again = FALSE;
 
@@ -2884,6 +2909,8 @@ _bfd_riscv_relax_section (bfd *abfd, asection *sec,
   else if (!(relocs = _bfd_elf_link_read_relocs (abfd, sec, NULL, NULL,
 						 info->keep_memory)))
     goto fail;
+
+  max_alignment = _bfd_riscv_get_max_alignment (sec);
 
   /* Examine and consider relaxing each reloc.  */
   for (i = 0; i < sec->reloc_count; i++)
@@ -2971,7 +2998,8 @@ _bfd_riscv_relax_section (bfd *abfd, asection *sec,
 
       symval += rel->r_addend;
 
-      if (!relax_func (abfd, sec, sym_sec, info, rel, symval, again))
+      if (!relax_func (abfd, sec, sym_sec, info, rel, symval,
+		       max_alignment, again))
 	goto fail;
     }
 
