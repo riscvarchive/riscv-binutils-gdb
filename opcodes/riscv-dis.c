@@ -31,6 +31,10 @@
 #include <stdint.h>
 #include <ctype.h>
 
+/* Extract the operand given by FIELD from riscv_cl_insn INSN.  */
+#define EXTRACT_OPERAND(FIELD, INSN) \
+  ((INSN >> OP_SH_##FIELD) & OP_MASK_##FIELD)
+
 struct riscv_private_data
 {
   bfd_vma gp;
@@ -110,6 +114,107 @@ maybe_print_address (struct riscv_private_data *pd, int base_reg, int offset)
     pd->print_addr = offset;
 }
 
+/* Print insn prefixes for hwacha.  */
+static void
+print_insn_prefix (const char *d, insn_t l, disassemble_info *info){
+  bfd_boolean scalar = 1;
+  bfd_boolean all = 1;
+  if(*d == '\0') scalar = 0; // empty args also means all and not scalar
+  for (; *d != '\0'; d++)
+    {
+      switch (*d){
+        case '#':
+          switch ( *++d ) {
+            case 'p':
+              scalar = 0;
+              all = 0;
+              if(EXTRACT_OPERAND(VN,l) ||
+                 EXTRACT_OPERAND(VPRED,l) > 0){
+              (*info->fprintf_func)
+                ( info->stream, "@%s%-4s%s",
+                  EXTRACT_OPERAND(VN,l) ? "!" : "", riscv_vec_ppr_names[EXTRACT_OPERAND(VPRED,l)],
+                  EXTRACT_OPERAND(VN,l) ? "" : " ");
+              }else
+                (*info->fprintf_func) (info->stream, "      ");
+              continue;
+            case 'F':// vpop
+            case 'G':// vfence
+              all = scalar; // if it wasn't predicated but we write to pred its all
+              scalar = 0;
+              break;
+            default:
+              continue;
+            }
+          break;
+        case ',':
+          continue;
+        default:
+          continue;
+      }
+	}
+  if(scalar)
+    (*info->fprintf_func) (info->stream, "@s    ");
+  else if(all)
+    (*info->fprintf_func) (info->stream, "@all  ");
+}
+
+/* Print insn suffixes for hwacha.  */
+static void
+print_insn_suffix (const char *d, insn_t l, disassemble_info *info){
+  bfd_boolean suffix = 0;
+  for (; *d != '\0'; d++)
+    {
+      switch (*d){
+        case '#':
+          switch ( *++d ) {
+            case 'w':
+              suffix = 1;
+              if(EXTRACT_OPERAND(VS1,l))
+                (*info->fprintf_func) (info->stream, ".v");
+              else
+                (*info->fprintf_func) (info->stream, ".s");
+              continue;
+            case 'x':
+              suffix = 1;
+              if(EXTRACT_OPERAND(VS1,l))
+                (*info->fprintf_func) (info->stream, ".v");
+              else
+                (*info->fprintf_func) (info->stream, ".s");
+              if(EXTRACT_OPERAND(VS2,l))
+                (*info->fprintf_func) (info->stream, "v");
+              else
+                (*info->fprintf_func) (info->stream, "s");
+              continue;
+            case 'y':
+              suffix = 1;
+              if(EXTRACT_OPERAND(VS1,l))
+                (*info->fprintf_func) (info->stream, ".v");
+              else
+                (*info->fprintf_func) (info->stream, ".s");
+              if(EXTRACT_OPERAND(VS2,l))
+                (*info->fprintf_func) (info->stream, "v");
+              else
+                (*info->fprintf_func) (info->stream, "s");
+              if(EXTRACT_OPERAND(VS3,l))
+                (*info->fprintf_func) (info->stream, "v");
+              else
+                (*info->fprintf_func) (info->stream, "s");
+              continue;
+            default:
+              continue;
+            }
+          break;
+        case ',':
+          continue;
+        default:
+          continue;
+      }
+	}
+  if(!suffix)
+    (*info->fprintf_func) (info->stream, "\t");
+}
+
+
 /* Print insn arguments for 32/64-bit code.  */
 
 static void
@@ -144,6 +249,189 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	      print (info->stream, "%d", (int) EXTRACT_OPERAND (CUSTOM_IMM, l));
 	      break;
 	    }
+	  break;
+	/* Xhwacha */
+	case '#':
+	  switch ( *++d )
+		  {
+	    case 'g':
+	      (*info->fprintf_func)
+	        ( info->stream, "%d",
+	          (int)((l >> OP_SH_IMMNGPR) & OP_MASK_IMMNGPR));
+	      break;
+	    case 'f':
+	      (*info->fprintf_func)
+	        ( info->stream, "%d",
+	          (int)((l >> OP_SH_IMMNPPR) & OP_MASK_IMMNPPR));
+	      break;
+	    case 'n':
+	      (*info->fprintf_func)
+	        ( info->stream, "%d",
+	          (int)(((l >> OP_SH_IMMSEGNELM) & OP_MASK_IMMSEGNELM) + 1));
+	      break;
+	    case 'j':
+	      (*info->fprintf_func)
+	        ( info->stream, "%d",
+	          (int)((l >> OP_SH_VIMM) & OP_MASK_VIMM));
+	      break;
+	    case 'm':
+	      arg_print(info, (l >> OP_SH_VRM) & OP_MASK_VRM,
+	          riscv_rm, ARRAY_SIZE(riscv_rm));
+	      break;
+	    case '<':
+	      (*info->fprintf_func)
+	        ( info->stream, "%d",
+	          (int)((l >> OP_SH_VSHAMTW) & OP_MASK_VSHAMTW));
+	      break;
+	    case '>':
+	      (*info->fprintf_func)
+	        ( info->stream, "%d",
+	          (int)((l >> OP_SH_VSHAMT) & OP_MASK_VSHAMT));
+	      break;
+	    case 'k':
+	      (*info->fprintf_func)
+	        ( info->stream, "%d",
+	          (int)(((l >> OP_SH_VCIMM) & OP_MASK_VCIMM)<<3));
+	      break;
+	    case 'c':
+	      (*info->fprintf_func)
+	        ( info->stream, "%d",
+	          (int)((l >> OP_SH_VCOND) & OP_MASK_VCOND));
+	      break;
+	    case 'N':
+	      ++d;
+	      break;
+	    case 'p':
+	      ++d;
+	      break;
+	    case 'v':
+	      ++d;
+	      break;
+	    case 'w':
+	      ++d;
+	      break;
+	    case 'x':
+	      ++d;
+	      break;
+	    case 'y':
+	      ++d;
+	      break;
+	    case 'd':
+	      if(EXTRACT_OPERAND( VD, l)){
+	        (*info->fprintf_func)
+	          ( info->stream, "%s",
+	            riscv_vec_gpr_names[(l >> OP_SH_VRD) & OP_MASK_VRD]);
+	      }else{
+	        (*info->fprintf_func)
+	          ( info->stream, "%s",
+	            riscv_vec_spr_names[(l >> OP_SH_VRD) & OP_MASK_VRD]);
+	      }
+	      break;
+	    case 's':
+	    case 'u':
+	      if(EXTRACT_OPERAND( VS1, l)){
+	        (*info->fprintf_func)
+	          ( info->stream, "%s",
+	            riscv_vec_gpr_names[(l >> OP_SH_VRS) & OP_MASK_VRS]);
+	      }else{
+	        (*info->fprintf_func)
+	          ( info->stream, "%s",
+	            riscv_vec_spr_names[(l >> OP_SH_VRS) & OP_MASK_VRS]);
+	      }
+	      break;
+	    case 't':
+	      if(EXTRACT_OPERAND( VS2, l)){
+	        (*info->fprintf_func)
+	          ( info->stream, "%s",
+	            riscv_vec_gpr_names[(l >> OP_SH_VRT) & OP_MASK_VRT]);
+	      }else{
+	        (*info->fprintf_func)
+	          ( info->stream, "%s",
+	            riscv_vec_spr_names[(l >> OP_SH_VRT) & OP_MASK_VRT]);
+	      }
+	      break;
+	    case 'r':
+	      if(EXTRACT_OPERAND( VS3, l)){
+	        (*info->fprintf_func)
+	          ( info->stream, "%s",
+	            riscv_vec_gpr_names[(l >> OP_SH_VRR) & OP_MASK_VRR]);
+	      }else{
+	        (*info->fprintf_func)
+	          ( info->stream, "%s",
+	            riscv_vec_spr_names[(l >> OP_SH_VRR) & OP_MASK_VRR]);
+	      }
+	      break;
+	    case 'D':
+	      (*info->fprintf_func)
+	        ( info->stream, "%s",
+	          riscv_vec_spr_names[(l >> OP_SH_VRD) & OP_MASK_VRD]);
+	      break;
+	    case 'S':
+	      (*info->fprintf_func)
+	        ( info->stream, "%s",
+	          riscv_vec_spr_names[(l >> OP_SH_VRS) & OP_MASK_VRS]);
+	      break;
+	    case 'T':
+	      (*info->fprintf_func)
+	        ( info->stream, "%s",
+	          riscv_vec_spr_names[(l >> OP_SH_VRT) & OP_MASK_VRT]);
+	      break;
+	    case 'R':
+	      (*info->fprintf_func)
+	        ( info->stream, "%s",
+	          riscv_vec_spr_names[(l >> OP_SH_VRR) & OP_MASK_VRR]);
+	      break;
+	    case 'A':
+	      (*info->fprintf_func)
+	        ( info->stream, "%s",
+	          riscv_vec_apr_names[(l >> OP_SH_VAS) & OP_MASK_VAS]);
+	      break;
+	    case 'B':
+	      (*info->fprintf_func)
+	        ( info->stream, "%s",
+	          riscv_vec_apr_names[(l >> OP_SH_VAT) & OP_MASK_VAT]);
+	      break;
+	    case 'F':
+	          (*info->fprintf_func)
+	            ( info->stream, "%s",
+	              riscv_vec_ppr_names[(l >> OP_SH_VPD) & OP_MASK_VPD]);
+	          break;
+	    case 'O':
+	          (*info->fprintf_func)
+	            ( info->stream, "%s",
+	              riscv_vec_ppr_names[(l >> OP_SH_VPS) & OP_MASK_VPS]);
+	          break;
+	    case 'P':
+	          (*info->fprintf_func)
+	            ( info->stream, "%s",
+	              riscv_vec_ppr_names[(l >> OP_SH_VPT) & OP_MASK_VPT]);
+	          break;
+	    case 'Q':
+	          (*info->fprintf_func)
+	            ( info->stream, "%s",
+	              riscv_vec_ppr_names[(l >> OP_SH_VPR) & OP_MASK_VPR]);
+	          break;
+	    case 'z':
+	          {
+	          uint64_t func = EXTRACT_OPERAND( VPFUNC, l);
+	          (*info->fprintf_func)
+	            ( info->stream, "0x%x", func);
+	          break;
+	          }
+	    case 'e':
+	          (*info->fprintf_func)
+	            ( info->stream, "%s",
+	              riscv_vec_apr_names[(l >> OP_SH_SVARD) & OP_MASK_SVARD]);
+	          break;
+	    case 'E':
+	          {
+	          unsigned int svs = (((l >> OP_SH_SVSRDHI) & OP_MASK_SVSRDHI) << 5) | ((l >> OP_SH_SVSRDLO) & OP_MASK_SVSRDLO);
+	          (*info->fprintf_func)
+	            ( info->stream, "%s",
+	              riscv_vec_spr_names[svs]);
+	          break;
+	          }
+	  }
 	  break;
 
 	case 'C': /* RVC */
@@ -410,7 +698,7 @@ riscv_disassemble_insn (bfd_vma memaddr, insn_t word, disassemble_info *info)
 
   insnlen = riscv_insn_length (word);
 
-  info->bytes_per_chunk = insnlen % 4 == 0 ? 4 : 2;
+  info->bytes_per_chunk = insnlen % 8 == 0 ? 8 : insnlen % 4 == 0 ? 4 : 2;
   info->bytes_per_line = 8;
   info->display_endian = info->endian;
   info->insn_info_valid = 1;
@@ -424,6 +712,7 @@ riscv_disassemble_insn (bfd_vma memaddr, insn_t word, disassemble_info *info)
   if (op != NULL)
     {
       int xlen = 0;
+      int hwacha = 1;
 
       /* The incoming section might not always be complete.  */
       if (info->section != NULL)
@@ -445,7 +734,14 @@ riscv_disassemble_insn (bfd_vma memaddr, insn_t word, disassemble_info *info)
 	    continue;
 
 	  /* It's a match.  */
+				//FIXME/TODO: COLIN UPDATE hwacha to use elf section
+    if(hwacha && insnlen == 8)
+	    print_insn_prefix (op->args, word, info);
 	  (*info->fprintf_func) (info->stream, "%s", op->name);
+    if(hwacha && insnlen == 8)
+	    print_insn_suffix (op->args, word, info);
+    if(hwacha && insnlen == 8)
+	    (*info->fprintf_func) (info->stream, "\t");
 	  print_insn_args (op->args, word, memaddr, info);
 
 	  /* Try to disassemble multi-instruction addressing sequences.  */
