@@ -2729,8 +2729,8 @@ _bfd_riscv_relax_lui (bfd *abfd, asection *sec, asection *sym_sec,
   bfd_vma gp = riscv_global_pointer_value (link_info);
   int use_rvc = elf_elfheader (abfd)->e_flags & EF_RISCV_RVC;
 
-  /* Mergeable symbols might later move out of range.  */
-  if (sym_sec->flags & SEC_MERGE)
+  /* Mergeable symbols and code might later move out of range.  */
+  if (sym_sec->flags & (SEC_MERGE | SEC_CODE))
     return TRUE;
 
   BFD_ASSERT (rel->r_offset + 4 <= sec->size);
