@@ -2063,7 +2063,7 @@ s_riscv_option (int x ATTRIBUTE_UNUSED)
     riscv_set_rvc (TRUE);
   else if (strcmp (name, "norvc") == 0)
     riscv_set_rvc (FALSE);
-  if (strcmp (name, "pic") == 0)
+  else if (strcmp (name, "pic") == 0)
     riscv_opts.pic = TRUE;
   else if (strcmp (name, "nopic") == 0)
     riscv_opts.pic = FALSE;
