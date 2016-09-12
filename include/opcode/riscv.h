@@ -49,11 +49,6 @@ static const char * const riscv_pred_succ[16] = {
   0,   "w",  "r",  "rw",  "o",  "ow",  "or",  "orw",
   "i", "iw", "ir", "irw", "io", "iow", "ior", "iorw",
 };
-static const char * const riscv_hwacha_svbits[24] = {
-  "s",    "v",    0,      0,      0,      0,      0,      0,
-  "ss",   "sv",   "vs",   "vv",   0,      0,      0,      0,
-  "sss",  "ssv",  "svs",  "svv",  "vss",  "vsv",  "vvs",  "vvv"
-};
 
 #define RVC_JUMP_BITS 11
 #define RVC_JUMP_REACH ((1ULL << RVC_JUMP_BITS) * RISCV_JUMP_ALIGN)
@@ -61,7 +56,7 @@ static const char * const riscv_hwacha_svbits[24] = {
 #define RVC_BRANCH_BITS 8
 #define RVC_BRANCH_REACH ((1ULL << RVC_BRANCH_BITS) * RISCV_BRANCH_ALIGN)
 
-#define RV_X(x, s, n) (((x) >> (s)) & (((insn_t)1<<(n))-1))
+#define RV_X(x, s, n) (((x) >> (s)) & ((1 << (n)) - 1))
 #define RV_IMM_SIGN(x) (-(((x) >> 31) & 1))
 
 #define EXTRACT_ITYPE_IMM(x) \
@@ -137,11 +132,6 @@ static const char * const riscv_hwacha_svbits[24] = {
   ((RV_X(x, 1, 2) << 3) | (RV_X(x, 3, 2) << 10) | (RV_X(x, 5, 1) << 2) | (RV_X(x, 6, 2) << 5) | (RV_X(x, 8, 1) << 12))
 #define ENCODE_RVC_J_IMM(x) \
   ((RV_X(x, 1, 3) << 3) | (RV_X(x, 4, 1) << 11) | (RV_X(x, 5, 1) << 2) | (RV_X(x, 6, 1) << 7) | (RV_X(x, 7, 1) << 6) | (RV_X(x, 8, 2) << 9) | (RV_X(x, 10, 1) << 8) | (RV_X(x, 11, 1) << 12))
-//vector imm encoding
-#define ENCODE_ITYPE_VIMM(x) \
-  ((insn_t)RV_X(x, 0, 32) << 32)
-#define ENCODE_STYPE_VIMM(x) \
-  ((RV_X(x, 0, 5) << 12) | ((insn_t)RV_X(x, 5, 7) << 36))
 
 #define VALID_ITYPE_IMM(x) (EXTRACT_ITYPE_IMM(ENCODE_ITYPE_IMM(x)) == (x))
 #define VALID_STYPE_IMM(x) (EXTRACT_STYPE_IMM(ENCODE_STYPE_IMM(x)) == (x))
@@ -226,78 +216,6 @@ static const char * const riscv_hwacha_svbits[24] = {
 #define OP_MASK_RL		0x1
 #define OP_SH_RL		25
 
-/*control thread vector instructions*/
-#define OP_MASK_SVARD	0x1f
-#define OP_SH_SVARD	7
-#define OP_MASK_SVSRDLO	0x1f
-#define OP_SH_SVSRDLO	7
-#define OP_MASK_SVSRDHI	0x7
-#define OP_SH_SVSRDHI	20
-
-/*microthread vector instructions*/
-#define OP_MASK_VRD	0xff
-#define OP_SH_VRD	16
-#define OP_MASK_VRS	0xff
-#define OP_SH_VRS	24
-#define OP_MASK_VRT	0xff
-#define OP_SH_VRT	33
-#define OP_MASK_VRR	0xff
-#define OP_SH_VRR	41
-#define OP_MASK_VPD	0xf
-#define OP_SH_VPD	16
-#define OP_MASK_VPS	0xf
-#define OP_SH_VPS	24
-#define OP_MASK_VPT	0xf
-#define OP_SH_VPT	33
-#define OP_MASK_VPR	0xf
-#define OP_SH_VPR	41
-#define OP_MASK_VAS	0x1f
-#define OP_SH_VAS	24
-#define OP_MASK_VAT	0x1f
-#define OP_SH_VAT	33
-#define OP_MASK_VPRED	0xf
-#define OP_SH_VPRED	12
-#define OP_MASK_VN	0x1
-#define OP_SH_VN	32
-#define OP_MASK_VD	0x1
-#define OP_SH_VD	63
-#define OP_MASK_VS1	0x1
-#define OP_SH_VS1	62
-#define OP_MASK_VS2	0x1
-#define OP_SH_VS2	61
-#define OP_MASK_VS3	0x1
-#define OP_SH_VS3	60
-#define OP_MASK_VCOND	0x3
-#define OP_SH_VCOND	33
-#define OP_MASK_VPFUNC	0xff
-#define OP_SH_VPFUNC	50
-
-#define OP_MASK_VIMM	0xffffffff
-#define OP_SH_VIMM	32
-#define OP_MASK_VCIMM	0x1fffffff
-#define OP_SH_VCIMM	35
-#define OP_MASK_VSHAMT	0x3f
-#define OP_SH_VSHAMT	32
-#define OP_MASK_VSHAMTW	0x1f
-#define OP_SH_VSHAMTW	32
-#define OP_MASK_VAQ	0x1
-#define OP_SH_VAQ	54
-#define OP_MASK_VRL	0x1
-#define OP_SH_VRL	53
-#define OP_MASK_VRM	0x7
-#define OP_SH_VRM	50
-#define OP_MASK_VPREV	0xf
-#define OP_SH_VPREV	20
-#define OP_MASK_VSUCC	0xf
-#define OP_SH_VSUCC	16
-
-#define OP_MASK_IMMNGPR	0x1ff
-#define OP_SH_IMMNGPR	20
-#define OP_MASK_IMMNPPR	0x7
-#define OP_SH_IMMNPPR	29
-#define OP_MASK_IMMSEGNELM	0x7
-#define OP_SH_IMMSEGNELM	45
-
 #define OP_MASK_CUSTOM_IMM	0x7f
 #define OP_SH_CUSTOM_IMM	25
 #define OP_MASK_CSR		0xfff
@@ -325,10 +243,6 @@ static const char * const riscv_hwacha_svbits[24] = {
 
 #define NGPR 32
 #define NFPR 32
-#define NVGPR 256
-#define NVSPR 256
-#define NVAPR 32
-#define NVPPR 16
 
 /* Replace bits MASK << SHIFT of STRUCT with the equivalent bits in
    VALUE << SHIFT.  VALUE is evaluated exactly once.  */
@@ -412,7 +326,6 @@ enum
   M_CALL,
   M_J,
   M_LI,
-  M_VF,
   M_NUM_MACROS
 };
 
@@ -421,10 +334,6 @@ extern const char * const riscv_gpr_names_numeric[NGPR];
 extern const char * const riscv_gpr_names_abi[NGPR];
 extern const char * const riscv_fpr_names_numeric[NFPR];
 extern const char * const riscv_fpr_names_abi[NFPR];
-extern const char * const riscv_vec_gpr_names[NVGPR];
-extern const char * const riscv_vec_spr_names[NVSPR];
-extern const char * const riscv_vec_apr_names[NVAPR];
-extern const char * const riscv_vec_ppr_names[NVPPR];
 
 extern const struct riscv_opcode riscv_builtin_opcodes[];
 extern const int bfd_riscv_num_builtin_opcodes;
