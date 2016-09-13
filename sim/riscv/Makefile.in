@@ -31,6 +31,5 @@ SIM_OBJS = \
 	interp.o \
 	machs.o \
 	sim-main.o
-SIM_EXTRA_LIBS = -lrt
 
 ## COMMON_POST_CONFIG_FRAG
