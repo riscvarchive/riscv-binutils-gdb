@@ -80,32 +80,8 @@ fetch_csr (SIM_CPU *cpu, const char *name, int csr, unsigned_word *reg)
     /* Allow certain registers only in respective modes.  */
     case CSR_CYCLEH:
     case CSR_INSTRETH:
-      RISCV_ASSERT_RV32 (cpu, "CSR: %s", name);
-      break;
-
-    /* Load time regs on demand.  */
     case CSR_TIMEH:
       RISCV_ASSERT_RV32 (cpu, "CSR: %s", name);
-    case CSR_TIME:
-      {
-	struct timespec ts;
-
-#if defined(CLOCK_BOOTTIME)
-	if (clock_gettime (CLOCK_BOOTTIME, &ts) == 0)
-#else
-	if (clock_gettime (CLOCK_MONOTONIC, &ts) == 0)
-#endif
-
-	  {
-	    uint64_t time = (uint64_t)ts.tv_sec * 1000 * 1000 + ts.tv_nsec;
-	    *reg = (csr == CSR_TIME) ? time : (time >> 32);
-	  }
-	else
-	  {
-	    /* This shouldn't error, but it's cheap to be semi-sane.  */
-	    *reg += 1;
-	  }
-      }
       break;
     }
 
@@ -569,12 +545,12 @@ execute_i (SIM_CPU *cpu, unsigned_word iw, const struct riscv_opcode *op)
       break;
     case MATCH_RDTIME:
       TRACE_INSN (cpu, "rdtime %s;", rd_name);
-      store_rd (cpu, rd, fetch_csr (cpu, "time", CSR_TIME, &cpu->csr.time));
+      store_rd (cpu, rd, fetch_csr (cpu, "time", CSR_TIME, &cpu->csr.cycle));
       break;
     case MATCH_RDTIMEH:
       TRACE_INSN (cpu, "rdtimeh %s;", rd_name);
       RISCV_ASSERT_RV32 (cpu, "insn: %s", op->name);
-      store_rd (cpu, rd, fetch_csr (cpu, "timeh", CSR_TIMEH, &cpu->csr.timeh));
+      store_rd (cpu, rd, fetch_csr (cpu, "timeh", CSR_TIMEH, &cpu->csr.cycleh));
       break;
 
     case MATCH_FENCE:
