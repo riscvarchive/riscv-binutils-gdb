@@ -21,7 +21,6 @@
 #ifndef SIM_MAIN_H
 #define SIM_MAIN_H
 
-#include "tconfig.h"
 #include "sim-basics.h"
 #include "machs.h"
 #include "sim-base.h"
