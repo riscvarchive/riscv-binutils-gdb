@@ -27,6 +27,10 @@
 
 #include "config.h"
 
+#include "libiberty.h"
+#include "bfd.h"
+#include "elf-bfd.h"
+
 #include "sim-main.h"
 #include "sim-options.h"
 
@@ -154,6 +158,8 @@ sim_create_inferior (SIM_DESC sd, struct bfd *abfd,
 {
   SIM_CPU *cpu = STATE_CPU (sd, 0);
   sim_cia addr;
+  Elf_Internal_Phdr *phdr;
+  int i, phnum;
 
   /* Set the PC.  */
   if (abfd != NULL)
@@ -161,6 +167,14 @@ sim_create_inferior (SIM_DESC sd, struct bfd *abfd,
   else
     addr = 0;
   sim_pc_set (cpu, addr);
+  phdr = elf_tdata (abfd)->phdr;
+  phnum = elf_elfheader (abfd)->e_phnum;
+
+  for (i = 0; i < phnum; i++)
+    {
+      if (phdr[i].p_paddr + phdr[i].p_memsz > cpu->endbrk)
+	cpu->endbrk = phdr[i].p_paddr + phdr[i].p_memsz;
+    }
 
   /* Standalone mode (i.e. `run`) will take care of the argv for us in
      sim_open() -> sim_parse_args().  But in debug mode (i.e. 'target sim'

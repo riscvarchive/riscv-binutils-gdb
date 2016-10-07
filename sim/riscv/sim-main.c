@@ -1253,6 +1253,15 @@ execute_i (SIM_CPU *cpu, unsigned_word iw, const struct riscv_opcode *op)
 		cpu->a0 = link (oldpath, newpath);
 		break;
 	      }
+	    case TARGET_SYS_brk:
+	      {
+		/* FIXME: Check the invalid access.  */
+		if (cpu->a0 == 0)
+		  cpu->a0 = cpu->endbrk;
+		else
+		  cpu->endbrk = cpu->a0;
+		break;
+	      }
 	    default:
 	      cpu->a0 = -1;
 	      break;
