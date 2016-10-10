@@ -79,11 +79,6 @@ MSGMERGE = msgmerge
 PACKAGE = @PACKAGE@
 CATALOGS = @CATALOGS@
 
-# The name of the compiler to use.
-COMPILER = @COMPILER@
-# Set to CFLAGS or CXXFLAGS, depending on compiler/language.
-COMPILER_CFLAGS = @COMPILER_CFLAGS@
-
 # If you are compiling with GCC, make sure that either 1) You have the
 # fixed include files where GCC can reach them, or 2) You use the
 # -traditional flag.  Otherwise the ioctl calls in inflow.c
@@ -99,7 +94,7 @@ depcomp = $(SHELL) $(srcdir)/../depcomp
 
 # Note that these are overridden by GNU make-specific code below if
 # GNU make is used.  The overrides implement dependency tracking.
-COMPILE.pre = $(COMPILER)
+COMPILE.pre = $(CXX)
 COMPILE.post = -c -o $@
 COMPILE = $(COMPILE.pre) $(INTERNAL_CFLAGS) $(COMPILE.post)
 POSTCOMPILE = @true
@@ -129,8 +124,8 @@ MAKEHTMLFLAGS =
 
 # Set this up with gcc if you have gnu ld and the loader will print out
 # line numbers for undefined references.
-#CC_LD=gcc -static
-CC_LD=$(COMPILER)
+#CC_LD=g++ -static
+CC_LD=$(CXX)
 
 # Where is our "include" directory?  Typically $(srcdir)/../include.
 # This is essentially the header file directory for the library
@@ -568,7 +563,7 @@ INTERNAL_CPPFLAGS = @CPPFLAGS@ @GUILE_CPPFLAGS@ @PYTHON_CPPFLAGS@
 
 # INTERNAL_CFLAGS is the aggregate of all other *CFLAGS macros.
 INTERNAL_CFLAGS_BASE = \
-	$(COMPILER_CFLAGS) $(GLOBAL_CFLAGS) $(PROFILE_CFLAGS) \
+	$(CXXFLAGS) $(GLOBAL_CFLAGS) $(PROFILE_CFLAGS) \
 	$(GDB_CFLAGS) $(OPCODES_CFLAGS) $(READLINE_CFLAGS) $(ZLIBINC) \
 	$(BFD_CFLAGS) $(INCLUDE_CFLAGS) $(LIBDECNUMBER_CFLAGS) \
 	$(INTL_CFLAGS) $(INCGNU) $(ENABLE_CFLAGS) $(INTERNAL_CPPFLAGS)
@@ -584,7 +579,7 @@ LDFLAGS = @LDFLAGS@
 # and have it work; that's why CFLAGS is here.
 # PROFILE_CFLAGS is _not_ included, however, because we use monstartup.
 INTERNAL_LDFLAGS = \
-	$(COMPILER_CFLAGS) $(GLOBAL_CFLAGS) $(MH_LDFLAGS) \
+	$(CXXFLAGS) $(GLOBAL_CFLAGS) $(MH_LDFLAGS) \
 	$(LDFLAGS) $(CONFIG_LDFLAGS)
 
 # If your system is missing alloca(), or, more likely, it's there but
@@ -897,6 +892,7 @@ SFILES = ada-exp.y ada-lang.c ada-typeprint.c ada-valprint.c ada-tasks.c \
 	target/waitstatus.c common/print-utils.c common/rsp-low.c \
 	common/errors.c common/common-debug.c common/common-exceptions.c \
 	common/btrace-common.c common/fileio.c common/common-regcache.c \
+	common/signals-state-save-restore.c \
 	$(SUBDIR_GCC_COMPILE_SRCS)
 
 LINTFILES = $(SFILES) $(YYFILES) $(CONFIG_SRCS) init.c
@@ -912,7 +908,7 @@ common/gdb_signals.h nat/gdb_thread_db.h common/gdb_vecs.h \
 common/x86-xstate.h nat/linux-ptrace.h nat/mips-linux-watch.h \
 proc-utils.h aarch64-tdep.h arm-tdep.h ax-gdb.h ppcfbsd-tdep.h \
 ppcnbsd-tdep.h cli-out.h gdb_expat.h breakpoint.h infcall.h obsd-tdep.h \
-exec.h m32r-tdep.h osabi.h gdbcore.h amd64bsd-nat.h \
+exec.h m32r-tdep.h osabi.h gdbcore.h x86bsd-nat.h \
 i386bsd-nat.h xml-support.h xml-tdesc.h alphabsd-tdep.h gdb_obstack.h \
 ia64-tdep.h ada-lang.h varobj.h varobj-iter.h frv-tdep.h \
 nto-tdep.h serial.h \
@@ -989,7 +985,8 @@ common/common-exceptions.h target/target.h common/symbol.h \
 common/common-regcache.h fbsd-tdep.h nat/linux-personality.h \
 common/fileio.h nat/x86-linux.h nat/x86-linux-dregs.h nat/amd64-linux-siginfo.h\
 nat/linux-namespaces.h arch/arm.h common/gdb_sys_time.h arch/aarch64-insn.h \
-tid-parse.h ser-event.h
+tid-parse.h ser-event.h \
+common/signals-state-save-restore.h
 
 # Header files that already have srcdir in them, or which are in objdir.
 
@@ -1049,6 +1046,7 @@ COMMON_OBS = $(DEPFILES) $(CONFIG_OBS) $(YYOBJ) \
 	build-id.o buildsym.o \
 	findcmd.o \
 	std-regs.o \
+	signals-state-save-restore.o \
 	signals.o \
 	exec.o reverse.o \
 	bcache.o objfiles.o observer.o minsyms.o maint.o demangle.o \
@@ -2285,6 +2283,10 @@ fileio.o: ${srcdir}/common/fileio.c
 
 common-regcache.o: ${srcdir}/common/common-regcache.c
 	$(COMPILE) $(srcdir)/common/common-regcache.c
+	$(POSTCOMPILE)
+
+signals-state-save-restore.o: $(srcdir)/common/signals-state-save-restore.c
+	$(COMPILE) $(srcdir)/common/signals-state-save-restore.c
 	$(POSTCOMPILE)
 
 #

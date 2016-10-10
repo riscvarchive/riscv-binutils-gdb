@@ -39,7 +39,6 @@
 #include "fnmatch.h"
 #include "demangle.h"
 #include "hashtab.h"
-#include "libbfd.h"
 #include "elf-bfd.h"
 #ifdef ENABLE_PLUGINS
 #include "plugin.h"
@@ -2295,6 +2294,12 @@ section_already_linked (bfd *abfd, asection *sec, void *data)
       return;
     }
 
+  /* Deal with SHF_EXCLUDE ELF sections.  */
+  if (!bfd_link_relocatable (&link_info)
+      && (abfd->flags & BFD_PLUGIN) == 0
+      && (sec->flags & (SEC_GROUP | SEC_KEEP | SEC_EXCLUDE)) == SEC_EXCLUDE)
+    sec->output_section = bfd_abs_section_ptr;
+
   if (!(abfd->flags & DYNAMIC))
     bfd_section_already_linked (abfd, sec, &link_info);
 }
@@ -3114,15 +3119,15 @@ open_output (const char *name)
      line?  */
   if (command_line.endian != ENDIAN_UNSET)
     {
-      const bfd_target *target;
-      enum bfd_endian desired_endian;
-
       /* Get the chosen target.  */
-      target = bfd_search_for_target (get_target, (void *) output_target);
+      const bfd_target *target
+	= bfd_iterate_over_targets (get_target, (void *) output_target);
 
       /* If the target is not supported, we cannot do anything.  */
       if (target != NULL)
 	{
+	  enum bfd_endian desired_endian;
+
 	  if (command_line.endian == ENDIAN_BIG)
 	    desired_endian = BFD_ENDIAN_BIG;
 	  else
@@ -3144,8 +3149,8 @@ open_output (const char *name)
 		  /* Try to find a target as similar as possible to
 		     the default target, but which has the desired
 		     endian characteristic.  */
-		  bfd_search_for_target (closest_target_match,
-					 (void *) target);
+		  bfd_iterate_over_targets (closest_target_match,
+					    (void *) target);
 
 		  /* Oh dear - we could not find any targets that
 		     satisfy our requirements.  */

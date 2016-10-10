@@ -486,15 +486,9 @@ target_terminal_inferior (void)
   if (ui->prompt_state != PROMPT_BLOCKED)
     return;
 
-  /* Always delete the current UI's input file handler, regardless of
-     terminal_state, because terminal_state is only valid for the main
-     UI.  */
-  delete_file_handler (ui->input_fd);
-
   /* Since we always run the inferior in the main console (unless "set
      inferior-tty" is in effect), when some UI other than the main one
      calls target_terminal_inferior/target_terminal_inferior, then we
-     only register/unregister the UI's input from the event loop, but
      leave the main UI's terminal settings as is.  */
   if (ui != main_ui)
     return;
@@ -519,11 +513,6 @@ void
 target_terminal_ours (void)
 {
   struct ui *ui = current_ui;
-
-  /* Always add the current UI's input file handler, regardless of
-     terminal_state, because terminal_state is only valid for the main
-     UI.  */
-  add_file_handler (ui->input_fd, stdin_event_handler, ui);
 
   /* See target_terminal_inferior.  */
   if (ui != main_ui)
@@ -1301,8 +1290,9 @@ memory_xfer_partial (struct target_ops *ops, enum target_object object,
 	 by memory_xfer_partial_1.  We will continually malloc
 	 and free a copy of the entire write request for breakpoint
 	 shadow handling even though we only end up writing a small
-	 subset of it.  Cap writes to 4KB to mitigate this.  */
-      len = min (4096, len);
+	 subset of it.  Cap writes to a limit specified by the target
+	 to mitigate this.  */
+      len = min (ops->to_get_memory_xfer_limit (ops), len);
 
       buf = (gdb_byte *) xmalloc (len);
       old_chain = make_cleanup (xfree, buf);
@@ -2123,7 +2113,8 @@ target_insert_breakpoint (struct gdbarch *gdbarch,
 
 int
 target_remove_breakpoint (struct gdbarch *gdbarch,
-			  struct bp_target_info *bp_tgt)
+			  struct bp_target_info *bp_tgt,
+			  enum remove_bp_reason reason)
 {
   /* This is kind of a weird case to handle, but the permission might
      have been changed after breakpoints were inserted - in which case
@@ -2136,7 +2127,7 @@ target_remove_breakpoint (struct gdbarch *gdbarch,
     }
 
   return current_target.to_remove_breakpoint (&current_target,
-					      gdbarch, bp_tgt);
+					      gdbarch, bp_tgt, reason);
 }
 
 static void
@@ -2291,6 +2282,8 @@ target_disconnect (const char *args, int from_tty)
 
   current_target.to_disconnect (&current_target, args, from_tty);
 }
+
+/* See target/target.h.  */
 
 ptid_t
 target_wait (ptid_t ptid, struct target_waitstatus *status, int options)
@@ -3251,6 +3244,28 @@ find_target_at (enum strata stratum)
 }
 
 
+
+/* See target.h  */
+
+void
+target_announce_detach (int from_tty)
+{
+  pid_t pid;
+  char *exec_file;
+
+  if (!from_tty)
+    return;
+
+  exec_file = get_exec_file (0);
+  if (exec_file == NULL)
+    exec_file = "";
+
+  pid = ptid_get_pid (inferior_ptid);
+  printf_unfiltered (_("Detaching from program: %s, %s\n"), exec_file,
+		     target_pid_to_str (pid_to_ptid (pid)));
+  gdb_flush (gdb_stdout);
+}
+
 /* The inferior process has died.  Long live the inferior!  */
 
 void
@@ -3434,6 +3449,14 @@ void
 target_continue_no_signal (ptid_t ptid)
 {
   target_resume (ptid, 0, GDB_SIGNAL_0);
+}
+
+/* See target/target.h.  */
+
+void
+target_continue (ptid_t ptid, enum gdb_signal signal)
+{
+  target_resume (ptid, 0, signal);
 }
 
 /* Concatenate ELEM to LIST, a comma separate list, and return the

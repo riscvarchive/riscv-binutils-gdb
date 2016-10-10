@@ -444,6 +444,7 @@ enum elf_target_id
 {
   AARCH64_ELF_DATA = 1,
   ALPHA_ELF_DATA,
+  ARC_ELF_DATA,
   ARM_ELF_DATA,
   AVR_ELF_DATA,
   BFIN_ELF_DATA,
@@ -525,6 +526,7 @@ struct elf_link_hash_table
   /* The number of symbols found in the link which is intended for the
      mandatory DT_SYMTAB tag (.dynsym section) in .dynamic section.  */
   bfd_size_type dynsymcount;
+  bfd_size_type local_dynsymcount;
 
   /* The string table of dynamic symbols, which becomes the .dynstr
      section.  */
@@ -1126,6 +1128,11 @@ struct elf_backend_data
     (bfd *, struct bfd_link_info *, void *,
      bfd_boolean (*) (void *, const char *, Elf_Internal_Sym *, asection *,
 		      struct elf_link_hash_entry *));
+
+  /* Filter what symbols of the output file to include in the import
+     library if one is created.  */
+  unsigned int (*elf_backend_filter_implib_symbols)
+    (bfd *, struct bfd_link_info *, asymbol **, long);
 
   /* Copy any information related to dynamic linking from a pre-existing
      symbol to a newly created symbol.  Also called to copy flags and
@@ -1952,6 +1959,8 @@ extern bfd_boolean _bfd_elf_section_already_linked
   (bfd *, asection *, struct bfd_link_info *);
 extern void bfd_elf_set_group_contents
   (bfd *, asection *, void *);
+extern unsigned int _bfd_elf_filter_global_symbols
+  (bfd *, struct bfd_link_info *, asymbol **, long);
 extern asection *_bfd_elf_check_kept_section
   (asection *, struct bfd_link_info *);
 #define _bfd_elf_link_just_syms _bfd_generic_link_just_syms

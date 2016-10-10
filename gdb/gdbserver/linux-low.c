@@ -22,7 +22,7 @@
 #include "agent.h"
 #include "tdesc.h"
 #include "rsp-low.h"
-
+#include "signals-state-save-restore.h"
 #include "nat/linux-nat.h"
 #include "nat/linux-waitpid.h"
 #include "gdb_wait.h"
@@ -267,6 +267,8 @@ static int kill_lwp (unsigned long lwpid, int signo);
 static void enqueue_pending_signal (struct lwp_info *lwp, int signal, siginfo_t *info);
 static void complete_ongoing_step_over (void);
 static int linux_low_ptrace_options (int attached);
+static int check_ptrace_stopped_lwp_gone (struct lwp_info *lp);
+static int proceed_one_lwp (struct inferior_list_entry *entry, void *except);
 
 /* When the event-loop is doing a step-over, this points at the thread
    being stepped.  */
@@ -548,20 +550,14 @@ handle_extended_wait (struct lwp_info **orig_event_lwp, int wstat)
 	      && can_software_single_step ()
 	      && event == PTRACE_EVENT_VFORK)
 	    {
-	      struct thread_info *saved_thread = current_thread;
-
-	      current_thread = event_thr;
-	      /* If we leave reinsert breakpoints there, child will
-		 hit it, so uninsert reinsert breakpoints from parent
+	      /* If we leave single-step breakpoints there, child will
+		 hit it, so uninsert single-step breakpoints from parent
 		 (and child).  Once vfork child is done, reinsert
 		 them back to parent.  */
-	      uninsert_reinsert_breakpoints ();
-	      current_thread = saved_thread;
+	      uninsert_single_step_breakpoints (event_thr);
 	    }
 
-	  clone_all_breakpoints (&child_proc->breakpoints,
-				 &child_proc->raw_breakpoints,
-				 parent_proc->breakpoints);
+	  clone_all_breakpoints (child_thr, event_thr);
 
 	  tdesc = XNEW (struct target_desc);
 	  copy_target_description (tdesc, parent_proc->tdesc);
@@ -585,25 +581,21 @@ handle_extended_wait (struct lwp_info **orig_event_lwp, int wstat)
 	  event_lwp->status_pending_p = 1;
 	  event_lwp->status_pending = wstat;
 
-	  /* If the parent thread is doing step-over with reinsert
-	     breakpoints, the list of reinsert breakpoints are cloned
+	  /* If the parent thread is doing step-over with single-step
+	     breakpoints, the list of single-step breakpoints are cloned
 	     from the parent's.  Remove them from the child process.
 	     In case of vfork, we'll reinsert them back once vforked
 	     child is done.  */
 	  if (event_lwp->bp_reinsert != 0
 	      && can_software_single_step ())
 	    {
-	      struct thread_info *saved_thread = current_thread;
-
 	      /* The child process is forked and stopped, so it is safe
 		 to access its memory without stopping all other threads
 		 from other processes.  */
-	      current_thread = child_thr;
-	      delete_reinsert_breakpoints ();
-	      current_thread = saved_thread;
+	      delete_single_step_breakpoints (child_thr);
 
-	      gdb_assert (has_reinsert_breakpoints (parent_proc));
-	      gdb_assert (!has_reinsert_breakpoints (child_proc));
+	      gdb_assert (has_single_step_breakpoints (event_thr));
+	      gdb_assert (!has_single_step_breakpoints (child_thr));
 	    }
 
 	  /* Report the event.  */
@@ -657,14 +649,9 @@ handle_extended_wait (struct lwp_info **orig_event_lwp, int wstat)
 
       if (event_lwp->bp_reinsert != 0 && can_software_single_step ())
 	{
-	  struct thread_info *saved_thread = current_thread;
-	  struct process_info *proc = get_thread_process (event_thr);
+	  reinsert_single_step_breakpoints (event_thr);
 
-	  current_thread = event_thr;
-	  reinsert_reinsert_breakpoints ();
-	  current_thread = saved_thread;
-
-	  gdb_assert (has_reinsert_breakpoints (proc));
+	  gdb_assert (has_single_step_breakpoints (event_thr));
 	}
 
       /* Report the event.  */
@@ -987,6 +974,8 @@ linux_create_inferior (char *program, char **allargs)
 	      /* Errors ignored.  */;
 	    }
 	}
+
+      restore_original_signals_state ();
 
       execv (program, allargs);
       if (errno == ENOENT)
@@ -1492,16 +1481,14 @@ get_detach_signal (struct thread_info *thread)
     }
 }
 
-static int
-linux_detach_one_lwp (struct inferior_list_entry *entry, void *args)
-{
-  struct thread_info *thread = (struct thread_info *) entry;
-  struct lwp_info *lwp = get_thread_lwp (thread);
-  int pid = * (int *) args;
-  int sig;
+/* Detach from LWP.  */
 
-  if (ptid_get_pid (entry->id) != pid)
-    return 0;
+static void
+linux_detach_one_lwp (struct lwp_info *lwp)
+{
+  struct thread_info *thread = get_lwp_thread (lwp);
+  int sig;
+  int lwpid;
 
   /* If there is a pending SIGSTOP, get rid of it.  */
   if (lwp->stop_expected)
@@ -1514,22 +1501,94 @@ linux_detach_one_lwp (struct inferior_list_entry *entry, void *args)
       lwp->stop_expected = 0;
     }
 
-  /* Flush any pending changes to the process's registers.  */
-  regcache_invalidate_thread (thread);
-
   /* Pass on any pending signal for this thread.  */
   sig = get_detach_signal (thread);
 
-  /* Finally, let it resume.  */
-  if (the_low_target.prepare_to_resume != NULL)
-    the_low_target.prepare_to_resume (lwp);
-  if (ptrace (PTRACE_DETACH, lwpid_of (thread), (PTRACE_TYPE_ARG3) 0,
+  /* Preparing to resume may try to write registers, and fail if the
+     lwp is zombie.  If that happens, ignore the error.  We'll handle
+     it below, when detach fails with ESRCH.  */
+  TRY
+    {
+      /* Flush any pending changes to the process's registers.  */
+      regcache_invalidate_thread (thread);
+
+      /* Finally, let it resume.  */
+      if (the_low_target.prepare_to_resume != NULL)
+	the_low_target.prepare_to_resume (lwp);
+    }
+  CATCH (ex, RETURN_MASK_ERROR)
+    {
+      if (!check_ptrace_stopped_lwp_gone (lwp))
+	throw_exception (ex);
+    }
+  END_CATCH
+
+  lwpid = lwpid_of (thread);
+  if (ptrace (PTRACE_DETACH, lwpid, (PTRACE_TYPE_ARG3) 0,
 	      (PTRACE_TYPE_ARG4) (long) sig) < 0)
-    error (_("Can't detach %s: %s"),
-	   target_pid_to_str (ptid_of (thread)),
-	   strerror (errno));
+    {
+      int save_errno = errno;
+
+      /* We know the thread exists, so ESRCH must mean the lwp is
+	 zombie.  This can happen if one of the already-detached
+	 threads exits the whole thread group.  In that case we're
+	 still attached, and must reap the lwp.  */
+      if (save_errno == ESRCH)
+	{
+	  int ret, status;
+
+	  ret = my_waitpid (lwpid, &status, __WALL);
+	  if (ret == -1)
+	    {
+	      warning (_("Couldn't reap LWP %d while detaching: %s"),
+		       lwpid, strerror (errno));
+	    }
+	  else if (!WIFEXITED (status) && !WIFSIGNALED (status))
+	    {
+	      warning (_("Reaping LWP %d while detaching "
+			 "returned unexpected status 0x%x"),
+		       lwpid, status);
+	    }
+	}
+      else
+	{
+	  error (_("Can't detach %s: %s"),
+		 target_pid_to_str (ptid_of (thread)),
+		 strerror (save_errno));
+	}
+    }
+  else if (debug_threads)
+    {
+      debug_printf ("PTRACE_DETACH (%s, %s, 0) (OK)\n",
+		    target_pid_to_str (ptid_of (thread)),
+		    strsignal (sig));
+    }
 
   delete_lwp (lwp);
+}
+
+/* Callback for find_inferior.  Detaches from non-leader threads of a
+   given process.  */
+
+static int
+linux_detach_lwp_callback (struct inferior_list_entry *entry, void *args)
+{
+  struct thread_info *thread = (struct thread_info *) entry;
+  struct lwp_info *lwp = get_thread_lwp (thread);
+  int pid = *(int *) args;
+  int lwpid = lwpid_of (thread);
+
+  /* Skip other processes.  */
+  if (ptid_get_pid (entry->id) != pid)
+    return 0;
+
+  /* We don't actually detach from the thread group leader just yet.
+     If the thread group exits, we must reap the zombie clone lwps
+     before we're able to reap the leader.  */
+  if (ptid_get_pid (entry->id) == lwpid)
+    return 0;
+
+  linux_detach_one_lwp (lwp);
   return 0;
 }
 
@@ -1537,6 +1596,7 @@ static int
 linux_detach (int pid)
 {
   struct process_info *process;
+  struct lwp_info *main_lwp;
 
   process = find_process_pid (pid);
   if (process == NULL)
@@ -1560,7 +1620,13 @@ linux_detach (int pid)
   /* Stabilize threads (move out of jump pads).  */
   stabilize_threads ();
 
-  find_inferior (&all_threads, linux_detach_one_lwp, &pid);
+  /* Detach from the clone lwps first.  If the thread group exits just
+     while we're detaching, we must reap the clone lwps before we're
+     able to reap the leader.  */
+  find_inferior (&all_threads, linux_detach_lwp_callback, &pid);
+
+  main_lwp = find_lwp_pid (pid_to_ptid (pid));
+  linux_detach_one_lwp (main_lwp);
 
   the_target->mourn (process);
 
@@ -2556,11 +2622,9 @@ maybe_hw_step (struct thread_info *thread)
     return 1;
   else
     {
-      struct process_info *proc = get_thread_process (thread);
-
-      /* GDBserver must insert reinsert breakpoint for software
+      /* GDBserver must insert single-step breakpoint for software
 	 single step.  */
-      gdb_assert (has_reinsert_breakpoints (proc));
+      gdb_assert (has_single_step_breakpoints (thread));
       return 0;
     }
 }
@@ -2579,7 +2643,10 @@ resume_stopped_resumed_lwps (struct inferior_list_entry *entry)
       && !lp->status_pending_p
       && thread->last_status.kind == TARGET_WAITKIND_IGNORE)
     {
-      int step = thread->last_resume_kind == resume_step;
+      int step = 0;
+
+      if (thread->last_resume_kind == resume_step)
+	step = maybe_hw_step (thread);
 
       if (debug_threads)
 	debug_printf ("RSRL: resuming stopped-resumed LWP %s at %s: step=%d\n",
@@ -3263,13 +3330,13 @@ linux_wait_1 (ptid_t ptid,
      the breakpoint address.
      So in the case of the hardware single step advance the PC manually
      past the breakpoint and in the case of software single step advance only
-     if it's not the reinsert_breakpoint we are hitting.
+     if it's not the single_step_breakpoint we are hitting.
      This avoids that a program would keep trapping a permanent breakpoint
      forever.  */
   if (!ptid_equal (step_over_bkpt, null_ptid)
       && event_child->stop_reason == TARGET_STOPPED_BY_SW_BREAKPOINT
       && (event_child->stepping
-	  || !reinsert_breakpoint_inserted_here (event_child->stop_pc)))
+	  || !single_step_breakpoint_inserted_here (event_child->stop_pc)))
     {
       int increment_pc = 0;
       int breakpoint_kind = 0;
@@ -3323,8 +3390,8 @@ linux_wait_1 (ptid_t ptid,
 
       /* We have a SIGTRAP, possibly a step-over dance has just
 	 finished.  If so, tweak the state machine accordingly,
-	 reinsert breakpoints and delete any reinsert (software
-	 single-step) breakpoints.  */
+	 reinsert breakpoints and delete any single-step
+	 breakpoints.  */
       step_over_finished = finish_step_over (event_child);
 
       /* Now invoke the callbacks of any internal breakpoints there.  */
@@ -3638,29 +3705,71 @@ linux_wait_1 (ptid_t ptid,
 
   /* Alright, we're going to report a stop.  */
 
+  /* Remove single-step breakpoints.  */
+  if (can_software_single_step ())
+    {
+      /* Remove single-step breakpoints or not.  It it is true, stop all
+	 lwps, so that other threads won't hit the breakpoint in the
+	 staled memory.  */
+      int remove_single_step_breakpoints_p = 0;
+
+      if (non_stop)
+	{
+	  remove_single_step_breakpoints_p
+	    = has_single_step_breakpoints (current_thread);
+	}
+      else
+	{
+	  /* In all-stop, a stop reply cancels all previous resume
+	     requests.  Delete all single-step breakpoints.  */
+	  struct inferior_list_entry *inf, *tmp;
+
+	  ALL_INFERIORS (&all_threads, inf, tmp)
+	    {
+	      struct thread_info *thread = (struct thread_info *) inf;
+
+	      if (has_single_step_breakpoints (thread))
+		{
+		  remove_single_step_breakpoints_p = 1;
+		  break;
+		}
+	    }
+	}
+
+      if (remove_single_step_breakpoints_p)
+	{
+	  /* If we remove single-step breakpoints from memory, stop all lwps,
+	     so that other threads won't hit the breakpoint in the staled
+	     memory.  */
+	  stop_all_lwps (0, event_child);
+
+	  if (non_stop)
+	    {
+	      gdb_assert (has_single_step_breakpoints (current_thread));
+	      delete_single_step_breakpoints (current_thread);
+	    }
+	  else
+	    {
+	      struct inferior_list_entry *inf, *tmp;
+
+	      ALL_INFERIORS (&all_threads, inf, tmp)
+		{
+		  struct thread_info *thread = (struct thread_info *) inf;
+
+		  if (has_single_step_breakpoints (thread))
+		    delete_single_step_breakpoints (thread);
+		}
+	    }
+
+	  unstop_all_lwps (0, event_child);
+	}
+    }
+
   if (!stabilizing_threads)
     {
       /* In all-stop, stop all threads.  */
       if (!non_stop)
 	stop_all_lwps (0, NULL);
-
-      /* If we're not waiting for a specific LWP, choose an event LWP
-	 from among those that have had events.  Giving equal priority
-	 to all LWPs that have had events helps prevent
-	 starvation.  */
-      if (ptid_equal (ptid, minus_one_ptid))
-	{
-	  event_child->status_pending_p = 1;
-	  event_child->status_pending = w;
-
-	  select_event_lwp (&event_child);
-
-	  /* current_thread and event_child must stay in sync.  */
-	  current_thread = get_lwp_thread (event_child);
-
-	  event_child->status_pending_p = 0;
-	  w = event_child->status_pending;
-	}
 
       if (step_over_finished)
 	{
@@ -3685,6 +3794,25 @@ linux_wait_1 (ptid_t ptid,
 	      unstop_all_lwps (1, event_child);
 	    }
 	}
+
+      /* If we're not waiting for a specific LWP, choose an event LWP
+	 from among those that have had events.  Giving equal priority
+	 to all LWPs that have had events helps prevent
+	 starvation.  */
+      if (ptid_equal (ptid, minus_one_ptid))
+	{
+	  event_child->status_pending_p = 1;
+	  event_child->status_pending = w;
+
+	  select_event_lwp (&event_child);
+
+	  /* current_thread and event_child must stay in sync.  */
+	  current_thread = get_lwp_thread (event_child);
+
+	  event_child->status_pending_p = 0;
+	  w = event_child->status_pending;
+	}
+
 
       /* Stabilize threads (move out of jump pads).  */
       if (!non_stop)
@@ -4141,14 +4269,18 @@ install_software_single_step_breakpoints (struct lwp_info *lwp)
 {
   int i;
   CORE_ADDR pc;
-  struct regcache *regcache = get_thread_regcache (current_thread, 1);
+  struct thread_info *thread = get_lwp_thread (lwp);
+  struct regcache *regcache = get_thread_regcache (thread, 1);
   VEC (CORE_ADDR) *next_pcs = NULL;
-  struct cleanup *old_chain = make_cleanup (VEC_cleanup (CORE_ADDR), &next_pcs);
+  struct cleanup *old_chain = make_cleanup_restore_current_thread ();
 
+  make_cleanup (VEC_cleanup (CORE_ADDR), &next_pcs);
+
+  current_thread = thread;
   next_pcs = (*the_low_target.get_next_pcs) (regcache);
 
   for (i = 0; VEC_iterate (CORE_ADDR, next_pcs, i, pc); ++i)
-    set_reinsert_breakpoint (pc);
+    set_single_step_breakpoint (pc, current_ptid);
 
   do_cleanups (old_chain);
 }
@@ -4286,12 +4418,6 @@ linux_resume_one_lwp_throw (struct lwp_info *lwp,
 	}
 
       step = maybe_hw_step (thread);
-    }
-  else
-    {
-      /* If the thread isn't doing step-over, there shouldn't be any
-	 reinsert breakpoints.  */
-      gdb_assert (!has_reinsert_breakpoints (proc));
     }
 
   if (fast_tp_collecting == 1)
@@ -4755,7 +4881,7 @@ start_step_over (struct lwp_info *lwp)
 }
 
 /* Finish a step-over.  Reinsert the breakpoint we had uninserted in
-   start_step_over, if still there, and delete any reinsert
+   start_step_over, if still there, and delete any single-step
    breakpoints we've set, on non hardware single-step targets.  */
 
 static int
@@ -4777,15 +4903,15 @@ finish_step_over (struct lwp_info *lwp)
 
       lwp->bp_reinsert = 0;
 
-      /* Delete any software-single-step reinsert breakpoints.  No
-	 longer needed.  We don't have to worry about other threads
-	 hitting this trap, and later not being able to explain it,
-	 because we were stepping over a breakpoint, and we hold all
-	 threads but LWP stopped while doing that.  */
+      /* Delete any single-step breakpoints.  No longer needed.  We
+	 don't have to worry about other threads hitting this trap,
+	 and later not being able to explain it, because we were
+	 stepping over a breakpoint, and we hold all threads but
+	 LWP stopped while doing that.  */
       if (!can_hardware_single_step ())
 	{
-	  gdb_assert (has_reinsert_breakpoints (current_process ()));
-	  delete_reinsert_breakpoints ();
+	  gdb_assert (has_single_step_breakpoints (current_thread));
+	  delete_single_step_breakpoints (current_thread);
 	}
 
       step_over_bkpt = null_ptid;
@@ -4847,7 +4973,6 @@ linux_resume_one_thread (struct inferior_list_entry *entry, void *arg)
 {
   struct thread_info *thread = (struct thread_info *) entry;
   struct lwp_info *lwp = get_thread_lwp (thread);
-  int step;
   int leave_all_stopped = * (int *) arg;
   int leave_pending;
 
@@ -4914,38 +5039,35 @@ linux_resume_one_thread (struct inferior_list_entry *entry, void *arg)
 		   || lwp->status_pending_p
 		   || leave_all_stopped);
 
+  /* If we have a new signal, enqueue the signal.  */
+  if (lwp->resume->sig != 0)
+    {
+      siginfo_t info, *info_p;
+
+      /* If this is the same signal we were previously stopped by,
+	 make sure to queue its siginfo.  */
+      if (WIFSTOPPED (lwp->last_status)
+	  && WSTOPSIG (lwp->last_status) == lwp->resume->sig
+	  && ptrace (PTRACE_GETSIGINFO, lwpid_of (thread),
+		     (PTRACE_TYPE_ARG3) 0, &info) == 0)
+	info_p = &info;
+      else
+	info_p = NULL;
+
+      enqueue_pending_signal (lwp, lwp->resume->sig, info_p);
+    }
+
   if (!leave_pending)
     {
       if (debug_threads)
 	debug_printf ("resuming LWP %ld\n", lwpid_of (thread));
 
-      step = (lwp->resume->kind == resume_step);
-      linux_resume_one_lwp (lwp, step, lwp->resume->sig, NULL);
+      proceed_one_lwp (entry, NULL);
     }
   else
     {
       if (debug_threads)
 	debug_printf ("leaving LWP %ld stopped\n", lwpid_of (thread));
-
-      /* If we have a new signal, enqueue the signal.  */
-      if (lwp->resume->sig != 0)
-	{
-	  struct pending_signals *p_sig = XCNEW (struct pending_signals);
-
-	  p_sig->prev = lwp->pending_signals;
-	  p_sig->signal = lwp->resume->sig;
-
-	  /* If this is the same signal we were previously stopped by,
-	     make sure to queue its siginfo.  We can ignore the return
-	     value of ptrace; if it fails, we'll skip
-	     PTRACE_SETSIGINFO.  */
-	  if (WIFSTOPPED (lwp->last_status)
-	      && WSTOPSIG (lwp->last_status) == lwp->resume->sig)
-	    ptrace (PTRACE_GETSIGINFO, lwpid_of (thread), (PTRACE_TYPE_ARG3) 0,
-		    &p_sig->info);
-
-	  lwp->pending_signals = p_sig;
-	}
     }
 
   thread->last_status.kind = TARGET_WAITKIND_IGNORE;
@@ -5104,7 +5226,15 @@ proceed_one_lwp (struct inferior_list_entry *entry, void *except)
       if (debug_threads)
 	debug_printf ("   stepping LWP %ld, client wants it stepping\n",
 		      lwpid_of (thread));
-      step = 1;
+
+      /* If resume_step is requested by GDB, install single-step
+	 breakpoints when the thread is about to be actually resumed if
+	 the single-step breakpoints weren't removed.  */
+      if (can_software_single_step ()
+	  && !has_single_step_breakpoints (thread))
+	install_software_single_step_breakpoints (lwp);
+
+      step = maybe_hw_step (thread);
     }
   else if (lwp->bp_reinsert != 0)
     {
@@ -5278,6 +5408,12 @@ regsets_fetch_inferior_registers (struct regsets_info *regsets_info,
 	      /* ENODATA may be returned if the regset is currently
 		 not "active".  This can happen in normal operation,
 		 so suppress the warning in this case.  */
+	    }
+	  else if (errno == ESRCH)
+	    {
+	      /* At this point, ESRCH should mean the process is
+		 already gone, in which case we simply ignore attempts
+		 to read its registers.  */
 	    }
 	  else
 	    {

@@ -256,7 +256,7 @@ struct orl 			/* Output ranlib.  */
   } u;			/* bfd* or file position.  */
   int namidx;		/* Index into string table.  */
 };
-
+
 /* Linenumber stuff.  */
 typedef struct lineno_cache_entry
 {
@@ -270,11 +270,19 @@ typedef struct lineno_cache_entry
 alent;
 
 /* Object and core file sections.  */
+typedef struct bfd_section *sec_ptr;
 
 #define	align_power(addr, align)	\
   (((addr) + ((bfd_vma) 1 << (align)) - 1) & (-((bfd_vma) 1 << (align))))
 
-typedef struct bfd_section *sec_ptr;
+/* Align an address upward to a boundary, expressed as a number of bytes.
+   E.g. align to an 8-byte boundary with argument of 8.  Take care never
+   to wrap around if the address is within boundary-1 of the end of the
+   address space.  */
+#define BFD_ALIGN(this, boundary)					  \
+  ((((bfd_vma) (this) + (boundary) - 1) >= (bfd_vma) (this))		  \
+   ? (((bfd_vma) (this) + ((boundary) - 1)) & ~ (bfd_vma) ((boundary)-1)) \
+   : ~ (bfd_vma) 0)
 
 #define bfd_get_section_name(bfd, ptr) ((void) bfd, (ptr)->name)
 #define bfd_get_section_vma(bfd, ptr) ((void) bfd, (ptr)->vma)
@@ -892,9 +900,27 @@ extern bfd_boolean bfd_elf32_arm_allocate_interworking_sections
 extern bfd_boolean bfd_elf32_arm_process_before_allocation
   (bfd *, struct bfd_link_info *);
 
-void bfd_elf32_arm_set_target_relocs
-  (bfd *, struct bfd_link_info *, int, char *, int, int, bfd_arm_vfp11_fix,
-   bfd_arm_stm32l4xx_fix, int, int, int, int, int);
+struct elf32_arm_params {
+  char *thumb_entry_symbol;
+  int byteswap_code;
+  int target1_is_rel;
+  char * target2_type;
+  int fix_v4bx;
+  int use_blx;
+  bfd_arm_vfp11_fix vfp11_denorm_fix;
+  bfd_arm_stm32l4xx_fix stm32l4xx_fix;
+  int no_enum_size_warning;
+  int no_wchar_size_warning;
+  int pic_veneer;
+  int fix_cortex_a8;
+  int fix_arm1176;
+  int merge_exidx_entries;
+  int cmse_implib;
+  bfd *in_implib_bfd;
+};
+
+void bfd_elf32_arm_set_target_params
+  (bfd *, struct bfd_link_info *, struct elf32_arm_params *);
 
 extern bfd_boolean bfd_elf32_arm_get_bfd_for_interworking
   (bfd *, struct bfd_link_info *);

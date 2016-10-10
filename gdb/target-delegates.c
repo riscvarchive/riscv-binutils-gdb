@@ -262,24 +262,26 @@ debug_insert_breakpoint (struct target_ops *self, struct gdbarch *arg1, struct b
 }
 
 static int
-delegate_remove_breakpoint (struct target_ops *self, struct gdbarch *arg1, struct bp_target_info *arg2)
+delegate_remove_breakpoint (struct target_ops *self, struct gdbarch *arg1, struct bp_target_info *arg2, enum remove_bp_reason arg3)
 {
   self = self->beneath;
-  return self->to_remove_breakpoint (self, arg1, arg2);
+  return self->to_remove_breakpoint (self, arg1, arg2, arg3);
 }
 
 static int
-debug_remove_breakpoint (struct target_ops *self, struct gdbarch *arg1, struct bp_target_info *arg2)
+debug_remove_breakpoint (struct target_ops *self, struct gdbarch *arg1, struct bp_target_info *arg2, enum remove_bp_reason arg3)
 {
   int result;
   fprintf_unfiltered (gdb_stdlog, "-> %s->to_remove_breakpoint (...)\n", debug_target.to_shortname);
-  result = debug_target.to_remove_breakpoint (&debug_target, arg1, arg2);
+  result = debug_target.to_remove_breakpoint (&debug_target, arg1, arg2, arg3);
   fprintf_unfiltered (gdb_stdlog, "<- %s->to_remove_breakpoint (", debug_target.to_shortname);
   target_debug_print_struct_target_ops_p (&debug_target);
   fputs_unfiltered (", ", gdb_stdlog);
   target_debug_print_struct_gdbarch_p (arg1);
   fputs_unfiltered (", ", gdb_stdlog);
   target_debug_print_struct_bp_target_info_p (arg2);
+  fputs_unfiltered (", ", gdb_stdlog);
+  target_debug_print_enum_remove_bp_reason (arg3);
   fputs_unfiltered (") = ", gdb_stdlog);
   target_debug_print_int (result);
   fputs_unfiltered ("\n", gdb_stdlog);
@@ -2060,6 +2062,33 @@ debug_xfer_partial (struct target_ops *self, enum target_object arg1, const char
   target_debug_print_ULONGEST_p (arg7);
   fputs_unfiltered (") = ", gdb_stdlog);
   target_debug_print_enum_target_xfer_status (result);
+  fputs_unfiltered ("\n", gdb_stdlog);
+  return result;
+}
+
+static ULONGEST
+delegate_get_memory_xfer_limit (struct target_ops *self)
+{
+  self = self->beneath;
+  return self->to_get_memory_xfer_limit (self);
+}
+
+static ULONGEST
+tdefault_get_memory_xfer_limit (struct target_ops *self)
+{
+  return ULONGEST_MAX;
+}
+
+static ULONGEST
+debug_get_memory_xfer_limit (struct target_ops *self)
+{
+  ULONGEST result;
+  fprintf_unfiltered (gdb_stdlog, "-> %s->to_get_memory_xfer_limit (...)\n", debug_target.to_shortname);
+  result = debug_target.to_get_memory_xfer_limit (&debug_target);
+  fprintf_unfiltered (gdb_stdlog, "<- %s->to_get_memory_xfer_limit (", debug_target.to_shortname);
+  target_debug_print_struct_target_ops_p (&debug_target);
+  fputs_unfiltered (") = ", gdb_stdlog);
+  target_debug_print_ULONGEST (result);
   fputs_unfiltered ("\n", gdb_stdlog);
   return result;
 }
@@ -4223,6 +4252,8 @@ install_delegators (struct target_ops *ops)
     ops->to_get_thread_local_address = delegate_get_thread_local_address;
   if (ops->to_xfer_partial == NULL)
     ops->to_xfer_partial = delegate_xfer_partial;
+  if (ops->to_get_memory_xfer_limit == NULL)
+    ops->to_get_memory_xfer_limit = delegate_get_memory_xfer_limit;
   if (ops->to_memory_map == NULL)
     ops->to_memory_map = delegate_memory_map;
   if (ops->to_flash_erase == NULL)
@@ -4454,6 +4485,7 @@ install_dummy_methods (struct target_ops *ops)
   ops->to_goto_bookmark = tdefault_goto_bookmark;
   ops->to_get_thread_local_address = tdefault_get_thread_local_address;
   ops->to_xfer_partial = tdefault_xfer_partial;
+  ops->to_get_memory_xfer_limit = tdefault_get_memory_xfer_limit;
   ops->to_memory_map = tdefault_memory_map;
   ops->to_flash_erase = tdefault_flash_erase;
   ops->to_flash_done = tdefault_flash_done;
@@ -4610,6 +4642,7 @@ init_debug_target (struct target_ops *ops)
   ops->to_goto_bookmark = debug_goto_bookmark;
   ops->to_get_thread_local_address = debug_get_thread_local_address;
   ops->to_xfer_partial = debug_xfer_partial;
+  ops->to_get_memory_xfer_limit = debug_get_memory_xfer_limit;
   ops->to_memory_map = debug_memory_map;
   ops->to_flash_erase = debug_flash_erase;
   ops->to_flash_done = debug_flash_done;

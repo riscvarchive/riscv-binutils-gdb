@@ -2439,9 +2439,8 @@ class Stub_control
   // the stubbed branches.
   Stub_control(int32_t size, bool no_size_errors)
     : state_(NO_GROUP), stub_group_size_(abs(size)),
-      stub14_group_size_(abs(size) >> 10),
       stubs_always_before_branch_(size < 0),
-      suppress_size_errors_(no_size_errors),
+      suppress_size_errors_(no_size_errors), group_size_(0),
       group_end_addr_(0), owner_(NULL), output_section_(NULL)
   {
   }
@@ -2479,24 +2478,28 @@ class Stub_control
 
   State state_;
   uint32_t stub_group_size_;
-  uint32_t stub14_group_size_;
   bool stubs_always_before_branch_;
   bool suppress_size_errors_;
+  // Current max size of group.  Starts at stub_group_size_ but is
+  // reduced to stub_group_size_/1024 on seeing a section with
+  // external conditional branches.
+  uint32_t group_size_;
   uint64_t group_end_addr_;
+  // owner_ and output_section_ specify the section to which stubs are
+  // attached.  The stubs are placed at the end of this section.
   const Output_section::Input_section* owner_;
   Output_section* output_section_;
 };
 
 // Return true iff input section can be handled by current stub
-// group.
+// group.  Sections are presented to this function in reverse order,
+// so the first section is the tail of the group.
 
 bool
 Stub_control::can_add_to_stub_group(Output_section* o,
 				    const Output_section::Input_section* i,
 				    bool has14)
 {
-  uint32_t group_size
-    = has14 ? this->stub14_group_size_ : this->stub_group_size_;
   bool whole_sec = o->order() == ORDER_INIT || o->order() == ORDER_FINI;
   uint64_t this_size;
   uint64_t start_addr = o->address();
@@ -2510,46 +2513,90 @@ Stub_control::can_add_to_stub_group(Output_section* o,
       start_addr += i->relobj()->output_section_offset(i->shndx());
       this_size = i->data_size();
     }
-  uint64_t end_addr = start_addr + this_size;
-  bool toobig = this_size > group_size;
 
-  if (toobig && !this->suppress_size_errors_)
+  uint32_t group_size = this->stub_group_size_;
+  if (has14)
+    this->group_size_ = group_size = group_size >> 10;
+
+  if (this_size > group_size && !this->suppress_size_errors_)
     gold_warning(_("%s:%s exceeds group size"),
 		 i->relobj()->name().c_str(),
 		 i->relobj()->section_name(i->shndx()).c_str());
 
-  if (this->state_ != HAS_STUB_SECTION
-      && (!whole_sec || this->output_section_ != o)
-      && (this->state_ == NO_GROUP
-	  || this->group_end_addr_ - end_addr < group_size))
-    {
-      this->owner_ = i;
-      this->output_section_ = o;
-    }
+  gold_debug(DEBUG_TARGET, "maybe add%s %s:%s size=%#llx total=%#llx",
+	     has14 ? " 14bit" : "",
+	     i->relobj()->name().c_str(),
+	     i->relobj()->section_name(i->shndx()).c_str(),
+	     (long long) this_size,
+	     (long long) this->group_end_addr_ - start_addr);
 
-  if (this->state_ == NO_GROUP)
+  uint64_t end_addr = start_addr + this_size;
+  if (this->state_ == HAS_STUB_SECTION)
     {
-      this->state_ = FINDING_STUB_SECTION;
-      this->group_end_addr_ = end_addr;
-    }
-  else if (this->group_end_addr_ - start_addr < group_size)
-    ;
-  // Adding this section would make the group larger than GROUP_SIZE.
-  else if (this->state_ == FINDING_STUB_SECTION
-	   && !this->stubs_always_before_branch_
-	   && !toobig)
-    {
-      // But wait, there's more!  Input sections up to GROUP_SIZE
-      // bytes before the stub table can be handled by it too.
-      this->state_ = HAS_STUB_SECTION;
-      this->group_end_addr_ = end_addr;
+      // Can we add this section, which is before the stubs, to the
+      // group?
+      if (this->group_end_addr_ - start_addr <= this->group_size_)
+	return true;
     }
   else
     {
-      this->state_ = NO_GROUP;
-      return false;
+      // Stubs are added at the end of "owner_".
+      // The current section can always be the stub owner, except when
+      // whole_sec is true and the current section isn't the last of
+      // the pasted sections.  (This restriction for the whole_sec
+      // case is just to simplify the corner case mentioned in
+      // group_sections.)
+      // Note that "owner_" itself is not necessarily part of the
+      // group of sections served by these stubs!
+      if (!whole_sec || this->output_section_ != o)
+	{
+	  this->owner_ = i;
+	  this->output_section_ = o;
+	}
+
+      if (this->state_ == FINDING_STUB_SECTION)
+	{
+	  if (this->group_end_addr_ - start_addr <= this->group_size_)
+	    return true;
+	  // The group after the stubs has reached maximum size.
+	  // Now see about adding sections before the stubs to the
+	  // group.  If the current section has a 14-bit branch and
+	  // the group after the stubs exceeds group_size_ (because
+	  // they didn't have 14-bit branches), don't add sections
+	  // before the stubs:  The size of stubs for such a large
+	  // group may exceed the reach of a 14-bit branch.
+	  if (!this->stubs_always_before_branch_
+	      && this_size <= this->group_size_
+	      && this->group_end_addr_ - end_addr <= this->group_size_)
+	    {
+	      gold_debug(DEBUG_TARGET, "adding before stubs");
+	      this->state_ = HAS_STUB_SECTION;
+	      this->group_end_addr_ = end_addr;
+	      return true;
+	    }
+	}
+      else if (this->state_ == NO_GROUP)
+	{
+	  // Only here on very first use of Stub_control
+	  this->state_ = FINDING_STUB_SECTION;
+	  this->group_size_ = group_size;
+	  this->group_end_addr_ = end_addr;
+	  return true;
+	}
+      else
+	gold_unreachable();
     }
-  return true;
+
+  gold_debug(DEBUG_TARGET, "nope, didn't fit\n");
+
+  // The section fails to fit in the current group.  Set up a few
+  // things for the next group.  owner_ and output_section_ will be
+  // set later after we've retrieved those values for the current
+  // group.
+  this->state_ = FINDING_STUB_SECTION;
+  this->group_size_ = group_size;
+  this->group_end_addr_ = end_addr;
+  return false;
 }
 
 // Look over all the input sections, deciding where to place stubs.
@@ -2887,7 +2934,7 @@ Target_powerpc<size, big_endian>::do_relax(int pass,
 	}
       this->stub_tables_.clear();
       this->stub_group_size_ = this->stub_group_size_ / 4 * 3;
-      gold_info(_("%s: stub group size is too large; retrying with %d"),
+      gold_info(_("%s: stub group size is too large; retrying with %#x"),
 		program_name, this->stub_group_size_);
       this->group_sections(layout, task, true);
     }
@@ -2982,7 +3029,13 @@ Target_powerpc<size, big_endian>::do_relax(int pass,
 	      Stub_table<size, big_endian>* stub_table
 		= static_cast<Stub_table<size, big_endian>*>(
 		    i->relaxed_input_section());
-	      off += stub_table->set_address_and_size(os, off);
+	      Address stub_table_size = stub_table->set_address_and_size(os, off);
+	      off += stub_table_size;
+	      // After a few iterations, set current stub table size
+	      // as min size threshold, so later stub tables can only
+	      // grow in size.
+	      if (pass >= 4)
+		stub_table->set_min_size_threshold(stub_table_size);
 	    }
 	  else
 	    off += i->data_size();
@@ -3634,8 +3687,8 @@ class Stub_table : public Output_relaxed_input_section
       targ_(targ), plt_call_stubs_(), long_branch_stubs_(),
       orig_data_size_(owner->current_data_size()),
       plt_size_(0), last_plt_size_(0),
-      branch_size_(0), last_branch_size_(0), eh_frame_added_(false),
-      need_save_res_(false)
+      branch_size_(0), last_branch_size_(0), min_size_threshold_(0),
+      eh_frame_added_(false), need_save_res_(false)
   {
     this->set_output_section(output_section);
 
@@ -3726,6 +3779,11 @@ class Stub_table : public Output_relaxed_input_section
       off = align_address(off, this->stub_align());
     // Include original section size and alignment padding in size
     my_size += off - start_off;
+    // Ensure new size is always larger than min size
+    // threshold. Alignment requirement is included in "my_size", so
+    // increase "my_size" does not invalidate alignment.
+    if (my_size < this->min_size_threshold_)
+      my_size = this->min_size_threshold_;
     this->reset_address_and_file_offset();
     this->set_current_data_size(my_size);
     this->set_address_and_file_offset(os->address() + start_off,
@@ -3750,6 +3808,9 @@ class Stub_table : public Output_relaxed_input_section
   section_size_type
   plt_size() const
   { return this->plt_size_; }
+
+  void set_min_size_threshold(Address min_size)
+  { this->min_size_threshold_ = min_size; }
 
   bool
   size_update()
@@ -4015,6 +4076,13 @@ class Stub_table : public Output_relaxed_input_section
   section_size_type orig_data_size_;
   // size of stubs
   section_size_type plt_size_, last_plt_size_, branch_size_, last_branch_size_;
+  // Some rare cases cause (PR/20529) fluctuation in stub table
+  // size, which leads to an endless relax loop. This is to be fixed
+  // by, after the first few iterations, allowing only increase of
+  // stub table size. This variable sets the minimal possible size of
+  // a stub table, it is zero for the first few iterations, then
+  // increases monotonically.
+  Address min_size_threshold_;
   // Whether .eh_frame info has been created for this stub section.
   bool eh_frame_added_;
   // Set if this stub group needs a copy of out-of-line register

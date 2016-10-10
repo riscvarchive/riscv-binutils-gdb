@@ -39,6 +39,8 @@
 #include "gdb-dlfcn.h"
 #include <sys/stat.h>
 #include "gdb_bfd.h"
+#include "readline/tilde.h"
+#include "completer.h"
 
 static const char *jit_reader_dir = NULL;
 
@@ -51,6 +53,7 @@ static const char *const jit_descriptor_name = "__jit_debug_descriptor";
 static const struct program_space_data *jit_program_space_data = NULL;
 
 static void jit_inferior_init (struct gdbarch *gdbarch);
+static void jit_inferior_exit_hook (struct inferior *inf);
 
 /* An unwinder is registered for every gdbarch.  This key is used to
    remember if the unwinder has been registered for a particular
@@ -207,17 +210,23 @@ jit_reader_load_command (char *args, int from_tty)
 
   if (args == NULL)
     error (_("No reader name provided."));
+  args = tilde_expand (args);
+  prev_cleanup = make_cleanup (xfree, args);
 
   if (loaded_jit_reader != NULL)
     error (_("JIT reader already loaded.  Run jit-reader-unload first."));
 
   if (IS_ABSOLUTE_PATH (args))
-    so_name = xstrdup (args);
+    so_name = args;
   else
-    so_name = xstrprintf ("%s%s%s", jit_reader_dir, SLASH_STRING, args);
-  prev_cleanup = make_cleanup (xfree, so_name);
+    {
+      so_name = xstrprintf ("%s%s%s", jit_reader_dir, SLASH_STRING, args);
+      make_cleanup (xfree, so_name);
+    }
 
   loaded_jit_reader = jit_reader_load (so_name);
+  reinit_frame_cache ();
+  jit_inferior_created_hook ();
   do_cleanups (prev_cleanup);
 }
 
@@ -229,6 +238,8 @@ jit_reader_unload_command (char *args, int from_tty)
   if (!loaded_jit_reader)
     error (_("No JIT reader loaded."));
 
+  reinit_frame_cache ();
+  jit_inferior_exit_hook (current_inferior ());
   loaded_jit_reader->functions->destroy (loaded_jit_reader->functions);
 
   gdb_dlclose (loaded_jit_reader->handle);
@@ -1090,7 +1101,7 @@ struct jit_unwind_private
 {
   /* Cached register values.  See jit_frame_sniffer to see how this
      works.  */
-  struct gdb_reg_value **registers;
+  struct regcache *regcache;
 
   /* The frame being unwound.  */
   struct frame_info *this_frame;
@@ -1115,11 +1126,12 @@ jit_unwind_reg_set_impl (struct gdb_unwind_callbacks *cb, int dwarf_regnum,
         fprintf_unfiltered (gdb_stdlog,
                             _("Could not recognize DWARF regnum %d"),
                             dwarf_regnum);
+      value->free (value);
       return;
     }
 
-  gdb_assert (priv->registers);
-  priv->registers[gdb_reg] = value;
+  regcache_raw_set_cached_value (priv->regcache, gdb_reg, value->value);
+  value->free (value);
 }
 
 static void
@@ -1159,17 +1171,9 @@ static void
 jit_dealloc_cache (struct frame_info *this_frame, void *cache)
 {
   struct jit_unwind_private *priv_data = (struct jit_unwind_private *) cache;
-  struct gdbarch *frame_arch;
-  int i;
 
-  gdb_assert (priv_data->registers);
-  frame_arch = get_frame_arch (priv_data->this_frame);
-
-  for (i = 0; i < gdbarch_num_regs (frame_arch); i++)
-    if (priv_data->registers[i] && priv_data->registers[i]->free)
-      priv_data->registers[i]->free (priv_data->registers[i]);
-
-  xfree (priv_data->registers);
+  gdb_assert (priv_data->regcache != NULL);
+  regcache_xfree (priv_data->regcache);
   xfree (priv_data);
 }
 
@@ -1188,6 +1192,8 @@ jit_frame_sniffer (const struct frame_unwind *self,
   struct jit_unwind_private *priv_data;
   struct gdb_unwind_callbacks callbacks;
   struct gdb_reader_funcs *funcs;
+  struct address_space *aspace;
+  struct gdbarch *gdbarch;
 
   callbacks.reg_get = jit_unwind_reg_get_impl;
   callbacks.reg_set = jit_unwind_reg_set_impl;
@@ -1200,11 +1206,12 @@ jit_frame_sniffer (const struct frame_unwind *self,
 
   gdb_assert (!*cache);
 
+  aspace = get_frame_address_space (this_frame);
+  gdbarch = get_frame_arch (this_frame);
+
   *cache = XCNEW (struct jit_unwind_private);
   priv_data = (struct jit_unwind_private *) *cache;
-  priv_data->registers =
-    XCNEWVEC (struct gdb_reg_value *,	      
-	      gdbarch_num_regs (get_frame_arch (this_frame)));
+  priv_data->regcache = regcache_xmalloc (gdbarch, aspace);
   priv_data->this_frame = this_frame;
 
   callbacks.priv_data = priv_data;
@@ -1240,7 +1247,7 @@ jit_frame_this_id (struct frame_info *this_frame, void **cache,
   struct gdb_reader_funcs *funcs;
   struct gdb_unwind_callbacks callbacks;
 
-  priv.registers = NULL;
+  priv.regcache = NULL;
   priv.this_frame = this_frame;
 
   /* We don't expect the frame_id function to set any registers, so we
@@ -1264,17 +1271,25 @@ static struct value *
 jit_frame_prev_register (struct frame_info *this_frame, void **cache, int reg)
 {
   struct jit_unwind_private *priv = (struct jit_unwind_private *) *cache;
-  struct gdb_reg_value *value;
+  struct gdbarch *gdbarch;
 
   if (priv == NULL)
     return frame_unwind_got_optimized (this_frame, reg);
 
-  gdb_assert (priv->registers);
-  value = priv->registers[reg];
-  if (value && value->defined)
-    return frame_unwind_got_bytes (this_frame, reg, value->value);
+  gdbarch = get_regcache_arch (priv->regcache);
+  if (reg < gdbarch_num_regs (gdbarch))
+    {
+      gdb_byte *buf = (gdb_byte *) alloca (register_size (gdbarch, reg));
+      enum register_status status;
+
+      status = regcache_raw_read (priv->regcache, reg, buf);
+      if (status == REG_VALID)
+	return frame_unwind_got_bytes (this_frame, reg, buf);
+      else
+	return frame_unwind_got_optimized (this_frame, reg);
+    }
   else
-    return frame_unwind_got_optimized (this_frame, reg);
+    return gdbarch_pseudo_register_read_value (gdbarch, priv->regcache, reg);
 }
 
 /* Relay everything back to the unwinder registered by the JIT debug
@@ -1516,15 +1531,21 @@ _initialize_jit (void)
   jit_gdbarch_data = gdbarch_data_register_pre_init (jit_gdbarch_data_init);
   if (is_dl_available ())
     {
-      add_com ("jit-reader-load", no_class, jit_reader_load_command, _("\
+      struct cmd_list_element *c;
+
+      c = add_com ("jit-reader-load", no_class, jit_reader_load_command, _("\
 Load FILE as debug info reader and unwinder for JIT compiled code.\n\
 Usage: jit-reader-load FILE\n\
 Try to load file FILE as a debug info reader (and unwinder) for\n\
 JIT compiled code.  The file is loaded from " JIT_READER_DIR ",\n\
 relocated relative to the GDB executable if required."));
-      add_com ("jit-reader-unload", no_class, jit_reader_unload_command, _("\
+      set_cmd_completer (c, filename_completer);
+
+      c = add_com ("jit-reader-unload", no_class,
+		   jit_reader_unload_command, _("\
 Unload the currently loaded JIT debug info reader.\n\
-Usage: jit-reader-unload FILE\n\n\
+Usage: jit-reader-unload\n\n\
 Do \"help jit-reader-load\" for info on loading debug info readers."));
+      set_cmd_completer (c, noop_completer);
     }
 }

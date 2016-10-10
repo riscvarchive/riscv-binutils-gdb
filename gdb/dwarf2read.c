@@ -4497,12 +4497,12 @@ read_abbrev_offset (struct dwarf2_section_info *section,
 {
   bfd *abfd = get_section_bfd_owner (section);
   const gdb_byte *info_ptr;
-  unsigned int length, initial_length_size, offset_size;
+  unsigned int initial_length_size, offset_size;
   sect_offset abbrev_offset;
 
   dwarf2_read_section (dwarf2_per_objfile->objfile, section);
   info_ptr = section->buffer + offset.sect_off;
-  length = read_initial_length (abfd, info_ptr, &initial_length_size);
+  read_initial_length (abfd, info_ptr, &initial_length_size);
   offset_size = initial_length_size == 4 ? 4 : 8;
   info_ptr += initial_length_size + 2 /*version*/;
   abbrev_offset.sect_off = read_offset_1 (abfd, info_ptr, offset_size);
@@ -6695,6 +6695,9 @@ scan_partial_symbols (struct partial_die_info *first_die, CORE_ADDR *lowpc,
 		{
 		  add_partial_symbol (pdi, cu);
 		}
+	      if (cu->language == language_rust && pdi->has_children)
+		scan_partial_symbols (pdi->die_child, lowpc, highpc,
+				      set_addrmap, cu);
 	      break;
 	    case DW_TAG_enumeration_type:
 	      if (!pdi->is_declaration)
@@ -8732,6 +8735,12 @@ dwarf2_physname (const char *name, struct die_info *die, struct dwarf2_cu *cu)
   mangled = dwarf2_string_attr (die, DW_AT_linkage_name, cu);
   if (mangled == NULL)
     mangled = dwarf2_string_attr (die, DW_AT_MIPS_linkage_name, cu);
+
+  /* rustc emits invalid values for DW_AT_linkage_name.  Ignore these.
+     See https://github.com/rust-lang/rust/issues/32925.  */
+  if (cu->language == language_rust && mangled != NULL
+      && strchr (mangled, '{') != NULL)
+    mangled = NULL;
 
   /* DW_AT_linkage_name is missing in some cases - depend on what GDB
      has computed.  */
@@ -13315,8 +13324,16 @@ process_structure_scope (struct die_info *die, struct dwarf2_cu *cu)
 	    }
 	  else if (child_die->tag == DW_TAG_subprogram)
 	    {
-	      /* C++ member function.  */
-	      dwarf2_add_member_fn (&fi, child_die, type, cu);
+	      /* Rust doesn't have member functions in the C++ sense.
+		 However, it does emit ordinary functions as children
+		 of a struct DIE.  */
+	      if (cu->language == language_rust)
+		read_func_scope (child_die, cu);
+	      else
+		{
+		  /* C++ member function.  */
+		  dwarf2_add_member_fn (&fi, child_die, type, cu);
+		}
 	    }
 	  else if (child_die->tag == DW_TAG_inheritance)
 	    {
@@ -20800,6 +20817,7 @@ decode_locdesc (struct dwarf_block *blk, struct dwarf2_cu *cu)
 	  break;
 
         case DW_OP_GNU_push_tls_address:
+	case DW_OP_form_tls_address:
 	  /* The top of the stack has the offset from the beginning
 	     of the thread control block at which the variable is located.  */
 	  /* Nothing should follow this operator, so the top of stack would
@@ -21578,9 +21596,10 @@ dwarf_decode_macro_bytes (bfd *abfd,
 	  if (!section_is_gnu)
 	    {
 	      unsigned int bytes_read;
-	      int constant;
 
-	      constant = read_unsigned_leb128 (abfd, mac_ptr, &bytes_read);
+	      /* This reads the constant, but since we don't recognize
+		 any vendor extensions, we ignore it.  */
+	      read_unsigned_leb128 (abfd, mac_ptr, &bytes_read);
 	      mac_ptr += bytes_read;
 	      read_direct_string (abfd, mac_ptr, &bytes_read);
 	      mac_ptr += bytes_read;

@@ -81,12 +81,14 @@ fn main () {
     let i = ["whatever"; 8];
 
     let j = Unit;
+    let j2 = Unit{};
 
     let k = SpaceSaver::Nothing;
     let l = SpaceSaver::Thebox(9, Box::new(1729));
 
     let v = Something::Three;
     let w = [1,2,3,4];
+    let w_ptr = &w[0];
     let x = (23, 25.5);
     let y = HiBob {field1: 7, field2: 8};
     let z = ByeBob(7, 8);

@@ -972,6 +972,8 @@ static const arch_entry cpu_arch[] =
     CPU_OSPKE_FLAGS, 0 },
   { STRING_COMMA_LEN (".rdpid"), PROCESSOR_UNKNOWN,
     CPU_RDPID_FLAGS, 0 },
+  { STRING_COMMA_LEN (".ptwrite"), PROCESSOR_UNKNOWN,
+    CPU_PTWRITE_FLAGS, 0 },
 };
 
 static const noarch_entry cpu_noarch[] =
@@ -5670,7 +5672,7 @@ check_qword_reg (void)
     /* Warn if the r prefix on a general reg is missing.  */
     else if ((i.types[op].bitfield.reg16
 	      || i.types[op].bitfield.reg32)
-	     && (i.tm.operand_types[op].bitfield.reg32
+	     && (i.tm.operand_types[op].bitfield.reg64
 		 || i.tm.operand_types[op].bitfield.acc))
       {
 	/* Prohibit these changes in the 64bit mode, since the

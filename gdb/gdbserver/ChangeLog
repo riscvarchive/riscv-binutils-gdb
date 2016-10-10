@@ -1,3 +1,248 @@
+2016-09-05  Pedro Alves  <palves@redhat.com>
+
+	* Makefile.in (COMPILER, COMPILER_CFLAGS): Remove.
+	(COMPILE.pre, CC_LD): Use CXX directly.
+	(INTERNAL_CFLAGS_BASE): Use CXXFLAGS directly.
+	* acinclude.m4: Don't include build-with-cxx.m4.
+	* configure.ac: Remove GDB_AC_BUILD_WITH_CXX call.
+	* configure: Regenerate.
+
+2016-09-02  Akash Trehan  <akash.trehan123@gmail.com>
+
+	PR gdb/19495
+	* remote-utils.c (relocate_instruction): Remove redundant strcpy()
+	call writing data to own_buf.
+
+2016-09-01  Sergio Durigan Junior  <sergiodj@redhat.com>
+
+	* target.c (mywait): Call target_wait instead of
+	the_target->wait.
+	(target_wait): New function.
+
+2016-09-01  Sergio Durigan Junior  <sergiodj@redhat.com>
+
+	* server.c (start_inferior): New variable 'ptid'.  Replace calls
+	to the_target->resume by target_continue{,_no_signal}, depending
+	on the case.
+	* target.c (target_stop_and_wait): Call target_continue_no_signal
+	instead of the_target->resume.
+	(target_continue): New function.
+
+2016-08-31  Antoine Tremblay  <antoine.tremblay@ericsson.com>
+
+	* linux-low.c (linux_wait_1): Move event switch after unsuspend_lwps.
+
+2016-08-25  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	PR server/20491
+	* gdb_proc_service.h (ps_get_thread_area): Remove const from struct
+	ps_prochandle.
+	* linux-aarch64-low.c (ps_get_thread_area): Likewise.
+	* linux-arm-low.c (ps_get_thread_area): Likewise.
+	* linux-crisv32-low.c (ps_get_thread_area): Likewise.
+	* linux-m68k-low.c (ps_get_thread_area): Likewise.
+	* linux-mips-low.c (ps_get_thread_area): Likewise.
+	* linux-nios2-low.c (ps_get_thread_area): Likewise.
+	* linux-tic6x-low.c (ps_get_thread_area): Likewise.
+	* linux-x86-low.c (ps_get_thread_area): Likewise.
+	* linux-xtensa-low.c (ps_get_thread_area): Likewise.
+
+2016-08-19  Pedro Alves  <palves@redhat.com>
+
+	* linux-x86-low.c (amd64_emit_call): Emit missing call opcode.
+
+2016-08-19  Pedro Alves  <palves@redhat.com>
+
+	* linux-x86-low.c (amd64_install_fast_tracepoint_jump_pad): Fix
+	comment.  Use memcpy instead of casting through unsigned long.
+
+2016-08-19  Pedro Alves  <palves@redhat.com>
+
+	* linux-amd64-ipa.c (alloc_jump_pad_buffer) [__ILP32__]: Try
+	allocating around 0x80000000.
+
+2016-08-19  Pedro Alves  <palves@redhat.com>
+
+	PR gdb/20415
+	* Makefile.in (x32-linux-ipa.o, x32-avx-linux-ipa.o)
+	(x32-avx512-linux-ipa.o): New rules.
+	* configure.ac (x86_64-*-linux*): New x32 check.
+	* configure.srv (ipa_x32_linux_regobj): New.
+	(x86_64-*-linux*): Use $ipa_x32_linux_regobj if building for x32.
+	* linux-amd64-ipa.c (get_ipa_tdesc) [__ILP32__]: Return x32
+	descriptions.
+	(initialize_low_tracepoint) [__ILP32__]: Initialize x32
+	descriptions.
+	* configure: Regenerate.
+
+2016-08-09  Pedro Alves  <palves@redhat.com>
+
+	PR gdb/18653
+	* Makefile.in (OBS): Add signals-state-save-restore.o.
+	(signals-state-save-restore.o): New rule.
+	* config.in: Regenerate.
+	* configure: Regenerate.
+	* linux-low.c: Include "signals-state-save-restore.h".
+	(linux_create_inferior): Call
+	restore_original_signals_state.
+	* server.c: Include "dispositions-save-restore.h".
+	(captured_main): Call save_original_signals_state.
+
+2016-08-05  Pedro Alves  <palves@redhat.com>
+
+	* configure: Regenerate.
+
+2016-08-04  Yao Qi  <yao.qi@linaro.org>
+
+	* linux-low.c (regsets_fetch_inferior_registers): Check
+	errno is ESRCH or not.
+
+2016-08-02  Yao Qi  <yao.qi@linaro.org>
+
+	* thread-db.c (struct thread_db) <td_ta_event_getmsg_p>: Remove.
+	<td_ta_set_event_p, td_ta_event_addr_p>: Remove.
+	(thread_db_load_search): Update.
+	(try_thread_db_load_1): Don't look for td_ta_event_addr,
+	td_ta_set_event and td_ta_event_getmsg.
+
+2016-07-26  Pedro Alves  <palves@redhat.com>
+
+	PR server/20414
+	* linux-x86-low.c (x86_get_pc, x86_set_pc): Use uint64_t instead
+	of unsigned long for 64-bit registers and use uint32_t instead of
+	unsigned int for 32-bit registers.
+
+2016-07-26  Pedro Alves  <palves@redhat.com>
+
+	* linux-x86-low.c (x86_siginfo_fixup): Rename 'native' parameter
+	to 'ptrace'.
+
+2016-07-21  Tom Tromey  <tom@tromey.com>
+
+	* configure: Rebuild.
+
+2016-07-21  Yao Qi  <yao.qi@linaro.org>
+
+	* mem-break.c (find_gdb_breakpoint): Cast bp to
+	'struct gdb_breakpoint *' rather than 'gdb_breakpoint *'.
+
+2016-07-21  Yao Qi  <yao.qi@linaro.org>
+
+	* server.c (handle_v_requests): Support s and S actions
+	if target_supports_software_single_step return true.
+
+2016-07-21  Yao Qi  <yao.qi@linaro.org>
+
+	* linux-low.c (resume_stopped_resumed_lwps): If resume request
+	is resume_step, call maybe_hw_step.
+	(linux_wait_1): Stop all threads, remove reinsert breakpoints,
+	and unstop them.
+	(linux_resume_one_lwp_throw): Don't assert the thread has reinsert
+	breakpoints or not.
+	(proceed_one_lwp): If resume request is resume_step, install
+	reinsert breakpoints and call maybe_hw_step.
+
+2016-07-21  Yao Qi  <yao.qi@linaro.org>
+
+	* linux-low.c (proceed_one_lwp): Declare.
+	(linux_resume_one_thread): Remove local variable 'step'.
+	Lift code enqueue signal.  Call proceed_one_lwp instead of
+	linux_resume_one_lwp.
+
+2016-07-21  Yao Qi  <yao.qi@linaro.org>
+
+	* linux-low.c (linux_resume_one_thread): Call
+	enqueue_pending_signal.
+
+2016-07-21  Yao Qi  <yao.qi@linaro.org>
+
+	* gdbthread.h (make_cleanup_restore_current_thread): Declare.
+	* inferiors.c (do_restore_current_thread_cleanup): New function.
+	(make_cleanup_restore_current_thread): Likewise.
+	* linux-low.c (install_software_single_step_breakpoints): Call
+	make_cleanup_restore_current_thread.  Switch current_thread to
+	thread.
+
+2016-07-21  Yao Qi  <yao.qi@linaro.org>
+
+	* mem-break.c (struct reinsert_breakpoint) <ptid>: New field.
+	(set_reinsert_breakpoint): New parameter ptid.  Callers updated.
+	(clone_one_breakpoint): Likewise.
+	(delete_reinsert_breakpoints): Change parameter to thread.
+	Callers updated.
+	(has_reinsert_breakpoints): Likewise.
+	(uninsert_reinsert_breakpoints): Likewise.
+	(reinsert_reinsert_breakpoints): Likewise.
+	* mem-break.h (set_reinsert_breakpoint): Update declaration.
+	(delete_reinsert_breakpoints): Likewise.
+	(reinsert_reinsert_breakpoints): Likewise.
+	(uninsert_reinsert_breakpoints): Likewise.
+	(has_reinsert_breakpoints): Likewise.
+
+2016-07-21  Yao Qi  <yao.qi@linaro.org>
+
+	* inferiors.c (get_thread_process): Make parameter const.
+	* inferiors.h (get_thread_process): Update declaration.
+	* mem-break.c (clone_all_breakpoints): Remove all parameters.
+	Add new parameters child_thread and parent_thread.  Callers
+	updated.
+	* mem-break.h (clone_all_breakpoints): Update declaration.
+
+2016-07-21  Yao Qi  <yao.qi@linaro.org>
+
+	* mem-break.c (struct breakpoint) <cond_list>: Remove.
+	<command_list, handler>: Remove.
+	(struct gdb_breakpoint): New.
+	(struct other_breakpoint): New.
+	(struct reinsert_breakpoint): New.
+	(is_gdb_breakpoint): New function.
+	(any_persistent_commands): Update command_list if
+	is_gdb_breakpoint returns true.
+	(set_breakpoint): Create breakpoints according to their types.
+	(find_gdb_breakpoint): Return 'struct gdb_breakpoint *'.
+	(set_gdb_breakpoint_1): Likewise.
+	(set_gdb_breakpoint): Likewise.
+	(clear_breakpoint_conditions): Change parameter type to
+	'struct gdb_breakpoint *'.
+	(clear_breakpoint_commands): Likewise.
+	(clear_breakpoint_conditions_and_commands): Likewise.
+	(add_condition_to_breakpoint): Likewise.
+	(add_breakpoint_condition): Likewise.
+	(add_commands_to_breakpoint): Likewise.
+	(check_breakpoints): Check other_breakpoint.
+	(clone_one_breakpoint): Clone breakpopint according to its type.
+	* mem-break.h (struct gdb_breakpoint): Declare.
+	(set_gdb_breakpoint): Update declaration.
+	(clear_breakpoint_conditions_and_commands): Likewise.
+	(add_breakpoint_condition): Likewise.
+	(add_breakpoint_commands): Likewise.
+	* server.c (process_point_options): Change parameter type to
+	'struct gdb_breakpoint *'.
+
+2016-07-21  Yao Qi  <yao.qi@linaro.org>
+
+	* mem-break.c (set_breakpoint_at): Rename it to ...
+	(set_breakpoint_type_at): ... it.
+	(set_breakpoint_at): Call set_breakpoint_type_at.
+	(set_reinsert_breakpoint): Call set_breakpoint_type_at.
+	* mem-break.h (set_breakpoint_at): Update comments.
+
+2016-07-12  Chung-Lin Tang  <cltang@codesourcery.com>
+
+	* linux-nios2-low.c (nios2_fill_gregset): Add type cast
+	to buf parameter.
+	(nios2_store_gregset): Likewise.
+
+2016-07-01  Pedro Alves  <palves@redhat.com>
+	    Antoine Tremblay  <antoine.tremblay@ericsson.com>
+
+	* linux-low.c: Change interface to take the target lwp_info
+	pointer directly and return void.  Handle detaching from a zombie
+	thread.
+	(linux_detach_lwp_callback): New function.
+	(linux_detach): Detach from the leader thread after detaching from
+	the clone threads.
+
 2016-06-28  Yao Qi  <yao.qi@linaro.org>
 
 	* linux-aarch64-low.c (aarch64_ftrace_insn_reloc_b): Use int64_t

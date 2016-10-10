@@ -151,7 +151,11 @@ void
 set_inferior_io_terminal (const char *terminal_name)
 {
   xfree (current_inferior ()->terminal);
-  current_inferior ()->terminal = terminal_name ? xstrdup (terminal_name) : 0;
+
+  if (terminal_name != NULL && *terminal_name != '\0')
+    current_inferior ()->terminal = xstrdup (terminal_name);
+  else
+    current_inferior ()->terminal = NULL;
 }
 
 const char *
@@ -2998,6 +3002,13 @@ detach_command (char *args, int from_tty)
 
   target_detach (args, from_tty);
 
+  /* The current inferior process was just detached successfully.  Get
+     rid of breakpoints that no longer make sense.  Note we don't do
+     this within target_detach because that is also used when
+     following child forks, and in that case we will want to transfer
+     breakpoints to the child, not delete them.  */
+  breakpoint_init_inferior (inf_exited);
+
   /* If the solist is global across inferiors, don't clear it when we
      detach from a single inferior.  */
   if (!gdbarch_has_global_solist (target_gdbarch ()))
@@ -3217,14 +3228,16 @@ _initialize_infcmd (void)
   const char *cmd_name;
 
   /* Add the filename of the terminal connected to inferior I/O.  */
-  add_setshow_filename_cmd ("inferior-tty", class_run,
-			    &inferior_io_terminal_scratch, _("\
+  add_setshow_optional_filename_cmd ("inferior-tty", class_run,
+				     &inferior_io_terminal_scratch, _("\
 Set terminal for future runs of program being debugged."), _("\
 Show terminal for future runs of program being debugged."), _("\
-Usage: set inferior-tty /dev/pts/1"),
-			    set_inferior_tty_command,
-			    show_inferior_tty_command,
-			    &setlist, &showlist);
+Usage: set inferior-tty [TTY]\n\n\
+If TTY is omitted, the default behavior of using the same terminal as GDB\n\
+is restored."),
+				     set_inferior_tty_command,
+				     show_inferior_tty_command,
+				     &setlist, &showlist);
   add_com_alias ("tty", "set inferior-tty", class_alias, 0);
 
   cmd_name = "args";

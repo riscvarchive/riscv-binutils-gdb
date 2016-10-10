@@ -322,10 +322,11 @@ aarch64_analyze_prologue (struct gdbarch *gdbarch,
 			 is64 ? 8 : 4, regs[rt]);
 	}
       else if ((inst.opcode->iclass == ldstpair_off
-		|| inst.opcode->iclass == ldstpair_indexed)
-	       && inst.operands[2].addr.preind
+		|| (inst.opcode->iclass == ldstpair_indexed
+		    && inst.operands[2].addr.preind))
 	       && strcmp ("stp", inst.opcode->name) == 0)
 	{
+	  /* STP with addressing mode Pre-indexed and Base register.  */
 	  unsigned rt1 = inst.operands[0].reg.regno;
 	  unsigned rt2 = inst.operands[1].reg.regno;
 	  unsigned rn = inst.operands[2].addr.base_regno;
@@ -2981,11 +2982,10 @@ aarch64_record_data_proc_reg (insn_decode_record *aarch64_insn_r)
 static unsigned int
 aarch64_record_data_proc_imm (insn_decode_record *aarch64_insn_r)
 {
-  uint8_t reg_rd, insn_bit28, insn_bit23, insn_bits24_27, setflags;
+  uint8_t reg_rd, insn_bit23, insn_bits24_27, setflags;
   uint32_t record_buf[4];
 
   reg_rd = bits (aarch64_insn_r->aarch64_insn, 0, 4);
-  insn_bit28 = bit (aarch64_insn_r->aarch64_insn, 28);
   insn_bit23 = bit (aarch64_insn_r->aarch64_insn, 23);
   insn_bits24_27 = bits (aarch64_insn_r->aarch64_insn, 24, 27);
 

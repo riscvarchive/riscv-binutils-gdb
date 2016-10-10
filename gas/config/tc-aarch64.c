@@ -1736,12 +1736,12 @@ s_ltorg (int ignored ATTRIBUTE_UNUSED)
       if (pool == NULL || pool->symbol == NULL || pool->next_free_entry == 0)
 	continue;
 
-      mapping_state (MAP_DATA);
-
       /* Align pool as you have word accesses.
          Only make a frag if we have to.  */
       if (!need_pass_2)
 	frag_align (align, 0, 0);
+
+      mapping_state (MAP_DATA);
 
       record_alignment (now_seg, align);
 
@@ -2240,7 +2240,7 @@ parse_aarch64_imm_float (char **ccp, int *immed, bfd_boolean dp_p)
 	}
     }
 
-  if (aarch64_imm_float_p (fpword) || (fpword & 0x7fffffff) == 0)
+  if (aarch64_imm_float_p (fpword) || fpword == 0)
     {
       *immed = fpword;
       *ccp = str;
@@ -6080,7 +6080,7 @@ md_assemble (char *str)
 	{
 	  /* Check that this instruction is supported for this CPU.  */
 	  if (!opcode->avariant
-	      || !AARCH64_CPU_HAS_FEATURE (cpu_variant, *opcode->avariant))
+	      || !AARCH64_CPU_HAS_ALL_FEATURES (cpu_variant, *opcode->avariant))
 	    {
 	      as_bad (_("selected processor does not support `%s'"), str);
 	      return;
@@ -6373,10 +6373,14 @@ aarch64_init_frag (fragS * fragP, int max_chars)
 
   switch (fragP->fr_type)
     {
-    case rs_align:
     case rs_align_test:
     case rs_fill:
       mapping_state_2 (MAP_DATA, max_chars);
+      break;
+    case rs_align:
+      /* PR 20364: We can get alignment frags in code sections,
+	 so do not just assume that we should use the MAP_DATA state.  */
+      mapping_state_2 (subseg_text_p (now_seg) ? MAP_INSN : MAP_DATA, max_chars);
       break;
     case rs_align_code:
       mapping_state_2 (MAP_INSN, max_chars);
@@ -7801,23 +7805,33 @@ struct aarch64_option_cpu_value_table
 {
   const char *name;
   const aarch64_feature_set value;
+  const aarch64_feature_set require; /* Feature dependencies.  */
 };
 
 static const struct aarch64_option_cpu_value_table aarch64_features[] = {
-  {"crc",		AARCH64_FEATURE (AARCH64_FEATURE_CRC, 0)},
-  {"crypto",		AARCH64_FEATURE (AARCH64_FEATURE_CRYPTO, 0)},
-  {"fp",		AARCH64_FEATURE (AARCH64_FEATURE_FP, 0)},
-  {"lse",		AARCH64_FEATURE (AARCH64_FEATURE_LSE, 0)},
-  {"simd",		AARCH64_FEATURE (AARCH64_FEATURE_SIMD, 0)},
-  {"pan",		AARCH64_FEATURE (AARCH64_FEATURE_PAN, 0)},
-  {"lor",		AARCH64_FEATURE (AARCH64_FEATURE_LOR, 0)},
-  {"ras",		AARCH64_FEATURE (AARCH64_FEATURE_RAS, 0)},
-  {"rdma",		AARCH64_FEATURE (AARCH64_FEATURE_SIMD
-					 | AARCH64_FEATURE_RDMA, 0)},
-  {"fp16",		AARCH64_FEATURE (AARCH64_FEATURE_F16
-					 | AARCH64_FEATURE_FP, 0)},
-  {"profile",		AARCH64_FEATURE (AARCH64_FEATURE_PROFILE, 0)},
-  {NULL,		AARCH64_ARCH_NONE}
+  {"crc",		AARCH64_FEATURE (AARCH64_FEATURE_CRC, 0),
+			AARCH64_ARCH_NONE},
+  {"crypto",		AARCH64_FEATURE (AARCH64_FEATURE_CRYPTO, 0),
+			AARCH64_ARCH_NONE},
+  {"fp",		AARCH64_FEATURE (AARCH64_FEATURE_FP, 0),
+			AARCH64_ARCH_NONE},
+  {"lse",		AARCH64_FEATURE (AARCH64_FEATURE_LSE, 0),
+			AARCH64_ARCH_NONE},
+  {"simd",		AARCH64_FEATURE (AARCH64_FEATURE_SIMD, 0),
+			AARCH64_ARCH_NONE},
+  {"pan",		AARCH64_FEATURE (AARCH64_FEATURE_PAN, 0),
+			AARCH64_ARCH_NONE},
+  {"lor",		AARCH64_FEATURE (AARCH64_FEATURE_LOR, 0),
+			AARCH64_ARCH_NONE},
+  {"ras",		AARCH64_FEATURE (AARCH64_FEATURE_RAS, 0),
+			AARCH64_ARCH_NONE},
+  {"rdma",		AARCH64_FEATURE (AARCH64_FEATURE_RDMA, 0),
+			AARCH64_FEATURE (AARCH64_FEATURE_SIMD, 0)},
+  {"fp16",		AARCH64_FEATURE (AARCH64_FEATURE_F16, 0),
+			AARCH64_FEATURE (AARCH64_FEATURE_FP, 0)},
+  {"profile",		AARCH64_FEATURE (AARCH64_FEATURE_PROFILE, 0),
+			AARCH64_ARCH_NONE},
+  {NULL,		AARCH64_ARCH_NONE, AARCH64_ARCH_NONE},
 };
 
 struct aarch64_long_option_table
@@ -7827,6 +7841,38 @@ struct aarch64_long_option_table
   int (*func) (const char *subopt);	/* Function to decode sub-option.  */
   char *deprecated;		/* If non-null, print this message.  */
 };
+
+/* Transitive closure of features depending on set.  */
+static aarch64_feature_set
+aarch64_feature_disable_set (aarch64_feature_set set)
+{
+  const struct aarch64_option_cpu_value_table *opt;
+  aarch64_feature_set prev = 0;
+
+  while (prev != set) {
+    prev = set;
+    for (opt = aarch64_features; opt->name != NULL; opt++)
+      if (AARCH64_CPU_HAS_ANY_FEATURES (opt->require, set))
+        AARCH64_MERGE_FEATURE_SETS (set, set, opt->value);
+  }
+  return set;
+}
+
+/* Transitive closure of dependencies of set.  */
+static aarch64_feature_set
+aarch64_feature_enable_set (aarch64_feature_set set)
+{
+  const struct aarch64_option_cpu_value_table *opt;
+  aarch64_feature_set prev = 0;
+
+  while (prev != set) {
+    prev = set;
+    for (opt = aarch64_features; opt->name != NULL; opt++)
+      if (AARCH64_CPU_HAS_FEATURE (set, opt->value))
+        AARCH64_MERGE_FEATURE_SETS (set, set, opt->require);
+  }
+  return set;
+}
 
 static int
 aarch64_parse_features (const char *str, const aarch64_feature_set **opt_p,
@@ -7895,11 +7941,19 @@ aarch64_parse_features (const char *str, const aarch64_feature_set **opt_p,
       for (opt = aarch64_features; opt->name != NULL; opt++)
 	if (strncmp (opt->name, str, optlen) == 0)
 	  {
+	    aarch64_feature_set set;
+
 	    /* Add or remove the extension.  */
 	    if (adding_value)
-	      AARCH64_MERGE_FEATURE_SETS (*ext_set, *ext_set, opt->value);
+	      {
+		set = aarch64_feature_enable_set (opt->value);
+		AARCH64_MERGE_FEATURE_SETS (*ext_set, *ext_set, set);
+	      }
 	    else
-	      AARCH64_CLEAR_FEATURE (*ext_set, *ext_set, opt->value);
+	      {
+		set = aarch64_feature_disable_set (opt->value);
+		AARCH64_CLEAR_FEATURE (*ext_set, *ext_set, set);
+	      }
 	    break;
 	  }
 

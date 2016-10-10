@@ -3848,6 +3848,7 @@ check_curr_ui_sync_execution_done (void)
     {
       target_terminal_ours ();
       observer_notify_sync_execution_done ();
+      ui_register_input_event_handler (ui);
     }
 }
 
@@ -9409,6 +9410,8 @@ leave it stopped or free to run as needed."),
   signal_print[GDB_SIGNAL_WAITING] = 0;
   signal_stop[GDB_SIGNAL_CANCEL] = 0;
   signal_print[GDB_SIGNAL_CANCEL] = 0;
+  signal_stop[GDB_SIGNAL_LIBRT] = 0;
+  signal_print[GDB_SIGNAL_LIBRT] = 0;
 
   /* Update cached state.  */
   signal_cache_update (-1);

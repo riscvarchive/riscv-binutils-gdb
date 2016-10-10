@@ -834,6 +834,14 @@ _bfd_elf_setup_sections (bfd *abfd)
 	      elf_linked_to_section (s) = linksec;
 	    }
 	}
+      else if (this_hdr->sh_type == SHT_GROUP
+	       && elf_next_in_group (s) == NULL)
+	{
+	  (*_bfd_error_handler)
+	    (_("%B: SHT_GROUP section [index %d] has no SHF_GROUP sections"),
+	     abfd, elf_section_data (s)->this_idx);
+	  result = FALSE;
+	}
     }
 
   /* Process section groups.  */
@@ -3093,7 +3101,7 @@ elf_fake_sections (bfd *abfd, asection *asect, void *fsarg)
 	     compressed.  */
 	  asect->flags |= SEC_ELF_COMPRESS;
 
-	  /* If this section will be compressed, delay adding setion
+	  /* If this section will be compressed, delay adding section
 	     name to section name section after it is compressed in
 	     _bfd_elf_assign_file_positions_for_non_load.  */
 	  delay_st_name_p = TRUE;
@@ -3403,12 +3411,19 @@ bfd_elf_set_group_contents (bfd *abfd, asection *sec, void *failedptrarg)
       /* The ELF backend linker sets sh_info to -2 when the group
 	 signature symbol is global, and thus the index can't be
 	 set until all local symbols are output.  */
-      asection *igroup = elf_sec_group (elf_next_in_group (sec));
-      struct bfd_elf_section_data *sec_data = elf_section_data (igroup);
-      unsigned long symndx = sec_data->this_hdr.sh_info;
-      unsigned long extsymoff = 0;
+      asection *igroup;
+      struct bfd_elf_section_data *sec_data;
+      unsigned long symndx;
+      unsigned long extsymoff;
       struct elf_link_hash_entry *h;
 
+      /* The point of this little dance to the first SHF_GROUP section
+	 then back to the SHT_GROUP section is that this gets us to
+	 the SHT_GROUP in the input object.  */
+      igroup = elf_sec_group (elf_next_in_group (sec));
+      sec_data = elf_section_data (igroup);
+      symndx = sec_data->this_hdr.sh_info;
+      extsymoff = 0;
       if (!elf_bad_symtab (igroup->owner))
 	{
 	  Elf_Internal_Shdr *symtab_hdr;
@@ -3595,10 +3610,6 @@ assign_section_numbers (bfd *abfd, struct bfd_link_info *link_info)
 	d->rela.idx = 0;
     }
 
-  elf_shstrtab_sec (abfd) = section_number++;
-  _bfd_elf_strtab_addref (elf_shstrtab (abfd), t->shstrtab_hdr.sh_name);
-  elf_elfheader (abfd)->e_shstrndx = elf_shstrtab_sec (abfd);
-
   need_symtab = (bfd_get_symcount (abfd) > 0
 		|| (link_info == NULL
 		    && ((abfd->flags & (EXEC_P | DYNAMIC | HAS_RELOC))
@@ -3625,6 +3636,10 @@ assign_section_numbers (bfd *abfd, struct bfd_link_info *link_info)
       elf_strtab_sec (abfd) = section_number++;
       _bfd_elf_strtab_addref (elf_shstrtab (abfd), t->strtab_hdr.sh_name);
     }
+
+  elf_shstrtab_sec (abfd) = section_number++;
+  _bfd_elf_strtab_addref (elf_shstrtab (abfd), t->shstrtab_hdr.sh_name);
+  elf_elfheader (abfd)->e_shstrndx = elf_shstrtab_sec (abfd);
 
   if (section_number >= SHN_LORESERVE)
     {
@@ -3868,6 +3883,44 @@ sym_is_global (bfd *abfd, asymbol *sym)
   return ((sym->flags & (BSF_GLOBAL | BSF_WEAK | BSF_GNU_UNIQUE)) != 0
 	  || bfd_is_und_section (bfd_get_section (sym))
 	  || bfd_is_com_section (bfd_get_section (sym)));
+}
+
+/* Filter global symbols of ABFD to include in the import library.  All
+   SYMCOUNT symbols of ABFD can be examined from their pointers in
+   SYMS.  Pointers of symbols to keep should be stored contiguously at
+   the beginning of that array.
+
+   Returns the number of symbols to keep.  */
+
+unsigned int
+_bfd_elf_filter_global_symbols (bfd *abfd, struct bfd_link_info *info,
+				asymbol **syms, long symcount)
+{
+  long src_count, dst_count = 0;
+
+  for (src_count = 0; src_count < symcount; src_count++)
+    {
+      asymbol *sym = syms[src_count];
+      char *name = (char *) bfd_asymbol_name (sym);
+      struct bfd_link_hash_entry *h;
+
+      if (!sym_is_global (abfd, sym))
+	continue;
+
+      h = bfd_link_hash_lookup (info->hash, name, FALSE, FALSE, FALSE);
+      if (h == NULL)
+	continue;
+      if (h->type != bfd_link_hash_defined && h->type != bfd_link_hash_defweak)
+	continue;
+      if (h->linker_def || h->ldscript_def)
+	continue;
+
+      syms[dst_count++] = sym;
+    }
+
+  syms[dst_count] = NULL;
+
+  return dst_count;
 }
 
 /* Don't output section symbols for sections that are not going to be
@@ -5234,7 +5287,9 @@ assign_file_positions_for_load_sections (bfd *abfd,
 	  p->p_memsz = bed->s->sizeof_ehdr;
 	  if (m->count > 0)
 	    {
-	      if (p->p_vaddr < (bfd_vma) off)
+	      if (p->p_vaddr < (bfd_vma) off
+		  || (!m->p_paddr_valid
+		      && p->p_paddr < (bfd_vma) off))
 		{
 		  (*_bfd_error_handler)
 		    (_("%B: Not enough room for program headers, try linking with -N"),
@@ -5988,7 +6043,7 @@ _bfd_elf_assign_file_positions_for_non_load (bfd *abfd)
 			return FALSE;
 		      name = new_name;
 		    }
-		  /* Add setion name to section name section.  */
+		  /* Add section name to section name section.  */
 		  if (shdrp->sh_name != (unsigned int) -1)
 		    abort ();
 		  shdrp->sh_name
@@ -5996,7 +6051,7 @@ _bfd_elf_assign_file_positions_for_non_load (bfd *abfd)
 							  name, FALSE);
 		  d = elf_section_data (sec);
 
-		  /* Add reloc setion name to section name section.  */
+		  /* Add reloc section name to section name section.  */
 		  if (d->rel.hdr
 		      && !_bfd_elf_set_reloc_sh_name (abfd,
 						      d->rel.hdr,
@@ -7604,7 +7659,9 @@ error_return:
 		     section of a symbol to be a section that is
 		     actually in the output file.  */
 		  sec2 = bfd_get_section_by_name (abfd, sec->name);
-		  if (sec2 == NULL)
+		  if (sec2 != NULL)
+		    shndx = _bfd_elf_section_from_bfd_section (abfd, sec2);
+		  if (shndx == SHN_BAD)
 		    {
 		      _bfd_error_handler (_("\
 Unable to find equivalent output section for symbol '%s' from section '%s'"),
@@ -7613,9 +7670,6 @@ Unable to find equivalent output section for symbol '%s' from section '%s'"),
 		      bfd_set_error (bfd_error_invalid_operation);
 		      goto error_return;
 		    }
-
-		  shndx = _bfd_elf_section_from_bfd_section (abfd, sec2);
-		  BFD_ASSERT (shndx != SHN_BAD);
 		}
 	    }
 
@@ -9551,25 +9605,34 @@ elfcore_grok_freebsd_psinfo (bfd *abfd, Elf_Internal_Note *note)
 {
   size_t offset;
 
-  /* Check for version 1 in pr_version. */
+  switch (abfd->arch_info->bits_per_word)
+    {
+    case 32:
+      if (note->descsz < 108)
+	return FALSE;
+      break;
+
+    case 64:
+      if (note->descsz < 120)
+	return FALSE;
+      break;
+
+    default:
+      return FALSE;
+    }
+
+  /* Check for version 1 in pr_version.  */
   if (bfd_h_get_32 (abfd, (bfd_byte *) note->descdata) != 1)
     return FALSE;
   offset = 4;
 
   /* Skip over pr_psinfosz. */
-  switch (abfd->arch_info->bits_per_word)
+  if (abfd->arch_info->bits_per_word == 32)
+    offset += 4;
+  else
     {
-    case 32:
-      offset += 4;
-      break;
-
-    case 64:
       offset += 4;	/* Padding before pr_psinfosz. */
       offset += 8;
-      break;
-
-    default:
-      return FALSE;
     }
 
   /* pr_fname is PRFNAMESZ (16) + 1 bytes in size.  */
@@ -9580,6 +9643,17 @@ elfcore_grok_freebsd_psinfo (bfd *abfd, Elf_Internal_Note *note)
   /* pr_psargs is PRARGSZ (80) + 1 bytes in size.  */
   elf_tdata (abfd)->core->command
     = _bfd_elfcore_strndup (abfd, note->descdata + offset, 81);
+  offset += 81;
+
+  /* Padding before pr_pid.  */
+  offset += 2;
+
+  /* The pr_pid field was added in version "1a".  */
+  if (note->descsz < offset + 4)
+    return TRUE;
+
+  elf_tdata (abfd)->core->pid
+    = bfd_h_get_32 (abfd, (bfd_byte *) note->descdata + offset);
 
   return TRUE;
 }

@@ -194,15 +194,8 @@ static void commands_command (char *, int);
 
 static void condition_command (char *, int);
 
-typedef enum
-  {
-    mark_inserted,
-    mark_uninserted
-  }
-insertion_state_t;
-
-static int remove_breakpoint (struct bp_location *, insertion_state_t);
-static int remove_breakpoint_1 (struct bp_location *, insertion_state_t);
+static int remove_breakpoint (struct bp_location *);
+static int remove_breakpoint_1 (struct bp_location *, enum remove_bp_reason);
 
 static enum print_stop_action print_bp_stop_message (bpstat bs);
 
@@ -3189,7 +3182,7 @@ insert_breakpoint_locations (void)
 	{
 	  for (loc = bpt->loc; loc; loc = loc->next)
 	    if (loc->inserted)
-	      remove_breakpoint (loc, mark_uninserted);
+	      remove_breakpoint (loc);
 
 	  hw_breakpoint_error = 1;
 	  fprintf_unfiltered (tmp_error_stream,
@@ -3229,7 +3222,7 @@ remove_breakpoints (void)
   ALL_BP_LOCATIONS (bl, blp_tmp)
   {
     if (bl->inserted && !is_tracepoint (bl->owner))
-      val |= remove_breakpoint (bl, mark_uninserted);
+      val |= remove_breakpoint (bl);
   }
   return val;
 }
@@ -3274,7 +3267,7 @@ remove_breakpoints_pid (int pid)
 
     if (bl->inserted && !bl->target_info.persist)
       {
-	val = remove_breakpoint (bl, mark_uninserted);
+	val = remove_breakpoint (bl);
 	if (val != 0)
 	  return val;
       }
@@ -3929,7 +3922,7 @@ detach_breakpoints (ptid_t ptid)
       continue;
 
     if (bl->inserted)
-      val |= remove_breakpoint_1 (bl, mark_inserted);
+      val |= remove_breakpoint_1 (bl, DETACH_BREAKPOINT);
   }
 
   do_cleanups (old_chain);
@@ -3943,7 +3936,7 @@ detach_breakpoints (ptid_t ptid)
    *not* look at bl->pspace->aspace here.  */
 
 static int
-remove_breakpoint_1 (struct bp_location *bl, insertion_state_t is)
+remove_breakpoint_1 (struct bp_location *bl, enum remove_bp_reason reason)
 {
   int val;
 
@@ -3991,7 +3984,7 @@ remove_breakpoint_1 (struct bp_location *bl, insertion_state_t is)
 	      && !memory_validate_breakpoint (bl->gdbarch, &bl->target_info))
 	    val = 0;
 	  else
-	    val = bl->owner->ops->remove_location (bl);
+	    val = bl->owner->ops->remove_location (bl, reason);
 	}
       else
 	{
@@ -4009,7 +4002,8 @@ remove_breakpoint_1 (struct bp_location *bl, insertion_state_t is)
 					       &bl->overlay_target_info);
 		else
 		  target_remove_breakpoint (bl->gdbarch,
-					    &bl->overlay_target_info);
+					    &bl->overlay_target_info,
+					    reason);
 	      }
 	  /* Did we set a breakpoint at the VMA? 
 	     If so, we will have marked the breakpoint 'inserted'.  */
@@ -4025,7 +4019,7 @@ remove_breakpoint_1 (struct bp_location *bl, insertion_state_t is)
 		 wrong code with the saved shadow contents.  */
 	      if (bl->loc_type == bp_loc_hardware_breakpoint
 		  || section_is_mapped (bl->section))
-		val = bl->owner->ops->remove_location (bl);
+		val = bl->owner->ops->remove_location (bl, reason);
 	      else
 		val = 0;
 	    }
@@ -4055,18 +4049,18 @@ remove_breakpoint_1 (struct bp_location *bl, insertion_state_t is)
 
       if (val)
 	return val;
-      bl->inserted = (is == mark_inserted);
+      bl->inserted = (reason == DETACH_BREAKPOINT);
     }
   else if (bl->loc_type == bp_loc_hardware_watchpoint)
     {
       gdb_assert (bl->owner->ops != NULL
 		  && bl->owner->ops->remove_location != NULL);
 
-      bl->inserted = (is == mark_inserted);
-      bl->owner->ops->remove_location (bl);
+      bl->inserted = (reason == DETACH_BREAKPOINT);
+      bl->owner->ops->remove_location (bl, reason);
 
       /* Failure to remove any of the hardware watchpoints comes here.  */
-      if ((is == mark_uninserted) && (bl->inserted))
+      if (reason == REMOVE_BREAKPOINT && bl->inserted)
 	warning (_("Could not remove hardware watchpoint %d."),
 		 bl->owner->number);
     }
@@ -4077,18 +4071,18 @@ remove_breakpoint_1 (struct bp_location *bl, insertion_state_t is)
       gdb_assert (bl->owner->ops != NULL
 		  && bl->owner->ops->remove_location != NULL);
 
-      val = bl->owner->ops->remove_location (bl);
+      val = bl->owner->ops->remove_location (bl, reason);
       if (val)
 	return val;
 
-      bl->inserted = (is == mark_inserted);
+      bl->inserted = (reason == DETACH_BREAKPOINT);
     }
 
   return 0;
 }
 
 static int
-remove_breakpoint (struct bp_location *bl, insertion_state_t is)
+remove_breakpoint (struct bp_location *bl)
 {
   int ret;
   struct cleanup *old_chain;
@@ -4104,7 +4098,7 @@ remove_breakpoint (struct bp_location *bl, insertion_state_t is)
 
   switch_to_program_space_and_thread (bl->pspace);
 
-  ret = remove_breakpoint_1 (bl, is);
+  ret = remove_breakpoint_1 (bl, REMOVE_BREAKPOINT);
 
   do_cleanups (old_chain);
   return ret;
@@ -4204,15 +4198,25 @@ breakpoint_init_inferior (enum inf_context context)
 	  /* Likewise for watchpoints on local expressions.  */
 	  if (w->exp_valid_block != NULL)
 	    delete_breakpoint (b);
-	  else if (context == inf_starting)
+	  else
 	    {
-	      /* Reset val field to force reread of starting value in
-		 insert_breakpoints.  */
-	      if (w->val)
-		value_free (w->val);
-	      w->val = NULL;
-	      w->val_valid = 0;
-	  }
+	      /* Get rid of existing locations, which are no longer
+		 valid.  New ones will be created in
+		 update_watchpoint, when the inferior is restarted.
+		 The next update_global_location_list call will
+		 garbage collect them.  */
+	      b->loc = NULL;
+
+	      if (context == inf_starting)
+		{
+		  /* Reset val field to force reread of starting value in
+		     insert_breakpoints.  */
+		  if (w->val)
+		    value_free (w->val);
+		  w->val = NULL;
+		  w->val_valid = 0;
+		}
+	    }
 	}
 	break;
       default:
@@ -6805,6 +6809,14 @@ user_breakpoint_p (struct breakpoint *b)
   return b->number > 0;
 }
 
+/* See breakpoint.h.  */
+
+int
+pending_breakpoint_p (struct breakpoint *b)
+{
+  return b->loc == NULL;
+}
+
 /* Print information on user settable breakpoint (watchpoint, etc)
    number BNUM.  If BNUM is -1 print all user-settable breakpoints.
    If ALLFLAG is non-zero, include non-user-settable breakpoints.  If
@@ -8097,7 +8109,7 @@ insert_catch_fork (struct bp_location *bl)
    catchpoints.  */
 
 static int
-remove_catch_fork (struct bp_location *bl)
+remove_catch_fork (struct bp_location *bl, enum remove_bp_reason reason)
 {
   return target_remove_fork_catchpoint (ptid_get_pid (inferior_ptid));
 }
@@ -8215,7 +8227,7 @@ insert_catch_vfork (struct bp_location *bl)
    catchpoints.  */
 
 static int
-remove_catch_vfork (struct bp_location *bl)
+remove_catch_vfork (struct bp_location *bl, enum remove_bp_reason reason)
 {
   return target_remove_vfork_catchpoint (ptid_get_pid (inferior_ptid));
 }
@@ -8358,7 +8370,7 @@ insert_catch_solib (struct bp_location *ignore)
 }
 
 static int
-remove_catch_solib (struct bp_location *ignore)
+remove_catch_solib (struct bp_location *ignore, enum remove_bp_reason reason)
 {
   return 0;
 }
@@ -8688,7 +8700,7 @@ insert_catch_exec (struct bp_location *bl)
 }
 
 static int
-remove_catch_exec (struct bp_location *bl)
+remove_catch_exec (struct bp_location *bl, enum remove_bp_reason reason)
 {
   return target_remove_exec_catchpoint (ptid_get_pid (inferior_ptid));
 }
@@ -10697,7 +10709,7 @@ insert_watchpoint (struct bp_location *bl)
 /* Implement the "remove" breakpoint_ops method for hardware watchpoints.  */
 
 static int
-remove_watchpoint (struct bp_location *bl)
+remove_watchpoint (struct bp_location *bl, enum remove_bp_reason reason)
 {
   struct watchpoint *w = (struct watchpoint *) bl->owner;
   int length = w->exact ? 1 : bl->length;
@@ -10952,7 +10964,7 @@ insert_masked_watchpoint (struct bp_location *bl)
    masked hardware watchpoints.  */
 
 static int
-remove_masked_watchpoint (struct bp_location *bl)
+remove_masked_watchpoint (struct bp_location *bl, enum remove_bp_reason reason)
 {
   struct watchpoint *w = (struct watchpoint *) bl->owner;
 
@@ -12591,7 +12603,7 @@ update_global_location_list (enum ugll_insert_mode insert_mode)
 
 	  if (!keep_in_target)
 	    {
-	      if (remove_breakpoint (old_loc, mark_uninserted))
+	      if (remove_breakpoint (old_loc))
 		{
 		  /* This is just about all we can do.  We could keep
 		     this location on the global list, and try to
@@ -12948,7 +12960,8 @@ base_breakpoint_insert_location (struct bp_location *bl)
 }
 
 static int
-base_breakpoint_remove_location (struct bp_location *bl)
+base_breakpoint_remove_location (struct bp_location *bl,
+				 enum remove_bp_reason reason)
 {
   internal_error_pure_virtual_called ();
 }
@@ -13110,12 +13123,12 @@ bkpt_insert_location (struct bp_location *bl)
 }
 
 static int
-bkpt_remove_location (struct bp_location *bl)
+bkpt_remove_location (struct bp_location *bl, enum remove_bp_reason reason)
 {
   if (bl->loc_type == bp_loc_hardware_breakpoint)
     return target_remove_hw_breakpoint (bl->gdbarch, &bl->target_info);
   else
-    return target_remove_breakpoint (bl->gdbarch, &bl->target_info);
+    return target_remove_breakpoint (bl->gdbarch, &bl->target_info, reason);
 }
 
 static int
@@ -13458,7 +13471,8 @@ bkpt_probe_insert_location (struct bp_location *bl)
 }
 
 static int
-bkpt_probe_remove_location (struct bp_location *bl)
+bkpt_probe_remove_location (struct bp_location *bl,
+			    enum remove_bp_reason reason)
 {
   /* Let's clear the semaphore before removing the location.  */
   if (bl->probe.probe->pops->clear_semaphore != NULL)
@@ -13466,7 +13480,7 @@ bkpt_probe_remove_location (struct bp_location *bl)
 					    bl->probe.objfile,
 					    bl->gdbarch);
 
-  return bkpt_remove_location (bl);
+  return bkpt_remove_location (bl, reason);
 }
 
 static void

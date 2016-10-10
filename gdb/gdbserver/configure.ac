@@ -40,9 +40,6 @@ AC_ARG_PROGRAM
 
 AC_HEADER_STDC
 
-# See if we are building with C++, and substitute COMPILER.
-GDB_AC_BUILD_WITH_CXX
-
 # Set the 'development' global.
 . $srcdir/../../bfd/development.sh
 
@@ -218,6 +215,20 @@ got it
                     [gdb_cv_i386_is_x86_64=no])
                     CPPFLAGS="$save_CPPFLAGS"])
     ;;
+
+  x86_64-*-linux*)
+    AC_CACHE_CHECK([if building for x32], [gdb_cv_x86_is_x32],
+		   [save_CPPFLAGS="$CPPFLAGS"
+		    CPPFLAGS="$CPPFLAGS $CFLAGS"
+		    AC_EGREP_CPP([got it], [
+#if __x86_64__ && __ILP32__
+got it
+#endif
+		 ], [gdb_cv_x86_is_x32=yes],
+		    [gdb_cv_x86_is_x32=no])
+		    CPPFLAGS="$save_CPPFLAGS"])
+    ;;
+
   m68k-*-*)
     AC_CACHE_CHECK([if building for Coldfire], [gdb_cv_m68k_is_coldfire],
       	           [save_CPPFLAGS="$CPPFLAGS"

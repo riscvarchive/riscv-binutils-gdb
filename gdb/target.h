@@ -478,7 +478,8 @@ struct target_ops
 				 struct bp_target_info *)
       TARGET_DEFAULT_FUNC (memory_insert_breakpoint);
     int (*to_remove_breakpoint) (struct target_ops *, struct gdbarch *,
-				 struct bp_target_info *)
+				 struct bp_target_info *,
+				 enum remove_bp_reason)
       TARGET_DEFAULT_FUNC (memory_remove_breakpoint);
 
     /* Returns true if the target stopped because it executed a
@@ -744,6 +745,12 @@ struct target_ops
 						ULONGEST offset, ULONGEST len,
 						ULONGEST *xfered_len)
       TARGET_DEFAULT_RETURN (TARGET_XFER_E_IO);
+
+    /* Return the limit on the size of any single memory transfer
+       for the target.  */
+
+    ULONGEST (*to_get_memory_xfer_limit) (struct target_ops *)
+      TARGET_DEFAULT_RETURN (ULONGEST_MAX);
 
     /* Returns the memory map for the target.  A return value of NULL
        means that no memory map is available.  If a memory address
@@ -1302,6 +1309,11 @@ extern struct target_ops *find_run_target (void);
 #define target_post_attach(pid) \
      (*current_target.to_post_attach) (&current_target, pid)
 
+/* Display a message indicating we're about to detach from the current
+   inferior process.  */
+
+extern void target_announce_detach (int from_tty);
+
 /* Takes a program previously attached to and detaches it.
    The program may resume execution (some targets do, some don't) and will
    no longer stop on signals, etc.  We better not have left any breakpoints
@@ -1329,17 +1341,7 @@ extern void target_disconnect (const char *, int);
 
 extern void target_resume (ptid_t ptid, int step, enum gdb_signal signal);
 
-/* Wait for process pid to do something.  PTID = -1 to wait for any
-   pid to do something.  Return pid of child, or -1 in case of error;
-   store status through argument pointer STATUS.  Note that it is
-   _NOT_ OK to throw_exception() out of target_wait() without popping
-   the debugging target from the stack; GDB isn't prepared to get back
-   to the prompt with a debugging target but without the frame cache,
-   stop_pc, etc., set up.  OPTIONS is a bitwise OR of TARGET_W*
-   options.  */
-
-extern ptid_t target_wait (ptid_t ptid, struct target_waitstatus *status,
-			   int options);
+/* For target_read_memory see target/target.h.  */
 
 /* The default target_ops::to_wait implementation.  */
 
@@ -1496,7 +1498,8 @@ extern int target_insert_breakpoint (struct gdbarch *gdbarch,
    machine.  Result is 0 for success, non-zero for error.  */
 
 extern int target_remove_breakpoint (struct gdbarch *gdbarch,
-				     struct bp_target_info *bp_tgt);
+				     struct bp_target_info *bp_tgt,
+				     enum remove_bp_reason reason);
 
 /* Returns true if the terminal settings of the inferior are in
    effect.  */
@@ -1512,21 +1515,23 @@ extern int target_terminal_is_ours (void);
 
 extern void target_terminal_init (void);
 
-/* Put the inferior's terminal settings into effect.
-   This is preparation for starting or resuming the inferior.  */
+/* Put the inferior's terminal settings into effect.  This is
+   preparation for starting or resuming the inferior.  This is a no-op
+   unless called with the main UI as current UI.  */
 
 extern void target_terminal_inferior (void);
 
 /* Put some of our terminal settings into effect, enough to get proper
    results from our output, but do not change into or out of RAW mode
    so that no input is discarded.  This is a no-op if terminal_ours
-   was most recently called.  */
+   was most recently called.  This is a no-op unless called with the main
+   UI as current UI.  */
 
 extern void target_terminal_ours_for_output (void);
 
-/* Put our terminal settings into effect.
-   First record the inferior's terminal settings
-   so they can be restored properly later.  */
+/* Put our terminal settings into effect.  First record the inferior's
+   terminal settings so they can be restored properly later.  This is
+   a no-op unless called with the main UI as current UI.  */
 
 extern void target_terminal_ours (void);
 
@@ -2360,7 +2365,8 @@ extern struct target_section_table *target_get_section_table
 /* From mem-break.c */
 
 extern int memory_remove_breakpoint (struct target_ops *, struct gdbarch *,
-				     struct bp_target_info *);
+				     struct bp_target_info *,
+				     enum remove_bp_reason);
 
 extern int memory_insert_breakpoint (struct target_ops *, struct gdbarch *,
 				     struct bp_target_info *);

@@ -1,14 +1,33 @@
-2016-08-03  Tristan Gingold  <gingold@adacore.com>
+2016-08-30  Nick Clifton  <nickc@redhat.com>
 
-	* configure: Regenerate.
+	PR gprof/20499
+	* corefile.c (num_of_syms_in): Return an unsigned int.
+	Fail if the count exceeds the maximum possible allocatable size.
+	(core_create_syms_from): Exit early if num_of_syms_in returns a
+	failure code.
 
-2016-07-01  Tristan Gingold  <gingold@adacore.com>
+2016-08-23  Nick Clifton  <nickc@redhat.com>
 
-	* configure: Regenerate.
+	PR gprof/20499
+	* corefile.c (BUFSIZE): Define.
+	(STR_BUFSIZE): Define.
+	(read_function_mappings): Use BUFSIZE and STR)BUFSIZE.
+	(num_of_syms_in): Move buf, address and name arrays out of
+	function and declare as static BUFSIZE arrays.
+	Use STR_BUFSIZE when scanning for name and address.
+	(core_create_syms_from): Revert previous delta.  Instead
+	short circuit the parsing of a symbol if all three fields
+	could not be found.
 
-2016-07-01  Tristan Gingold  <gingold@adacore.com>
+2016-08-22  Nick Clifton  <nickc@redhat.com>
 
-	* configure: Regenerate.
+	PR gprof/20499
+	* corefile.c (core_create_syms_from): Avoid walking off the end of
+	the symbol table.
+
+2016-07-21  H.J. Lu  <hongjiu.lu@intel.com>
+
+	* configure: Regenerated.
 
 2016-04-20  Trevor Saunders  <tbsaunde+binutils@tbsaunde.org>
 

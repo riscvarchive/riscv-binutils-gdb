@@ -49,11 +49,6 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
 RANLIB = @RANLIB@
 
-# The name of the compiler to use.
-COMPILER = @COMPILER@
-# Set to CFLAGS or CXXFLAGS, depending on compiler/language.
-COMPILER_CFLAGS = @COMPILER_CFLAGS@
-
 CC = @CC@
 CXX = @CXX@
 AR = @AR@
@@ -66,7 +61,7 @@ depcomp = $(SHELL) $(srcdir)/../depcomp
 
 # Note that these are overridden by GNU make-specific code below if
 # GNU make is used.  The overrides implement dependency tracking.
-COMPILE.pre = $(COMPILER)
+COMPILE.pre = $(CXX)
 COMPILE.post = -c -o $@
 COMPILE = $(COMPILE.pre) $(INTERNAL_CFLAGS) $(COMPILE.post)
 POSTCOMPILE = @true
@@ -84,8 +79,8 @@ VPATH = @srcdir@
 
 # Set this up with gcc if you have gnu ld and the loader will print out
 # line numbers for undefinded refs.
-#CC_LD=gcc -static
-CC_LD=$(COMPILER)
+#CC_LD=g++ -static
+CC_LD=$(CXX)
 
 # Where is the "include" directory?  Traditionally ../include or ./include
 INCLUDE_DIR =  ${srcdir}/../../include
@@ -138,7 +133,7 @@ CXXFLAGS = @CXXFLAGS@
 CPPFLAGS = @CPPFLAGS@
 
 # INTERNAL_CFLAGS is the aggregate of all other *CFLAGS macros.
-INTERNAL_CFLAGS_BASE =  ${COMPILER_CFLAGS} ${GLOBAL_CFLAGS} \
+INTERNAL_CFLAGS_BASE =  ${CXXFLAGS} ${GLOBAL_CFLAGS} \
 	${PROFILE_CFLAGS} ${INCLUDE_CFLAGS} ${CPPFLAGS}
 INTERNAL_WARN_CFLAGS =  ${INTERNAL_CFLAGS_BASE} $(WARN_CFLAGS)
 INTERNAL_CFLAGS =  ${INTERNAL_WARN_CFLAGS} $(WERROR_CFLAGS) -DGDBSERVER
@@ -200,6 +195,7 @@ OBS = agent.o ax.o inferiors.o regcache.o remote-utils.o server.o signals.o \
       common-utils.o ptid.o buffer.o format.o filestuff.o dll.o notif.o \
       tdesc.o print-utils.o rsp-low.o errors.o common-debug.o cleanups.o \
       common-exceptions.o symbol.o btrace-common.o fileio.o common-regcache.o \
+      signals-state-save-restore.o \
       $(XML_BUILTIN) $(DEPFILES) $(LIBOBJS)
 GDBREPLAY_OBS = gdbreplay.o version.o
 GDBSERVER_LIBS = @GDBSERVER_LIBS@
@@ -647,6 +643,15 @@ rsp-low-ipa.o: ../common/rsp-low.c
 errors-ipa.o: ../common/errors.c
 	$(IPAGENT_COMPILE) $<
 	$(POSTCOMPILE)
+x32-linux-ipa.o: x32-linux.c
+	$(IPAGENT_COMPILE) $<
+	$(POSTCOMPILE)
+x32-avx-linux-ipa.o: x32-avx-linux.c
+	$(IPAGENT_COMPILE) $<
+	$(POSTCOMPILE)
+x32-avx512-linux-ipa.o: x32-avx512-linux.c
+	$(IPAGENT_COMPILE) $<
+	$(POSTCOMPILE)
 
 ax.o: ax.c
 	$(COMPILE) $(WARN_CFLAGS_NO_FORMAT) $<
@@ -713,6 +718,9 @@ fileio.o: ../common/fileio.c
 	$(COMPILE) $<
 	$(POSTCOMPILE)
 common-regcache.o: ../common/common-regcache.c
+	$(COMPILE) $<
+	$(POSTCOMPILE)
+signals-state-save-restore.o: ../common/signals-state-save-restore.c
 	$(COMPILE) $<
 	$(POSTCOMPILE)
 

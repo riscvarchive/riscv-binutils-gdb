@@ -330,6 +330,7 @@ extern void print_mips_disassembler_options (FILE *);
 extern void print_ppc_disassembler_options (FILE *);
 extern void print_riscv_disassembler_options (FILE *);
 extern void print_arm_disassembler_options (FILE *);
+extern void print_arc_disassembler_options (FILE *);
 extern void parse_arm_disassembler_option (char *);
 extern void print_s390_disassembler_options (FILE *);
 extern int  get_arm_regname_num_options (void);
