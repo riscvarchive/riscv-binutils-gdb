@@ -58,9 +58,6 @@ extern const char *riscv_target_format (void);
 #define md_after_parse_args() riscv_after_parse_args()
 extern void riscv_after_parse_args (void);
 
-#define tc_init_after_args() riscv_init_after_args()
-extern void riscv_init_after_args (void);
-
 #define md_parse_long_option(arg) riscv_parse_long_option (arg)
 extern int riscv_parse_long_option (const char *);
 

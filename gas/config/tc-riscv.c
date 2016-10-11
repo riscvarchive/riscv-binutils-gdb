@@ -618,7 +618,7 @@ md_begin (void)
 
   op_hash = hash_new ();
 
-  for (i = 0; i < NUMOPCODES;)
+  while (riscv_opcodes[i].name)
     {
       const char *name = riscv_opcodes[i].name;
       const char *hash_error =
@@ -641,7 +641,7 @@ md_begin (void)
 	    }
 	  ++i;
 	}
-      while ((i < NUMOPCODES) && !strcmp (riscv_opcodes[i].name, name));
+      while (riscv_opcodes[i].name && !strcmp (riscv_opcodes[i].name, name));
     }
 
   reg_names_hash = hash_new ();
@@ -1191,7 +1191,7 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
   char *s;
   const char *args;
   char c = 0;
-  struct riscv_opcode *insn, *end = &riscv_opcodes[NUMOPCODES];
+  struct riscv_opcode *insn;
   char *argsStart;
   unsigned int regno;
   char save_c = 0;
@@ -1212,7 +1212,7 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
   insn = (struct riscv_opcode *) hash_find (op_hash, str);
 
   argsStart = s;
-  for ( ; insn && insn < end && strcmp (insn->name, str) == 0; insn++)
+  for ( ; insn && insn->name && strcmp (insn->name, str) == 0; insn++)
     {
       if (!riscv_subset_supports (insn->subset))
 	continue;
@@ -1881,14 +1881,6 @@ riscv_after_parse_args (void)
     elf_flags &= ~EF_RISCV_SOFT_FLOAT;
     break;
   }
-}
-
-void
-riscv_init_after_args (void)
-{
-  /* initialize opcodes */
-  bfd_riscv_num_opcodes = bfd_riscv_num_builtin_opcodes;
-  riscv_opcodes = (struct riscv_opcode *) riscv_builtin_opcodes;
 }
 
 long

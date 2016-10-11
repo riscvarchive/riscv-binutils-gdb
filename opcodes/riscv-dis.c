@@ -384,7 +384,7 @@ riscv_disassemble_insn (bfd_vma memaddr, insn_t word, disassemble_info *info)
   /* Build a hash table to shorten the search time.  */
   if (! init)
     {
-      for (op = riscv_opcodes; op < &riscv_opcodes[NUMOPCODES]; op++)
+      for (op = riscv_opcodes; op->name; op++)
 	if (!riscv_hash[OP_HASH_IDX (op->match)])
 	  riscv_hash[OP_HASH_IDX (op->match)] = op;
 
@@ -432,7 +432,7 @@ riscv_disassemble_insn (bfd_vma memaddr, insn_t word, disassemble_info *info)
 	  xlen = ehdr->e_ident[EI_CLASS] == ELFCLASS64 ? 64 : 32;
 	}
 
-      for (; op < &riscv_opcodes[NUMOPCODES]; op++)
+      for (; op->name; op++)
 	{
 	  /* Does the opcode match?  */
 	  if (! (op->match_func) (op, word))

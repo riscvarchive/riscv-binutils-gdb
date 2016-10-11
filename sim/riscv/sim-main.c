@@ -996,7 +996,7 @@ void step_once (SIM_CPU *cpu)
   if (!op)
     sim_engine_halt (sd, cpu, NULL, pc, sim_signalled, SIM_SIGILL);
 
-  for (; op < &riscv_opcodes[NUMOPCODES]; op++)
+  for (; op->name; op++)
     if ((op->match_func) (op, iw) && !(op->pinfo & INSN_ALIAS))
       {
 	pc = execute_one (cpu, iw, op);
@@ -1104,7 +1104,7 @@ void initialize_cpu (SIM_DESC sd, SIM_CPU *cpu, int mhartid)
     {
       const struct riscv_opcode *op;
 
-      for (op = riscv_opcodes; op < &riscv_opcodes[NUMOPCODES]; op++)
+      for (op = riscv_opcodes; op->name; op++)
 	if (!riscv_hash[OP_HASH_IDX (op->match)])
 	  riscv_hash[OP_HASH_IDX (op->match)] = op;
     }
