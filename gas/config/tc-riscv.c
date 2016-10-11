@@ -54,7 +54,6 @@ struct riscv_cl_insn
   fixS *fixp;
 };
 
-/* The default architecture.  */
 #ifndef DEFAULT_ARCH
 #define DEFAULT_ARCH "riscv64"
 #endif
@@ -216,11 +215,15 @@ riscv_set_arch (const char *arg)
     }
 
   if (rvc)
-    /* Override -m[no-]rvc setting if C was explicitly listed.  */
-    riscv_set_rvc (TRUE);
+    {
+      /* Override -m[no-]rvc setting if C was explicitly listed.  */
+      riscv_set_rvc (TRUE);
+    }
   else
-    /* Add RVC anyway.  -m[no-]rvc toggles its availability.  */
-    riscv_add_subset ("C");
+    {
+      /* Add RVC anyway.  -m[no-]rvc toggles its availability.  */
+      riscv_add_subset ("C");
+    }
 
   free (uppercase);
 }
@@ -411,7 +414,8 @@ enum reg_class {
 
 static struct hash_control *reg_names_hash = NULL;
 
-#define ENCODE_REG_HASH(cls, n) (void *)(uintptr_t)((n) * RCLASS_MAX + (cls) + 1)
+#define ENCODE_REG_HASH(cls, n) \
+  ((void *)(uintptr_t)((n) * RCLASS_MAX + (cls) + 1))
 #define DECODE_REG_CLASS(hash) (((uintptr_t)(hash) - 1) % RCLASS_MAX)
 #define DECODE_REG_NUM(hash) (((uintptr_t)(hash) - 1) / RCLASS_MAX)
 
@@ -585,7 +589,8 @@ validate_riscv_insn (const struct riscv_opcode *opc)
       case ']': break;
       case '0': break;
       default:
-	as_bad (_("internal: bad RISC-V opcode (unknown operand type `%c'): %s %s"),
+	as_bad (_("internal: bad RISC-V opcode "
+		  "(unknown operand type `%c'): %s %s"),
 		c, opc->name, opc->args);
 	return 0;
       }
@@ -748,7 +753,8 @@ macro_build (expressionS *ep, const char *name, const char *fmt, ...)
   mo = (struct riscv_opcode *) hash_find (op_hash, name);
   gas_assert (mo);
 
-  /* Find a non-RVC variant of the instruction.  */
+  /* Find a non-RVC variant of the instruction.  append_insn will compress
+     it if possible.  */
   while (riscv_insn_length (mo->match) < 4)
     mo++;
   gas_assert (strcmp (name, mo->name) == 0);
@@ -809,7 +815,7 @@ normalize_constant_expr (expressionS *ex)
 			- 0x80000000);
 }
 
-/* Warn if an expression is not a constant.  */
+/* Fail if an expression is not a constant.  */
 
 static void
 check_absolute_expr (struct riscv_cl_insn *ip, expressionS *ex)
@@ -888,8 +894,7 @@ load_const (int reg, expressionS *ep)
 
   if (xlen > 32 && !IS_SEXT_32BIT_NUM(ep->X_add_number))
     {
-      /* Reduce to a signed 32-bit constant using SLLI and ADDI, which
-	 is not optimal but also not so bad.  */
+      /* Reduce to a signed 32-bit constant using SLLI and ADDI.  */
       while (((upper.X_add_number >> shift) & 1) == 0)
 	shift++;
 
@@ -902,6 +907,7 @@ load_const (int reg, expressionS *ep)
     }
   else
     {
+      /* Simply emit LUI and/or ADDI to build a 32-bit signed constant.  */
       int hi_reg = 0;
 
       if (upper.X_add_number != 0)
@@ -936,7 +942,7 @@ macro (struct riscv_cl_insn *ip, expressionS *imm_expr,
     case M_LLA:
       /* Load the address of a symbol into a register.  */
       if (!IS_SEXT_32BIT_NUM (imm_expr->X_add_number))
-	as_bad(_("offset too large"));
+	as_bad (_("offset too large"));
 
       if (imm_expr->X_op == O_constant)
 	load_const (rd, imm_expr);

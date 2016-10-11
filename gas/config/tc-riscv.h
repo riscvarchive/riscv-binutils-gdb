@@ -75,6 +75,8 @@ extern int riscv_parse_long_option (const char *);
 #define EXTERN_FORCE_RELOC			\
   (OUTPUT_FLAVOR == bfd_target_elf_flavour)
 
+/* Postpone text-section label subtraction calculation until linking, since
+   linker relaxations might change the deltas.  */
 #define TC_FORCE_RELOCATION_SUB_SAME(FIX, SEG) ((SEG)->flags & SEC_CODE)
 #define TC_FORCE_RELOCATION_SUB_LOCAL(FIX, SEG) 1
 #define TC_VALIDATE_FIX_SUB(FIX, SEG) 1
