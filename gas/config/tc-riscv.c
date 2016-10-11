@@ -611,7 +611,6 @@ struct percent_op_match
 void
 md_begin (void)
 {
-  const char *retval = NULL;
   int i = 0;
 
   if (! bfd_set_arch_mach (stdoutput, bfd_arch_riscv, 0))
@@ -622,16 +621,17 @@ md_begin (void)
   for (i = 0; i < NUMOPCODES;)
     {
       const char *name = riscv_opcodes[i].name;
+      const char *hash_error =
+	hash_insert (op_hash, name, (void *) &riscv_opcodes[i]);
 
-      retval = hash_insert (op_hash, name, (void *) &riscv_opcodes[i]);
-
-      if (retval != NULL)
+      if (hash_error)
 	{
 	  fprintf (stderr, _("internal error: can't hash `%s': %s\n"),
-		   riscv_opcodes[i].name, retval);
+		   riscv_opcodes[i].name, hash_error);
 	  /* Probably a memory allocation problem?  Give up now.  */
 	  as_fatal (_("Broken assembler.  No assembly attempted."));
 	}
+
       do
 	{
 	  if (riscv_opcodes[i].pinfo != INSN_MACRO)
