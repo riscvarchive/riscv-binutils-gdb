@@ -91,8 +91,6 @@ riscv_set_rvc (bfd_boolean rvc_value)
 struct riscv_subset
 {
   const char *name;
-  int version_major;
-  int version_minor;
 
   struct riscv_subset *next;
 };
@@ -111,8 +109,6 @@ riscv_subset_supports (const char *feature)
 
   for (s = riscv_subsets; s != NULL; s = s->next)
     if (strcasecmp (s->name, p) == 0)
-      /* FIXME: once we support version numbers:
-	 return major == s->version_major && minor <= s->version_minor; */
       return TRUE;
 
   return FALSE;
@@ -123,8 +119,6 @@ riscv_add_subset (const char *subset)
 {
   struct riscv_subset *s = xmalloc (sizeof *s);
   s->name = xstrdup (subset);
-  s->version_major = 2;
-  s->version_minor = 0;
   s->next = riscv_subsets;
   riscv_subsets = s;
 }
