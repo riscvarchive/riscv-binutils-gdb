@@ -1421,16 +1421,16 @@ rvc_lui:
 		      || imm_expr->X_add_number <= 0
 		      || imm_expr->X_add_number >= RISCV_BIGIMM_REACH
 		      || (imm_expr->X_add_number >= RISCV_RVC_IMM_REACH / 2
-			  && imm_expr->X_add_number <
-			      RISCV_BIGIMM_REACH - RISCV_RVC_IMM_REACH / 2))
+			  && (imm_expr->X_add_number <
+			      RISCV_BIGIMM_REACH - RISCV_RVC_IMM_REACH / 2)))
 		    break;
 		  ip->insn_opcode |= ENCODE_RVC_IMM (imm_expr->X_add_number);
 		  goto rvc_imm_done;
 		case 'v':
 		  if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
 		      || (imm_expr->X_add_number & (RISCV_IMM_REACH - 1))
-		      || (int32_t)imm_expr->X_add_number
-			  != imm_expr->X_add_number)
+		      || ((int32_t)imm_expr->X_add_number
+			  != imm_expr->X_add_number))
 		    break;
 		  imm_expr->X_add_number =
 		    ((uint32_t) imm_expr->X_add_number) >> RISCV_IMM_BITS;
@@ -1659,7 +1659,7 @@ alu_op:
 	      s = expr_end;
 	      continue;
 
-	    case 'p':		/* pc relative offset */
+	    case 'p':		/* PC-relative offset */
 branch:
 	      *imm_reloc = BFD_RELOC_12_PCREL;
 	      my_getExpression (imm_expr, s);
@@ -1681,7 +1681,7 @@ branch:
 	      s = expr_end;
 	      continue;
 
-	    case 'a':		/* 26 bit address */
+	    case 'a':		/* 20-bit PC-relative offset */
 jump:
 	      my_getExpression (imm_expr, s);
 	      s = expr_end;
@@ -1748,19 +1748,18 @@ md_number_to_chars (char *buf, valueT val, int n)
 
 const char *md_shortopts = "O::g::G:";
 
-enum options
-  {
-    OPTION_M32 = OPTION_MD_BASE,
-    OPTION_M64,
-    OPTION_MARCH,
-    OPTION_PIC,
-    OPTION_NO_PIC,
-    OPTION_MSOFT_FLOAT,
-    OPTION_MHARD_FLOAT,
-    OPTION_MRVC,
-    OPTION_MNO_RVC,
-    OPTION_END_OF_ENUM
-  };
+enum options {
+  OPTION_M32 = OPTION_MD_BASE,
+  OPTION_M64,
+  OPTION_MARCH,
+  OPTION_PIC,
+  OPTION_NO_PIC,
+  OPTION_MSOFT_FLOAT,
+  OPTION_MHARD_FLOAT,
+  OPTION_MRVC,
+  OPTION_MNO_RVC,
+  OPTION_END_OF_ENUM
+};
 
 struct option md_longopts[] =
 {
@@ -1856,9 +1855,9 @@ riscv_after_parse_args (void)
   isa_float_mode = FLOAT_MODE_SOFT;
   for (subset = riscv_subsets; subset != NULL; subset = subset->next)
     {
-       if (strcasecmp(subset->name, "F") == 0)
+       if (strcasecmp (subset->name, "F") == 0)
          isa_float_mode = FLOAT_MODE_HARD;
-       if (strcasecmp(subset->name, "D") == 0)
+       if (strcasecmp (subset->name, "D") == 0)
          isa_float_mode = FLOAT_MODE_HARD;
     }
 
@@ -1868,19 +1867,20 @@ riscv_after_parse_args (void)
   elf_float_mode = (marg_float_mode == FLOAT_MODE_DEFAULT) ? isa_float_mode
                                                            : marg_float_mode;
 
-  switch (elf_float_mode) {
-  case FLOAT_MODE_DEFAULT:
-    as_bad("a specific float mode must be specified for an ELF");
-    break;
+  switch (elf_float_mode)
+    {
+    case FLOAT_MODE_DEFAULT:
+      as_bad ("a specific float mode must be specified for an ELF");
+      break;
 
-  case FLOAT_MODE_SOFT:
-    elf_flags |= EF_RISCV_SOFT_FLOAT;
-    break;
+    case FLOAT_MODE_SOFT:
+      elf_flags |= EF_RISCV_SOFT_FLOAT;
+      break;
 
-  case FLOAT_MODE_HARD:
-    elf_flags &= ~EF_RISCV_SOFT_FLOAT;
-    break;
-  }
+    case FLOAT_MODE_HARD:
+      elf_flags &= ~EF_RISCV_SOFT_FLOAT;
+      break;
+    }
 }
 
 long
@@ -1941,23 +1941,24 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
 	  fixP->fx_next->fx_offset = 0;
 	  fixP->fx_subsy = NULL;
 
-	  if (fixP->fx_r_type == BFD_RELOC_64)
+	  switch (fixP->fx_r_type)
 	    {
+	    case BFD_RELOC_64:
 	      fixP->fx_r_type = BFD_RELOC_RISCV_ADD64;
 	      fixP->fx_next->fx_r_type = BFD_RELOC_RISCV_SUB64;
-	    }
-	  else if (fixP->fx_r_type == BFD_RELOC_32)
-	    {
+	      break;
+
+	    case BFD_RELOC_32:
 	      fixP->fx_r_type = BFD_RELOC_RISCV_ADD32;
 	      fixP->fx_next->fx_r_type = BFD_RELOC_RISCV_SUB32;
-	    }
-	  else if (fixP->fx_r_type == BFD_RELOC_16)
-	    {
+	      break;
+
+	    case BFD_RELOC_16:
 	      fixP->fx_r_type = BFD_RELOC_RISCV_ADD16;
 	      fixP->fx_next->fx_r_type = BFD_RELOC_RISCV_SUB16;
-	    }
-	  else
-	    {
+	      break;
+
+	    case BFD_RELOC_8:
 	      fixP->fx_r_type = BFD_RELOC_RISCV_ADD8;
 	      fixP->fx_next->fx_r_type = BFD_RELOC_RISCV_SUB8;
 	    }
