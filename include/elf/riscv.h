@@ -1,7 +1,7 @@
 /* RISC-V ELF support for BFD.
    Copyright 2011-2015 Free Software Foundation, Inc.
 
-   Contributed by Andrw Waterman <waterman@cs.berkeley.edu> at UC Berkeley.
+   Contributed by Andrew Waterman (andrew@sifive.com).
    Based on MIPS ELF support for BFD, by Ian Lance Taylor.
 
    This file is part of BFD, the Binary File Descriptor library.

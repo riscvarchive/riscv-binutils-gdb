@@ -1,7 +1,7 @@
 /* BFD backend for RISC-V
    Copyright 2011-2015 Free Software Foundation, Inc.
 
-   Contributed by Andrew Waterman (waterman@cs.berkeley.edu) at UC Berkeley.
+   Contributed by Andrew Waterman (andrew@sifive.com).
    Based on MIPS target.
 
    This file is part of BFD, the Binary File Descriptor library.
@@ -39,23 +39,24 @@ riscv_compatible (const bfd_arch_info_type *a, const bfd_arch_info_type *b)
   return a;
 }
 
-#define N(BITS_WORD, BITS_ADDR, NUMBER, PRINT, DEFAULT, NEXT)		\
-  {							\
-    BITS_WORD, /*  bits in a word */			\
-    BITS_ADDR, /* bits in an address */			\
-    8,	/* 8 bits in a byte */				\
-    bfd_arch_riscv,					\
-    NUMBER,						\
-    "riscv",						\
-    PRINT,						\
-    3,							\
-    DEFAULT,						\
-    riscv_compatible,					\
-    bfd_default_scan,					\
-    bfd_arch_default_fill,				\
-    NEXT,						\
+#define N(BITS_WORD, BITS_ADDR, NUMBER, PRINT, DEFAULT, NEXT)	\
+  {								\
+    BITS_WORD, /*  bits in a word */				\
+    BITS_ADDR, /* bits in an address */				\
+    8,	/* 8 bits in a byte */					\
+    bfd_arch_riscv,						\
+    NUMBER,							\
+    "riscv",							\
+    PRINT,							\
+    3,								\
+    DEFAULT,							\
+    riscv_compatible,						\
+    bfd_default_scan,						\
+    bfd_arch_default_fill,					\
+    NEXT,							\
   }
 
+/* This enum must be kept in the same order as arch_info_struct.  */
 enum
 {
   I_riscv64,
@@ -64,6 +65,8 @@ enum
 
 #define NN(index) (&arch_info_struct[(index) + 1])
 
+/* This array must be kept in the same order as the anonymous enum above,
+   and each entry except the last should end with NN (my enum value).  */
 static const bfd_arch_info_type arch_info_struct[] =
 {
   N (64, 64, bfd_mach_riscv64, "riscv:rv64", FALSE, NN (I_riscv64)),

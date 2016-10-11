@@ -1,7 +1,7 @@
 /* Native-dependent code for GNU/Linux RISC-V.
 
    Copyright (C) 2015 Free Software Foundation, Inc.
-   Contributed by Albert Ou <aou@eecs.berkeley.edu>.
+   Contributed by Albert Ou <albert@sifive.com>.
 
    This file is part of GDB.
 

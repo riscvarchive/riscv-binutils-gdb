@@ -1,7 +1,7 @@
 /* tc-riscv.h -- header file for tc-riscv.c.
    Copyright 2011-2015 Free Software Foundation, Inc.
 
-   Contributed by Andrew Waterman (waterman@cs.berkeley.edu) at UC Berkeley.
+   Contributed by Andrew Waterman (andrew@sifive.com).
    Based on MIPS target.
 
    This file is part of GAS.
@@ -58,9 +58,6 @@ extern const char *riscv_target_format (void);
 #define md_after_parse_args() riscv_after_parse_args()
 extern void riscv_after_parse_args (void);
 
-#define tc_init_after_args() riscv_init_after_args()
-extern void riscv_init_after_args (void);
-
 #define md_parse_long_option(arg) riscv_parse_long_option (arg)
 extern int riscv_parse_long_option (const char *);
 
@@ -75,6 +72,8 @@ extern int riscv_parse_long_option (const char *);
 #define EXTERN_FORCE_RELOC			\
   (OUTPUT_FLAVOR == bfd_target_elf_flavour)
 
+/* Postpone text-section label subtraction calculation until linking, since
+   linker relaxations might change the deltas.  */
 #define TC_FORCE_RELOCATION_SUB_SAME(FIX, SEG) ((SEG)->flags & SEC_CODE)
 #define TC_FORCE_RELOCATION_SUB_LOCAL(FIX, SEG) 1
 #define TC_VALIDATE_FIX_SUB(FIX, SEG) 1

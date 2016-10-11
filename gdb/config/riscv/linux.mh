@@ -1,7 +1,7 @@
 #  Host: RISC-V based machine running GNU/Linux
 #
 #  Copyright (C) 2015 Free Software Foundation, Inc.
-#  Contributed by Albert Ou <aou@eecs.berkeley.edu>.
+#  Contributed by Albert Ou <albert@sifive.com>.
 #
 #  This file is part of GDB.
 #
