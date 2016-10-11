@@ -14095,7 +14095,6 @@ putop (const char *in_template, int sizeflag)
 	  cond = 0;
 	  break;
 	case '{':
-	  alt = 0;
 	  if (intel_syntax)
 	    {
 	      while (*++p != '|')
@@ -14851,13 +14850,14 @@ intel_operand_size (int bytemode, int sizeflag)
 	  oappend ("QWORD PTR ");
 	  break;
 	}
+      /* Fall through.  */
     case stack_v_mode:
       if (address_mode == mode_64bit && ((sizeflag & DFLAG) || (rex & REX_W)))
 	{
 	  oappend ("QWORD PTR ");
 	  break;
 	}
-      /* FALLTHRU */
+      /* Fall through.  */
     case v_mode:
     case v_swap_mode:
     case dq_mode:
@@ -15234,6 +15234,7 @@ OP_E_register (int bytemode, int sizeflag)
 	  names = names64;
 	  break;
 	}
+      /* Fall through.  */
     case stack_v_mode:
       if (address_mode == mode_64bit && ((sizeflag & DFLAG) || (rex & REX_W)))
 	{
@@ -15241,7 +15242,7 @@ OP_E_register (int bytemode, int sizeflag)
 	  break;
 	}
       bytemode = v_mode;
-      /* FALLTHRU */
+      /* Fall through.  */
     case v_mode:
     case v_swap_mode:
     case dq_mode:
@@ -15322,7 +15323,7 @@ OP_E_memory (int bytemode, int sizeflag)
 	      shift = vex.w ? 3 : 2;
 	      break;
 	    }
-	  /* Fall through if vex.b == 0.  */
+	  /* Fall through.  */
 	case xmmqd_mode:
 	case xmmdw_mode:
 	case ymmq_mode:
@@ -17302,6 +17303,7 @@ get_vex_imm8 (int sizeflag, int opnum)
 		    if (base != 5)
 		      /* No displacement. */
 		      break;
+		    /* Fall through.  */
 		  case 2:
 		    /* 4 byte displacement.  */
 		    bytes_before_imm += 4;
@@ -17328,6 +17330,7 @@ get_vex_imm8 (int sizeflag, int opnum)
 		  if (modrm.rm != 6)
 		    /* No displacement. */
 		    break;
+		  /* Fall through.  */
 		case 2:
 		  /* 2 byte displacement.  */
 		  bytes_before_imm += 2;

@@ -43,6 +43,7 @@
 #include <ctype.h>
 #include <sys/stat.h>
 #include "solist.h"
+#include <algorithm>
 
 void (*deprecated_file_changed_hook) (char *);
 
@@ -157,7 +158,7 @@ exception_print_same (struct gdb_exception e1, struct gdb_exception e2)
 /* See gdbcore.h.  */
 
 void
-exec_file_locate_attach (int pid, int from_tty)
+exec_file_locate_attach (int pid, int defer_bp_reset, int from_tty)
 {
   char *exec_file, *full_exec_path = NULL;
   struct cleanup *old_chain;
@@ -232,6 +233,8 @@ exec_file_locate_attach (int pid, int from_tty)
 
   TRY
     {
+      if (defer_bp_reset)
+	current_inferior ()->symfile_flags |= SYMFILE_DEFER_BP_RESET;
       symbol_file_add_main (full_exec_path, from_tty);
     }
   CATCH (err, RETURN_MASK_ERROR)
@@ -240,6 +243,7 @@ exec_file_locate_attach (int pid, int from_tty)
 	warning ("%s", err.message);
     }
   END_CATCH
+  current_inferior ()->symfile_flags &= ~SYMFILE_DEFER_BP_RESET;
 
   do_cleanups (old_chain);
 }
@@ -758,8 +762,8 @@ section_table_available_memory (VEC(mem_range_s) *memory,
 
 	  r = VEC_safe_push (mem_range_s, memory, NULL);
 
-	  r->start = max (lo1, lo2);
-	  r->length = min (hi1, hi2) - r->start;
+	  r->start = std::max (lo1, lo2);
+	  r->length = std::min (hi1, hi2) - r->start;
 	}
     }
 
@@ -797,7 +801,7 @@ section_table_read_available_memory (gdb_byte *readbuf, ULONGEST offset,
 	  enum target_xfer_status status;
 
 	  /* Get the intersection window.  */
-	  end = min (offset + len, r->start + r->length);
+	  end = std::min<CORE_ADDR> (offset + len, r->start + r->length);
 
 	  gdb_assert (end - offset <= len);
 

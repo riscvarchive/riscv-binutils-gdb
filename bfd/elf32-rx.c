@@ -704,6 +704,7 @@ rx_elf_relocate_section
 	case R_RX_RH_8_NEG:
 	  WARN_REDHAT ("RX_RH_8_NEG");
 	  relocation = - relocation;
+	  /* Fall through.  */
 	case R_RX_DIR8S_PCREL:
 	  UNSAFE_FOR_PID;
 	  RANGE (-128, 127);
@@ -725,6 +726,7 @@ rx_elf_relocate_section
 	case R_RX_RH_16_NEG:
 	  WARN_REDHAT ("RX_RH_16_NEG");
 	  relocation = - relocation;
+	  /* Fall through.  */
 	case R_RX_DIR16S_PCREL:
 	  UNSAFE_FOR_PID;
 	  RANGE (-32768, 32767);
@@ -809,6 +811,7 @@ rx_elf_relocate_section
 	  UNSAFE_FOR_PID;
 	  WARN_REDHAT ("RX_RH_24_NEG");
 	  relocation = - relocation;
+	  /* Fall through.  */
 	case R_RX_DIR24S_PCREL:
 	  RANGE (-0x800000, 0x7fffff);
 #if RX_OPCODE_BIG_ENDIAN
@@ -1232,6 +1235,7 @@ rx_elf_relocate_section
 
 	case R_RX_ABS8S:
 	  UNSAFE_FOR_PID;
+	  /* Fall through.  */
 	case R_RX_ABS8S_PCREL:
 	  RX_STACK_POP (relocation);
 	  RANGE (-128, 127);
@@ -3079,8 +3083,9 @@ describe_flags (flagword flags)
    object file when linking.  */
 
 static bfd_boolean
-rx_elf_merge_private_bfd_data (bfd * ibfd, bfd * obfd)
+rx_elf_merge_private_bfd_data (bfd * ibfd, struct bfd_link_info *info)
 {
+  bfd *obfd = info->output_bfd;
   flagword old_flags;
   flagword new_flags;
   bfd_boolean error = FALSE;

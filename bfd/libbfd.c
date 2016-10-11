@@ -785,7 +785,7 @@ _bfd_generic_get_section_contents (bfd *abfd,
 
   if (section->compress_status != COMPRESS_SECTION_NONE)
     {
-      (*_bfd_error_handler)
+      _bfd_error_handler
 	(_("%B: unable to get decompressed section %A"),
 	 abfd, section);
       bfd_set_error (bfd_error_invalid_operation);
@@ -920,32 +920,6 @@ bfd_generic_is_local_label_name (bfd *abfd, const char *name)
   char locals_prefix = (bfd_get_symbol_leading_char (abfd) == '_') ? 'L' : '.';
 
   return name[0] == locals_prefix;
-}
-
-/*  Can be used from / for bfd_merge_private_bfd_data to check that
-    endianness matches between input and output file.  Returns
-    TRUE for a match, otherwise returns FALSE and emits an error.  */
-bfd_boolean
-_bfd_generic_verify_endian_match (bfd *ibfd, bfd *obfd)
-{
-  if (ibfd->xvec->byteorder != obfd->xvec->byteorder
-      && ibfd->xvec->byteorder != BFD_ENDIAN_UNKNOWN
-      && obfd->xvec->byteorder != BFD_ENDIAN_UNKNOWN)
-    {
-      const char *msg;
-
-      if (bfd_big_endian (ibfd))
-	msg = _("%B: compiled for a big endian system and target is little endian");
-      else
-	msg = _("%B: compiled for a little endian system and target is big endian");
-
-      (*_bfd_error_handler) (msg, ibfd);
-
-      bfd_set_error (bfd_error_wrong_format);
-      return FALSE;
-    }
-
-  return TRUE;
 }
 
 /* Give a warning at runtime if someone compiles code which calls

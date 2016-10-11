@@ -188,8 +188,8 @@ extern void delete_ui (struct ui *todel);
 /* Cleanup that deletes a UI.  */
 extern struct cleanup *make_delete_ui_cleanup (struct ui *ui);
 
-/* Cleanup that restores the current UI.  */
-extern void restore_ui_cleanup (void *data);
+/* Make a cleanup that restores the current UI.  */
+extern struct cleanup *make_cleanup_restore_current_ui (void);
 
 /* Register the UI's input file descriptor in the event loop.  */
 extern void ui_register_input_event_handler (struct ui *ui);
@@ -212,7 +212,7 @@ extern void read_command_file (FILE *);
 extern void init_history (void);
 extern void command_loop (void);
 extern int quit_confirm (void);
-extern void quit_force (char *, int);
+extern void quit_force (int *, int);
 extern void quit_command (char *, int);
 extern void quit_cover (void);
 extern void execute_command (char *, int);

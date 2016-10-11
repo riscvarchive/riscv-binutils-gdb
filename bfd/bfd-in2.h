@@ -41,6 +41,7 @@ extern "C" {
 
 #include "ansidecl.h"
 #include "symcat.h"
+#include <stdarg.h>
 #include <sys/stat.h>
 
 #if defined (__STDC__) || defined (ALMOST_STDC) || defined (HAVE_STRINGIZE)
@@ -6971,13 +6972,11 @@ const char *bfd_errmsg (bfd_error_type error_tag);
 void bfd_perror (const char *message);
 
 
-typedef void (*bfd_error_handler_type) (const char *, ...);
+typedef void (*bfd_error_handler_type) (const char *, va_list);
 
 bfd_error_handler_type bfd_set_error_handler (bfd_error_handler_type);
 
 void bfd_set_error_program_name (const char *);
-
-bfd_error_handler_type bfd_get_error_handler (void);
 
 
 typedef void (*bfd_assert_handler_type) (const char *bfd_formatmsg,
@@ -6986,8 +6985,6 @@ typedef void (*bfd_assert_handler_type) (const char *bfd_formatmsg,
                                          int bfd_line);
 
 bfd_assert_handler_type bfd_set_assert_handler (bfd_assert_handler_type);
-
-bfd_assert_handler_type bfd_get_assert_handler (void);
 
 long bfd_get_reloc_upper_bound (bfd *abfd, asection *sect);
 
@@ -7020,11 +7017,6 @@ bfd_boolean bfd_copy_private_bfd_data (bfd *ibfd, bfd *obfd);
 
 #define bfd_copy_private_bfd_data(ibfd, obfd) \
      BFD_SEND (obfd, _bfd_copy_private_bfd_data, \
-               (ibfd, obfd))
-bfd_boolean bfd_merge_private_bfd_data (bfd *ibfd, bfd *obfd);
-
-#define bfd_merge_private_bfd_data(ibfd, obfd) \
-     BFD_SEND (obfd, _bfd_merge_private_bfd_data, \
                (ibfd, obfd))
 bfd_boolean bfd_set_private_flags (bfd *abfd, flagword flags);
 
@@ -7342,7 +7334,7 @@ typedef struct bfd_target
   bfd_boolean (*_bfd_copy_private_bfd_data) (bfd *, bfd *);
   /* Called to merge BFD general private data from one object file
      to a common output file when linking.  */
-  bfd_boolean (*_bfd_merge_private_bfd_data) (bfd *, bfd *);
+  bfd_boolean (*_bfd_merge_private_bfd_data) (bfd *, struct bfd_link_info *);
   /* Called to initialize BFD private section data from one object file
      to another.  */
 #define bfd_init_private_section_data(ibfd, isec, obfd, osec, link_info) \
@@ -7666,6 +7658,12 @@ bfd_boolean bfd_link_check_relocs
 bfd_boolean _bfd_generic_link_check_relocs
    (bfd *abfd, struct bfd_link_info *info);
 
+bfd_boolean bfd_merge_private_bfd_data
+   (bfd *ibfd, struct bfd_link_info *info);
+
+#define bfd_merge_private_bfd_data(ibfd, info) \
+     BFD_SEND ((info)->output_bfd, _bfd_merge_private_bfd_data, \
+               (ibfd, info))
 /* Extracted from simple.c.  */
 bfd_byte *bfd_simple_get_relocated_section_contents
    (bfd *abfd, asection *sec, bfd_byte *outbuf, asymbol **symbol_table);

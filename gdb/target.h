@@ -1380,12 +1380,6 @@ struct address_space *target_thread_address_space (ptid_t);
 
 int target_info_proc (const char *, enum info_proc_what);
 
-/* Returns true if this target can debug multiple processes
-   simultaneously.  */
-
-#define	target_supports_multi_process()	\
-     (*current_target.to_supports_multi_process) (&current_target)
-
 /* Returns true if this target can disable address space randomization.  */
 
 int target_supports_disable_randomization (void);
@@ -1660,9 +1654,7 @@ void target_follow_exec (struct inferior *inf, char *execd_pathname);
    be defined by those targets that require the debugger to perform
    cleanup or internal state changes in response to the process event.  */
 
-/* The inferior process has died.  Do what is right.  */
-
-void target_mourn_inferior (void);
+/* For target_mourn_inferior see target/target.h.  */
 
 /* Does target have enough data to do a run or attach command? */
 

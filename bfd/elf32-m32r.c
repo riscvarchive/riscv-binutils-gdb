@@ -2444,9 +2444,8 @@ m32r_elf_relocate_section (bfd *output_bfd ATTRIBUTE_UNUSED,
       r_type = ELF32_R_TYPE (rel->r_info);
       if (r_type < 0 || r_type >= (int) R_M32R_max)
 	{
-	  (*_bfd_error_handler) (_("%B: unknown relocation type %d"),
-				 input_bfd,
-				 (int) r_type);
+	  _bfd_error_handler (_("%B: unknown relocation type %d"),
+			      input_bfd, (int) r_type);
 	  bfd_set_error (bfd_error_bad_value);
 	  ret = FALSE;
 	  continue;
@@ -2565,7 +2564,7 @@ m32r_elf_relocate_section (bfd *output_bfd ATTRIBUTE_UNUSED,
 						    rel->r_offset)
 			   != (bfd_vma) -1))
 		{
-		  (*_bfd_error_handler)
+		  _bfd_error_handler
 		    (_("%B(%A+0x%lx): unresolvable %s relocation against symbol `%s'"),
 		     input_bfd,
 		     input_section,
@@ -3009,7 +3008,7 @@ m32r_elf_relocate_section (bfd *output_bfd ATTRIBUTE_UNUSED,
 		  }
 		else
 		  {
-		    (*_bfd_error_handler)
+		    _bfd_error_handler
 		      (_("%B: The target (%s) of an %s relocation is in the wrong section (%A)"),
 		       input_bfd,
 		       sec,
@@ -3484,8 +3483,9 @@ m32r_elf_set_private_flags (bfd *abfd, flagword flags)
    object file when linking.  */
 
 static bfd_boolean
-m32r_elf_merge_private_bfd_data (bfd *ibfd, bfd *obfd)
+m32r_elf_merge_private_bfd_data (bfd *ibfd, struct bfd_link_info *info)
 {
+  bfd *obfd = info->output_bfd;
   flagword out_flags;
   flagword in_flags;
 
@@ -3528,7 +3528,7 @@ m32r_elf_merge_private_bfd_data (bfd *ibfd, bfd *obfd)
           || ((out_flags & EF_M32R_ARCH) == E_M32R_ARCH)
           || ((in_flags  & EF_M32R_ARCH) == E_M32R2_ARCH))
 	{
-	  (*_bfd_error_handler)
+	  _bfd_error_handler
 	    (_("%B: Instruction set mismatch with previous modules"), ibfd);
 
 	  bfd_set_error (bfd_error_bad_value);

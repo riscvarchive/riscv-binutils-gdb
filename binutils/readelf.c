@@ -427,7 +427,7 @@ print_vma (bfd_vma vma, print_mode mode)
     {
     case FULL_HEX:
       nc = printf ("0x");
-      /* Drop through.  */
+      /* Fall through.  */
 
     case LONG_HEX:
 #ifdef BFD64
@@ -440,11 +440,11 @@ print_vma (bfd_vma vma, print_mode mode)
     case DEC_5:
       if (vma <= 99999)
 	return printf ("%5" BFD_VMA_FMT "d", vma);
-      /* Drop through.  */
+      /* Fall through.  */
 
     case PREFIX_HEX:
       nc = printf ("0x");
-      /* Drop through.  */
+      /* Fall through.  */
 
     case HEX:
       return nc + printf ("%" BFD_VMA_FMT "x", vma);
@@ -1294,6 +1294,7 @@ dump_relocations (FILE * file,
 	      rtype = elf_msp430x_reloc_type (type);
 	      break;
 	    }
+	  /* Fall through.  */
 	case EM_MSP430_OLD:
 	  rtype = elf_msp430_reloc_type (type);
 	  break;
@@ -4252,10 +4253,13 @@ request_dump_bynumber (unsigned int section, dump_type type)
 	error (_("Out of memory allocating dump request table.\n"));
       else
 	{
-	  /* Copy current flag settings.  */
-	  memcpy (new_dump_sects, dump_sects, num_dump_sects * sizeof (* dump_sects));
+	  if (dump_sects)
+	    {
+	      /* Copy current flag settings.  */
+	      memcpy (new_dump_sects, dump_sects, num_dump_sects * sizeof (* dump_sects));
 
-	  free (dump_sects);
+	      free (dump_sects);
+	    }
 
 	  dump_sects = new_dump_sects;
 	  num_dump_sects = section + 1;
@@ -4461,7 +4465,7 @@ parse_args (int argc, char ** argv)
 	default:
 	  /* xgettext:c-format */
 	  error (_("Invalid option '-%c'\n"), c);
-	  /* Drop through.  */
+	  /* Fall through.  */
 	case '?':
 	  usage (stderr);
 	}
@@ -9690,6 +9694,7 @@ process_dynamic_section (FILE * file)
 	case DT_SYMENT	:
 	case DT_RELENT	:
 	  dynamic_info[entry->d_tag] = entry->d_un.d_val;
+	  /* Fall through.  */
 	case DT_PLTPADSZ:
 	case DT_MOVEENT	:
 	case DT_MOVESZ	:
@@ -11505,6 +11510,7 @@ target_specific_reloc_handling (Elf_Internal_Rela * reloc,
 	  case 10: /* R_MSP430_SYM_DIFF */
 	    if (uses_msp430x_relocs ())
 	      break;
+	    /* Fall through.  */
 	  case 21: /* R_MSP430X_SYM_DIFF */
 	    saved_sym = symtab + get_reloc_symindex (reloc->r_info);
 	    return TRUE;
@@ -12026,6 +12032,7 @@ is_16bit_abs_reloc (unsigned int reloc_type)
     case EM_MSP430:
       if (uses_msp430x_relocs ())
 	return reloc_type == 2; /* R_MSP430_ABS16.  */
+      /* Fall through.  */
     case EM_MSP430_OLD:
       return reloc_type == 5; /* R_MSP430_16_BYTE.  */
     case EM_NDS32:
@@ -13398,47 +13405,77 @@ display_power_gnu_attribute (unsigned char * p,
 			     const unsigned char * const end)
 {
   unsigned int len;
-  int val;
+  unsigned int val;
 
   if (tag == Tag_GNU_Power_ABI_FP)
     {
       val = read_uleb128 (p, &len, end);
       p += len;
       printf ("  Tag_GNU_Power_ABI_FP: ");
+      if (len == 0)
+	{
+	  printf (_("<corrupt>\n"));
+	  return p;
+	}
 
-      switch (val)
+      if (val > 15)
+	printf ("(%#x), ", val);
+
+      switch (val & 3)
 	{
 	case 0:
-	  printf (_("Hard or soft float\n"));
+	  printf (_("unspecified hard/soft float, "));
 	  break;
 	case 1:
-	  printf (_("Hard float\n"));
+	  printf (_("hard float, "));
 	  break;
 	case 2:
-	  printf (_("Soft float\n"));
+	  printf (_("soft float, "));
 	  break;
 	case 3:
-	  printf (_("Single-precision hard float\n"));
+	  printf (_("single-precision hard float, "));
 	  break;
-	default:
-	  printf ("??? (%d)\n", val);
+	}
+
+      switch (val & 0xC)
+	{
+	case 0:
+	  printf (_("unspecified long double\n"));
+	  break;
+	case 4:
+	  printf (_("128-bit IBM long double\n"));
+	  break;
+	case 8:
+	  printf (_("64-bit long double\n"));
+	  break;
+	case 12:
+	  printf (_("128-bit IEEE long double\n"));
 	  break;
 	}
       return p;
-   }
+    }
 
   if (tag == Tag_GNU_Power_ABI_Vector)
     {
       val = read_uleb128 (p, &len, end);
       p += len;
       printf ("  Tag_GNU_Power_ABI_Vector: ");
-      switch (val)
+      if (len == 0)
+	{
+	  printf (_("<corrupt>\n"));
+	  return p;
+	}
+
+      if (val > 3)
+	printf ("(%#x), ", val);
+
+      switch (val & 3)
 	{
 	case 0:
-	  printf (_("Any\n"));
+	  printf (_("unspecified\n"));
 	  break;
 	case 1:
-	  printf (_("Generic\n"));
+	  printf (_("generic\n"));
 	  break;
 	case 2:
 	  printf ("AltiVec\n");
@@ -13446,39 +13483,39 @@ display_power_gnu_attribute (unsigned char * p,
 	case 3:
 	  printf ("SPE\n");
 	  break;
-	default:
-	  printf ("??? (%d)\n", val);
-	  break;
 	}
       return p;
-   }
+    }
 
   if (tag == Tag_GNU_Power_ABI_Struct_Return)
     {
-      if (p == end)
-	{
-	  warn (_("corrupt Tag_GNU_Power_ABI_Struct_Return\n"));
-	  return p;
-	}
-
       val = read_uleb128 (p, &len, end);
       p += len;
       printf ("  Tag_GNU_Power_ABI_Struct_Return: ");
-      switch (val)
-       {
-       case 0:
-         printf (_("Any\n"));
-         break;
-       case 1:
-         printf ("r3/r4\n");
-         break;
-       case 2:
-         printf (_("Memory\n"));
-         break;
-       default:
-         printf ("??? (%d)\n", val);
-         break;
-       }
+      if (len == 0)
+	{
+	  printf (_("<corrupt>\n"));
+	  return p;
+	}
+
+      if (val > 2)
+	printf ("(%#x), ", val);
+
+      switch (val & 3)
+	{
+	case 0:
+	  printf (_("unspecified\n"));
+	  break;
+	case 1:
+	  printf ("r3/r4\n");
+	  break;
+	case 2:
+	  printf (_("memory\n"));
+	  break;
+	case 3:
+	  printf ("???\n");
+	  break;
+	}
       return p;
     }
 
@@ -14227,6 +14264,7 @@ process_attributes (FILE * file,
 		      goto do_numlist;
 		    case 3:
 		      printf (_("Symbol Attributes:"));
+		      /* Fall through.  */
 		    do_numlist:
 		      for (;;)
 			{
@@ -14737,7 +14775,7 @@ process_mips_specific (FILE * file)
               cmalloc ((sect->sh_size / sizeof (eopt)), sizeof (* iopt));
 	  if (iopt == NULL)
 	    {
-	      error (_("Out of memory allocatinf space for MIPS options\n"));
+	      error (_("Out of memory allocating space for MIPS options\n"));
 	      return 0;
 	    }
 
@@ -16371,6 +16409,7 @@ process_arch_specific (FILE * file)
       return process_nds32_specific (file);
       break;
     case EM_PPC:
+    case EM_PPC64:
       return process_power_specific (file);
       break;
     case EM_S390:
@@ -16403,8 +16442,8 @@ get_file_header (FILE * file)
   /* Determine how to read the rest of the header.  */
   switch (elf_header.e_ident[EI_DATA])
     {
-    default: /* fall through */
-    case ELFDATANONE: /* fall through */
+    default:
+    case ELFDATANONE:
     case ELFDATA2LSB:
       byte_get = byte_get_little_endian;
       byte_put = byte_put_little_endian;

@@ -542,8 +542,9 @@ arc_info_to_howto_rel (bfd * abfd ATTRIBUTE_UNUSED,
    object file when linking.  */
 
 static bfd_boolean
-arc_elf_merge_private_bfd_data (bfd *ibfd, bfd *obfd)
+arc_elf_merge_private_bfd_data (bfd *ibfd, struct bfd_link_info *info)
 {
+  bfd *obfd = info->output_bfd;
   unsigned short mach_ibfd;
   static unsigned short mach_obfd = EM_NONE;
   flagword out_flags;
@@ -551,13 +552,8 @@ arc_elf_merge_private_bfd_data (bfd *ibfd, bfd *obfd)
   asection *sec;
 
    /* Check if we have the same endianess.  */
-  if (! _bfd_generic_verify_endian_match (ibfd, obfd))
-    {
-      _bfd_error_handler (_("ERROR: Endian Match failed. Attempting to link "
-			    "%B with binary %s of opposite endian-ness"),
-			  ibfd, bfd_get_filename (obfd));
-      return FALSE;
-    }
+  if (! _bfd_generic_verify_endian_match (ibfd, info))
+    return FALSE;
 
   /* Collect ELF flags.  */
   in_flags = elf_elfheader (ibfd)->e_flags & EF_ARC_MACH_MSK;
@@ -613,7 +609,7 @@ arc_elf_merge_private_bfd_data (bfd *ibfd, bfd *obfd)
       else if (in_flags != out_flags)
 	{
 	  /* Warn if different flags.  */
-	  (*_bfd_error_handler)
+	  _bfd_error_handler
 	    (_("%s: uses different e_flags (0x%lx) fields than "
 	       "previous modules (0x%lx)"),
 	     bfd_get_filename (ibfd), (long)in_flags, (long)out_flags);
@@ -674,13 +670,13 @@ arc_elf_object_p (bfd * abfd)
     {
       if (e_machine == EM_ARC)
 	{
-	  (*_bfd_error_handler)
+	  _bfd_error_handler
 	    (_("Error: The ARC4 architecture is no longer supported.\n"));
 	  return FALSE;
 	}
       else
 	{
-	  (*_bfd_error_handler)
+	  _bfd_error_handler
 	    (_("Warning: unset or old architecture flags. \n"
 	       "	       Use default machine.\n"));
 	}
@@ -807,7 +803,7 @@ arc_special_overflow_checks (const struct arc_relocation_data reloc_data,
       if (((relocation >> 16) & 0xffff) != NPS_CMEM_HIGH_VALUE)
 	{
 	  if (reloc_data.reloc_addend == 0)
-	    (*_bfd_error_handler)
+	    _bfd_error_handler
 	      (_("%B(%A+0x%lx): CMEM relocation to `%s' is invalid, "
 		 "16 MSB should be 0x%04x (value is 0x%lx)"),
 	       reloc_data.input_section->owner,
@@ -817,7 +813,7 @@ arc_special_overflow_checks (const struct arc_relocation_data reloc_data,
 	       NPS_CMEM_HIGH_VALUE,
 	       (relocation));
 	  else
-	    (*_bfd_error_handler)
+	    _bfd_error_handler
 	      (_("%B(%A+0x%lx): CMEM relocation to `%s+0x%lx' is invalid, "
 		 "16 MSB should be 0x%04x (value is 0x%lx)"),
 	       reloc_data.input_section->owner,
@@ -1493,8 +1489,8 @@ elf_arc_relocate_section (bfd *		          output_bfd,
       if (is_reloc_SDA_relative (howto)
 	  && (reloc_data.sdata_begin_symbol_vma_set == FALSE))
 	{
-	  (*_bfd_error_handler)
-	      ("Error: Linker symbol __SDATA_BEGIN__ not found");
+	  _bfd_error_handler
+	    ("Error: Linker symbol __SDATA_BEGIN__ not found");
 	  bfd_set_error (bfd_error_bad_value);
 	  return FALSE;
 	}
@@ -1506,7 +1502,7 @@ elf_arc_relocate_section (bfd *		          output_bfd,
       if ((is_reloc_for_GOT (howto) || is_reloc_for_PLT (howto))
 	  && reloc_data.sym_section == NULL)
 	{
-	  (*_bfd_error_handler)
+	  _bfd_error_handler
 	    (_("GOT and PLT relocations cannot be fixed with a non dynamic linker."));
 	  bfd_set_error (bfd_error_bad_value);
 	  return FALSE;
@@ -1727,7 +1723,7 @@ elf_arc_check_relocs (bfd *			 abfd,
 		else
 		  /* bfd_elf_sym_name (abfd, symtab_hdr, isym, NULL);  */
 		  name = "UNKNOWN";
-		(*_bfd_error_handler)
+		_bfd_error_handler
 		  (_("\
 %B: relocation %s against `%s' can not be used when making a shared object; recompile with -fPIC"),
 		    abfd,

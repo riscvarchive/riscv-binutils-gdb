@@ -64,9 +64,6 @@ char **gdb_buildargv (const char *);
 
 extern struct cleanup *make_cleanup_freeargv (char **);
 
-struct dyn_string;
-extern struct cleanup *make_cleanup_dyn_string_delete (struct dyn_string *);
-
 struct ui_file;
 extern struct cleanup *make_cleanup_ui_file_delete (struct ui_file *);
 
@@ -93,9 +90,6 @@ extern struct cleanup *make_cleanup_restore_uinteger (unsigned int *variable);
 struct target_ops;
 extern struct cleanup *make_cleanup_unpush_target (struct target_ops *ops);
 
-
-extern struct cleanup *
-  make_cleanup_restore_ui_out (struct ui_out **variable);
 extern struct cleanup *
   make_cleanup_restore_ui_file (struct ui_file **variable);
 

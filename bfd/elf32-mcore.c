@@ -49,13 +49,14 @@ mcore_elf_set_private_flags (bfd * abfd, flagword flags)
    object file when linking.  */
 
 static bfd_boolean
-mcore_elf_merge_private_bfd_data (bfd * ibfd, bfd * obfd)
+mcore_elf_merge_private_bfd_data (bfd *ibfd, struct bfd_link_info *info)
 {
+  bfd *obfd = info->output_bfd;
   flagword old_flags;
   flagword new_flags;
 
   /* Check if we have the same endianness.  */
-  if (! _bfd_generic_verify_endian_match (ibfd, obfd))
+  if (! _bfd_generic_verify_endian_match (ibfd, info))
     return FALSE;
 
   if (   bfd_get_flavour (ibfd) != bfd_target_elf_flavour
@@ -349,8 +350,8 @@ mcore_elf_info_to_howto (bfd * abfd ATTRIBUTE_UNUSED,
   r_type = ELF32_R_TYPE (dst->r_info);
   if (r_type >= R_MCORE_max)
     {
-      (*_bfd_error_handler) (_("%B: unrecognised MCore reloc number: %d"),
-			     abfd, r_type);
+      _bfd_error_handler (_("%B: unrecognised MCore reloc number: %d"),
+			  abfd, r_type);
       bfd_set_error (bfd_error_bad_value);
       r_type = R_MCORE_NONE;
     }

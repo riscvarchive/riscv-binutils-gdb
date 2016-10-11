@@ -1517,7 +1517,7 @@ get_windows_debug_event (struct target_ops *ops,
       if (!windows_initialization_done)
 	{
 	  target_terminal_ours ();
-	  target_mourn_inferior ();
+	  target_mourn_inferior (inferior_ptid);
 	  error (_("During startup program exited with code 0x%x."),
 		 (unsigned int) current_event.u.ExitProcess.dwExitCode);
 	}
@@ -2464,7 +2464,7 @@ windows_kill_inferior (struct target_ops *ops)
 	break;
     }
 
-  target_mourn_inferior ();	/* Or just windows_mourn_inferior?  */
+  target_mourn_inferior (inferior_ptid);	/* Or just windows_mourn_inferior?  */
 }
 
 static void

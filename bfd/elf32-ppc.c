@@ -2041,8 +2041,8 @@ ppc_elf_info_to_howto (bfd *abfd ATTRIBUTE_UNUSED,
   r_type = ELF32_R_TYPE (dst->r_info);
   if (r_type >= R_PPC_max)
     {
-      (*_bfd_error_handler) (_("%B: unrecognised PPC reloc number: %d"),
-			     abfd, r_type);
+      _bfd_error_handler (_("%B: unrecognised PPC reloc number: %d"),
+			  abfd, r_type);
       bfd_set_error (bfd_error_bad_value);
       r_type = R_PPC_NONE;
     }
@@ -2052,8 +2052,8 @@ ppc_elf_info_to_howto (bfd *abfd ATTRIBUTE_UNUSED,
      ELF32_R_TYPE (dst->r_info) is necessarily a valid relocation.  */
   if (!cache_ptr->howto)
     {
-      (*_bfd_error_handler) (_("%B: invalid relocation type %d"),
-                             abfd, r_type);
+      _bfd_error_handler (_("%B: invalid relocation type %d"),
+			  abfd, r_type);
       bfd_set_error (bfd_error_bad_value);
 
       cache_ptr->howto = ppc_elf_howto_table[R_PPC_NONE];
@@ -2827,7 +2827,7 @@ ppc_elf_begin_write_processing (bfd *abfd, struct bfd_link_info *link_info)
     free (buffer);
 
   if (error_message)
-    (*_bfd_error_handler) (error_message, ibfd, APUINFO_SECTION_NAME);
+    _bfd_error_handler (error_message, ibfd, APUINFO_SECTION_NAME);
 }
 
 /* Prevent the output section from accumulating the input sections'
@@ -2867,7 +2867,7 @@ ppc_elf_final_write_processing (bfd *abfd, bfd_boolean linker ATTRIBUTE_UNUSED)
   buffer = bfd_malloc (length);
   if (buffer == NULL)
     {
-      (*_bfd_error_handler)
+      _bfd_error_handler
 	(_("failed to allocate space for new APUinfo section."));
       return;
     }
@@ -2887,10 +2887,10 @@ ppc_elf_final_write_processing (bfd *abfd, bfd_boolean linker ATTRIBUTE_UNUSED)
     }
 
   if (length != asec->size)
-    (*_bfd_error_handler) (_("failed to compute new APUinfo section."));
+    _bfd_error_handler (_("failed to compute new APUinfo section."));
 
   if (! bfd_set_section_contents (abfd, asec, buffer, (file_ptr) 0, length))
-    (*_bfd_error_handler) (_("failed to install new APUinfo section."));
+    _bfd_error_handler (_("failed to install new APUinfo section."));
 
   free (buffer);
 
@@ -3968,7 +3968,7 @@ is_branch_reloc (enum elf_ppc_reloc_type r_type)
 static void
 bad_shared_reloc (bfd *abfd, enum elf_ppc_reloc_type r_type)
 {
-  (*_bfd_error_handler)
+  _bfd_error_handler
     (_("%B: relocation %s cannot be used when making a shared object"),
      abfd,
      ppc_elf_howto_table[r_type]->name);
@@ -4160,7 +4160,7 @@ ppc_elf_check_relocs (bfd *abfd,
 	  tls_type = TLS_TLS | TLS_DTPREL;
 	dogottls:
 	  sec->has_tls_reloc = 1;
-	  /* Fall thru */
+	  /* Fall through.  */
 
 	  /* GOT16 relocations */
 	case R_PPC_GOT16:
@@ -4232,7 +4232,7 @@ ppc_elf_check_relocs (bfd *abfd,
 
 	case R_PPC_SDAREL16:
 	  htab->sdata[0].sym->ref_regular = 1;
-	  /* Fall thru */
+	  /* Fall through.  */
 
 	case R_PPC_VLE_SDAREL_LO16A:
 	case R_PPC_VLE_SDAREL_LO16D:
@@ -4653,68 +4653,90 @@ ppc_elf_check_relocs (bfd *abfd,
   return TRUE;
 }
 
-
-/* Merge object attributes from IBFD into OBFD.  Raise an error if
-   there are conflicting attributes.  */
-static bfd_boolean
-ppc_elf_merge_obj_attributes (bfd *ibfd, bfd *obfd)
+/* Warn for conflicting Tag_GNU_Power_ABI_FP attributes between IBFD
+   and OBFD, and merge non-conflicting ones.  */
+void
+_bfd_elf_ppc_merge_fp_attributes (bfd *ibfd, struct bfd_link_info *info)
 {
+  bfd *obfd = info->output_bfd;
   obj_attribute *in_attr, *in_attrs;
   obj_attribute *out_attr, *out_attrs;
-
-  if (!elf_known_obj_attributes_proc (obfd)[0].i)
-    {
-      /* This is the first object.  Copy the attributes.  */
-      _bfd_elf_copy_obj_attributes (ibfd, obfd);
-
-      /* Use the Tag_null value to indicate the attributes have been
-	 initialized.  */
-      elf_known_obj_attributes_proc (obfd)[0].i = 1;
-
-      return TRUE;
-    }
 
   in_attrs = elf_known_obj_attributes (ibfd)[OBJ_ATTR_GNU];
   out_attrs = elf_known_obj_attributes (obfd)[OBJ_ATTR_GNU];
 
-  /* Check for conflicting Tag_GNU_Power_ABI_FP attributes and merge
-     non-conflicting ones.  */
   in_attr = &in_attrs[Tag_GNU_Power_ABI_FP];
   out_attr = &out_attrs[Tag_GNU_Power_ABI_FP];
+
   if (in_attr->i != out_attr->i)
     {
-      out_attr->type = 1;
-      if (out_attr->i == 0)
-	out_attr->i = in_attr->i;
-      else if (in_attr->i == 0)
+      int in_fp = in_attr->i & 3;
+      int out_fp = out_attr->i & 3;
+
+      if (in_fp == 0)
 	;
-      else if (out_attr->i == 1 && in_attr->i == 2)
+      else if (out_fp == 0)
+	{
+	  out_attr->type = 1;
+	  out_attr->i ^= in_fp;
+	}
+      else if (out_fp != 2 && in_fp == 2)
 	_bfd_error_handler
 	  (_("Warning: %B uses hard float, %B uses soft float"), obfd, ibfd);
-      else if (out_attr->i == 1 && in_attr->i == 3)
-	_bfd_error_handler
-	  (_("Warning: %B uses double-precision hard float, %B uses single-precision hard float"),
-	  obfd, ibfd);
-      else if (out_attr->i == 3 && in_attr->i == 1)
-	_bfd_error_handler
-	  (_("Warning: %B uses double-precision hard float, %B uses single-precision hard float"),
-	  ibfd, obfd);
-      else if (out_attr->i == 3 && in_attr->i == 2)
-	_bfd_error_handler
-	  (_("Warning: %B uses soft float, %B uses single-precision hard float"),
-	  ibfd, obfd);
-      else if (out_attr->i == 2 && (in_attr->i == 1 || in_attr->i == 3))
+      else if (out_fp == 2 && in_fp != 2)
 	_bfd_error_handler
 	  (_("Warning: %B uses hard float, %B uses soft float"), ibfd, obfd);
-      else if (in_attr->i > 3)
+      else if (out_fp == 1 && in_fp == 3)
 	_bfd_error_handler
-	  (_("Warning: %B uses unknown floating point ABI %d"), ibfd,
-	   in_attr->i);
-      else
+	  (_("Warning: %B uses double-precision hard float, "
+	     "%B uses single-precision hard float"), obfd, ibfd);
+      else if (out_fp == 3 && in_fp == 1)
 	_bfd_error_handler
-	  (_("Warning: %B uses unknown floating point ABI %d"), obfd,
-	   out_attr->i);
+	  (_("Warning: %B uses double-precision hard float, "
+	     "%B uses single-precision hard float"), ibfd, obfd);
+
+      in_fp = in_attr->i & 0xc;
+      out_fp = out_attr->i & 0xc;
+      if (in_fp == 0)
+	;
+      else if (out_fp == 0)
+	{
+	  out_attr->type = 1;
+	  out_attr->i ^= in_fp;
+	}
+      else if (out_fp != 2 * 4 && in_fp == 2 * 4)
+	_bfd_error_handler
+	  (_("Warning: %B uses 64-bit long double, "
+	     "%B uses 128-bit long double"), ibfd, obfd);
+      else if (in_fp != 2 * 4 && out_fp == 2 * 4)
+	_bfd_error_handler
+	  (_("Warning: %B uses 64-bit long double, "
+	     "%B uses 128-bit long double"), obfd, ibfd);
+      else if (out_fp == 1 * 4 && in_fp == 3 * 4)
+	_bfd_error_handler
+	  (_("Warning: %B uses IBM long double, "
+	     "%B uses IEEE long double"), ibfd, obfd);
+      else if (out_fp == 3 * 4 && in_fp == 1 * 4)
+	_bfd_error_handler
+	  (_("Warning: %B uses IBM long double, "
+	     "%B uses IEEE long double"), obfd, ibfd);
     }
+}
+
+/* Merge object attributes from IBFD into OBFD.  Warn if
+   there are conflicting attributes.  */
+static bfd_boolean
+ppc_elf_merge_obj_attributes (bfd *ibfd, struct bfd_link_info *info)
+{
+  bfd *obfd;
+  obj_attribute *in_attr, *in_attrs;
+  obj_attribute *out_attr, *out_attrs;
+
+  _bfd_elf_ppc_merge_fp_attributes (ibfd, info);
+
+  obfd = info->output_bfd;
+  in_attrs = elf_known_obj_attributes (ibfd)[OBJ_ATTR_GNU];
+  out_attrs = elf_known_obj_attributes (obfd)[OBJ_ATTR_GNU];
 
   /* Check for conflicting Tag_GNU_Power_ABI_Vector attributes and
      merge non-conflicting ones.  */
@@ -4722,48 +4744,36 @@ ppc_elf_merge_obj_attributes (bfd *ibfd, bfd *obfd)
   out_attr = &out_attrs[Tag_GNU_Power_ABI_Vector];
   if (in_attr->i != out_attr->i)
     {
-      const char *in_abi = NULL, *out_abi = NULL;
+      int in_vec = in_attr->i & 3;
+      int out_vec = out_attr->i & 3;
 
-      switch (in_attr->i)
-	{
-	case 1: in_abi = "generic"; break;
-	case 2: in_abi = "AltiVec"; break;
-	case 3: in_abi = "SPE"; break;
-	}
-
-      switch (out_attr->i)
-	{
-	case 1: out_abi = "generic"; break;
-	case 2: out_abi = "AltiVec"; break;
-	case 3: out_abi = "SPE"; break;
-	}
-
-      out_attr->type = 1;
-      if (out_attr->i == 0)
-	out_attr->i = in_attr->i;
-      else if (in_attr->i == 0)
+      if (in_vec == 0)
 	;
+      else if (out_vec == 0)
+	{
+	  out_attr->type = 1;
+	  out_attr->i = in_vec;
+	}
       /* For now, allow generic to transition to AltiVec or SPE
 	 without a warning.  If GCC marked files with their stack
 	 alignment and used don't-care markings for files which are
 	 not affected by the vector ABI, we could warn about this
 	 case too.  */
-      else if (out_attr->i == 1)
-	out_attr->i = in_attr->i;
-      else if (in_attr->i == 1)
+      else if (in_vec == 1)
 	;
-      else if (in_abi == NULL)
+      else if (out_vec == 1)
+	{
+	  out_attr->type = 1;
+	  out_attr->i = in_vec;
+	}
+      else if (out_vec < in_vec)
 	_bfd_error_handler
-	  (_("Warning: %B uses unknown vector ABI %d"), ibfd,
-	   in_attr->i);
-      else if (out_abi == NULL)
+	  (_("Warning: %B uses AltiVec vector ABI, %B uses SPE vector ABI"),
+	   obfd, ibfd);
+      else if (out_vec > in_vec)
 	_bfd_error_handler
-	  (_("Warning: %B uses unknown vector ABI %d"), obfd,
-	   in_attr->i);
-      else
-	_bfd_error_handler
-	  (_("Warning: %B uses vector ABI \"%s\", %B uses \"%s\""),
-	   ibfd, obfd, in_abi, out_abi);
+	  (_("Warning: %B uses AltiVec vector ABI, %B uses SPE vector ABI"),
+	   ibfd, obfd);
     }
 
   /* Check for conflicting Tag_GNU_Power_ABI_Struct_Return attributes
@@ -4772,29 +4782,28 @@ ppc_elf_merge_obj_attributes (bfd *ibfd, bfd *obfd)
   out_attr = &out_attrs[Tag_GNU_Power_ABI_Struct_Return];
   if (in_attr->i != out_attr->i)
     {
-      out_attr->type = 1;
-      if (out_attr->i == 0)
-       out_attr->i = in_attr->i;
-      else if (in_attr->i == 0)
+      int in_struct = in_attr->i & 3;
+      int out_struct = out_attr->i & 3;
+
+      if (in_struct == 0 || in_struct == 3)
        ;
-      else if (out_attr->i == 1 && in_attr->i == 2)
-       _bfd_error_handler
-         (_("Warning: %B uses r3/r4 for small structure returns, %B uses memory"), obfd, ibfd);
-      else if (out_attr->i == 2 && in_attr->i == 1)
-       _bfd_error_handler
-         (_("Warning: %B uses r3/r4 for small structure returns, %B uses memory"), ibfd, obfd);
-      else if (in_attr->i > 2)
-       _bfd_error_handler
-         (_("Warning: %B uses unknown small structure return convention %d"), ibfd,
-          in_attr->i);
-      else
-       _bfd_error_handler
-         (_("Warning: %B uses unknown small structure return convention %d"), obfd,
-          out_attr->i);
+      else if (out_struct == 0)
+	{
+	  out_attr->type = 1;
+	  out_attr->i = in_struct;
+	}
+      else if (out_struct < in_struct)
+	_bfd_error_handler
+	  (_("Warning: %B uses r3/r4 for small structure returns, "
+	     "%B uses memory"), obfd, ibfd);
+      else if (out_struct > in_struct)
+	_bfd_error_handler
+	  (_("Warning: %B uses r3/r4 for small structure returns, "
+	     "%B uses memory"), ibfd, obfd);
     }
 
   /* Merge Tag_compatibility attributes and any common GNU ones.  */
-  _bfd_elf_merge_object_attributes (ibfd, obfd);
+  _bfd_elf_merge_object_attributes (ibfd, info);
 
   return TRUE;
 }
@@ -4803,8 +4812,9 @@ ppc_elf_merge_obj_attributes (bfd *ibfd, bfd *obfd)
    object file when linking.  */
 
 static bfd_boolean
-ppc_elf_merge_private_bfd_data (bfd *ibfd, bfd *obfd)
+ppc_elf_merge_private_bfd_data (bfd *ibfd, struct bfd_link_info *info)
 {
+  bfd *obfd = info->output_bfd;
   flagword old_flags;
   flagword new_flags;
   bfd_boolean error;
@@ -4813,10 +4823,10 @@ ppc_elf_merge_private_bfd_data (bfd *ibfd, bfd *obfd)
     return TRUE;
 
   /* Check if we have the same endianness.  */
-  if (! _bfd_generic_verify_endian_match (ibfd, obfd))
+  if (! _bfd_generic_verify_endian_match (ibfd, info))
     return FALSE;
 
-  if (!ppc_elf_merge_obj_attributes (ibfd, obfd))
+  if (!ppc_elf_merge_obj_attributes (ibfd, info))
     return FALSE;
 
   new_flags = elf_elfheader (ibfd)->e_flags;
@@ -4842,7 +4852,7 @@ ppc_elf_merge_private_bfd_data (bfd *ibfd, bfd *obfd)
 	  && (old_flags & (EF_PPC_RELOCATABLE | EF_PPC_RELOCATABLE_LIB)) == 0)
 	{
 	  error = TRUE;
-	  (*_bfd_error_handler)
+	  _bfd_error_handler
 	    (_("%B: compiled with -mrelocatable and linked with "
 	       "modules compiled normally"), ibfd);
 	}
@@ -4850,7 +4860,7 @@ ppc_elf_merge_private_bfd_data (bfd *ibfd, bfd *obfd)
 	       && (old_flags & EF_PPC_RELOCATABLE) != 0)
 	{
 	  error = TRUE;
-	  (*_bfd_error_handler)
+	  _bfd_error_handler
 	    (_("%B: compiled normally and linked with "
 	       "modules compiled with -mrelocatable"), ibfd);
 	}
@@ -4877,7 +4887,7 @@ ppc_elf_merge_private_bfd_data (bfd *ibfd, bfd *obfd)
       if (new_flags != old_flags)
 	{
 	  error = TRUE;
-	  (*_bfd_error_handler)
+	  _bfd_error_handler
 	    (_("%B: uses different e_flags (0x%lx) fields "
 	       "than previous modules (0x%lx)"),
 	     ibfd, (long) new_flags, (long) old_flags);
@@ -5161,7 +5171,7 @@ ppc_elf_gc_sweep_hook (bfd *abfd,
 	case R_PPC_REL32:
 	  if (h == NULL || h == htab->elf.hgot)
 	    break;
-	  /* Fall thru */
+	  /* Fall through.  */
 
 	case R_PPC_ADDR32:
 	case R_PPC_ADDR24:
@@ -5176,6 +5186,7 @@ ppc_elf_gc_sweep_hook (bfd *abfd,
 	case R_PPC_UADDR16:
 	  if (bfd_link_pic (info))
 	    break;
+	  /* Fall through.  */
 
 	case R_PPC_PLT32:
 	case R_PPC_PLTREL24:
@@ -5403,7 +5414,7 @@ ppc_elf_tls_optimize (bfd *obfd ATTRIBUTE_UNUSED,
 		    case R_PPC_GOT_TLSLD16:
 		    case R_PPC_GOT_TLSLD16_LO:
 		      expecting_tls_get_addr = 1;
-		      /* Fall thru */
+		      /* Fall through.  */
 
 		    case R_PPC_GOT_TLSLD16_HI:
 		    case R_PPC_GOT_TLSLD16_HA:
@@ -5421,7 +5432,7 @@ ppc_elf_tls_optimize (bfd *obfd ATTRIBUTE_UNUSED,
 		    case R_PPC_GOT_TLSGD16:
 		    case R_PPC_GOT_TLSGD16_LO:
 		      expecting_tls_get_addr = 1;
-		      /* Fall thru */
+		      /* Fall through.  */
 
 		    case R_PPC_GOT_TLSGD16_HI:
 		    case R_PPC_GOT_TLSGD16_HA:
@@ -8148,7 +8159,7 @@ ppc_elf_relocate_section (bfd *output_bfd,
 	case R_PPC_ADDR14_BRTAKEN:
 	case R_PPC_REL14_BRTAKEN:
 	  branch_bit = BRANCH_PREDICT_BIT;
-	  /* Fall thru */
+	  /* Fall through.  */
 
 	  /* Branch not taken prediction relocations.  */
 	case R_PPC_ADDR14_BRNTAKEN:
@@ -8972,7 +8983,7 @@ ppc_elf_relocate_section (bfd *output_bfd,
 			      + htab->plt->output_offset
 			      + ent->plt.offset);
 	    }
-	  /* Fall thru */
+	  /* Fall through.  */
 
 	case R_PPC_RELAX:
 	  {
@@ -9346,7 +9357,7 @@ ppc_elf_relocate_section (bfd *output_bfd,
 	      }
 	    else
 	      {
-		(*_bfd_error_handler)
+		_bfd_error_handler
 		  (_("%B: the target (%s) of a %s relocation is "
 		     "in the wrong output section (%s)"),
 		   input_bfd,
@@ -9474,7 +9485,7 @@ ppc_elf_relocate_section (bfd *output_bfd,
 	     alone (it will be set to zero elsewhere in the link).  */
 	  if (sec == NULL)
 	    break;
-	  /* Fall thru */
+	  /* Fall through.  */
 
 	case R_PPC_PLT16_HA:
 	case R_PPC_GOT16_HA:

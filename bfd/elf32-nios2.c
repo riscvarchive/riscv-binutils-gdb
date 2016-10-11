@@ -2225,9 +2225,9 @@ nios2_add_stub (const char *stub_name,
 				TRUE, FALSE);
   if (hsh == NULL)
     {
-      (*_bfd_error_handler) (_("%B: cannot create stub entry %s"),
-			     section->owner,
-			     stub_name);
+      _bfd_error_handler (_("%B: cannot create stub entry %s"),
+			  section->owner,
+			  stub_name);
       return NULL;
     }
 
@@ -2916,8 +2916,9 @@ nios2_elf32_build_stubs (struct bfd_link_info *info)
    object file when linking.  */
 
 static bfd_boolean
-nios2_elf32_merge_private_bfd_data (bfd *ibfd, bfd *obfd)
+nios2_elf32_merge_private_bfd_data (bfd *ibfd, struct bfd_link_info *info)
 {
+  bfd *obfd = info->output_bfd;
   flagword old_flags;
   flagword new_flags;
 
@@ -2925,7 +2926,7 @@ nios2_elf32_merge_private_bfd_data (bfd *ibfd, bfd *obfd)
     return TRUE;
 
   /* Check if we have the same endianness.  */
-  if (! _bfd_generic_verify_endian_match (ibfd, obfd))
+  if (! _bfd_generic_verify_endian_match (ibfd, info))
     return FALSE;
 
   new_flags = elf_elfheader (ibfd)->e_flags;
@@ -2945,7 +2946,7 @@ nios2_elf32_merge_private_bfd_data (bfd *ibfd, bfd *obfd)
 	case EF_NIOS2_ARCH_R2:
 	  if (bfd_big_endian (ibfd))
 	    {
-	      (*_bfd_error_handler)
+	      _bfd_error_handler
 		(_("error: %B: Big-endian R2 is not supported."), ibfd);
 	      bfd_set_error (bfd_error_bad_value);
 	      return FALSE;
@@ -2960,7 +2961,7 @@ nios2_elf32_merge_private_bfd_data (bfd *ibfd, bfd *obfd)
     {
       /* So far, the only incompatible flags denote incompatible
 	 architectures.  */
-      (*_bfd_error_handler)
+      _bfd_error_handler
 	(_("error: %B: Conflicting CPU architectures %d/%d"),
 	 ibfd, new_flags, old_flags);
       bfd_set_error (bfd_error_bad_value);
@@ -2968,7 +2969,7 @@ nios2_elf32_merge_private_bfd_data (bfd *ibfd, bfd *obfd)
     }
 
   /* Merge Tag_compatibility attributes and any common GNU ones.  */
-  _bfd_elf_merge_object_attributes (ibfd, obfd);
+  _bfd_elf_merge_object_attributes (ibfd, info);
 
   return TRUE;
 }
@@ -4365,7 +4366,7 @@ nios2_elf32_relocate_section (bfd *output_bfd,
 	    case R_NIOS2_TLS_LE16:
 	      if (bfd_link_dll (info))
 		{
-		  (*_bfd_error_handler)
+		  _bfd_error_handler
 		    (_("%B(%A+0x%lx): R_NIOS2_TLS_LE16 relocation not "
 		       "permitted in shared object"),
 		     input_bfd, input_section,
@@ -5532,8 +5533,8 @@ nios2_elf32_adjust_dynamic_symbol (struct bfd_link_info *info,
 
   if (h->size == 0)
     {
-      (*_bfd_error_handler) (_("dynamic variable `%s' is zero size"),
-			     h->root.root.string);
+      _bfd_error_handler (_("dynamic variable `%s' is zero size"),
+			  h->root.root.string);
       return TRUE;
     }
 

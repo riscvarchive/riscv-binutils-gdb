@@ -285,8 +285,8 @@ elf_x86_64_rtype_to_howto (bfd *abfd, unsigned r_type)
     {
       if (r_type >= (unsigned int) R_X86_64_standard)
 	{
-	  (*_bfd_error_handler) (_("%B: invalid relocation type %d"),
-				 abfd, (int) r_type);
+	  _bfd_error_handler (_("%B: invalid relocation type %d"),
+			      abfd, (int) r_type);
 	  r_type = R_X86_64_NONE;
 	}
       i = r_type;
@@ -1653,7 +1653,7 @@ elf_x86_64_tls_transition (struct bfd_link_info *info, bfd *abfd,
 	    }
 	}
 
-      (*_bfd_error_handler)
+      _bfd_error_handler
 	(_("%B: TLS transition from %s to %s against `%s' at 0x%lx "
 	   "in section `%A' failed"),
 	 abfd, sec, from->name, to->name, name,
@@ -1712,9 +1712,9 @@ elf_x86_64_need_pic (bfd *input_bfd, asection *sec,
       pic = _("; recompile with -fPIC");
     }
 
-  (*_bfd_error_handler) (_("%B: relocation %s against %s%s`%s' can "
-			   "not be used when making a shared object%s"),
-			 input_bfd, howto->name, und, v, name, pic);
+  _bfd_error_handler (_("%B: relocation %s against %s%s`%s' can "
+			"not be used when making a shared object%s"),
+		      input_bfd, howto->name, und, v, name, pic);
   bfd_set_error (bfd_error_bad_value);
   sec->check_relocs_failed = 1;
   return FALSE;
@@ -1877,7 +1877,10 @@ elf_x86_64_convert_load_reloc (bfd *abfd, asection *sec,
 	     bfd_elf_record_link_assignment.   */
 	  if (h->def_regular
 	      && (h->root.type == bfd_link_hash_new
-		  || h->root.type == bfd_link_hash_undefined))
+		  || h->root.type == bfd_link_hash_undefined
+		  || ((h->root.type == bfd_link_hash_defined
+		       || h->root.type == bfd_link_hash_defweak)
+		      && h->root.u.def.section == bfd_und_section_ptr)))
 	    {
 	      /* Skip since R_X86_64_32/R_X86_64_32S may overflow.  */
 	      if (require_reloc_pc32)
@@ -2204,8 +2207,8 @@ elf_x86_64_check_relocs (bfd *abfd, struct bfd_link_info *info,
 
       if (r_symndx >= NUM_SHDR_ENTRIES (symtab_hdr))
 	{
-	  (*_bfd_error_handler) (_("%B: bad symbol index: %d"),
-				 abfd, r_symndx);
+	  _bfd_error_handler (_("%B: bad symbol index: %d"),
+			      abfd, r_symndx);
 	  goto error_return;
 	}
 
@@ -2266,7 +2269,7 @@ elf_x86_64_check_relocs (bfd *abfd, struct bfd_link_info *info,
 		else
 		  name = bfd_elf_sym_name (abfd, symtab_hdr, isym,
 					   NULL);
-		(*_bfd_error_handler)
+		_bfd_error_handler
 		  (_("%B: relocation %s against symbol `%s' isn't "
 		     "supported in x32 mode"), abfd,
 		   x86_64_elf_howto_table[r_type].name, name);
@@ -2327,6 +2330,7 @@ elf_x86_64_check_relocs (bfd *abfd, struct bfd_link_info *info,
 			goto error_return;
 		    }
 		}
+	      /* Fall through.  */
 
 	    case R_X86_64_32S:
 	    case R_X86_64_PC64:
@@ -2454,7 +2458,7 @@ elf_x86_64_check_relocs (bfd *abfd, struct bfd_link_info *info,
 		    else
 		      name = bfd_elf_sym_name (abfd, symtab_hdr,
 					       isym, NULL);
-		    (*_bfd_error_handler)
+		    _bfd_error_handler
 		      (_("%B: '%s' accessed both as normal and thread local symbol"),
 		       abfd, name);
 		    bfd_set_error (bfd_error_bad_value);
@@ -2525,6 +2529,7 @@ elf_x86_64_check_relocs (bfd *abfd, struct bfd_link_info *info,
 	case R_X86_64_32:
 	  if (!ABI_64_P (abfd))
 	    goto pointer;
+	  /* Fall through.  */
 	case R_X86_64_8:
 	case R_X86_64_16:
 	case R_X86_64_32S:
@@ -4144,7 +4149,7 @@ elf_x86_64_relocate_section (bfd *output_bfd,
 
       if (r_type >= (int) R_X86_64_standard)
 	{
-	  (*_bfd_error_handler)
+	  _bfd_error_handler
 	    (_("%B: unrecognized relocation (0x%x) in section `%A'"),
 	     input_bfd, input_section, r_type);
 	  bfd_set_error (bfd_error_bad_value);
@@ -4371,7 +4376,7 @@ bad_ifunc_reloc:
 	      else
 		name = bfd_elf_sym_name (input_bfd, symtab_hdr, sym,
 					 NULL);
-	      (*_bfd_error_handler)
+	      _bfd_error_handler
 		(_("%B: relocation %s against STT_GNU_IFUNC "
 		   "symbol `%s' isn't supported"), input_bfd,
 		 howto->name, name);
@@ -4396,7 +4401,7 @@ do_ifunc_pointer:
 		  else
 		    name = bfd_elf_sym_name (input_bfd, symtab_hdr,
 					     sym, NULL);
-		  (*_bfd_error_handler)
+		  _bfd_error_handler
 		    (_("%B: relocation %s against STT_GNU_IFUNC "
 		       "symbol `%s' has non-zero addend: %d"),
 		     input_bfd, howto->name, name, rel->r_addend);
@@ -4631,7 +4636,7 @@ do_ifunc_pointer:
 		      break;
 		    }
 
-		  (*_bfd_error_handler)
+		  _bfd_error_handler
 		    (_("%B: relocation R_X86_64_GOTOFF64 against undefined %s `%s' can not be used when making a shared object"),
 		     input_bfd, v, h->root.root.string);
 		  bfd_set_error (bfd_error_bad_value);
@@ -4643,7 +4648,7 @@ do_ifunc_pointer:
 			   || h->type == STT_OBJECT)
 		       && ELF_ST_VISIBILITY (h->other) == STV_PROTECTED)
 		{
-		  (*_bfd_error_handler)
+		  _bfd_error_handler
 		    (_("%B: relocation R_X86_64_GOTOFF64 against protected %s `%s' can not be used when making a shared object"),
 		     input_bfd,
 		     h->type == STT_FUNC ? "function" : "data",
@@ -4818,7 +4823,9 @@ direct:
 		    && (h->needs_copy
 			|| eh->needs_copy
 			|| h->root.type == bfd_link_hash_undefined)
-		    && IS_X86_64_PCREL_TYPE (r_type))
+		    && (IS_X86_64_PCREL_TYPE (r_type)
+			|| r_type == R_X86_64_SIZE32
+			|| r_type == R_X86_64_SIZE64))
 	       && (h == NULL
 		   || ((ELF_ST_VISIBILITY (h->other) == STV_DEFAULT
 			&& !resolved_to_zero)
@@ -4908,7 +4915,7 @@ direct:
 			    name = bfd_elf_sym_name (input_bfd, symtab_hdr,
 						     sym, NULL);
 			  if (addend < 0)
-			    (*_bfd_error_handler)
+			    _bfd_error_handler
 			      (_("%B: addend -0x%x in relocation %s against "
 				 "symbol `%s' at 0x%lx in section `%A' is "
 				 "out of range"),
@@ -4916,7 +4923,7 @@ direct:
 			       howto->name, name,
 			       (unsigned long) rel->r_offset);
 			  else
-			    (*_bfd_error_handler)
+			    _bfd_error_handler
 			      (_("%B: addend 0x%x in relocation %s against "
 				 "symbol `%s' at 0x%lx in section `%A' is "
 				 "out of range"),
@@ -5539,7 +5546,7 @@ direct:
 	  && _bfd_elf_section_offset (output_bfd, info, input_section,
 				      rel->r_offset) != (bfd_vma) -1)
 	{
-	  (*_bfd_error_handler)
+	  _bfd_error_handler
 	    (_("%B(%A+0x%lx): unresolvable %s relocation against symbol `%s'"),
 	     input_bfd,
 	     input_section,
@@ -5578,7 +5585,7 @@ check_relocation_error:
 	       (bfd_vma) 0, input_bfd, input_section, rel->r_offset);
 	  else
 	    {
-	      (*_bfd_error_handler)
+	      _bfd_error_handler
 		(_("%B(%A+0x%lx): reloc against `%s': error %d"),
 		 input_bfd, input_section,
 		 (long) rel->r_offset, name, (int) r);
@@ -6286,7 +6293,7 @@ elf_x86_64_finish_dynamic_sections (bfd *output_bfd,
     {
       if (bfd_is_abs_section (htab->elf.sgotplt->output_section))
 	{
-	  (*_bfd_error_handler)
+	  _bfd_error_handler
 	    (_("discarded output section: `%A'"), htab->elf.sgotplt);
 	  return FALSE;
 	}

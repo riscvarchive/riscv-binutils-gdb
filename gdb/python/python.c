@@ -654,7 +654,8 @@ execute_gdb_command (PyObject *self, PyObject *args, PyObject *kw)
       make_cleanup_restore_integer (&current_ui->async);
       current_ui->async = 0;
 
-      make_cleanup_restore_ui_out (&current_uiout);
+      make_cleanup_restore_current_uiout ();
+
       /* Use the console interpreter uiout to have the same print format
 	for console or MI.  */
       interp = interp_lookup (current_ui, "console");
@@ -739,7 +740,7 @@ gdbpy_decode_line (PyObject *self, PyObject *args)
 
   if (arg != NULL)
     {
-      location = new_linespec_location (&arg);
+      location = string_to_event_location_basic (&arg, python_language);
       make_cleanup_delete_event_location (location);
     }
 
