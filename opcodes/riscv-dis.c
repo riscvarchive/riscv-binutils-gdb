@@ -127,25 +127,6 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
     {
       switch (*d)
 	{
-	/* Xcustom */
-	case '^':
-	  switch (*++d)
-	    {
-	    case 'd':
-	      print (info->stream, "%d", rd);
-	      break;
-	    case 's':
-	      print (info->stream, "%d", rs1);
-	      break;
-	    case 't':
-	      print (info->stream, "%d", (int)EXTRACT_OPERAND (RS2, l));
-	      break;
-	    case 'j':
-	      print (info->stream, "%d", (int)EXTRACT_OPERAND (CUSTOM_IMM, l));
-	      break;
-	    }
-	  break;
-
 	case 'C': /* RVC */
 	  switch (*++d)
 	    {

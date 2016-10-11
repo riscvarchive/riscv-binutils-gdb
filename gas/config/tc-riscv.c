@@ -509,16 +509,6 @@ validate_riscv_insn (const struct riscv_opcode *opc)
   while (*p)
     switch (c = *p++)
       {
-      /* Xcustom */
-      case '^':
-	switch (c = *p++)
-	  {
-	  case 'd': USE_BITS (OP_MASK_RD, OP_SH_RD); break;
-	  case 's': USE_BITS (OP_MASK_RS1, OP_SH_RS1); break;
-	  case 't': USE_BITS (OP_MASK_RS2, OP_SH_RS2); break;
-	  case 'j': USE_BITS (OP_MASK_CUSTOM_IMM, OP_SH_CUSTOM_IMM); break;
-	  }
-	break;
       case 'C': /* RVC */
 	switch (c = *p++)
 	  {
@@ -1242,35 +1232,6 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 	      /* Successful assembly.  */
 	      error = NULL;
 	      goto out;
-	    /* Xcustom */
-	    case '^':
-	      {
-		unsigned long max = OP_MASK_RD;
-		my_getExpression (imm_expr, s);
-		check_absolute_expr (ip, imm_expr);
-		switch (*++args)
-		  {
-		  case 'j':
-		    max = OP_MASK_CUSTOM_IMM;
-		    INSERT_OPERAND (CUSTOM_IMM, *ip, imm_expr->X_add_number);
-		    break;
-		  case 'd':
-		    INSERT_OPERAND (RD, *ip, imm_expr->X_add_number);
-		    break;
-		  case 's':
-		    INSERT_OPERAND (RS1, *ip, imm_expr->X_add_number);
-		    break;
-		  case 't':
-		    INSERT_OPERAND (RS2, *ip, imm_expr->X_add_number);
-		    break;
-		  }
-		imm_expr->X_op = O_absent;
-		s = expr_end;
-		if ((unsigned long) imm_expr->X_add_number > max)
-		  as_warn ("Bad custom immediate (%lu), must be at most %lu",
-			   (unsigned long)imm_expr->X_add_number, max);
-		continue;
-	      }
 
 	    case 'C': /* RVC */
 	      switch (*++args)
@@ -1840,7 +1801,7 @@ riscv_after_parse_args (void)
   enum float_mode isa_float_mode, elf_float_mode;
 
   if (riscv_subsets == NULL)
-    riscv_set_arch ("RVIMAFDXcustom");
+    riscv_set_arch ("RVIMAFD");
 
   if (xlen == 0)
     {
