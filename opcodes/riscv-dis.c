@@ -138,10 +138,10 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	      print (info->stream, "%d", rs1);
 	      break;
 	    case 't':
-	      print (info->stream, "%d", (int) EXTRACT_OPERAND (RS2, l));
+	      print (info->stream, "%d", (int)EXTRACT_OPERAND (RS2, l));
 	      break;
 	    case 'j':
-	      print (info->stream, "%d", (int) EXTRACT_OPERAND (CUSTOM_IMM, l));
+	      print (info->stream, "%d", (int)EXTRACT_OPERAND (CUSTOM_IMM, l));
 	      break;
 	    }
 	  break;
@@ -209,13 +209,13 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	      break;
 	    case 'u':
 	      print (info->stream, "0x%x",
-		     (int) (EXTRACT_RVC_IMM (l) & (RISCV_BIGIMM_REACH-1)));
+		     (int)(EXTRACT_RVC_IMM (l) & (RISCV_BIGIMM_REACH-1)));
 	      break;
 	    case '>':
-	      print (info->stream, "0x%x", (int) EXTRACT_RVC_IMM (l) & 0x3f);
+	      print (info->stream, "0x%x", (int)EXTRACT_RVC_IMM (l) & 0x3f);
 	      break;
 	    case '<':
-	      print (info->stream, "0x%x", (int) EXTRACT_RVC_IMM (l) & 0x1f);
+	      print (info->stream, "0x%x", (int)EXTRACT_RVC_IMM (l) & 0x1f);
 	      break;
 	    case 'T': /* floating-point RS2 */
 	      print (info->stream, "%s",
@@ -254,7 +254,7 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 
 	case 'u':
 	  print (info->stream, "0x%x",
-		 (unsigned) EXTRACT_UTYPE_IMM (l) >> RISCV_IMM_BITS);
+		 (unsigned)EXTRACT_UTYPE_IMM (l) >> RISCV_IMM_BITS);
 	  break;
 
 	case 'm':
@@ -278,12 +278,12 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	  if (((l & MASK_ADDI) == MATCH_ADDI && rs1 != 0)
 	      || (l & MASK_JALR) == MATCH_JALR)
 	    maybe_print_address (pd, rs1, EXTRACT_ITYPE_IMM (l));
-	  print (info->stream, "%d", (int) EXTRACT_ITYPE_IMM (l));
+	  print (info->stream, "%d", (int)EXTRACT_ITYPE_IMM (l));
 	  break;
 
 	case 'q':
 	  maybe_print_address (pd, rs1, EXTRACT_STYPE_IMM (l));
-	  print (info->stream, "%d", (int) EXTRACT_STYPE_IMM (l));
+	  print (info->stream, "%d", (int)EXTRACT_STYPE_IMM (l));
 	  break;
 
 	case 'a':
@@ -311,11 +311,11 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	  break;
 
 	case '>':
-	  print (info->stream, "0x%x", (int) EXTRACT_OPERAND (SHAMT, l));
+	  print (info->stream, "0x%x", (int)EXTRACT_OPERAND (SHAMT, l));
 	  break;
 
 	case '<':
-	  print (info->stream, "0x%x", (int) EXTRACT_OPERAND (SHAMTW, l));
+	  print (info->stream, "0x%x", (int)EXTRACT_OPERAND (SHAMTW, l));
 	  break;
 
 	case 'S':
@@ -341,9 +341,9 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	    unsigned int csr = EXTRACT_OPERAND (CSR, l);
 	    switch (csr)
 	      {
-	      #define DECLARE_CSR(name, num) case num: csr_name = #name; break;
-	      #include "opcode/riscv-opc.h"
-	      #undef DECLARE_CSR
+#define DECLARE_CSR(name, num) case num: csr_name = #name; break;
+#include "opcode/riscv-opc.h"
+#undef DECLARE_CSR
 	      }
 	    if (csr_name)
 	      print (info->stream, "%s", csr_name);
@@ -398,7 +398,7 @@ riscv_disassemble_insn (bfd_vma memaddr, insn_t word, disassemble_info *info)
       pd = info->private_data = xcalloc (1, sizeof (struct riscv_private_data));
       pd->gp = -1;
       pd->print_addr = -1;
-      for (i = 0; i < (int) ARRAY_SIZE (pd->hi_addr); i++)
+      for (i = 0; i < (int)ARRAY_SIZE (pd->hi_addr); i++)
 	pd->hi_addr[i] = -1;
 
       for (i = 0; i < info->symtab_size; i++)

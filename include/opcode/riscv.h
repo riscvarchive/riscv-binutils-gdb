@@ -47,7 +47,7 @@ static const char * const riscv_rm[8] = {
 };
 static const char * const riscv_pred_succ[16] = {
   0,   "w",  "r",  "rw",  "o",  "ow",  "or",  "orw",
-  "i", "iw", "ir", "irw", "io", "iow", "ior", "iorw",
+  "i", "iw", "ir", "irw", "io", "iow", "ior", "iorw"
 };
 
 #define RVC_JUMP_BITS 11
