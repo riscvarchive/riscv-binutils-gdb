@@ -55,9 +55,9 @@ set_default_riscv_dis_options (void)
 static void
 parse_riscv_dis_option (const char *option)
 {
-  if (CONST_STRNEQ (option, "no-aliases"))
+  if (strcmp (option, "no-aliases") == 0)
     no_aliases = 1;
-  else if (CONST_STRNEQ (option, "numeric"))
+  else if (strcmp (option, "numeric") == 0)
     {
       riscv_gpr_names = riscv_gpr_names_numeric;
       riscv_fpr_names = riscv_fpr_names_numeric;
