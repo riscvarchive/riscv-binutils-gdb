@@ -38,7 +38,7 @@ struct gdbarch;
 #define RISCV_ABI_FLAG_C	(1 << 2)	/* 16-bit Compressed Instructions.  */
 #define RISCV_ABI_FLAG_D	(1 << 3)	/* Double-Precision Floating-Point.  */
 #define RISCV_ABI_FLAG_E	(1 << 4)	/* Embedded base.  */
-#define RISCV_ABI_FLAG_F	(1 << 4)	/* Single-Precision Floating-Point.  */
+#define RISCV_ABI_FLAG_F	(1 << 5)	/* Single-Precision Floating-Point.  */
 #define RISCV_ABI_FLAG_H	(1 << 7)	/* Hypervisor mode.  */
 #define RISCV_ABI_FLAG_I	(1 << 8)	/* Base integer.  */
 #define RISCV_ABI_FLAG_L	(1 << 11)	/* Decimal Floating-Point.  */
