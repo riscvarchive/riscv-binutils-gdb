@@ -1,7 +1,7 @@
 /* RISC-V-specific support for NN-bit ELF.
    Copyright 2011-2015 Free Software Foundation, Inc.
 
-   Contributed by Andrew Waterman (waterman@cs.berkeley.edu) at UC Berkeley.
+   Contributed by Andrew Waterman (andrew@sifive.com).
    Based on TILE-Gx and MIPS targets.
 
    This file is part of BFD, the Binary File Descriptor library.
