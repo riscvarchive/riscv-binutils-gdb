@@ -1690,9 +1690,13 @@ jump:
 	    case 'c':
 	      my_getExpression (imm_expr, s);
 	      s = expr_end;
-	      *imm_reloc = BFD_RELOC_RISCV_CALL;
-	      if (*s == '@')
-		*imm_reloc = BFD_RELOC_RISCV_CALL_PLT, s++;
+	      if (strcmp (s, "@plt") == 0)
+		{
+		  *imm_reloc = BFD_RELOC_RISCV_CALL_PLT;
+		  s += 4;
+		}
+	      else
+		*imm_reloc = BFD_RELOC_RISCV_CALL;
 	      continue;
 
 	    default:
