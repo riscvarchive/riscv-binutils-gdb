@@ -58,6 +58,7 @@
 #include "user-regs.h"
 #include "valprint.h"
 #include "opcode/riscv-opc.h"
+#include <algorithm>
 
 struct riscv_frame_cache
 {
@@ -248,7 +249,7 @@ riscv_extract_return_value (struct type *type,
   while (len > 0)
     {
       regcache_cooked_read_unsigned (regs, regnum++, &tmp);
-      store_unsigned_integer (valbuf, min (regsize, len), byte_order, tmp);
+      store_unsigned_integer (valbuf, std::min (regsize, len), byte_order, tmp);
       len -= regsize;
       valbuf += regsize;
     }
@@ -955,7 +956,7 @@ riscv_skip_prologue (struct gdbarch *gdbarch,
     {
       CORE_ADDR post_prologue_pc = skip_prologue_using_sal (gdbarch, func_addr);
       if (post_prologue_pc != 0)
-	return max (pc, post_prologue_pc);
+	return std::max (pc, post_prologue_pc);
     }
 
   /* Can't determine prologue from the symbol table, need to examine
