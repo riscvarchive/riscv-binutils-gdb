@@ -2536,8 +2536,9 @@ riscv_reloc_type_class (const struct bfd_link_info *info ATTRIBUTE_UNUSED,
    object file when linking.  */
 
 static bfd_boolean
-_bfd_riscv_elf_merge_private_bfd_data (bfd *ibfd, bfd *obfd)
+_bfd_riscv_elf_merge_private_bfd_data (bfd *ibfd, struct bfd_link_info *info)
 {
+  bfd *obfd = info->output_bfd;
   flagword new_flags = elf_elfheader (ibfd)->e_flags;
   flagword old_flags = elf_elfheader (obfd)->e_flags;
 
@@ -2552,7 +2553,7 @@ _bfd_riscv_elf_merge_private_bfd_data (bfd *ibfd, bfd *obfd)
       return FALSE;
     }
 
-  if (!_bfd_elf_merge_object_attributes (ibfd, obfd))
+  if (!_bfd_elf_merge_object_attributes (ibfd, info))
     return FALSE;
 
   if (! elf_flags_init (obfd))
