@@ -2660,7 +2660,7 @@ _bfd_riscv_relax_call (bfd *abfd, asection *sec, asection *sym_sec,
 		       struct bfd_link_info *link_info,
 		       Elf_Internal_Rela *rel,
 		       bfd_vma symval,
-		       unsigned int max_alignment ATTRIBUTE_UNUSED,
+		       unsigned int max_alignment,
 		       bfd_boolean *again)
 {
   bfd_byte *contents = elf_section_data (sec)->this_hdr.contents;
@@ -2670,10 +2670,9 @@ _bfd_riscv_relax_call (bfd *abfd, asection *sec, asection *sym_sec,
   int rd, r_type, len = 4, rvc = elf_elfheader (abfd)->e_flags & EF_RISCV_RVC;
 
   /* If the call crosses section boundaries, an alignment directive could
-     cause the PC-relative offset to later increase.  Assume at most
-     page-alignment, and account for this by adding some slop.  */
+     cause the PC-relative offset to later increase.  */
   if (VALID_UJTYPE_IMM (foff) && sym_sec->output_section != sec->output_section)
-    foff += (foff < 0 ? -ELF_MAXPAGESIZE : ELF_MAXPAGESIZE);
+    foff += (foff < 0 ? -max_alignment : max_alignment);
 
   /* See if this function call can be shortened.  */
   if (!VALID_UJTYPE_IMM (foff) && !(!bfd_link_pic (link_info) && near_zero))
@@ -2782,12 +2781,11 @@ _bfd_riscv_relax_lui (bfd *abfd, asection *sec, asection *sym_sec,
 	}
     }
 
-  /* Can we relax LUI to C.LUI?  Alignment might move the section forward;
-     account for this assuming page alignment at worst.  */
+  /* Can we relax LUI to C.LUI?  Account for alignment.  */
   if (use_rvc
       && ELFNN_R_TYPE (rel->r_info) == R_RISCV_HI20
-      && VALID_RVC_LUI_IMM (RISCV_CONST_HIGH_PART (symval))
-      && VALID_RVC_LUI_IMM (RISCV_CONST_HIGH_PART (symval + ELF_MAXPAGESIZE)))
+      && VALID_RVC_LUI_IMM (RISCV_CONST_HIGH_PART (symval + max_alignment))
+      && VALID_RVC_LUI_IMM (RISCV_CONST_HIGH_PART (symval - max_alignment)))
     {
       /* Replace LUI with C.LUI if legal (i.e., rd != x2/sp).  */
       bfd_vma lui = bfd_get_32 (abfd, contents + rel->r_offset);
