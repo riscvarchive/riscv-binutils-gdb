@@ -1926,6 +1926,10 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
 	    case BFD_RELOC_8:
 	      fixP->fx_r_type = BFD_RELOC_RISCV_ADD8;
 	      fixP->fx_next->fx_r_type = BFD_RELOC_RISCV_SUB8;
+
+	    default:
+	      /* This case is unreachable.  */
+	      abort ();
 	    }
 	}
       /* fall through */
