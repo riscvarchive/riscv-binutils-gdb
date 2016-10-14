@@ -1783,7 +1783,7 @@ enum float_mode {
   FLOAT_MODE_SOFT,
   FLOAT_MODE_HARD
 };
-static enum float_mode marg_float_mode = FLOAT_MODE_DEFAULT;
+static enum float_mode float_mode = FLOAT_MODE_DEFAULT;
 
 int
 md_parse_option (int c, const char *arg)
@@ -1799,11 +1799,11 @@ md_parse_option (int c, const char *arg)
       break;
 
     case OPTION_MSOFT_FLOAT:
-      marg_float_mode = FLOAT_MODE_SOFT;
+      float_mode = FLOAT_MODE_SOFT;
       break;
 
     case OPTION_MHARD_FLOAT:
-      marg_float_mode = FLOAT_MODE_HARD;
+      float_mode = FLOAT_MODE_HARD;
       break;
 
     case OPTION_M32:
@@ -1836,9 +1836,6 @@ md_parse_option (int c, const char *arg)
 void
 riscv_after_parse_args (void)
 {
-  struct riscv_subset *subset;
-  enum float_mode isa_float_mode, elf_float_mode;
-
   if (riscv_subsets == NULL)
     riscv_set_arch ("RVIMAFDXcustom");
 
@@ -1851,35 +1848,6 @@ riscv_after_parse_args (void)
       else
 	as_bad ("unknown default architecture `%s'", default_arch);
     }
-
-  isa_float_mode = FLOAT_MODE_SOFT;
-  for (subset = riscv_subsets; subset != NULL; subset = subset->next)
-    {
-       if (strcasecmp(subset->name, "F") == 0)
-         isa_float_mode = FLOAT_MODE_HARD;
-       if (strcasecmp(subset->name, "D") == 0)
-         isa_float_mode = FLOAT_MODE_HARD;
-    }
-
-  if (marg_float_mode == FLOAT_MODE_HARD && isa_float_mode == FLOAT_MODE_SOFT)
-    as_bad ("Architecture doesn't allow hardfloat ABI");
-
-  elf_float_mode = (marg_float_mode == FLOAT_MODE_DEFAULT) ? isa_float_mode
-                                                           : marg_float_mode;
-
-  switch (elf_float_mode) {
-  case FLOAT_MODE_DEFAULT:
-    as_bad("a specific float mode must be specified for an ELF");
-    break;
-
-  case FLOAT_MODE_SOFT:
-    elf_flags |= EF_RISCV_SOFT_FLOAT;
-    break;
-
-  case FLOAT_MODE_HARD:
-    elf_flags &= ~EF_RISCV_SOFT_FLOAT;
-    break;
-  }
 }
 
 void
@@ -2067,6 +2035,10 @@ s_riscv_option (int x ATTRIBUTE_UNUSED)
     riscv_opts.pic = TRUE;
   else if (strcmp (name, "nopic") == 0)
     riscv_opts.pic = FALSE;
+  else if (strcmp (name, "soft-float") == 0)
+    float_mode = FLOAT_MODE_SOFT;
+  else if (strcmp (name, "hard-float") == 0)
+    float_mode = FLOAT_MODE_HARD;
   else if (strcmp (name, "push") == 0)
     {
       struct riscv_option_stack *s;
@@ -2402,7 +2374,24 @@ tc_riscv_regname_to_dw2regnum (char *regname)
 void
 riscv_elf_final_processing (void)
 {
+  enum float_mode elf_float_mode = float_mode;
+
   elf_elfheader (stdoutput)->e_flags |= elf_flags;
+
+  if (elf_float_mode == FLOAT_MODE_DEFAULT)
+    {
+      struct riscv_subset *subset;
+
+      /* Assume soft-float unless D extension is present.  */
+      elf_float_mode = FLOAT_MODE_SOFT;
+
+      for (subset = riscv_subsets; subset != NULL; subset = subset->next)
+	if (strcasecmp (subset->name, "D") == 0)
+	  elf_float_mode = FLOAT_MODE_HARD;
+    }
+
+  if (elf_float_mode == FLOAT_MODE_SOFT)
+    elf_elfheader (stdoutput)->e_flags |= EF_RISCV_SOFT_FLOAT;
 }
 
 /* Parse the .sleb128 and .uleb128 pseudos.  Only allow constant expressions,
