@@ -2782,11 +2782,12 @@ _bfd_riscv_relax_lui (bfd *abfd, asection *sec, asection *sym_sec,
 	}
     }
 
-  /* Can we relax LUI to C.LUI?  Account for alignment.  */
+  /* Can we relax LUI to C.LUI?  Alignment might move the section forward;
+     account for this assuming page alignment at worst.  */
   if (use_rvc
       && ELFNN_R_TYPE (rel->r_info) == R_RISCV_HI20
-      && VALID_RVC_LUI_IMM (RISCV_CONST_HIGH_PART (symval + max_alignment))
-      && VALID_RVC_LUI_IMM (RISCV_CONST_HIGH_PART (symval - max_alignment)))
+      && VALID_RVC_LUI_IMM (RISCV_CONST_HIGH_PART (symval))
+      && VALID_RVC_LUI_IMM (RISCV_CONST_HIGH_PART (symval + ELF_MAXPAGESIZE)))
     {
       /* Replace LUI with C.LUI if legal (i.e., rd != x2/sp).  */
       bfd_vma lui = bfd_get_32 (abfd, contents + rel->r_offset);
