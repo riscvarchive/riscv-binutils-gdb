@@ -434,7 +434,7 @@ reg_lookup_internal (const char *s, enum reg_class class)
   return DECODE_REG_NUM (r);
 }
 
-static int
+static bfd_boolean
 reg_lookup (char **s, enum reg_class class, unsigned int *regnop)
 {
   char *e;
@@ -462,7 +462,7 @@ reg_lookup (char **s, enum reg_class class, unsigned int *regnop)
   return reg >= 0;
 }
 
-static int
+static bfd_boolean
 arg_lookup (char **s, const char *const *array, size_t size, unsigned *regnop)
 {
   const char *p = strchr (*s, ',');
@@ -482,7 +482,7 @@ arg_lookup (char **s, const char *const *array, size_t size, unsigned *regnop)
 /* For consistency checking, verify that all bits are specified either
    by the match/mask part of the instruction definition, or by the
    operand list.  */
-static int
+static bfd_boolean
 validate_riscv_insn (const struct riscv_opcode *opc)
 {
   const char *p = opc->args;
