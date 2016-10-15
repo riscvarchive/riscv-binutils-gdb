@@ -215,7 +215,7 @@ riscv_set_arch (const char *p)
     }
 }
 
-/* handle of the OPCODE hash table */
+/* Handle of the OPCODE hash table.  */
 static struct hash_control *op_hash = NULL;
 
 /* This array holds the chars that always start a comment.  If the
