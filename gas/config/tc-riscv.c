@@ -649,9 +649,7 @@ static void
 append_insn (struct riscv_cl_insn *ip, expressionS *address_expr,
 	     bfd_reloc_code_real_type reloc_type)
 {
-#ifdef OBJ_ELF
   dwarf2_emit_insn (0);
-#endif
 
   if (reloc_type != BFD_RELOC_UNUSED)
     {
