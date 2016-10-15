@@ -2299,6 +2299,11 @@ RISC-V options:\n\
   -m64           assemble RV64 code (default)\n\
   -fpic          generate position-independent code\n\
   -fno-pic       don't generate position-independent code (default)\n\
+  -msoft-float   don't use F registers for floating-point values\n\
+  -mhard-float   use F registers for floating-point values (default)\n\
+  -mno-rvc       disable the C extension for compressed instructions (default)\n\
+  -mrvc          enable the C extension for compressed instructions\n\
+  -march=ISA     set the RISC-V architecture, RV64IMAFD by default\n\
 "));
 }
 
