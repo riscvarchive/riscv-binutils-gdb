@@ -128,32 +128,27 @@ riscv_add_subset (const char *subset)
 
    FIXME: Version numbers are not supported yet.  */
 static void
-riscv_set_arch (const char *arg)
+riscv_set_arch (const char *p)
 {
-  char *uppercase = xstrdup (arg);
-  char *p = uppercase;
   const char *all_subsets = "IMAFDC";
   const char *extension = NULL;
   int rvc = 0;
   int i;
 
-  for (i = 0; uppercase[i]; i++)
-    uppercase[i] = TOUPPER (uppercase[i]);
-
-  if (strncmp (p, "RV32", 4) == 0)
+  if (strncasecmp (p, "RV32", 4) == 0)
     {
       xlen = 32;
       p += 4;
     }
-  else if (strncmp (p, "RV64", 4) == 0)
+  else if (strncasecmp (p, "RV64", 4) == 0)
     {
       xlen = 64;
       p += 4;
     }
-  else if (strncmp (p, "RV", 2) == 0)
+  else if (strncasecmp (p, "RV", 2) == 0)
     p += 2;
 
-  switch (*p)
+  switch (TOUPPER(*p))
     {
       case 'I':
 	break;
@@ -177,7 +172,7 @@ riscv_set_arch (const char *arg)
 
   while (*p)
     {
-      if (*p == 'X')
+      if (TOUPPER(*p) == 'X')
 	{
 	  char *subset = xstrdup (p), *q = subset;
 
@@ -199,7 +194,7 @@ riscv_set_arch (const char *arg)
 	{
 	  const char subset[] = {*p, 0};
 	  riscv_add_subset (subset);
-	  if (*p == 'C')
+	  if (TOUPPER(*p) == 'C')
 	    rvc = 1;
 	  all_subsets++;
 	  p++;
@@ -218,8 +213,6 @@ riscv_set_arch (const char *arg)
       /* Add RVC anyway.  -m[no-]rvc toggles its availability.  */
       riscv_add_subset ("C");
     }
-
-  free (uppercase);
 }
 
 /* handle of the OPCODE hash table */
