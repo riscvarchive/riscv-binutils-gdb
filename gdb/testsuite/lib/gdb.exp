@@ -3290,12 +3290,8 @@ proc get_compiler_info {{arg ""}} {
     }
 
     # Set the legacy symbols.
-    set gcc_compiled     0
-    if { [regexp "^gcc-1-" "$compiler_info" ] } { set gcc_compiled 1 }
-    if { [regexp "^gcc-2-" "$compiler_info" ] } { set gcc_compiled 2 }
-    if { [regexp "^gcc-3-" "$compiler_info" ] } { set gcc_compiled 3 }
-    if { [regexp "^gcc-4-" "$compiler_info" ] } { set gcc_compiled 4 }
-    if { [regexp "^gcc-5-" "$compiler_info" ] } { set gcc_compiled 5 }
+    set gcc_compiled 0
+    regexp "^gcc-(\[0-9\]+)-" "$compiler_info" matchall gcc_compiled
 
     # Log what happened.
     verbose -log "get_compiler_info: $compiler_info"
@@ -5584,6 +5580,30 @@ proc get_target_charset { } {
     # Pick a reasonable default.
     warning "Unable to read target-charset."
     return "UTF-8"
+}
+
+# Get the address of VAR.
+
+proc get_var_address { var } {
+    global gdb_prompt hex
+
+    # Match output like:
+    # $1 = (int *) 0x0
+    # $5 = (int (*)()) 0
+    # $6 = (int (*)()) 0x24 <function_bar>
+
+    gdb_test_multiple "print &${var}" "get address of ${var}" {
+	-re "\\\$\[0-9\]+ = \\(.*\\) (0|$hex)( <${var}>)?\[\r\n\]+${gdb_prompt} $"
+	{
+	    pass "get address of ${var}"
+	    if { $expect_out(1,string) == "0" } {
+		return "0x0"
+	    } else {
+		return $expect_out(1,string)
+	    }
+	}
+    }
+    return ""
 }
 
 # Get the current value for remotetimeout and return it.

@@ -557,7 +557,7 @@ print_symbol (int width, const char *symbol)
   return num_printed;
 }
 
-/* Returns a pointer to a static buffer containing a  printable version of
+/* Returns a pointer to a static buffer containing a printable version of
    the given section's name.  Like print_symbol, except that it does not try
    to print multibyte characters, it just interprets them as hex values.  */
 
@@ -1972,7 +1972,7 @@ get_solaris_dynamic_type (unsigned long type)
     case 0x7ffffffe: return "USED";
     case 0x7fffffff: return "FILTER";
 
-    default: return NULL;      
+    default: return NULL;
     }
 }
 
@@ -2017,6 +2017,7 @@ get_dynamic_type (unsigned long type)
 
     case DT_PREINIT_ARRAY: return "PREINIT_ARRAY";
     case DT_PREINIT_ARRAYSZ: return "PREINIT_ARRAYSZ";
+    case DT_SYMTAB_SHNDX: return "SYMTAB_SHNDX";
 
     case DT_CHECKSUM:	return "CHECKSUM";
     case DT_PLTPADSZ:	return "PLTPADSZ";
@@ -2347,6 +2348,28 @@ get_machine_name (unsigned e_machine)
     case EM_TILEGX:		return "Tilera TILE-Gx multicore architecture family";
     case EM_CUDA:		return "NVIDIA CUDA architecture";
     case EM_XGATE:		return "Motorola XGATE embedded processor";
+    case EM_CLOUDSHIELD:	return "CloudShield architecture family";
+    case EM_COREA_1ST:		return "KIPO-KAIST Core-A 1st generation processor family";
+    case EM_COREA_2ND:		return "KIPO-KAIST Core-A 2nd generation processor family";
+    case EM_OPEN8:		return "Open8 8-bit RISC soft processor core";
+    case EM_VIDEOCORE5:		return "Broadcom VideoCore V processor";
+    case EM_56800EX:		return "Freescale 56800EX Digital Signal Controller (DSC)";
+    case EM_BA1:		return "Beyond BA1 CPU architecture";
+    case EM_BA2:		return "Beyond BA2 CPU architecture";
+    case EM_XCORE:		return "XMOS xCORE processor family";
+    case EM_MCHP_PIC:		return "Microchip 8-bit PIC(r) family";
+    case EM_KM32:		return "KM211 KM32 32-bit processor";
+    case EM_KMX32:		return "KM211 KMX32 32-bit processor";
+    case EM_KMX16:		return "KM211 KMX16 16-bit processor";
+    case EM_KMX8:		return "KM211 KMX8 8-bit processor";
+    case EM_KVARC:		return "KM211 KVARC processor";
+    case EM_CDP:		return "Paneve CDP architecture family";
+    case EM_COGE:		return "Cognitive Smart Memory Processor";
+    case EM_COOL:		return "Bluechip Systems CoolEngine";
+    case EM_NORC:		return "Nanoradio Optimized RISC";
+    case EM_CSR_KALIMBA:	return "CSR Kalimba architecture family";
+    case EM_Z80:		return "Zilog Z80";
+    case EM_AMDGPU:		return "AMD GPU architecture";
     default:
       snprintf (buff, sizeof (buff), _("<unknown>: 0x%x"), e_machine);
       return buff;
@@ -3548,6 +3571,8 @@ get_osabi_name (unsigned int osabi)
     case ELFOSABI_NSK:		return "HP - Non-Stop Kernel";
     case ELFOSABI_AROS:		return "AROS";
     case ELFOSABI_FENIXOS:	return "FenixOS";
+    case ELFOSABI_CLOUDABI:	return "Nuxi CloudABI";
+    case ELFOSABI_OPENVOS:	return "Stratus Technologies OpenVOS";
     default:
       if (osabi >= 64)
 	switch (elf_header.e_machine)
@@ -6267,19 +6292,32 @@ process_section_headers (FILE * file)
 static const char *
 get_group_flags (unsigned int flags)
 {
-  static char buff[32];
-  switch (flags)
+  static char buff[128];
+
+  if (flags == 0)
+    return "";
+  else if (flags == GRP_COMDAT)
+    return "COMDAT ";
+
+  snprintf (buff, 14, _("[0x%x: "), flags);
+
+  flags &= ~ GRP_COMDAT;
+  if (flags & GRP_MASKOS)
     {
-    case 0:
-      return "";
-
-    case GRP_COMDAT:
-      return "COMDAT ";
-
-   default:
-      snprintf (buff, sizeof (buff), _("[<unknown>: 0x%x] "), flags);
-      break;
+      strcat (buff, "<OS specific>");
+      flags &= ~ GRP_MASKOS;
     }
+
+  if (flags & GRP_MASKPROC)
+    {
+      strcat (buff, "<PROC specific>");
+      flags &= ~ GRP_MASKPROC;
+    }
+
+  if (flags)
+    strcat (buff, "<unknown>");
+
+  strcat (buff, "]");
   return buff;
 }
 
@@ -10748,12 +10786,14 @@ print_dynamic_symbol (bfd_vma si, unsigned long hn)
 }
 
 static const char *
-get_symbol_version_string (FILE *file, int is_dynsym,
-			   const char *strtab,
-			   unsigned long int strtab_size,
-			   unsigned int si, Elf_Internal_Sym *psym,
-			   enum versioned_symbol_info *sym_info,
-			   unsigned short *vna_other)
+get_symbol_version_string (FILE *                       file,
+			   bfd_boolean                  is_dynsym,
+			   const char *                 strtab,
+			   unsigned long int            strtab_size,
+			   unsigned int                 si,
+			   Elf_Internal_Sym *           psym,
+			   enum versioned_symbol_info * sym_info,
+			   unsigned short *             vna_other)
 {
   unsigned char data[2];
   unsigned short vers_data;
@@ -12162,7 +12202,7 @@ apply_relocations (void *                     file,
 		   const Elf_Internal_Shdr *  section,
 		   unsigned char *            start,
 		   bfd_size_type              size,
-		   void **                     relocs_return,
+		   void **                    relocs_return,
 		   unsigned long *            num_relocs_return)
 {
   Elf_Internal_Shdr * relsec;
@@ -12218,6 +12258,9 @@ apply_relocations (void *                     file,
 	is_rela = FALSE;
 
       symsec = section_headers + relsec->sh_link;
+      if (symsec->sh_type != SHT_SYMTAB
+	  && symsec->sh_type != SHT_DYNSYM)
+	return;
       symtab = GET_ELF_SYMBOLS ((FILE *) file, symsec, & num_syms);
 
       for (rp = relocs; rp < relocs + num_relocs; ++rp)
@@ -15559,8 +15602,7 @@ print_core_note (Elf_Internal_Note *pnote)
 static const char *
 get_gnu_elf_note_type (unsigned e_type)
 {
-  static char buff[64];
-
+  /* NB/ Keep this switch statement in sync with print_gnu_note ().  */
   switch (e_type)
     {
     case NT_GNU_ABI_TAG:
@@ -15572,16 +15614,19 @@ get_gnu_elf_note_type (unsigned e_type)
     case NT_GNU_GOLD_VERSION:
       return _("NT_GNU_GOLD_VERSION (gold version)");
     default:
-      break;
-    }
+      {
+	static char buff[64];
 
-  snprintf (buff, sizeof (buff), _("Unknown note type: (0x%08x)"), e_type);
-  return buff;
+	snprintf (buff, sizeof (buff), _("Unknown note type: (0x%08x)"), e_type);
+	return buff;
+      }
+    }
 }
 
 static int
 print_gnu_note (Elf_Internal_Note *pnote)
 {
+  /* NB/ Keep this switch statement in sync with get_gnu_elf_note_type ().  */
   switch (pnote->type)
     {
     case NT_GNU_BUILD_ID:
@@ -15652,6 +15697,42 @@ print_gnu_note (Elf_Internal_Note *pnote)
 	printf (_("    Version: "));
 	for (i = 0; i < pnote->descsz && pnote->descdata[i] != '\0'; ++i)
 	  printf ("%c", pnote->descdata[i]);
+	printf ("\n");
+      }
+      break;
+
+    case NT_GNU_HWCAP:
+      {
+	unsigned long num_entries, mask;
+
+	/* Hardware capabilities information.  Word 0 is the number of entries.
+	   Word 1 is a bitmask of enabled entries.  The rest of the descriptor
+	   is a series of entries, where each entry is a single byte followed
+	   by a nul terminated string.  The byte gives the bit number to test
+	   if enabled in the bitmask.  */
+	printf (_("      Hardware Capabilities: "));
+	if (pnote->descsz < 8)
+	  {
+	    printf (_("<corrupt GNU_HWCAP>\n"));
+	    break;
+	  }
+	num_entries = byte_get ((unsigned char *) pnote->descdata, 4);
+	mask = byte_get ((unsigned char *) pnote->descdata + 4, 4);
+	printf (_("num entries: %ld, enabled mask: %lx\n"), num_entries, mask);
+	/* FIXME: Add code to display the entries... */
+      }
+      break;
+
+    default:
+      /* Handle unrecognised types.  An error message should have already been
+	 created by get_gnu_elf_note_type(), so all that we need to do is to
+	 display the data.  */
+      {
+	unsigned long i;
+
+	printf (_("    Description data: "));
+	for (i = 0; i < pnote->descsz; ++i)
+	  printf ("%02x ", pnote->descdata[i] & 0xff);
 	printf ("\n");
       }
       break;
@@ -15739,7 +15820,7 @@ print_v850_note (Elf_Internal_Note * pnote)
   return 0;
 }
 
-static int 
+static int
 process_netbsd_elf_note (Elf_Internal_Note * pnote)
 {
   unsigned int version;
@@ -15752,11 +15833,11 @@ process_netbsd_elf_note (Elf_Internal_Note * pnote)
         printf ("  NetBSD\t\t0x%08lx\tIDENT %u (%u.%u%s%c)\n", pnote->descsz,
 		version, version / 100000000, (version / 1000000) % 100,
 		(version / 10000) % 100 > 26 ? "Z" : "",
-		'A' + (version / 10000) % 26); 
+		'A' + (version / 10000) % 26);
       else
 	printf ("  NetBSD\t\t0x%08lx\tIDENT %u (%u.%u.%u)\n", pnote->descsz,
 	        version, version / 100000000, (version / 1000000) % 100,
-		(version / 100) % 100); 
+		(version / 100) % 100);
       return 1;
 
     case NT_NETBSD_MARCH:
@@ -16037,7 +16118,9 @@ print_ia64_vms_note (Elf_Internal_Note * pnote)
 
    If the value of namesz is zero, there is no name present.  */
 static int
-process_note (Elf_Internal_Note * pnote)
+process_note (Elf_Internal_Note * pnote,
+	      FILE * file ATTRIBUTE_UNUSED,
+	      Elf_Internal_Shdr * section ATTRIBUTE_UNUSED)
 {
   const char * name = pnote->namesz ? pnote->namedata : "(NONE)";
   const char * nt;
@@ -16082,7 +16165,9 @@ process_note (Elf_Internal_Note * pnote)
        note type strings.  */
     nt = get_note_type (pnote->type);
 
-  printf ("  %-20s 0x%08lx\t%s\n", name, pnote->descsz, nt);
+  printf ("  ");
+  print_symbol (-20, name);
+  printf (" 0x%08lx\t%s\n", pnote->descsz, nt);
 
   if (const_strneq (pnote->namedata, "IPF/VMS"))
     return print_ia64_vms_note (pnote);
@@ -16092,13 +16177,25 @@ process_note (Elf_Internal_Note * pnote)
     return print_stapsdt_note (pnote);
   else if (const_strneq (pnote->namedata, "CORE"))
     return print_core_note (pnote);
-  else
-    return 1;
+
+  else if (pnote->descsz)
+    {
+      unsigned long i;
+
+      printf (_("   description data: "));
+      for (i = 0; i < pnote->descsz; i++)
+	printf ("%02x ", pnote->descdata[i]);
+      printf ("\n");
+    }
+
+  return 1;
 }
 
-
 static int
-process_corefile_note_segment (FILE * file, bfd_vma offset, bfd_vma length)
+process_notes_at (FILE *              file,
+		  Elf_Internal_Shdr * section,
+		  bfd_vma             offset,
+		  bfd_vma             length)
 {
   Elf_External_Note * pnotes;
   Elf_External_Note * external;
@@ -16108,15 +16205,26 @@ process_corefile_note_segment (FILE * file, bfd_vma offset, bfd_vma length)
   if (length <= 0)
     return 0;
 
-  pnotes = (Elf_External_Note *) get_data (NULL, file, offset, 1, length,
-					   _("notes"));
+  if (section)
+    {
+      pnotes = (Elf_External_Note *) get_section_contents (section, file);
+      if (pnotes)
+	apply_relocations (file, section, (unsigned char *) pnotes, length, NULL, NULL);
+    }
+  else
+    pnotes = (Elf_External_Note *) get_data (NULL, file, offset, 1, length,
+					     _("notes"));
   if (pnotes == NULL)
     return 0;
 
   external = pnotes;
 
-  printf (_("\nDisplaying notes found at file offset 0x%08lx with length 0x%08lx:\n"),
-	  (unsigned long) offset, (unsigned long) length);
+  if (section)
+    printf (_("\nDisplaying notes found in: %s\n"), printable_section_name (section));
+  else
+    printf (_("\nDisplaying notes found at file offset 0x%08lx with length 0x%08lx:\n"),
+	    (unsigned long) offset, (unsigned long) length);
+
   printf (_("  %-20s %10s\tDescription\n"), _("Owner"), _("Data size"));
 
   end = (char *) pnotes + length;
@@ -16216,7 +16324,7 @@ process_corefile_note_segment (FILE * file, bfd_vma offset, bfd_vma length)
 	  inote.namedata = temp;
 	}
 
-      res &= process_note (& inote);
+      res &= process_note (& inote, file, section);
 
       if (temp != NULL)
 	{
@@ -16245,9 +16353,9 @@ process_corefile_note_segments (FILE * file)
        i++, segment++)
     {
       if (segment->p_type == PT_NOTE)
-	res &= process_corefile_note_segment (file,
-					      (bfd_vma) segment->p_offset,
-					      (bfd_vma) segment->p_filesz);
+	res &= process_notes_at (file, NULL,
+				 (bfd_vma) segment->p_offset,
+				 (bfd_vma) segment->p_filesz);
     }
 
   return res;
@@ -16348,9 +16456,9 @@ process_note_sections (FILE * file)
     {
       if (section->sh_type == SHT_NOTE)
 	{
-	  res &= process_corefile_note_segment (file,
-						(bfd_vma) section->sh_offset,
-						(bfd_vma) section->sh_size);
+	  res &= process_notes_at (file, section,
+				   (bfd_vma) section->sh_offset,
+				   (bfd_vma) section->sh_size);
 	  n++;
 	}
 

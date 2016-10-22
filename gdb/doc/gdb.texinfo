@@ -13678,7 +13678,7 @@ the data directly into @var{filename} in its own filesystem, which may be
 more efficient if the trace buffer is very large.  (Note, however, that
 @code{target tfile} can only read from files accessible to the host.)
 By default, this command will save trace frame in tfile format.
-You can supply the optional argument @code{-ctf} to save date in CTF
+You can supply the optional argument @code{-ctf} to save data in CTF
 format.  The @dfn{Common Trace Format} (CTF) is proposed as a trace format
 that can be shared by multiple debugging and tracing tools.  Please go to
 @indicateurl{http://www.efficios.com/ctf} to get more information.
@@ -30934,13 +30934,17 @@ body=[variable=@{name="$trace_timestamp",initial="0"@}
 @subsubheading Synopsis
 
 @smallexample
- -trace-save [-r ] @var{filename}
+ -trace-save [ -r ] [ -ctf ] @var{filename}
 @end smallexample
 
 Saves the collected trace data to @var{filename}.  Without the
 @samp{-r} option, the data is downloaded from the target and saved
 in a local file.  With the @samp{-r} option the target is asked
 to perform the save.
+
+By default, this command will save the trace in the tfile format.  You can
+supply the optional @samp{-ctf} argument to save it the CTF format. See
+@ref{Trace Files} for more information about CTF.
 
 @subsubheading @value{GDBN} Command
 
@@ -30956,7 +30960,7 @@ The corresponding @value{GDBN} command is @samp{tsave}.
  -trace-start
 @end smallexample
 
-Starts a tracing experiments.  The result of this command does not
+Starts a tracing experiment.  The result of this command does not
 have any fields.
 
 @subsubheading @value{GDBN} Command
