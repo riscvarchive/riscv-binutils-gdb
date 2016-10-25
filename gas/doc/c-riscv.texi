@@ -34,11 +34,12 @@ Select the base ISA, either RV32 or RV64.
 @item -mrvc
 Enables the C ISA subset for compressed instructions.
 
-@cindex @samp{-msoft-float} option, RISC-V
-@cindex @samp{-mhard-float} option, RISC-V
-@item -msoft-float | -mhard-float
-Select the floating-point ABI, hard-float has F registers while soft-float
-doesn't.
+@cindex @samp{-mfloat-abi=ABI} option, RISC-V
+@item -mfloat-abi=ABI
+Selects the floating-point ABI that will be used.  ABI can be one of "soft",
+"single", "double", or "quad".  ABI selects the largest floating point format
+that will be passed in registers, with "soft" passing no floating point
+arguments in registers.
 
 @cindex @samp{-march=RV{32,64}{G,I}{M,}{A,}{F,}{D,}{C,}} option, RISC-V
 @item -march=RV{32,64}{G,I}{M,}{A,}{F,}{D,}{C,}
