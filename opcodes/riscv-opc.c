@@ -70,9 +70,9 @@ const char * const riscv_fpr_names_abi[NFPR] = {
 #define MASK_RS2 (OP_MASK_RS2 << OP_SH_RS2)
 #define MASK_RD (OP_MASK_RD << OP_SH_RD)
 #define MASK_CRS2 (OP_MASK_CRS2 << OP_SH_CRS2)
-#define MASK_IMM ENCODE_ITYPE_IMM(-1U)
-#define MASK_RVC_IMM ENCODE_RVC_IMM(-1U)
-#define MASK_UIMM ENCODE_UTYPE_IMM(-1U)
+#define MASK_IMM ENCODE_ITYPE_IMM (-1U)
+#define MASK_RVC_IMM ENCODE_RVC_IMM (-1U)
+#define MASK_UIMM ENCODE_UTYPE_IMM (-1U)
 #define MASK_RM (OP_MASK_RM << OP_SH_RM)
 #define MASK_PRED (OP_MASK_PRED << OP_SH_PRED)
 #define MASK_SUCC (OP_MASK_SUCC << OP_SH_SUCC)
@@ -80,13 +80,13 @@ const char * const riscv_fpr_names_abi[NFPR] = {
 #define MASK_RL (OP_MASK_RL << OP_SH_RL)
 #define MASK_AQRL (MASK_AQ | MASK_RL)
 
-static int match_opcode(const struct riscv_opcode *op, insn_t insn)
+static int match_opcode (const struct riscv_opcode *op, insn_t insn)
 {
   return ((insn ^ op->match) & op->mask) == 0;
 }
 
-static int match_never(const struct riscv_opcode *op ATTRIBUTE_UNUSED,
-		       insn_t insn ATTRIBUTE_UNUSED)
+static int match_never (const struct riscv_opcode *op ATTRIBUTE_UNUSED,
+			insn_t insn ATTRIBUTE_UNUSED)
 {
   return 0;
 }
@@ -98,17 +98,17 @@ static int match_rs1_eq_rs2(const struct riscv_opcode *op, insn_t insn)
   return match_opcode (op, insn) && rs1 == rs2;
 }
 
-static int match_rd_nonzero(const struct riscv_opcode *op, insn_t insn)
+static int match_rd_nonzero (const struct riscv_opcode *op, insn_t insn)
 {
   return match_opcode (op, insn) && ((insn & MASK_RD) != 0);
 }
 
-static int match_c_add(const struct riscv_opcode *op, insn_t insn)
+static int match_c_add (const struct riscv_opcode *op, insn_t insn)
 {
   return match_rd_nonzero (op, insn) && ((insn & MASK_CRS2) != 0);
 }
 
-static int match_c_lui(const struct riscv_opcode *op, insn_t insn)
+static int match_c_lui (const struct riscv_opcode *op, insn_t insn)
 {
   return match_rd_nonzero (op, insn) && (((insn & MASK_RD) >> OP_SH_RD) != 2);
 }
@@ -232,7 +232,7 @@ const struct riscv_opcode riscv_opcodes[] =
 {"or",        "I",   "d,s,t",  MATCH_OR, MASK_OR, match_opcode, 0 },
 {"or",        "I",   "d,s,j",  MATCH_ORI, MASK_ORI, match_opcode, INSN_ALIAS },
 {"auipc",     "I",   "d,u",  MATCH_AUIPC, MASK_AUIPC, match_opcode, 0 },
-{"seqz",      "I",   "d,s",  MATCH_SLTIU | ENCODE_ITYPE_IMM(1), MASK_SLTIU | MASK_IMM, match_opcode, INSN_ALIAS },
+{"seqz",      "I",   "d,s",  MATCH_SLTIU | ENCODE_ITYPE_IMM (1), MASK_SLTIU | MASK_IMM, match_opcode, INSN_ALIAS },
 {"snez",      "I",   "d,t",  MATCH_SLTU, MASK_SLTU | MASK_RS1, match_opcode, INSN_ALIAS },
 {"sltz",      "I",   "d,s",  MATCH_SLT, MASK_SLT | MASK_RS2, match_opcode, INSN_ALIAS },
 {"sgtz",      "I",   "d,t",  MATCH_SLT, MASK_SLT | MASK_RS1, match_opcode, INSN_ALIAS },
