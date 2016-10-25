@@ -193,7 +193,7 @@ riscv_set_arch (const char *p)
 	}
       else if (*p == '_')
 	p++;
-      else if ((all_subsets = strchr (all_subsets, *p)) != NULL)
+      else if ((all_subsets = strchr (all_subsets, TOUPPER (*p))) != NULL)
 	{
 	  const char subset[] = {*p, 0};
 	  riscv_add_subset (subset);
