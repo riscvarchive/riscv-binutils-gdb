@@ -2562,8 +2562,8 @@ _bfd_riscv_elf_merge_private_bfd_data (bfd *ibfd, bfd *obfd)
       return TRUE;
     }
 
-  /* Disallow linking soft-float and hard-float.  */
-  if ((old_flags ^ new_flags) & EF_RISCV_SOFT_FLOAT)
+  /* Disallow linking different float ABIs.  */
+  if ((old_flags ^ new_flags) & EF_RISCV_FLOAT_ABI)
     {
       (*_bfd_error_handler)
 	(_("%B: can't link hard-float modules with soft-float modules"), ibfd);
