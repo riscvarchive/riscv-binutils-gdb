@@ -2675,7 +2675,7 @@ _bfd_riscv_relax_call (bfd *abfd, asection *sec, asection *sym_sec,
 		       struct bfd_link_info *link_info,
 		       Elf_Internal_Rela *rel,
 		       bfd_vma symval,
-		       unsigned int max_alignment,
+		       bfd_vma max_alignment,
 		       bfd_boolean *again)
 {
   bfd_byte *contents = elf_section_data (sec)->this_hdr.contents;
@@ -2733,7 +2733,7 @@ _bfd_riscv_relax_call (bfd *abfd, asection *sec, asection *sym_sec,
 
 /* Traverse all output sections and return the max alignment.  */
 
-static unsigned int
+static bfd_vma
 _bfd_riscv_get_max_alignment (asection *sec)
 {
   unsigned int max_alignment_power = 0;
@@ -2745,7 +2745,7 @@ _bfd_riscv_get_max_alignment (asection *sec)
 	max_alignment_power = o->alignment_power;
     }
 
-  return 1 << max_alignment_power;
+  return (bfd_vma) 1 << max_alignment_power;
 }
 
 /* Relax non-PIC global variable references.  */
@@ -2757,7 +2757,7 @@ _bfd_riscv_relax_lui (bfd *abfd,
 		      struct bfd_link_info *link_info,
 		      Elf_Internal_Rela *rel,
 		      bfd_vma symval,
-		      unsigned int max_alignment,
+		      bfd_vma max_alignment,
 		      bfd_boolean *again)
 {
   bfd_byte *contents = elf_section_data (sec)->this_hdr.contents;
@@ -2832,7 +2832,7 @@ _bfd_riscv_relax_tls_le (bfd *abfd,
 			 struct bfd_link_info *link_info,
 			 Elf_Internal_Rela *rel,
 			 bfd_vma symval,
-			 unsigned int max_alignment ATTRIBUTE_UNUSED,
+			 bfd_vma max_alignment ATTRIBUTE_UNUSED,
 			 bfd_boolean *again)
 {
   /* See if this symbol is in range of tp.  */
@@ -2856,7 +2856,7 @@ _bfd_riscv_relax_align (bfd *abfd, asection *sec,
 			struct bfd_link_info *link_info ATTRIBUTE_UNUSED,
 			Elf_Internal_Rela *rel,
 			bfd_vma symval,
-			unsigned int max_alignment ATTRIBUTE_UNUSED,
+			bfd_vma max_alignment ATTRIBUTE_UNUSED,
 			bfd_boolean *again ATTRIBUTE_UNUSED)
 {
   bfd_byte *contents = elf_section_data (sec)->this_hdr.contents;
@@ -2909,7 +2909,7 @@ _bfd_riscv_relax_section (bfd *abfd, asection *sec,
   Elf_Internal_Rela *relocs;
   bfd_boolean ret = FALSE;
   unsigned int i;
-  unsigned int max_alignment;
+  bfd_vma max_alignment;
 
   *again = FALSE;
 
