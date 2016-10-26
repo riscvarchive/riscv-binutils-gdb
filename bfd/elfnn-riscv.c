@@ -2668,6 +2668,11 @@ riscv_relax_delete_bytes (bfd *abfd, asection *sec, bfd_vma addr, size_t count)
   return TRUE;
 }
 
+typedef bfd_boolean (*relax_func_t) (bfd *, asection *, asection *,
+				     struct bfd_link_info *,
+				     Elf_Internal_Rela *,
+				     bfd_vma, bfd_vma, bfd_boolean *);
+
 /* Relax AUIPC + JALR into JAL.  */
 
 static bfd_boolean
@@ -2935,7 +2940,7 @@ _bfd_riscv_relax_section (bfd *abfd, asection *sec,
     {
       asection *sym_sec;
       Elf_Internal_Rela *rel = relocs + i;
-      typeof (&_bfd_riscv_relax_call) relax_func = NULL;
+      relax_func_t relax_func = NULL;
       int type = ELFNN_R_TYPE (rel->r_info);
       bfd_vma symval;
 
