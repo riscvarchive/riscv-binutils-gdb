@@ -63,7 +63,7 @@ static reloc_howto_type howto_table[] =
 	 "R_RISCV_32",			/* name */
 	 FALSE,				/* partial_inplace */
 	 0,				/* src_mask */
-	 0xffffffff,			/* dst_mask */
+	 MINUS_ONE,			/* dst_mask */
 	 FALSE),			/* pcrel_offset */
 
   /* 64 bit relocation.  */
@@ -93,7 +93,7 @@ static reloc_howto_type howto_table[] =
 	 "R_RISCV_RELATIVE",		/* name */
 	 FALSE,				/* partial_inplace */
 	 0,				/* src_mask */
-	 0xffffffff,			/* dst_mask */
+	 MINUS_ONE,			/* dst_mask */
 	 FALSE),			/* pcrel_offset */
 
   HOWTO (R_RISCV_COPY,			/* type */
@@ -106,8 +106,8 @@ static reloc_howto_type howto_table[] =
 	 bfd_elf_generic_reloc,		/* special_function */
 	 "R_RISCV_COPY",		/* name */
 	 FALSE,				/* partial_inplace */
-	 0x0,         			/* src_mask */
-	 0x0,		        	/* dst_mask */
+	 0,         			/* src_mask */
+	 0,		        	/* dst_mask */
 	 FALSE),			/* pcrel_offset */
 
   HOWTO (R_RISCV_JUMP_SLOT,		/* type */
@@ -120,8 +120,8 @@ static reloc_howto_type howto_table[] =
 	 bfd_elf_generic_reloc,		/* special_function */
 	 "R_RISCV_JUMP_SLOT",		/* name */
 	 FALSE,				/* partial_inplace */
-	 0x0,         			/* src_mask */
-	 0x0,		        	/* dst_mask */
+	 0,         			/* src_mask */
+	 0,		        	/* dst_mask */
 	 FALSE),			/* pcrel_offset */
 
   /* Dynamic TLS relocations.  */
