@@ -135,7 +135,7 @@ static reloc_howto_type howto_table[] =
 	 bfd_elf_generic_reloc, 	/* special_function */
 	 "R_RISCV_TLS_DTPMOD32",	/* name */
 	 FALSE,				/* partial_inplace */
-	 MINUS_ONE,			/* src_mask */
+	 0,				/* src_mask */
 	 MINUS_ONE,			/* dst_mask */
 	 FALSE),			/* pcrel_offset */
 
@@ -149,7 +149,7 @@ static reloc_howto_type howto_table[] =
 	 bfd_elf_generic_reloc, 	/* special_function */
 	 "R_RISCV_TLS_DTPMOD64",	/* name */
 	 FALSE,				/* partial_inplace */
-	 MINUS_ONE,			/* src_mask */
+	 0,				/* src_mask */
 	 MINUS_ONE,			/* dst_mask */
 	 FALSE),			/* pcrel_offset */
 
@@ -163,7 +163,7 @@ static reloc_howto_type howto_table[] =
 	 bfd_elf_generic_reloc, 	/* special_function */
 	 "R_RISCV_TLS_DTPREL32",	/* name */
 	 TRUE,				/* partial_inplace */
-	 MINUS_ONE,			/* src_mask */
+	 0,				/* src_mask */
 	 MINUS_ONE,			/* dst_mask */
 	 FALSE),			/* pcrel_offset */
 
@@ -177,7 +177,7 @@ static reloc_howto_type howto_table[] =
 	 bfd_elf_generic_reloc, 	/* special_function */
 	 "R_RISCV_TLS_DTPREL64",	/* name */
 	 TRUE,				/* partial_inplace */
-	 MINUS_ONE,			/* src_mask */
+	 0,				/* src_mask */
 	 MINUS_ONE,			/* dst_mask */
 	 FALSE),			/* pcrel_offset */
 
@@ -191,7 +191,7 @@ static reloc_howto_type howto_table[] =
 	 bfd_elf_generic_reloc, 	/* special_function */
 	 "R_RISCV_TLS_TPREL32",		/* name */
 	 FALSE,				/* partial_inplace */
-	 MINUS_ONE,			/* src_mask */
+	 0,				/* src_mask */
 	 MINUS_ONE,			/* dst_mask */
 	 FALSE),			/* pcrel_offset */
 
@@ -205,7 +205,7 @@ static reloc_howto_type howto_table[] =
 	 bfd_elf_generic_reloc, 	/* special_function */
 	 "R_RISCV_TLS_TPREL64",		/* name */
 	 FALSE,				/* partial_inplace */
-	 MINUS_ONE,			/* src_mask */
+	 0,				/* src_mask */
 	 MINUS_ONE,			/* dst_mask */
 	 FALSE),			/* pcrel_offset */
 
