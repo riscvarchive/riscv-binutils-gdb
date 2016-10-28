@@ -560,19 +560,35 @@ riscv_print_register_formatted (struct ui_file *file, struct frame_info *frame,
 
       if (regnum == RISCV_CSR_MSTATUS_REGNUM)
 	{
-	  d = unpack_long (builtin_type (gdbarch)->builtin_int32, raw_buffer);
-	  fprintf_filtered (file, "IP:%02X IM:%02X EA:%d VM:%d S64:%d U64:%d EF:%d PEI:%d EI:%d PS:%d S:%d",
-			    (int)((d >> 24) & 0xFF),
-			    (int)((d >> 16) & 0xFF),
-			    (int)((d >> 8) & 0x1),
-			    (int)((d >> 7) & 0x1),
-			    (int)((d >> 6) & 0x1),
-			    (int)((d >> 5) & 0x1),
-			    (int)((d >> 4) & 0x1),
-			    (int)((d >> 3) & 0x1),
-			    (int)((d >> 2) & 0x1),
-			    (int)((d >> 1) & 0x1),
-			    (int)((d >> 0) & 0x1));
+          if (size == 4) {
+            d = unpack_long (builtin_type (gdbarch)->builtin_uint32, raw_buffer);
+          } else if (size == 8) {
+            d = unpack_long (builtin_type (gdbarch)->builtin_uint64, raw_buffer);
+          } else {
+            internal_error (__FILE__, __LINE__, _("unknown size for mstatus"));
+          }
+          unsigned xlen = size * 4;
+          fprintf_filtered (file, "SD:%X VM:%02X MXR:%X PUM:%X MPRV:%X XS:%X "
+                  "FS:%X MPP:%x HPP:%X SPP:%X MPIE:%X HPIE:%X SPIE:%X UPIE:%X "
+                  "MIE:%X HIE:%X SIE:%X UIE:%X",
+                  (int)((d >> (xlen-1)) & 0x1),
+                  (int)((d >> 24) & 0x1f),
+                  (int)((d >> 19) & 0x1),
+                  (int)((d >> 18) & 0x1),
+                  (int)((d >> 17) & 0x1),
+                  (int)((d >> 15) & 0x3),
+                  (int)((d >> 13) & 0x3),
+                  (int)((d >> 11) & 0x3),
+                  (int)((d >> 9) & 0x3),
+                  (int)((d >> 8) & 0x1),
+                  (int)((d >> 7) & 0x1),
+                  (int)((d >> 6) & 0x1),
+                  (int)((d >> 5) & 0x1),
+                  (int)((d >> 4) & 0x1),
+                  (int)((d >> 3) & 0x1),
+                  (int)((d >> 2) & 0x1),
+                  (int)((d >> 1) & 0x1),
+                  (int)((d >> 0) & 0x1));
 	}
       else if (regnum == RISCV_CSR_MISA_REGNUM)
         {
