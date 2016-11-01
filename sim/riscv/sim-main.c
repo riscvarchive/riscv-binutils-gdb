@@ -1263,7 +1263,8 @@ execute_i (SIM_CPU *cpu, unsigned_word iw, const struct riscv_opcode *op)
 		break;
 	      }
 	    default:
-	      cpu->a0 = -1;
+	      cpu->a0 = sim_syscall (cpu, cpu->a7, cpu->a0,
+				     cpu->a1, cpu->a2, cpu->a3);
 	      break;
 	    }
 	}
