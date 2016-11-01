@@ -7592,6 +7592,9 @@ subject, see the hardware manufacturer's manual.
 @ifset RL78
 * RL78-Dependent::              RL78 Dependent Features
 @end ifset
+@ifset RISCV
+* RISC-V-Dependent::            RISC-V Dependent Features
+@end ifset
 @ifset RX
 * RX-Dependent::                RX Dependent Features
 @end ifset
@@ -7817,6 +7820,10 @@ family.
 
 @ifset RL78
 @include c-rl78.texi
+@end ifset
+
+@ifset RISCV
+@include c-riscv.texi
 @end ifset
 
 @ifset RX
