@@ -48,6 +48,14 @@ extern int riscv_relax_frag (asection *, struct frag *, long);
 #define md_undefined_symbol(name)	(0)
 #define md_operand(x)
 
+extern void riscv_frag_align_code (int, int);
+#define md_do_align(N, FILL, LEN, MAX, LABEL)					\
+  if (FILL == NULL && (N) != 0 && ! need_pass_2 && subseg_text_p (now_seg))	\
+    {										\
+      riscv_frag_align_code (N, MAX);						\
+      goto LABEL;								\
+    }
+
 /* FIXME: it is unclear if this is used, or if it is even correct.  */
 #define MAX_MEM_FOR_RS_ALIGN_CODE  (1 + 2)
 

@@ -2086,63 +2086,36 @@ s_bss (int ignore ATTRIBUTE_UNUSED)
   demand_empty_rest_of_line ();
 }
 
-/* Align to a given power of two.  */
+/* Called from md_do_align.  Used to create an alignment frag in a
+   code section by emitting a worst-case NOP sequence that the linker
+   will later relax to the correct number of NOPs.  We can't compute
+   the correct alignment now because of other linker relaxations.  */
 
-static void
-s_align (int bytes_p)
+void
+riscv_frag_align_code (int n, int max)
 {
-  int fill_value = 0, fill_value_specified = 0;
-  int min_text_alignment = riscv_opts.rvc ? 2 : 4;
-  int alignment = get_absolute_expression (), bytes;
+  bfd_vma bytes = (bfd_vma)1 << n;
+  bfd_vma min_text_alignment = riscv_opts.rvc ? 2 : 4;
 
-  if (bytes_p)
+  if (bytes > min_text_alignment)
     {
-      bytes = alignment;
-      if (bytes < 1 || (bytes & (bytes-1)) != 0)
-	as_bad (_("alignment not a power of 2: %d"), bytes);
-      for (alignment = 0; bytes > 1; bytes >>= 1)
-	alignment++;
-    }
-
-  bytes = 1 << alignment;
-
-  if (alignment < 0 || alignment > 31)
-    as_bad (_("unsatisfiable alignment: %d"), alignment);
-
-  if (*input_line_pointer == ',')
-    {
-      ++input_line_pointer;
-      fill_value = get_absolute_expression ();
-      fill_value_specified = 1;
-    }
-
-  if (!fill_value_specified
-      && subseg_text_p (now_seg)
-      && bytes > min_text_alignment)
-    {
-      /* Emit the worst-case NOP string.  The linker will delete any
-	 unnecessary NOPs.  This allows us to support code alignment
-	 in spite of linker relaxations.  */
-      bfd_vma i, worst_case_bytes = bytes - min_text_alignment;
+      bfd_vma worst_case_bytes = bytes - min_text_alignment;
       char *nops = frag_more (worst_case_bytes);
+      expressionS ex;
+      bfd_vma i;
+
       for (i = 0; i < worst_case_bytes - 2; i += 4)
 	md_number_to_chars (nops + i, RISCV_NOP, 4);
+
       if (i < worst_case_bytes)
 	md_number_to_chars (nops + i, RVC_NOP, 2);
 
-      expressionS ex;
       ex.X_op = O_constant;
       ex.X_add_number = worst_case_bytes;
 
       fix_new_exp (frag_now, nops - frag_now->fr_literal, 0,
 		   &ex, FALSE, BFD_RELOC_RISCV_ALIGN);
     }
-  else if (alignment)
-    frag_align (alignment, fill_value, 0);
-
-  record_alignment (now_seg, alignment);
-
-  demand_empty_rest_of_line ();
 }
 
 int
@@ -2389,9 +2362,6 @@ static const pseudo_typeS riscv_pseudo_table[] =
   {"dtprelword", s_dtprel, 4},
   {"dtpreldword", s_dtprel, 8},
   {"bss", s_bss, 0},
-  {"align", s_align, 0},
-  {"p2align", s_align, 0},
-  {"balign", s_align, 1},
   {"uleb128", s_riscv_leb128, 0},
   {"sleb128", s_riscv_leb128, 1},
 
