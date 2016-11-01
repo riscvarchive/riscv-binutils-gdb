@@ -56,9 +56,6 @@ extern void riscv_frag_align_code (int, int);
       goto LABEL;								\
     }
 
-/* FIXME: it is unclear if this is used, or if it is even correct.  */
-#define MAX_MEM_FOR_RS_ALIGN_CODE  (1 + 2)
-
 /* The ISA of the target may change based on command-line arguments.  */
 #define TARGET_FORMAT riscv_target_format()
 extern const char * riscv_target_format (void);
