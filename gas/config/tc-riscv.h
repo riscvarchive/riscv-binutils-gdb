@@ -56,8 +56,6 @@ extern bfd_boolean riscv_frag_align_code (int);
 	goto LABEL;							\
     }
 
-#define MAX_MEM_FOR_RS_ALIGN_CODE 7
-
 /* The ISA of the target may change based on command-line arguments.  */
 #define TARGET_FORMAT riscv_target_format()
 extern const char * riscv_target_format (void);
