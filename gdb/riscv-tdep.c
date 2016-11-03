@@ -1220,7 +1220,6 @@ riscv_gdbarch_init (struct gdbarch_info  info,
   /* Information about the target architecture.  */
   set_gdbarch_return_value (gdbarch, riscv_return_value);
   set_gdbarch_breakpoint_from_pc (gdbarch, riscv_breakpoint_from_pc);
-  set_gdbarch_remote_breakpoint_from_pc (gdbarch, riscv_remote_breakpoint_from_pc);
   set_gdbarch_print_insn (gdbarch, print_insn_riscv);
 
   /* Register architecture.  */
