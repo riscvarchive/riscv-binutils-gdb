@@ -2141,35 +2141,81 @@ s_bss (int ignore ATTRIBUTE_UNUSED)
   demand_empty_rest_of_line ();
 }
 
+static void
+riscv_make_nops (char *buf, bfd_vma bytes)
+{
+  bfd_vma i = 0;
+
+  if (bytes % 4 == 2)
+    {
+      md_number_to_chars (buf, RVC_NOP, 2);
+      i += 2;
+    }
+
+  gas_assert ((bytes - i) % 4 == 0);
+
+  for ( ; i < bytes; i += 4)
+    md_number_to_chars (buf + i, RISCV_NOP, 4);
+}
+
 /* Called from md_do_align.  Used to create an alignment frag in a
    code section by emitting a worst-case NOP sequence that the linker
    will later relax to the correct number of NOPs.  We can't compute
    the correct alignment now because of other linker relaxations.  */
 
-void
-riscv_frag_align_code (int n, int max)
+bfd_boolean
+riscv_frag_align_code (int n)
 {
   bfd_vma bytes = (bfd_vma)1 << n;
   bfd_vma min_text_alignment = riscv_opts.rvc ? 2 : 4;
+
+  /* When not relaxing, riscv_handle_align handles code alignment.  */
+  if (!riscv_opts.relax)
+    return FALSE;
 
   if (bytes > min_text_alignment)
     {
       bfd_vma worst_case_bytes = bytes - min_text_alignment;
       char *nops = frag_more (worst_case_bytes);
       expressionS ex;
-      bfd_vma i;
-
-      for (i = 0; i < worst_case_bytes - 2; i += 4)
-	md_number_to_chars (nops + i, RISCV_NOP, 4);
-
-      if (i < worst_case_bytes)
-	md_number_to_chars (nops + i, RVC_NOP, 2);
 
       ex.X_op = O_constant;
       ex.X_add_number = worst_case_bytes;
 
+      riscv_make_nops (nops, worst_case_bytes);
+
       fix_new_exp (frag_now, nops - frag_now->fr_literal, 0,
 		   &ex, FALSE, BFD_RELOC_RISCV_ALIGN);
+    }
+
+  return TRUE;
+}
+
+/* Implement HANDLE_ALIGN.  */
+
+void
+riscv_handle_align (fragS *fragP)
+{
+  switch (fragP->fr_type)
+    {
+    case rs_align_code:
+      /* When relaxing, riscv_frag_align_code handles code alignment.  */
+      if (!riscv_opts.relax)
+	{
+	  bfd_signed_vma count = fragP->fr_next->fr_address
+				 - fragP->fr_address - fragP->fr_fix;
+
+	  if (count <= 0)
+	    break;
+
+	  count &= MAX_MEM_FOR_RS_ALIGN_CODE;
+	  riscv_make_nops (fragP->fr_literal + fragP->fr_fix, count);
+	  fragP->fr_var = count;
+	}
+      break;
+
+    default:
+      break;
     }
 }
 
