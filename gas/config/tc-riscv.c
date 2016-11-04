@@ -2409,6 +2409,10 @@ RISC-V options:\n\
 void
 riscv_cfi_frame_initial_instructions (void)
 {
+  /* The generic DWARF code assumes that intra-section labels can be
+     subtracted at assembly time, which precludes relaxation.  */
+  riscv_opts.relax = 0;
+
   cfi_add_CFA_def_cfa_register (X_SP);
 }
 
