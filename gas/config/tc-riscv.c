@@ -73,12 +73,14 @@ struct riscv_set_options
 {
   int pic; /* Generate position-independent code.  */
   int rvc; /* Generate RVC code.  */
+  int relax; /* Emit relocs the linker is allowed to relax.  */
 };
 
 static struct riscv_set_options riscv_opts =
 {
   0,	/* pic */
   0,	/* rvc */
+  1,	/* relax */
 };
 
 static void
@@ -1041,10 +1043,28 @@ static const struct percent_op_match percent_op_utype[] =
   {0, 0}
 };
 
+static const struct percent_op_match percent_op_utype_relax[] =
+{
+  {"%tprel_hi", BFD_RELOC_RISCV_TPREL_HI20_RELAX},
+  {"%pcrel_hi", BFD_RELOC_RISCV_PCREL_HI20},
+  {"%tls_ie_pcrel_hi", BFD_RELOC_RISCV_TLS_GOT_HI20},
+  {"%tls_gd_pcrel_hi", BFD_RELOC_RISCV_TLS_GD_HI20},
+  {"%hi", BFD_RELOC_RISCV_HI20_RELAX},
+  {0, 0}
+};
+
 static const struct percent_op_match percent_op_itype[] =
 {
   {"%lo", BFD_RELOC_RISCV_LO12_I},
   {"%tprel_lo", BFD_RELOC_RISCV_TPREL_LO12_I},
+  {"%pcrel_lo", BFD_RELOC_RISCV_PCREL_LO12_I},
+  {0, 0}
+};
+
+static const struct percent_op_match percent_op_itype_relax[] =
+{
+  {"%lo", BFD_RELOC_RISCV_LO12_I_RELAX},
+  {"%tprel_lo", BFD_RELOC_RISCV_TPREL_LO12_I_RELAX},
   {"%pcrel_lo", BFD_RELOC_RISCV_PCREL_LO12_I},
   {0, 0}
 };
@@ -1057,7 +1077,21 @@ static const struct percent_op_match percent_op_stype[] =
   {0, 0}
 };
 
+static const struct percent_op_match percent_op_stype_relax[] =
+{
+  {"%lo", BFD_RELOC_RISCV_LO12_S_RELAX},
+  {"%tprel_lo", BFD_RELOC_RISCV_TPREL_LO12_S_RELAX},
+  {"%pcrel_lo", BFD_RELOC_RISCV_PCREL_LO12_S},
+  {0, 0}
+};
+
 static const struct percent_op_match percent_op_rtype[] =
+{
+  {"%tprel_add", BFD_RELOC_NONE},
+  {0, 0}
+};
+
+static const struct percent_op_match percent_op_rtype_relax[] =
 {
   {"%tprel_add", BFD_RELOC_RISCV_TPREL_ADD},
   {0, 0}
@@ -1371,7 +1405,8 @@ rvc_imm_done:
 		    ENCODE_RVC_SDSP_IMM (imm_expr->X_add_number);
 		  goto rvc_imm_done;
 		case 'u':
-		  p = percent_op_utype;
+		  p = riscv_opts.relax ? percent_op_utype_relax :
+					 percent_op_utype;
 		  if (my_getSmallExpression (imm_expr, imm_reloc, s, p))
 		    break;
 rvc_lui:
@@ -1579,18 +1614,18 @@ rvc_lui:
 
 	    case 'j': /* Sign-extended immediate.  */
 	      *imm_reloc = BFD_RELOC_RISCV_LO12_I;
-	      p = percent_op_itype;
+	      p = riscv_opts.relax ? percent_op_itype_relax : percent_op_itype;
 	      goto alu_op;
 	    case 'q': /* Store displacement.  */
-	      p = percent_op_stype;
+	      p = riscv_opts.relax ? percent_op_stype_relax : percent_op_stype;
 	      *imm_reloc = BFD_RELOC_RISCV_LO12_S;
 	      goto load_store;
 	    case 'o': /* Load displacement.  */
-	      p = percent_op_itype;
+	      p = riscv_opts.relax ? percent_op_itype_relax : percent_op_itype;
 	      *imm_reloc = BFD_RELOC_RISCV_LO12_I;
 	      goto load_store;
 	    case '0': /* AMO "displacement," which must be zero.  */
-	      p = percent_op_rtype;
+	      p = riscv_opts.relax ? percent_op_rtype_relax : percent_op_rtype;
 	      *imm_reloc = BFD_RELOC_UNUSED;
 load_store:
 	      /* Check whether there is only a single bracketed expression
@@ -1625,7 +1660,7 @@ branch:
 	      continue;
 
 	    case 'u':		/* Upper 20 bits.  */
-	      p = percent_op_utype;
+	      p = riscv_opts.relax ? percent_op_utype_relax : percent_op_utype;
 	      if (!my_getSmallExpression (imm_expr, imm_reloc, s, p)
 		  && imm_expr->X_op == O_constant)
 		{
@@ -1651,11 +1686,19 @@ jump:
 	      s = expr_end;
 	      if (strcmp (s, "@plt") == 0)
 		{
-		  *imm_reloc = BFD_RELOC_RISCV_CALL_PLT;
 		  s += 4;
+		  if (riscv_opts.relax)
+		    *imm_reloc = BFD_RELOC_RISCV_CALL_PLT_RELAX;
+		  else
+		    *imm_reloc = BFD_RELOC_RISCV_CALL_PLT;
 		}
 	      else
-		*imm_reloc = BFD_RELOC_RISCV_CALL;
+		{
+		  if (riscv_opts.relax)
+		    *imm_reloc = BFD_RELOC_RISCV_CALL_RELAX;
+		  else
+		    *imm_reloc = BFD_RELOC_RISCV_CALL;
+		}
 	      continue;
 
 	    default:
@@ -1856,8 +1899,11 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
     case BFD_RELOC_RISCV_TLS_DTPREL32:
     case BFD_RELOC_RISCV_TLS_DTPREL64:
     case BFD_RELOC_RISCV_TPREL_HI20:
+    case BFD_RELOC_RISCV_TPREL_HI20_RELAX:
     case BFD_RELOC_RISCV_TPREL_LO12_I:
+    case BFD_RELOC_RISCV_TPREL_LO12_I_RELAX:
     case BFD_RELOC_RISCV_TPREL_LO12_S:
+    case BFD_RELOC_RISCV_TPREL_LO12_S_RELAX:
     case BFD_RELOC_RISCV_TPREL_ADD:
       S_SET_THREAD_LOCAL (fixP->fx_addsy);
       /* Fall through.  */
@@ -1865,8 +1911,11 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
     case BFD_RELOC_RISCV_GOT_HI20:
     case BFD_RELOC_RISCV_PCREL_HI20:
     case BFD_RELOC_RISCV_HI20:
+    case BFD_RELOC_RISCV_HI20_RELAX:
     case BFD_RELOC_RISCV_LO12_I:
+    case BFD_RELOC_RISCV_LO12_I_RELAX:
     case BFD_RELOC_RISCV_LO12_S:
+    case BFD_RELOC_RISCV_LO12_S_RELAX:
     case BFD_RELOC_RISCV_ADD8:
     case BFD_RELOC_RISCV_ADD16:
     case BFD_RELOC_RISCV_ADD32:
@@ -1974,7 +2023,9 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
     case BFD_RELOC_RISCV_PCREL_LO12_S:
     case BFD_RELOC_RISCV_PCREL_LO12_I:
     case BFD_RELOC_RISCV_CALL:
+    case BFD_RELOC_RISCV_CALL_RELAX:
     case BFD_RELOC_RISCV_CALL_PLT:
+    case BFD_RELOC_RISCV_CALL_PLT_RELAX:
     case BFD_RELOC_RISCV_ALIGN:
       break;
 
@@ -2015,6 +2066,10 @@ s_riscv_option (int x ATTRIBUTE_UNUSED)
     riscv_opts.pic = TRUE;
   else if (strcmp (name, "nopic") == 0)
     riscv_opts.pic = FALSE;
+  else if (strcmp (name, "relax") == 0)
+    riscv_opts.relax = TRUE;
+  else if (strcmp (name, "norelax") == 0)
+    riscv_opts.relax = FALSE;
   else if (strcmp (name, "push") == 0)
     {
       struct riscv_option_stack *s;
