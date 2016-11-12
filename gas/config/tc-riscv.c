@@ -603,8 +603,9 @@ void
 md_begin (void)
 {
   int i = 0;
+  unsigned long mach = xlen == 64 ? bfd_mach_riscv64 : bfd_mach_riscv32;
 
-  if (! bfd_set_arch_mach (stdoutput, bfd_arch_riscv, 0))
+  if (! bfd_set_arch_mach (stdoutput, bfd_arch_riscv, mach))
     as_warn (_("Could not set architecture and machine"));
 
   op_hash = hash_new ();
