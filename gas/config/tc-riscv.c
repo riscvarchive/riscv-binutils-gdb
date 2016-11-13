@@ -60,7 +60,7 @@ struct riscv_cl_insn
 
 static const char default_arch[] = DEFAULT_ARCH;
 
-unsigned xlen = 0; /* width of an x-register */
+static unsigned xlen = 0; /* width of an x-register */
 
 #define LOAD_ADDRESS_INSN (xlen == 64 ? "ld" : "lw")
 #define ADD32_INSN (xlen == 64 ? "addiw" : "addi")
