@@ -101,9 +101,10 @@ extern void riscv_cfi_frame_initial_instructions (void);
 #define tc_regname_to_dw2regnum tc_riscv_regname_to_dw2regnum
 extern int tc_riscv_regname_to_dw2regnum (char *);
 
-extern unsigned xlen;
 #define DWARF2_DEFAULT_RETURN_COLUMN X_RA
-#define DWARF2_CIE_DATA_ALIGNMENT (-(int) (xlen / 8))
+
+/* Even on RV64, use 4-byte alignment, as F registers may be only 32 bits.  */
+#define DWARF2_CIE_DATA_ALIGNMENT -4
 
 #define elf_tc_final_processing riscv_elf_final_processing
 extern void riscv_elf_final_processing (void);
