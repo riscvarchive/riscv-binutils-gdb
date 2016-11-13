@@ -1088,7 +1088,7 @@ static const struct percent_op_match percent_op_stype_relax[] =
 
 static const struct percent_op_match percent_op_rtype[] =
 {
-  {"%tprel_add", BFD_RELOC_NONE},
+  {"%tprel_add", BFD_RELOC_UNUSED},
   {0, 0}
 };
 
@@ -1119,7 +1119,8 @@ parse_relocation (char **str, bfd_reloc_code_real_type *reloc,
 
 	/* Check whether the output BFD supports this relocation.
 	   If not, issue an error and fall back on something safe.  */
-	if (!bfd_reloc_type_lookup (stdoutput, percent_op->reloc))
+	if (*reloc != BFD_RELOC_UNUSED
+	    && !bfd_reloc_type_lookup (stdoutput, *reloc))
 	  {
 	    as_bad ("relocation %s isn't supported by the current ABI",
 		    percent_op->str);
