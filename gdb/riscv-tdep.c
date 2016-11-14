@@ -386,7 +386,6 @@ riscv_register_type (struct gdbarch *gdbarch,
 
   if (regnum < RISCV_FIRST_FP_REGNUM)
     {
- int_regsizes:
       switch (regsize)
 	{
 	case 4:
@@ -425,7 +424,18 @@ riscv_register_type (struct gdbarch *gdbarch,
 	  || regnum == RISCV_CSR_FCSR_REGNUM)
 	return builtin_type (gdbarch)->builtin_int32;
 
-      goto int_regsizes;
+      switch (regsize)
+	{
+	case 4:
+	  return builtin_type (gdbarch)->builtin_int32;
+	case 8:
+	  return builtin_type (gdbarch)->builtin_int64;
+	case 16:
+	  return builtin_type (gdbarch)->builtin_int128;
+	default:
+	  internal_error (__FILE__, __LINE__,
+			  _("unknown isa regsize %i"), regsize);
+	}
     }
 }
 
