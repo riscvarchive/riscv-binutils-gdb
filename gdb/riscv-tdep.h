@@ -30,28 +30,12 @@ struct gdbarch;
 /* All the official RISC-V ABIs.  These mostly line up with mcpuid purely for
    convenience.  */
 #define RISCV_ABI_FLAG_RV32I	(0x00000000)	/* 32-bit Integer GPRs.  */
-#define RISCV_ABI_FLAG_RV32E	(0x10000000)	/* 32-bit Embedded Integer GPRs.  */
 #define RISCV_ABI_FLAG_RV64I	(0x40000000)	/* 64-bit Integer GPRs.  */
-#define RISCV_ABI_FLAG_RV128I	(0x80000000)	/* 128-bit Integer GPRs.  */
-#define RISCV_ABI_FLAG_A	(1 << 0)	/* Atomics.  */
-#define RISCV_ABI_FLAG_B	(1 << 1)	/* Bit Manipulation.  */
-#define RISCV_ABI_FLAG_C	(1 << 2)	/* 16-bit Compressed Instructions.  */
 #define RISCV_ABI_FLAG_D	(1 << 3)	/* Double-Precision Floating-Point.  */
-#define RISCV_ABI_FLAG_E	(1 << 4)	/* Embedded base.  */
 #define RISCV_ABI_FLAG_F	(1 << 5)	/* Single-Precision Floating-Point.  */
-#define RISCV_ABI_FLAG_H	(1 << 7)	/* Hypervisor mode.  */
-#define RISCV_ABI_FLAG_I	(1 << 8)	/* Base integer.  */
-#define RISCV_ABI_FLAG_L	(1 << 11)	/* Decimal Floating-Point.  */
-#define RISCV_ABI_FLAG_M	(1 << 12)	/* Integer Multiply and Division.  */
-#define RISCV_ABI_FLAG_P	(1 << 15)	/* Packed-SIMD Extensions.  */
-#define RISCV_ABI_FLAG_Q	(1 << 16)	/* Quad-Precision Floating-Point.  */
-#define RISCV_ABI_FLAG_S	(1 << 18)	/* Supervisor mode.  */
-#define RISCV_ABI_FLAG_T	(1 << 19)	/* Transactional Memory.  */
-#define RISCV_ABI_FLAG_U	(1 << 20)	/* User mode.  */
 
 #define IS_RV32I(x)	(((x) & 0xF0000000) == RISCV_ABI_FLAG_RV32I)
 #define IS_RV64I(x)	(((x) & 0xF0000000) == RISCV_ABI_FLAG_RV64I)
-#define IS_RV128I(x)	(((x) & 0xF0000000) == RISCV_ABI_FLAG_RV128I)
 
 #define HAS_FPU(x)	((x) & (RISCV_ABI_FLAG_D | RISCV_ABI_FLAG_F))
 
