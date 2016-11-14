@@ -1043,12 +1043,13 @@ riscv_push_dummy_call (struct gdbarch *gdbarch,
     {
       struct type *value_type = value_enclosing_type (args[i]);
       const gdb_byte *arg_bits = value_contents_all (args[i]);
-      int regnum = TYPE_CODE (value_type) == TYPE_CODE_FLT ?
-	RISCV_FA0_REGNUM : RISCV_A0_REGNUM;
+      int regnum = (TYPE_CODE (value_type) == TYPE_CODE_FLT
+		    ? RISCV_FA0_REGNUM : RISCV_A0_REGNUM);
 
       regcache_cooked_write_unsigned
 	(regcache, regnum + i,
-	 extract_unsigned_integer (arg_bits, tdep->register_size, byte_order));
+	 extract_unsigned_integer
+	   (arg_bits, tdep->register_size, byte_order));
     }
 
   /* Store struct value address.  */
