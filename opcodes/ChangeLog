@@ -1,3 +1,68 @@
+2016-11-11  Szabolcs Nagy  <szabolcs.nagy@arm.com>
+
+	* aarch64-tbl.h (arch64_opcode_table): Add braa, brab, blraa, blrab, braaz,
+	brabz, blraaz, blrabz, retaa, retab, eretaa, eretab.
+	* aarch64-asm-2.c: Regenerate.
+	* aarch64-dis-2.c: Regenerate.
+	* aarch64-opc-2.c: Regenerate.
+
+2016-11-11  Szabolcs Nagy  <szabolcs.nagy@arm.com>
+
+	* aarch64-tbl.h (arch64_opcode_table): Add pacga.
+	(AARCH64_OPERANDS): Add Rm_SP.
+	* aarch64-opc.c (aarch64_print_operand): Handle AARCH64_OPND_Rm_SP.
+	* aarch64-asm-2.c: Regenerate.
+	* aarch64-dis-2.c: Regenerate.
+	* aarch64-opc-2.c: Regenerate.
+
+2016-11-11  Szabolcs Nagy  <szabolcs.nagy@arm.com>
+
+	* aarch64-tbl.h (arch64_opcode_table): Add pacia, pacib, pacda, pacdb, autia,
+	autib, autda, autdb, paciza, pacizb, pacdza, pacdzb, autiza, autizb, autdza,
+	autdzb, xpaci, xpacd.
+	* aarch64-asm-2.c: Regenerate.
+	* aarch64-dis-2.c: Regenerate.
+	* aarch64-opc-2.c: Regenerate.
+
+2016-11-11  Szabolcs Nagy  <szabolcs.nagy@arm.com>
+
+	* aarch64-opc.c (aarch64_sys_regs): Add apiakeylo_el1, apiakeyhi_el1,
+	apibkeylo_el1, apibkeyhi_el1, apdakeylo_el1, apdakeyhi_el1,
+	apdbkeylo_el1, apdbkeyhi_el1, apgakeylo_el1 and apgakeyhi_el1.
+	(aarch64_sys_reg_supported_p): Add feature test for new registers.
+
+2016-11-11  Szabolcs Nagy  <szabolcs.nagy@arm.com>
+
+	* aarch64-tbl.h (aarch64_feature_v8_3, ARMV8_3, V8_3_INSN): New.
+	(arch64_opcode_table): Add xpaclri, pacia1716, pacib1716, autia1716,
+	autib1716, paciaz, paciasp, pacibz, pacibsp, autiaz, autiasp, autibz,
+	autibsp.
+	* aarch64-asm-2.c: Regenerate.
+	* aarch64-dis-2.c: Regenerate.
+
+2016-11-11  Szabolcs Nagy  <szabolcs.nagy@arm.com>
+
+	* aarch64-gen.c (find_alias_opcode): Increase max_num_aliases to 32.
+
+2016-11-09  H.J. Lu  <hongjiu.lu@intel.com>
+
+	PR binutils/20799
+	* i386-dis-evex.h (evex_table): Replace EdqwS with Edqw.
+	* i386-dis.c (EdqwS): Removed.
+	(dqw_swap_mode): Likewise.
+	(intel_operand_size): Don't check dqw_swap_mode.
+	(OP_E_register): Likewise.
+	(OP_E_memory): Likewise.
+	(OP_G): Likewise.
+	(OP_EX): Likewise.
+	* i386-opc.tbl: Remove "S" from EVEX vpextrw.
+	* i386-tbl.h: Regerated.
+
+2016-11-09  H.J. Lu  <hongjiu.lu@intel.com>
+
+	* i386-opc.tbl: Merge AVX512F vmovq.
+	* i386-tbl.h: Regerated.
+
 2016-11-08  H.J. Lu  <hongjiu.lu@intel.com>
 
 	PR binutils/20701

@@ -4983,6 +4983,7 @@ process_omitted_operand (enum aarch64_opnd type, const aarch64_opcode *opcode,
     case AARCH64_OPND_Rt_SYS:
     case AARCH64_OPND_Rd_SP:
     case AARCH64_OPND_Rn_SP:
+    case AARCH64_OPND_Rm_SP:
     case AARCH64_OPND_Fd:
     case AARCH64_OPND_Fn:
     case AARCH64_OPND_Fm:
@@ -5314,6 +5315,7 @@ parse_operands (char *str, const aarch64_opcode *opcode)
 	case AARCH64_OPND_Rd_SP:
 	case AARCH64_OPND_Rn_SP:
 	case AARCH64_OPND_SVE_Rn_SP:
+	case AARCH64_OPND_Rm_SP:
 	  po_int_reg_or_fail (REG_TYPE_R_SP);
 	  break;
 
@@ -8374,6 +8376,7 @@ static const struct aarch64_arch_option_table aarch64_archs[] = {
   {"armv8-a", AARCH64_ARCH_V8},
   {"armv8.1-a", AARCH64_ARCH_V8_1},
   {"armv8.2-a", AARCH64_ARCH_V8_2},
+  {"armv8.3-a", AARCH64_ARCH_V8_3},
   {NULL, AARCH64_ARCH_NONE}
 };
 
@@ -8389,13 +8392,13 @@ static const struct aarch64_option_cpu_value_table aarch64_features[] = {
   {"crc",		AARCH64_FEATURE (AARCH64_FEATURE_CRC, 0),
 			AARCH64_ARCH_NONE},
   {"crypto",		AARCH64_FEATURE (AARCH64_FEATURE_CRYPTO, 0),
-			AARCH64_ARCH_NONE},
+			AARCH64_FEATURE (AARCH64_FEATURE_SIMD, 0)},
   {"fp",		AARCH64_FEATURE (AARCH64_FEATURE_FP, 0),
 			AARCH64_ARCH_NONE},
   {"lse",		AARCH64_FEATURE (AARCH64_FEATURE_LSE, 0),
 			AARCH64_ARCH_NONE},
   {"simd",		AARCH64_FEATURE (AARCH64_FEATURE_SIMD, 0),
-			AARCH64_ARCH_NONE},
+			AARCH64_FEATURE (AARCH64_FEATURE_FP, 0)},
   {"pan",		AARCH64_FEATURE (AARCH64_FEATURE_PAN, 0),
 			AARCH64_ARCH_NONE},
   {"lor",		AARCH64_FEATURE (AARCH64_FEATURE_LOR, 0),

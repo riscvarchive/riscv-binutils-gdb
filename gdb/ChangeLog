@@ -1,3 +1,98 @@
+2016-11-14  Markus Metzger  <markus.t.metzger@intel.com>
+
+	* nat/linux-btrace.c (perf_event_read): Allow data_head < size.
+	* nat/linux-btrace.c (perf_event_read_all): Do not adjust size.
+
+2016-11-12  Tom Tromey  <tom@tromey.com>
+
+	* rust-exp.y (super_name): Use std::vector.
+	(lex_number): Use std::string.
+	(convert_params_to_types): Return std::vector.
+	(convert_ast_to_type, convert_name): Update.
+	* rust-lang.c (rust_get_disr_info): Use unique_xmalloc_ptr.
+
+2016-11-12  Tom Tromey  <tom@tromey.com>
+
+	* rust-lang.c (rust_get_disr_info): Use std::string in one more
+	spot.
+
+2016-11-11  Yao Qi  <yao.qi@linaro.org>
+
+	* spu-tdep.c (spu_software_single_step): Don't call
+	get_frame_register_bytes, call get_frame_register_unsigned
+	instead.
+
+2016-11-11  Yao Qi  <yao.qi@linaro.org>
+
+	* cp-valprint.c (cp_print_value): Remove local base_valaddr.
+	* extension-priv.h (struct extension_language_ops)
+	<apply_val_pretty_printer>: Remove the second parameter.
+	Remove const from "struct value *".  Callers updated.
+	* extension.c (apply_ext_lang_val_pretty_printer): Update
+	comments.  Remove parameter valaddr.  Remove const from
+	"struct value *".
+	* extension.h (apply_ext_lang_val_pretty_printer): Update
+	declaration.
+	* guile/guile-internal.h (gdbscm_apply_val_pretty_printer):
+	Update declaration.
+	* guile/scm-pretty-print.c (gdbscm_apply_val_pretty_printer):
+	Remove parameter valaddr.  Remove const from "struct value *".
+	* python/py-prettyprint.c (gdbpy_apply_val_pretty_printer):
+	Likewise.
+	* python/python-internal.h (gdbpy_apply_val_pretty_printer):
+	Update declaration.
+
+2016-11-11  Yao Qi  <yao.qi@linaro.org>
+
+	* c-lang.h (cp_print_value_fields): Update declaration.
+	* cp-valprint.c (cp_print_value): Update declaration.
+	(cp_print_value_fields): Remove parameter valaddr.  Callers
+	updated.
+	(cp_print_value): Likewise.
+
+2016-11-09  Tom Tromey  <tom@tromey.com>
+
+	* varobj.h (varobj_get_display_hint): Change return type.
+	* varobj.c (varobj_get_display_hint): Return unique_xmalloc_ptr.
+	(varobj_value_get_print_value): Update.
+	* python/python.c (gdbpy_before_prompt_hook, gdbpy_print_stack)
+	(gdbpy_apply_type_printers): Update.
+	* python/python-internal.h (unicode_to_target_string)
+	(python_string_to_target_string, python_string_to_host_string)
+	(gdbpy_obj_to_string, gdbpy_exception_to_string)
+	(gdbpy_get_display_hint): Change return types.
+	* python/py-varobj.c (py_varobj_iter_next): Update.
+	* python/py-value.c (valpy_getitem, convert_value_from_python):
+	Update.
+	* python/py-utils.c (unicode_to_encoded_string)
+	(unicode_to_target_string, python_string_to_target_string)
+	(python_string_to_host_string, gdbpy_obj_to_string)
+	(gdbpy_exception_to_string): Return unique_xmalloc_ptr.
+	* python/py-unwind.c (pyuw_parse_register_id): Update.
+	* python/py-type.c (typy_getitem): Update.
+	* python/py-prettyprint.c (gdbpy_get_display_hint)
+	(print_stack_unless_memory_error, print_children)
+	(gdbpy_apply_val_pretty_printer): Update.
+	* python/py-param.c (set_parameter_value): Update.
+	(get_doc_string, call_doc_function): Return unique_xmalloc_ptr.
+	(get_set_value, get_show_value, compute_enum_values, parmpy_init):
+	Update.
+	* python/py-infthread.c (thpy_set_name): Update.
+	* python/py-function.c (fnpy_call, fnpy_init): Update.
+	* python/py-framefilter.c (extract_sym): Change "name" to
+	unique_xmalloc_ptr.
+	(enumerate_args, enumerate_locals): Update.
+	(py_print_frame): Use unique_xmalloc_ptr.
+	* python/py-frame.c (frapy_read_var): Update.  Remove cleanup.
+	* python/py-cmd.c (cmdpy_function, cmdpy_completer, cmdpy_init):
+	Update.
+	* python/py-breakpoint.c (bppy_set_condition): Use
+	unique_xmalloc_ptr.
+	(bppy_init): Likewise.  Remove cleanup.
+	(local_setattro): Update.
+	* mi/mi-cmd-var.c (print_varobj, mi_cmd_var_list_children)
+	(varobj_update_one): Update.
+
 2016-11-09  Pedro Alves  <palves@redhat.com>
 
 	* ax-gdb.c (agent_eval_command_one): Use std::move instead of

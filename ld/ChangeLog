@@ -1,3 +1,22 @@
+2016-11-14  H.J. Lu  <hongjiu.lu@intel.com>
+
+	PR ld/20800
+	* testsuite/ld-x86-64/pr20800a.S: New file.
+	* testsuite/ld-x86-64/pr20800b.S: Likewise.
+	* testsuite/ld-x86-64/x86-64.exp: Run PR ld/20800 test.
+
+2016-11-14  Nick Clifton  <nickc@redhat.com>
+
+	* lexsup.c (parse_args): Add break at end of default case.
+
+2016-11-10  Jiong Wang  <jiong.wang@arm.com>
+
+	PR target/20737
+	* testsuite/ld-aarch64/pie-bind-locally-a.s: New test source.
+	* testsuite/ld-aarch64/pie-bind-locally-b.s: Likewise.
+	* testsuite/ld-aarch64/pie-bind-locally.d: New testcase.
+	* testsuite/ld-aarch64/aarch64-elf.exp: Run new testcase.
+
 2016-11-07  Nick Clifton  <nickc@redhat.com>
 
 	PR ld/20784

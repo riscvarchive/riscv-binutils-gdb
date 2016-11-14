@@ -2989,6 +2989,7 @@ aarch64_print_operand (char *buf, size_t size, bfd_vma pc,
     case AARCH64_OPND_Rd_SP:
     case AARCH64_OPND_Rn_SP:
     case AARCH64_OPND_SVE_Rn_SP:
+    case AARCH64_OPND_Rm_SP:
       assert (opnd->qualifier == AARCH64_OPND_QLF_W
 	      || opnd->qualifier == AARCH64_OPND_QLF_WSP
 	      || opnd->qualifier == AARCH64_OPND_QLF_X
@@ -3650,6 +3651,16 @@ const aarch64_sys_reg aarch64_sys_regs [] =
   { "tcr_el3",          CPENC(3,6,C2,C0,2),	0 },
   { "tcr_el12",		CPENC (3, 5, C2, C0, 2), F_ARCHEXT },
   { "vtcr_el2",         CPENC(3,4,C2,C1,2),	0 },
+  { "apiakeylo_el1",	CPENC (3, 0, C2, C1, 0), F_ARCHEXT },
+  { "apiakeyhi_el1",	CPENC (3, 0, C2, C1, 1), F_ARCHEXT },
+  { "apibkeylo_el1",	CPENC (3, 0, C2, C1, 2), F_ARCHEXT },
+  { "apibkeyhi_el1",	CPENC (3, 0, C2, C1, 3), F_ARCHEXT },
+  { "apdakeylo_el1",	CPENC (3, 0, C2, C2, 0), F_ARCHEXT },
+  { "apdakeyhi_el1",	CPENC (3, 0, C2, C2, 1), F_ARCHEXT },
+  { "apdbkeylo_el1",	CPENC (3, 0, C2, C2, 2), F_ARCHEXT },
+  { "apdbkeyhi_el1",	CPENC (3, 0, C2, C2, 3), F_ARCHEXT },
+  { "apgakeylo_el1",	CPENC (3, 0, C2, C3, 0), F_ARCHEXT },
+  { "apgakeyhi_el1",	CPENC (3, 0, C2, C3, 1), F_ARCHEXT },
   { "afsr0_el1",        CPENC(3,0,C5,C1,0),	0 },
   { "afsr1_el1",        CPENC(3,0,C5,C1,1),	0 },
   { "afsr0_el2",        CPENC(3,4,C5,C1,0),	0 },
@@ -4024,6 +4035,20 @@ aarch64_sys_reg_supported_p (const aarch64_feature_set features,
        || reg->value == CPENC (3, 4, C9, C9, 0)
        || reg->value == CPENC (3, 5, C9, C9, 0))
       && !AARCH64_CPU_HAS_FEATURE (features, AARCH64_FEATURE_PROFILE))
+    return FALSE;
+
+  /* ARMv8.3 Pointer authentication keys.  */
+  if ((reg->value == CPENC (3, 0, C2, C1, 0)
+       || reg->value == CPENC (3, 0, C2, C1, 1)
+       || reg->value == CPENC (3, 0, C2, C1, 2)
+       || reg->value == CPENC (3, 0, C2, C1, 3)
+       || reg->value == CPENC (3, 0, C2, C2, 0)
+       || reg->value == CPENC (3, 0, C2, C2, 1)
+       || reg->value == CPENC (3, 0, C2, C2, 2)
+       || reg->value == CPENC (3, 0, C2, C2, 3)
+       || reg->value == CPENC (3, 0, C2, C3, 0)
+       || reg->value == CPENC (3, 0, C2, C3, 1))
+      && !AARCH64_CPU_HAS_FEATURE (features, AARCH64_FEATURE_V8_3))
     return FALSE;
 
   return TRUE;

@@ -1,3 +1,31 @@
+2016-11-14  H.J. Lu  <hongjiu.lu@intel.com>
+
+	PR ld/20800
+	* elf64-x86-64.c (elf_x86_64_relocate_section): Also check
+	plt_got.offset for R_X86_64_PLTOFF64.
+
+2016-11-14  Nick Clifton  <nickc@redhat.com>
+
+	* coffcode.h (coff_slurp_symbol_table): Fix typo: Faal -> Fall.
+
+2016-11-11  Luke Allardyce  <lukeallardyce@gmail.com>
+
+	PR ld/20722
+	* coffcode.h (coff_slurp_symbol_table): Accept C_HIDDEN symbols,
+	but treat them as debugging symbols.
+
+2016-11-10  Jiong Wang  <jiong.wang@arm.com>
+
+	PR target/20737
+	* elfnn-aarch64.c (elfNN_aarch64_final_link_relocate): Bind defined
+	symbol locally in PIE.
+
+2016-11-10  Nick Clifton  <nickc@redhat.com>
+
+	PR binutils/20801
+	* compress.c (bfd_get_full_section_contents): Provide a more
+	helpful error message when a section is too large to load.
+
 2016-11-08  Pedro Alves  <palves@redhat.com>
 
 	* dwarf2.c (struct funcinfo) <is_linkage>: Type is bfd_boolean,
