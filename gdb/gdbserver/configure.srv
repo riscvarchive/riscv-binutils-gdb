@@ -276,6 +276,11 @@ case "${target}" in
 			srv_xmlfiles="${srv_xmlfiles} rs6000/power-fpu.xml"
 			srv_lynxos=yes
 			;;
+  riscv*-*-linux*)	srv_regobj=riscv.o
+			srv_tgtobj="$srv_linux_obj linux-riscv-low.o"
+			srv_linux_regsets=yes
+			srv_linux_thread_db=yes
+			;;
   s390*-*-linux*)	srv_regobj="s390-linux32.o"
 			srv_regobj="${srv_regobj} s390-linux32v1.o"
 			srv_regobj="${srv_regobj} s390-linux32v2.o"
