@@ -851,11 +851,12 @@ riscv_scan_prologue (struct gdbarch *gdbarch,
   /* TODO: Handle compressed extensions.  */
   for (cur_pc = start_pc; cur_pc < limit_pc; cur_pc += 4)
     {
-      unsigned long inst, opcode;
+      ULONGEST inst;
+      unsigned long opcode;
       int reg, rs1, imm12, rs2, offset12, funct3;
 
       /* Fetch the instruction.  */
-      inst = (unsigned long) riscv_fetch_instruction (gdbarch, cur_pc);
+      inst = riscv_fetch_instruction (gdbarch, cur_pc);
       opcode = inst & 0x7F;
       reg = (inst >> 7) & 0x1F;
       rs1 = (inst >> 15) & 0x1F;
