@@ -848,6 +848,8 @@ riscv_scan_prologue (struct gdbarch *gdbarch,
       int reg, rs1, imm12, rs2, offset12, funct3;
 
       /* Fetch the instruction.  */
+      /* FIXME: Use riscv-opc.h's instruction parsing macros, not these
+         hand-written ones.  */
       inst = riscv_fetch_instruction (gdbarch, cur_pc);
       opcode = inst & 0x7F;
       reg = (inst >> 7) & 0x1F;
