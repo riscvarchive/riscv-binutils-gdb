@@ -817,7 +817,7 @@ reset_saved_regs (struct gdbarch *gdbarch, struct riscv_frame_cache *this_cache)
     return;
 
   for (i = 0; i < num_regs; ++i)
-    this_cache->saved_regs[i].addr = -1;
+    this_cache->saved_regs[i].addr = 0;
 }
 
 static CORE_ADDR
