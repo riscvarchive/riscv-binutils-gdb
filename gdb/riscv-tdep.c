@@ -172,14 +172,6 @@ riscv_breakpoint_from_pc (struct gdbarch *gdbarch,
   return sbreak_insn;
 }
 
-static void
-riscv_remote_breakpoint_from_pc (struct gdbarch *gdbarch, CORE_ADDR *pcptr, int *kindptr)
-{
-  struct gdbarch_tdep *tdep = gdbarch_tdep (gdbarch);
-
-  riscv_breakpoint_from_pc (gdbarch, pcptr, kindptr);
-}
-
 static struct value *
 value_of_riscv_user_reg (struct frame_info *frame, const void *baton)
 {
