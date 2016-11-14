@@ -231,6 +231,8 @@ riscv_register_name (struct gdbarch *gdbarch,
   return register_name(gdbarch, regnum, 0);
 }
 
+/* Reads a function return value of type TYPE.  */
+
 static void
 riscv_extract_return_value (struct type *type,
 			    struct regcache *regs,
@@ -242,6 +244,7 @@ riscv_extract_return_value (struct type *type,
   int regsize = riscv_isa_regsize (gdbarch);
   bfd_byte *valbuf = dst;
   int len = TYPE_LENGTH (type);
+  int st_len = std::min (regsize, len);
   ULONGEST tmp;
 
   gdb_assert (len <= 2 * regsize);
@@ -249,7 +252,7 @@ riscv_extract_return_value (struct type *type,
   while (len > 0)
     {
       regcache_cooked_read_unsigned (regs, regnum++, &tmp);
-      store_unsigned_integer (valbuf, std::min (regsize, len), byte_order, tmp);
+      store_unsigned_integer (valbuf, st_len, byte_order, tmp);
       len -= regsize;
       valbuf += regsize;
     }
