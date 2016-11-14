@@ -692,7 +692,7 @@ ALL_TARGET_OBS = \
 	nios2-tdep.o nios2-linux-tdep.o \
 	nto-tdep.o \
 	ppc-linux-tdep.o ppcfbsd-tdep.o ppcnbsd-tdep.o ppcobsd-tdep.o  \
-	ppc-sysv-tdep.o ppc64-tdep.o riscv-tdep.o rl78-tdep.o \
+	ppc-sysv-tdep.o ppc64-tdep.o riscv-tdep.o riscv-linux-tdep.o rl78-tdep.o \
 	rs6000-aix-tdep.o rs6000-tdep.o solib-aix.o ppc-ravenscar-thread.o \
 	rs6000-lynx178-tdep.o \
 	rx-tdep.o \
@@ -1736,7 +1736,7 @@ ALLDEPFILES = \
 	ravenscar-thread.c \
 	remote-sim.c \
 	dcache.c \
-	riscv-tdep.c \
+	riscv-tdep.c riscv-linux-tdep.c \
 	rl78-tdep.c \
 	rs6000-nat.c rs6000-tdep.c solib-aix.c ppc-ravenscar-thread.c \
 	rs6000-lynx178-tdep.c \
