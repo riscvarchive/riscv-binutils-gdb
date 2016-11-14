@@ -89,13 +89,23 @@ enum {
 struct gdbarch_tdep
 {
   int riscv_abi;
-  int register_size;
 };
 
 static inline int
 riscv_isa_regsize (struct gdbarch *gdbarch)
 {
-  return gdbarch_tdep (gdbarch)->register_size;
+  int abi = gdbarch_tdep (gdbarch)->riscv_abi;
+
+  switch (abi)
+    {
+      case RISCV_ABI_FLAG_RV32I:
+	return 4;
+      case RISCV_ABI_FLAG_RV64I:
+	return 8;
+      default:
+	internal_error (__FILE__, __LINE__, _("unknown abi %i"), abi);
+	return 4;
+    }
 }
 
 #endif /* RISCV_TDEP_H */

@@ -1049,7 +1049,7 @@ riscv_push_dummy_call (struct gdbarch *gdbarch,
       regcache_cooked_write_unsigned
 	(regcache, regnum + i,
 	 extract_unsigned_integer
-	   (arg_bits, tdep->register_size, byte_order));
+	   (arg_bits, riscv_isa_regsize(gdbarch), byte_order));
     }
 
   /* Store struct value address.  */
@@ -1202,28 +1202,15 @@ riscv_gdbarch_init (struct gdbarch_info info,
   gdbarch = gdbarch_alloc (&info, tdep);
 
   tdep->riscv_abi = abi;
-  switch (abi)
-    {
-    case RISCV_ABI_FLAG_RV32I:
-      tdep->register_size = 4;
-      break;
-    case RISCV_ABI_FLAG_RV64I:
-      tdep->register_size = 8;
-      break;
-    default:
-      internal_error (__FILE__, __LINE__, _("unknown abi %i"), abi);
-      tdep->register_size = 4;
-      break;
-    }
 
   /* Target data types.  */
   set_gdbarch_short_bit (gdbarch, 16);
   set_gdbarch_int_bit (gdbarch, 32);
-  set_gdbarch_long_bit (gdbarch, tdep->register_size * 8);
+  set_gdbarch_long_bit (gdbarch, riscv_isa_regsize (gdbarch) * 8);
   set_gdbarch_float_bit (gdbarch, 32);
   set_gdbarch_double_bit (gdbarch, 64);
   set_gdbarch_long_double_bit (gdbarch, 128);
-  set_gdbarch_ptr_bit (gdbarch, tdep->register_size * 8);
+  set_gdbarch_ptr_bit (gdbarch, riscv_isa_regsize (gdbarch) * 8);
   set_gdbarch_char_signed (gdbarch, 1);
 
   /* Information about the target architecture.  */
