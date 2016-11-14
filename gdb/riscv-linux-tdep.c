@@ -60,11 +60,8 @@ riscv_linux_init_abi (struct gdbarch_info info, struct gdbarch *gdbarch)
   linux_init_abi (info, gdbarch);
 
   /* GNU/Linux uses SVR4-style shared libraries.  */
-  /* FIXME: This '0' should actually be a check to see if we're on
-     rv32, but I can't figure out how to hook that up (it's in
-     gdbarch_tdep, which we don't have here). */
   set_solib_svr4_fetch_link_map_offsets
-    (gdbarch, (0) ?
+    (gdbarch, gdbarch_tdep (gdbarch)->riscv_abi == RISCV_ABI_FLAG_RV32I ?
       svr4_ilp32_fetch_link_map_offsets :
       svr4_lp64_fetch_link_map_offsets);
 
