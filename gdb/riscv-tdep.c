@@ -305,8 +305,8 @@ riscv_return_value (struct gdbarch  *gdbarch,
      struct consisting of only one or two floating-point values.  Other return
      values that fit into two pointer-words are returned in a0 and a1.  Larger
      return values are passed entirely in memory; the caller allocates this
-     memory region and passes a pointer to it as an implicit first parameter to
-     the callee.  */
+     memory region and passes a pointer to it as an implicit first parameter
+     to the callee.  */
 
   /* Deal with struct/unions first that are passed via memory.  */
   if (rv_size > 2 * riscv_isa_regsize (gdbarch))
