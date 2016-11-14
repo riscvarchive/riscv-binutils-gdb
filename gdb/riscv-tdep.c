@@ -775,7 +775,7 @@ riscv_print_registers_info (struct gdbarch    *gdbarch,
 static ULONGEST
 riscv_fetch_instruction (struct gdbarch *gdbarch, CORE_ADDR addr)
 {
-  enum bfd_endian byte_order = gdbarch_byte_order (gdbarch);
+  enum bfd_endian byte_order = gdbarch_byte_order_for_code (gdbarch);
   gdb_byte buf[8];
   int instlen, status;
 
