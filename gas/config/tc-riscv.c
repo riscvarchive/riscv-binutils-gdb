@@ -60,7 +60,7 @@ struct riscv_cl_insn
 
 static const char default_arch[] = DEFAULT_ARCH;
 
-unsigned xlen = 0; /* width of an x-register */
+static unsigned xlen = 0; /* width of an x-register */
 
 #define LOAD_ADDRESS_INSN (xlen == 64 ? "ld" : "lw")
 #define ADD32_INSN (xlen == 64 ? "addiw" : "addi")
@@ -603,8 +603,9 @@ void
 md_begin (void)
 {
   int i = 0;
+  unsigned long mach = xlen == 64 ? bfd_mach_riscv64 : bfd_mach_riscv32;
 
-  if (! bfd_set_arch_mach (stdoutput, bfd_arch_riscv, 0))
+  if (! bfd_set_arch_mach (stdoutput, bfd_arch_riscv, mach))
     as_warn (_("Could not set architecture and machine"));
 
   op_hash = hash_new ();
@@ -1087,7 +1088,7 @@ static const struct percent_op_match percent_op_stype_relax[] =
 
 static const struct percent_op_match percent_op_rtype[] =
 {
-  {"%tprel_add", BFD_RELOC_NONE},
+  {"%tprel_add", BFD_RELOC_UNUSED},
   {0, 0}
 };
 
@@ -1118,7 +1119,8 @@ parse_relocation (char **str, bfd_reloc_code_real_type *reloc,
 
 	/* Check whether the output BFD supports this relocation.
 	   If not, issue an error and fall back on something safe.  */
-	if (!bfd_reloc_type_lookup (stdoutput, percent_op->reloc))
+	if (*reloc != BFD_RELOC_UNUSED
+	    && !bfd_reloc_type_lookup (stdoutput, *reloc))
 	  {
 	    as_bad ("relocation %s isn't supported by the current ABI",
 		    percent_op->str);
