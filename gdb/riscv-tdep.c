@@ -190,8 +190,8 @@ value_of_riscv_user_reg (struct frame_info *frame, const void *baton)
 
 static const char *
 register_name (struct gdbarch *gdbarch,
-	       int             regnum,
-               int             prefer_alias)
+	       int regnum,
+	       int prefer_alias)
 {
   int i;
   static char buf[20];
@@ -226,7 +226,7 @@ register_name (struct gdbarch *gdbarch,
 
 static const char *
 riscv_register_name (struct gdbarch *gdbarch,
-		     int             regnum)
+		     int regnum)
 {
   return register_name(gdbarch, regnum, 0);
 }
@@ -287,10 +287,10 @@ riscv_store_return_value (struct type *type,
 static enum return_value_convention
 riscv_return_value (struct gdbarch  *gdbarch,
 		    struct value *function,
-		    struct type     *type,
+		    struct type *type,
 		    struct regcache *regcache,
-		    gdb_byte        *readbuf,
-		    const gdb_byte  *writebuf)
+		    gdb_byte *readbuf,
+		    const gdb_byte *writebuf)
 {
   enum type_code rv_type = TYPE_CODE (type);
   unsigned int rv_size = TYPE_LENGTH (type);
@@ -358,26 +358,26 @@ riscv_return_value (struct gdbarch  *gdbarch,
 }
 
 static enum register_status
-riscv_pseudo_register_read (struct gdbarch  *gdbarch,
+riscv_pseudo_register_read (struct gdbarch *gdbarch,
 			    struct regcache *regcache,
-			    int              regnum,
-			    gdb_byte        *buf)
+			    int regnum,
+			    gdb_byte *buf)
 {
   return regcache_raw_read (regcache, regnum, buf);
 }
 
 static void
-riscv_pseudo_register_write (struct gdbarch  *gdbarch,
+riscv_pseudo_register_write (struct gdbarch *gdbarch,
 			     struct regcache *regcache,
-			     int              cookednum,
-			     const gdb_byte  *buf)
+			     int cookednum,
+			     const gdb_byte *buf)
 {
   regcache_raw_write (regcache, cookednum, buf);
 }
 
 static struct type *
-riscv_register_type (struct gdbarch  *gdbarch,
-		     int              regnum)
+riscv_register_type (struct gdbarch *gdbarch,
+		     int regnum)
 {
   int regsize = riscv_isa_regsize (gdbarch);
 
@@ -677,7 +677,7 @@ riscv_print_register_formatted (struct ui_file *file, struct frame_info *frame,
 
 static int
 riscv_register_reggroup_p (struct gdbarch  *gdbarch,
-			   int              regnum,
+			   int regnum,
 			   struct reggroup *reggroup)
 {
   int float_p;
@@ -1143,7 +1143,7 @@ static const struct frame_unwind riscv_frame_unwind =
 };
 
 static struct gdbarch *
-riscv_gdbarch_init (struct gdbarch_info  info,
+riscv_gdbarch_init (struct gdbarch_info info,
 		    struct gdbarch_list *arches)
 {
   struct gdbarch *gdbarch;
