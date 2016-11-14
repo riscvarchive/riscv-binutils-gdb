@@ -692,7 +692,7 @@ ALL_TARGET_OBS = \
 	nios2-tdep.o nios2-linux-tdep.o \
 	nto-tdep.o \
 	ppc-linux-tdep.o ppcfbsd-tdep.o ppcnbsd-tdep.o ppcobsd-tdep.o  \
-	ppc-sysv-tdep.o ppc64-tdep.o rl78-tdep.o \
+	ppc-sysv-tdep.o ppc64-tdep.o riscv-tdep.o riscv-linux-tdep.o rl78-tdep.o \
 	rs6000-aix-tdep.o rs6000-tdep.o solib-aix.o ppc-ravenscar-thread.o \
 	rs6000-lynx178-tdep.o \
 	rx-tdep.o \
@@ -948,7 +948,7 @@ sparc64-tdep.h ppcobsd-tdep.h \
 coff-pe-read.h parser-defs.h gdb_ptrace.h mips-linux-tdep.h \
 m68k-tdep.h spu-tdep.h environ.h amd64-tdep.h \
 doublest.h regset.h hppa-tdep.h ppc-linux-tdep.h ppc64-tdep.h \
-rs6000-tdep.h rs6000-aix-tdep.h \
+riscv-tdep.h rs6000-tdep.h rs6000-aix-tdep.h \
 common/gdb_locale.h arch-utils.h trad-frame.h gnu-nat.h \
 language.h nbsd-tdep.h solib-svr4.h \
 macroexp.h ui-file.h regcache.h tracepoint.h tracefile.h i386-tdep.h \
@@ -1736,6 +1736,7 @@ ALLDEPFILES = \
 	ravenscar-thread.c \
 	remote-sim.c \
 	dcache.c \
+	riscv-tdep.c riscv-linux-tdep.c \
 	rl78-tdep.c \
 	rs6000-nat.c rs6000-tdep.c solib-aix.c ppc-ravenscar-thread.c \
 	rs6000-lynx178-tdep.c \
