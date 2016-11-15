@@ -1,6 +1,13 @@
 		What has changed in GDB?
 	     (Organized release by release)
 
+*** Changes since GDB 7.13
+
+* New targets
+
+RISC-V newlib			riscv*-*-elf
+RISC-V glibc/Linux		riscv*-*-linux-gnu
+
 *** Changes since GDB 7.12
 
 * Building GDB and GDBserver now requires a C++11 compiler.
