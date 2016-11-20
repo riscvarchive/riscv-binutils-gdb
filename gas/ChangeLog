@@ -1,3 +1,59 @@
+2016-11-18  Claudiu Zissulescu  <claziss@synopsys.com>
+
+	* testsuite/gas/arc/cl-warn.s: New file.
+	* testsuite/gas/arc/cpu-pseudop-1.d: Likewise.
+	* testsuite/gas/arc/cpu-pseudop-1.s: Likewise.
+	* testsuite/gas/arc/cpu-pseudop-2.d: Likewise.
+	* testsuite/gas/arc/cpu-pseudop-2.s: Likewise.
+	* testsuite/gas/arc/cpu-warn2.s: Likewise.
+	* config/tc-arc.c (selected_cpu): Initialize.
+	(feature_type): New struct.
+	(feature_list): New variable.
+	(arc_check_feature): New function.
+	(arc_select_cpu): Check for .cpu duplicates. Don't overwrite the
+	current cpu features. Check if a feature is available for a given
+	cpu.
+	(md_parse_option): Test if features are available for a given cpu.
+
+2016-11-18  Szabolcs Nagy  <szabolcs.nagy@arm.com>
+
+	* config/tc-aarch64.c (parse_operands): Handle AARCH64_OPND_IMM_ROT*.
+	* testsuite/gas/aarch64/advsimd-armv8_3.d: New.
+	* testsuite/gas/aarch64/advsimd-armv8_3.s: New.
+	* testsuite/gas/aarch64/illegal-fcmla.s: New.
+	* testsuite/gas/aarch64/illegal-fcmla.l: New.
+	* testsuite/gas/aarch64/illegal-fcmla.d: New.
+
+2016-11-18  Szabolcs Nagy  <szabolcs.nagy@arm.com>
+
+	* testsuite/gas/aarch64/ldst-exclusive-armv8_3.s: Add ldaprb, ldaprh, ldapr tests.
+	* testsuite/gas/aarch64/ldst-exclusive-armv8_3.d: Likewise.
+	* testsuite/gas/aarch64/illegal-ldapr.s: Likewise.
+	* testsuite/gas/aarch64/illegal-ldapr.d: Likewise.
+	* testsuite/gas/aarch64/illegal-ldapr.l: Likewise.
+
+2016-11-18  Szabolcs Nagy  <szabolcs.nagy@arm.com>
+
+	* testsuite/gas/aarch64/fp-armv8_3.s: Add fjcvtzs test.
+	* testsuite/gas/aarch64/fp-armv8_3.d: Likewise.
+	* testsuite/gas/aarch64/illegal-fjcvtzs.s: Likewise.
+	* testsuite/gas/aarch64/illegal-fjcvtzs.d: Likewise.
+	* testsuite/gas/aarch64/illegal-fjcvtzs.l: Likewise.
+	* testsuite/gas/aarch64/illegal-nofp-armv8_3.s: Likewise.
+	* testsuite/gas/aarch64/illegal-nofp-armv8_3.d: Likewise.
+	* testsuite/gas/aarch64/illegal-nofp-armv8_3.l: Likewise.
+
+2016-11-18  Szabolcs Nagy  <szabolcs.nagy@arm.com>
+
+	* config/tc-aarch64.c (parse_operands): Handle AARCH64_OPND_ADDR_SIMM10.
+	(fix_insn): Likewise.
+	(warn_unpredictable_ldst): Handle ldst_imm10.
+	* testsuite/gas/aarch64/pac.s: Add ldraa and ldrab tests.
+	* testsuite/gas/aarch64/pac.d: Likewise.
+	* testsuite/gas/aarch64/illegal-ldraa.s: New.
+	* testsuite/gas/aarch64/illegal-ldraa.l: New.
+	* testsuite/gas/aarch64/illegal-ldraa.d: New.
+
 2016-11-15  Nick Clifton  <nickc@redhat.com>
 
 	PR gas/20803

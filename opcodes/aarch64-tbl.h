@@ -318,6 +318,12 @@
   QLF2 (X, S_H),			\
 }
 
+/* e.g. FJCVTZS <Wd>, <Dn>.  */
+#define QL_FP2INT_W_D			\
+{					\
+  QLF2 (W, S_D),			\
+}
+
 /* e.g. FMOV <Xd>, <Vn>.D[1].  */
 #define QL_XVD1			\
 {				\
@@ -963,6 +969,16 @@
   QLF3(V_2D , V_2D , V_2D )	\
 }
 
+/* e.g. FCMLA <Vd>.<T>, <Vn>.<T>, <Vm>.<T>, #<rotate>.  */
+#define QL_V3SAMEHSD_ROT	\
+{				\
+  QLF4 (V_4H, V_4H, V_4H, NIL),	\
+  QLF4 (V_8H, V_8H, V_8H, NIL),	\
+  QLF4 (V_2S, V_2S, V_2S, NIL),	\
+  QLF4 (V_4S, V_4S, V_4S, NIL),	\
+  QLF4 (V_2D, V_2D, V_2D, NIL),	\
+}
+
 /* e.g. FMAXNM <Vd>.<T>, <Vn>.<T>, <Vm>.<T>.  */
 #define QL_V3SAMEH		\
 {				\
@@ -1092,6 +1108,12 @@
 {				\
   QLF3(W, W, NIL),		\
   QLF3(W, X, NIL),		\
+}
+
+/* e.g. LDRAA <Xt>, [<Xn|SP>{,#imm}].  */
+#define QL_X1NIL		\
+{				\
+  QLF2(X, NIL),			\
 }
 
 /* e.g. LDXP <Xt1>, <Xt2>, [<Xn|SP>{,#0}].  */
@@ -1294,6 +1316,14 @@
 {				\
   QLF3 (V_4H, V_4H, S_H),	\
   QLF3 (V_8H, V_8H, S_H),	\
+}
+
+/* e.g. FCMLA <Vd>.<T>, <Vn>.<T>, <Vm>.<Ts>[<index>], #<rotate>.  */
+#define QL_ELEMENT_ROT		\
+{				\
+  QLF4 (V_4H, V_4H, S_H, NIL),	\
+  QLF4 (V_8H, V_8H, S_H, NIL),	\
+  QLF4 (V_4S, V_4S, S_S, NIL),	\
 }
 
 /* e.g. MOVI <Vd>.4S, #<imm8> {, LSL #<amount>}.  */
@@ -1906,6 +1936,10 @@ static const aarch64_feature_set aarch64_feature_sve =
   AARCH64_FEATURE (AARCH64_FEATURE_SVE, 0);
 static const aarch64_feature_set aarch64_feature_v8_3 =
   AARCH64_FEATURE (AARCH64_FEATURE_V8_3, 0);
+static const aarch64_feature_set aarch64_feature_fp_v8_3 =
+  AARCH64_FEATURE (AARCH64_FEATURE_V8_3 | AARCH64_FEATURE_FP, 0);
+static const aarch64_feature_set aarch64_feature_simd_v8_3 =
+  AARCH64_FEATURE (AARCH64_FEATURE_V8_3 | AARCH64_FEATURE_SIMD, 0);
 
 #define CORE		&aarch64_feature_v8
 #define FP		&aarch64_feature_fp
@@ -1922,6 +1956,8 @@ static const aarch64_feature_set aarch64_feature_v8_3 =
 #define ARMV8_2		&aarch64_feature_v8_2
 #define SVE		&aarch64_feature_sve
 #define ARMV8_3		&aarch64_feature_v8_3
+#define FP_V8_3		&aarch64_feature_fp_v8_3
+#define SIMD_V8_3	&aarch64_feature_simd_v8_3
 
 #define CORE_INSN(NAME,OPCODE,MASK,CLASS,OP,OPS,QUALS,FLAGS) \
   { NAME, OPCODE, MASK, CLASS, OP, CORE, OPS, QUALS, FLAGS, 0, NULL }
@@ -2089,6 +2125,7 @@ struct aarch64_opcode aarch64_opcode_table[] =
   SF16_INSN ("fmulx",   0x2f009000, 0xbfc0f400, asimdelem, OP3 (Vd, Vn, Em), QL_ELEMENT_FP_H, F_SIZEQ),
   RDMA_INSN ("sqrdmlah",0x2f00d000, 0xbf00f400, asimdelem, OP3 (Vd, Vn, Em), QL_ELEMENT,      F_SIZEQ),
   RDMA_INSN ("sqrdmlsh",0x2f00f000, 0xbf00f400, asimdelem, OP3 (Vd, Vn, Em), QL_ELEMENT,      F_SIZEQ),
+  {"fcmla", 0x2f001000, 0xbf009400, asimdelem, OP_FCMLA_ELEM, SIMD_V8_3, OP4 (Vd, Vn, Em, IMM_ROT2), QL_ELEMENT_ROT, F_SIZEQ, 0, NULL},
   /* AdvSIMD EXT.  */
   SIMD_INSN ("ext",  0x2e000000, 0xbfe08400, asimdext, 0, OP4 (Vd, Vn, Vm, IDX), QL_VEXT, F_SIZEQ),
   /* AdvSIMD modified immediate.  */
@@ -2332,6 +2369,8 @@ struct aarch64_opcode aarch64_opcode_table[] =
   /* AdvSIMD three same extension.  */
   RDMA_INSN ("sqrdmlah",0x2e008400, 0xbf20fe00, asimdsame, OP3 (Vd, Vn, Vm), QL_V3SAMEHS, F_SIZEQ),
   RDMA_INSN ("sqrdmlsh",0x2e008c00, 0xbf20fe00, asimdsame, OP3 (Vd, Vn, Vm), QL_V3SAMEHS, F_SIZEQ),
+  {"fcmla", 0x2e00c400, 0xbf20e400, asimdsame, 0, SIMD_V8_3, OP4 (Vd, Vn, Vm, IMM_ROT1), QL_V3SAMEHSD_ROT, F_SIZEQ, 0, NULL},
+  {"fcadd", 0x2e00e400, 0xbf20ec00, asimdsame, 0, SIMD_V8_3, OP4 (Vd, Vn, Vm, IMM_ROT3), QL_V3SAMEHSD_ROT, F_SIZEQ, 0, NULL},
   /* AdvSIMD shift by immediate.  */
   SIMD_INSN ("sshr", 0xf000400, 0xbf80fc00, asimdshf, 0, OP3 (Vd, Vn, IMM_VLSR), QL_VSHIFT, 0),
   SIMD_INSN ("ssra", 0xf001400, 0xbf80fc00, asimdshf, 0, OP3 (Vd, Vn, IMM_VLSR), QL_VSHIFT, 0),
@@ -2783,6 +2822,7 @@ struct aarch64_opcode aarch64_opcode_table[] =
   FF16_INSN ("fcvtzu",0x1ef90000, 0x7f3ffc00, float2int, OP2 (Rd, Fn), QL_FP2INT_H, F_FPTYPE | F_SF),
   __FP_INSN ("fmov",  0x9eae0000, 0xfffffc00, float2int, 0, OP2 (Rd, VnD1), QL_XVD1, 0),
   __FP_INSN ("fmov",  0x9eaf0000, 0xfffffc00, float2int, 0, OP2 (VdD1, Rn), QL_VD1X, 0),
+  {"fjcvtzs", 0x1e7e0000, 0xfffffc00, float2int, 0, FP_V8_3, OP2 (Rd, Fn), QL_FP2INT_W_D, 0, 0, NULL },
   /* Floating-point conditional compare.  */
   __FP_INSN ("fccmp", 0x1e200400, 0xff200c10, floatccmp, 0, OP4 (Fn, Fm, NZCV, COND), QL_FCCMP, F_FPTYPE),
   FF16_INSN ("fccmp", 0x1ee00400, 0xff200c10, floatccmp, OP4 (Fn, Fm, NZCV, COND), QL_FCCMP_H, F_FPTYPE),
@@ -2916,6 +2956,9 @@ struct aarch64_opcode aarch64_opcode_table[] =
   CORE_INSN ("ldur", 0xb8400000, 0xbfe00c00, ldst_unscaled, OP_LDUR, OP2 (Rt, ADDR_SIMM9), QL_LDST_R, F_GPRSIZE_IN_Q),
   CORE_INSN ("ldursw", 0xb8800000, 0xffe00c00, ldst_unscaled, OP_LDURSW, OP2 (Rt, ADDR_SIMM9), QL_LDST_X32, 0),
   CORE_INSN ("prfum", 0xf8800000, 0xffe00c00, ldst_unscaled, OP_PRFUM, OP2 (PRFOP, ADDR_SIMM9), QL_LDST_PRFM, 0),
+  /* Load/store register (scaled signed immediate).  */
+  V8_3_INSN ("ldraa", 0xf8200400, 0xffa00400, ldst_imm10, OP2 (Rt, ADDR_SIMM10), QL_X1NIL, 0),
+  V8_3_INSN ("ldrab", 0xf8a00400, 0xffa00400, ldst_imm10, OP2 (Rt, ADDR_SIMM10), QL_X1NIL, 0),
   /* Load/store exclusive.  */
   CORE_INSN ("stxrb", 0x8007c00, 0xffe08000, ldstexcl, 0, OP3 (Rs, Rt, ADDR_SIMPLE), QL_W2_LDST_EXC, 0),
   CORE_INSN ("stlxrb", 0x800fc00, 0xffe08000, ldstexcl, 0, OP3 (Rs, Rt, ADDR_SIMPLE), QL_W2_LDST_EXC, 0),
@@ -2939,6 +2982,9 @@ struct aarch64_opcode aarch64_opcode_table[] =
   CORE_INSN ("ldaxp", 0x887f8000, 0xbfe08000, ldstexcl, 0, OP3 (Rt, Rt2, ADDR_SIMPLE), QL_R2NIL, F_GPRSIZE_IN_Q),
   CORE_INSN ("stlr", 0x889ffc00, 0xbfe08000, ldstexcl, 0, OP2 (Rt, ADDR_SIMPLE), QL_R1NIL, F_GPRSIZE_IN_Q),
   CORE_INSN ("ldar", 0x88dffc00, 0xbfeffc00, ldstexcl, 0, OP2 (Rt, ADDR_SIMPLE), QL_R1NIL, F_GPRSIZE_IN_Q),
+  V8_3_INSN ("ldaprb", 0x38bfc000, 0xfffffc00, ldstexcl, OP2 (Rt, ADDR_SIMPLE), QL_W1_LDST_EXC, 0),
+  V8_3_INSN ("ldaprh", 0x78bfc000, 0xfffffc00, ldstexcl, OP2 (Rt, ADDR_SIMPLE), QL_W1_LDST_EXC, 0),
+  V8_3_INSN ("ldapr", 0xb8bfc000, 0xbffffc00, ldstexcl, OP2 (Rt, ADDR_SIMPLE), QL_R1NIL, F_GPRSIZE_IN_Q),
   /* Limited Ordering Regions load/store instructions.  */
   _LOR_INSN ("ldlar",  0x88df7c00, 0xbfe08000, ldstexcl, OP2 (Rt, ADDR_SIMPLE), QL_R1NIL,       F_GPRSIZE_IN_Q),
   _LOR_INSN ("ldlarb", 0x08df7c00, 0xffe08000, ldstexcl, OP2 (Rt, ADDR_SIMPLE), QL_W1_LDST_EXC, 0),
@@ -4094,6 +4140,12 @@ struct aarch64_opcode aarch64_opcode_table[] =
     Y(IMMEDIATE, fbits, "FBITS", 0, F(FLD_scale),			\
       "the number of bits after the binary point in the fixed-point value")\
     X(IMMEDIATE, 0, 0, "IMM_MOV", 0, F(), "an immediate")		\
+    Y(IMMEDIATE, imm_rotate, "IMM_ROT1", 0, F(FLD_rotate1),		\
+      "a 2-bit rotation specifier for complex arithmetic operations")	\
+    Y(IMMEDIATE, imm_rotate, "IMM_ROT2", 0, F(FLD_rotate2),		\
+      "a 2-bit rotation specifier for complex arithmetic operations")	\
+    Y(IMMEDIATE, imm_rotate, "IMM_ROT3", 0, F(FLD_rotate3),		\
+      "a 1-bit rotation specifier for complex arithmetic operations")	\
     Y(COND, cond, "COND", 0, F(), "a condition")			\
     Y(COND, cond, "COND1", 0, F(),					\
       "one of the standard conditions, excluding AL and NV.")		\
@@ -4117,6 +4169,8 @@ struct aarch64_opcode aarch64_opcode_table[] =
       "an address with 9-bit signed immediate offset")			\
     Y(ADDRESS, addr_simm, "ADDR_SIMM9_2", 0, F(FLD_imm9,FLD_index),	\
       "an address with 9-bit negative or unaligned immediate offset")	\
+    Y(ADDRESS, addr_simm10, "ADDR_SIMM10", 0, F(FLD_Rn,FLD_S_imm10,FLD_imm9,FLD_index),\
+      "an address with 10-bit scaled, signed immediate offset")		\
     Y(ADDRESS, addr_uimm12, "ADDR_UIMM12", 0, F(FLD_Rn,FLD_imm12),	\
       "an address with scaled, unsigned immediate offset")		\
     Y(ADDRESS, addr_simple, "SIMD_ADDR_SIMPLE", 0, F(),			\

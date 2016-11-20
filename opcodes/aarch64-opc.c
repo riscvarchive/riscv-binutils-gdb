@@ -253,6 +253,7 @@ const aarch64_field fields[] =
     { 16,  6 },	/* immr: in bitfield and logical immediate instructions.  */
     { 16,  3 },	/* immb: in advsimd shift by immediate instructions.  */
     { 19,  4 },	/* immh: in advsimd shift by immediate instructions.  */
+    { 22,  1 },	/* S: in LDRAA and LDRAB instructions.  */
     { 22,  1 },	/* N: in logical (immediate) instructions.  */
     { 11,  1 },	/* index: in ld/st inst deciding the pre/post-index.  */
     { 24,  1 },	/* index2: in ld/st pair inst deciding the pre/post-index.  */
@@ -308,7 +309,10 @@ const aarch64_field fields[] =
     {  8,  2 }, /* SVE_tszl_8: triangular size select low, bits [9,8].  */
     { 19,  2 }, /* SVE_tszl_19: triangular size select low, bits [20,19].  */
     { 14,  1 }, /* SVE_xs_14: UXTW/SXTW select (bit 14).  */
-    { 22,  1 }  /* SVE_xs_22: UXTW/SXTW select (bit 22).  */
+    { 22,  1 }, /* SVE_xs_22: UXTW/SXTW select (bit 22).  */
+    { 11,  2 }, /* rotate1: FCMLA immediate rotate.  */
+    { 13,  2 }, /* rotate2: Indexed element FCMLA immediate rotate.  */
+    { 12,  1 }, /* rotate3: FCADD immediate rotate.  */
 };
 
 enum aarch64_operand_class
@@ -1528,6 +1532,14 @@ operand_general_constraint_met_p (const aarch64_opnd_info *opnds, int idx,
 	      return 0;
 	    }
 	  break;
+	case ldst_imm10:
+	  if (opnd->addr.writeback == 1 && opnd->addr.preind != 1)
+	    {
+	      set_syntax_error (mismatch_detail, idx,
+				_("unexpected address writeback"));
+	      return 0;
+	    }
+	  break;
 	case ldst_imm9:
 	case ldstpair_indexed:
 	case asisdlsep:
@@ -1583,6 +1595,20 @@ operand_general_constraint_met_p (const aarch64_opnd_info *opnds, int idx,
 	  set_other_error (mismatch_detail, idx,
 			   _("negative or unaligned offset expected"));
 	  return 0;
+
+	case AARCH64_OPND_ADDR_SIMM10:
+	  /* Scaled signed 10 bits immediate offset.  */
+	  if (!value_in_range_p (opnd->addr.offset.imm, -4096, 4088))
+	    {
+	      set_offset_out_of_range_error (mismatch_detail, idx, -4096, 4088);
+	      return 0;
+	    }
+	  if (!value_aligned_p (opnd->addr.offset.imm, 8))
+	    {
+	      set_unaligned_error (mismatch_detail, idx, 8);
+	      return 0;
+	    }
+	  break;
 
 	case AARCH64_OPND_SIMD_ADDR_POST:
 	  /* AdvSIMD load/store multiple structures, post-index.  */
@@ -2074,6 +2100,28 @@ operand_general_constraint_met_p (const aarch64_opnd_info *opnds, int idx,
 	    }
 	  break;
 
+	case AARCH64_OPND_IMM_ROT1:
+	case AARCH64_OPND_IMM_ROT2:
+	  if (opnd->imm.value != 0
+	      && opnd->imm.value != 90
+	      && opnd->imm.value != 180
+	      && opnd->imm.value != 270)
+	    {
+	      set_other_error (mismatch_detail, idx,
+			       _("rotate expected to be 0, 90, 180 or 270"));
+	      return 0;
+	    }
+	  break;
+
+	case AARCH64_OPND_IMM_ROT3:
+	  if (opnd->imm.value != 90 && opnd->imm.value != 270)
+	    {
+	      set_other_error (mismatch_detail, idx,
+			       _("rotate expected to be 90 or 270"));
+	      return 0;
+	    }
+	  break;
+
 	case AARCH64_OPND_SHLL_IMM:
 	  assert (idx == 2);
 	  size = 8 * aarch64_get_qualifier_esize (opnds[idx - 1].qualifier);
@@ -2413,7 +2461,15 @@ operand_general_constraint_met_p (const aarch64_opnd_info *opnds, int idx,
 
     case AARCH64_OPND_CLASS_SIMD_ELEMENT:
       /* Get the upper bound for the element index.  */
-      num = 16 / aarch64_get_qualifier_esize (qualifier) - 1;
+      if (opcode->op == OP_FCMLA_ELEM)
+	/* FCMLA index range depends on the vector size of other operands
+	   and is halfed because complex numbers take two elements.  */
+	num = aarch64_get_qualifier_nelem (opnds[0].qualifier)
+	      * aarch64_get_qualifier_esize (opnds[0].qualifier) / 2;
+      else
+	num = 16;
+      num = num / aarch64_get_qualifier_esize (qualifier) - 1;
+
       /* Index out-of-range.  */
       if (!value_in_range_p (opnd->reglane.index, 0, num))
 	{
@@ -3162,6 +3218,9 @@ aarch64_print_operand (char *buf, size_t size, bfd_vma pc,
     case AARCH64_OPND_SVE_UIMM7:
     case AARCH64_OPND_SVE_UIMM8:
     case AARCH64_OPND_SVE_UIMM8_53:
+    case AARCH64_OPND_IMM_ROT1:
+    case AARCH64_OPND_IMM_ROT2:
+    case AARCH64_OPND_IMM_ROT3:
       snprintf (buf, size, "#%" PRIi64, opnd->imm.value);
       break;
 
@@ -3408,6 +3467,7 @@ aarch64_print_operand (char *buf, size_t size, bfd_vma pc,
     case AARCH64_OPND_ADDR_SIMM7:
     case AARCH64_OPND_ADDR_SIMM9:
     case AARCH64_OPND_ADDR_SIMM9_2:
+    case AARCH64_OPND_ADDR_SIMM10:
     case AARCH64_OPND_SVE_ADDR_RI_S4xVL:
     case AARCH64_OPND_SVE_ADDR_RI_S4x2xVL:
     case AARCH64_OPND_SVE_ADDR_RI_S4x3xVL:
