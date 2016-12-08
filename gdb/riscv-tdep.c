@@ -172,6 +172,23 @@ riscv_breakpoint_from_pc (struct gdbarch *gdbarch,
   return sbreak_insn;
 }
 
+static int
+riscv_breakpoint_kind_from_pc (struct gdbarch *gdbarch, CORE_ADDR *pcptr)
+{
+  /* TODO: Support C.EBREAK for compressed (16-bit) insns.  */
+  /* TODO: Support NOPs for >=6 byte insns.  */
+  return 4;
+}
+
+static const gdb_byte *
+riscv_sw_breakpoint_from_kind (struct gdbarch *gdbarch, int kind, int *size)
+{
+  /* TODO: Support C.EBREAK for compressed (16-bit) insns.  */
+  /* TODO: Support NOPs for >=6 byte insns.  */
+  gdb_assert(kind == 4);
+  return riscv_breakpoint_from_pc(gdbarch, NULL, size);
+}
+
 static struct value *
 value_of_riscv_user_reg (struct frame_info *frame, const void *baton)
 {
@@ -1216,6 +1233,8 @@ riscv_gdbarch_init (struct gdbarch_info info,
   /* Information about the target architecture.  */
   set_gdbarch_return_value (gdbarch, riscv_return_value);
   set_gdbarch_breakpoint_from_pc (gdbarch, riscv_breakpoint_from_pc);
+  set_gdbarch_breakpoint_kind_from_pc (gdbarch, riscv_breakpoint_kind_from_pc);
+  set_gdbarch_sw_breakpoint_from_kind (gdbarch, riscv_sw_breakpoint_from_kind);
   set_gdbarch_print_insn (gdbarch, print_insn_riscv);
 
   /* Register architecture.  */
