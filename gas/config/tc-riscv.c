@@ -1765,6 +1765,7 @@ enum options
   OPTION_MFLOAT_ABI,
   OPTION_MRVC,
   OPTION_MNO_RVC,
+  OPTION_MABI,
   OPTION_END_OF_ENUM
 };
 
@@ -1779,6 +1780,7 @@ struct option md_longopts[] =
   {"mrvc", no_argument, NULL, OPTION_MRVC},
   {"mno-rvc", no_argument, NULL, OPTION_MNO_RVC},
   {"mfloat-abi", required_argument, NULL, OPTION_MFLOAT_ABI},
+  {"mabi", required_argument, NULL, OPTION_MABI},
 
   {NULL, no_argument, NULL, 0}
 };
@@ -1837,6 +1839,35 @@ md_parse_option (int c, const char *arg)
 
     case OPTION_PIC:
       riscv_opts.pic = TRUE;
+      break;
+
+    case OPTION_MABI:
+      if (strcmp (arg, "ilp32") == 0) {
+	xlen = 32;
+	float_abi = FLOAT_ABI_SOFT;
+      } else if (strcmp (arg, "ilp32f") == 0) {
+	xlen = 32;
+	float_abi = FLOAT_ABI_SINGLE;
+      } else if (strcmp (arg, "ilp32d") == 0) {
+	xlen = 32;
+	float_abi = FLOAT_ABI_DOUBLE;
+      } else if (strcmp (arg, "ilp32q") == 0) {
+	xlen = 32;
+	float_abi = FLOAT_ABI_QUAD;
+      } if (strcmp (arg, "lp64") == 0) {
+	xlen = 64;
+	float_abi = FLOAT_ABI_SOFT;
+      } else if (strcmp (arg, "lp64f") == 0) {
+	xlen = 64;
+	float_abi = FLOAT_ABI_SINGLE;
+      } else if (strcmp (arg, "lp64d") == 0) {
+	xlen = 64;
+	float_abi = FLOAT_ABI_DOUBLE;
+      } else if (strcmp (arg, "lp64q") == 0) {
+	xlen = 64;
+	float_abi = FLOAT_ABI_QUAD;
+      } else
+	return 0;
       break;
 
     default:
