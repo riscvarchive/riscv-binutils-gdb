@@ -1854,7 +1854,7 @@ md_parse_option (int c, const char *arg)
       } else if (strcmp (arg, "ilp32q") == 0) {
 	xlen = 32;
 	float_abi = FLOAT_ABI_QUAD;
-      } if (strcmp (arg, "lp64") == 0) {
+      } else if (strcmp (arg, "lp64") == 0) {
 	xlen = 64;
 	float_abi = FLOAT_ABI_SOFT;
       } else if (strcmp (arg, "lp64f") == 0) {
