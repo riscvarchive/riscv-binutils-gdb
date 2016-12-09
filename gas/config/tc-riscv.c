@@ -61,8 +61,9 @@ struct riscv_cl_insn
 static const char default_arch[] = DEFAULT_ARCH;
 
 static unsigned xlen = 0; /* width of an x-register */
+static unsigned abi_xlen = 0; /* width of a pointer in the ABI */
 
-#define LOAD_ADDRESS_INSN (xlen == 64 ? "ld" : "lw")
+#define LOAD_ADDRESS_INSN (abi_xlen == 64 ? "ld" : "lw")
 #define ADD32_INSN (xlen == 64 ? "addiw" : "addi")
 
 static unsigned elf_flags = 0;
@@ -137,7 +138,6 @@ riscv_set_arch (const char *p)
 {
   const char *all_subsets = "IMAFDC";
   const char *extension = NULL;
-  int rvc = 0;
   int i;
 
   if (strncasecmp (p, "RV32", 4) == 0)
@@ -199,24 +199,11 @@ riscv_set_arch (const char *p)
 	{
 	  const char subset[] = {*p, 0};
 	  riscv_add_subset (subset);
-	  if (TOUPPER (*p) == 'C')
-	    rvc = 1;
 	  all_subsets++;
 	  p++;
 	}
       else
 	as_fatal ("unsupported ISA subset %c", *p);
-    }
-
-  if (rvc)
-    {
-      /* Override -m[no-]rvc setting if C was explicitly listed.  */
-      riscv_set_rvc (TRUE);
-    }
-  else
-    {
-      /* Add RVC anyway.  -m[no-]rvc toggles its availability.  */
-      riscv_add_subset ("C");
     }
 }
 
@@ -1757,29 +1744,19 @@ const char *md_shortopts = "O::g::G:";
 
 enum options
 {
-  OPTION_M32 = OPTION_MD_BASE,
-  OPTION_M64,
-  OPTION_MARCH,
+  OPTION_MARCH = OPTION_MD_BASE,
   OPTION_PIC,
   OPTION_NO_PIC,
-  OPTION_MFLOAT_ABI,
-  OPTION_MRVC,
-  OPTION_MNO_RVC,
   OPTION_MABI,
   OPTION_END_OF_ENUM
 };
 
 struct option md_longopts[] =
 {
-  {"m32", no_argument, NULL, OPTION_M32},
-  {"m64", no_argument, NULL, OPTION_M64},
   {"march", required_argument, NULL, OPTION_MARCH},
   {"fPIC", no_argument, NULL, OPTION_PIC},
   {"fpic", no_argument, NULL, OPTION_PIC},
   {"fno-pic", no_argument, NULL, OPTION_NO_PIC},
-  {"mrvc", no_argument, NULL, OPTION_MRVC},
-  {"mno-rvc", no_argument, NULL, OPTION_MNO_RVC},
-  {"mfloat-abi", required_argument, NULL, OPTION_MFLOAT_ABI},
   {"mabi", required_argument, NULL, OPTION_MABI},
 
   {NULL, no_argument, NULL, 0}
@@ -1795,40 +1772,18 @@ enum float_abi {
 };
 static enum float_abi float_abi = FLOAT_ABI_DEFAULT;
 
+static void
+riscv_set_abi (unsigned new_xlen, enum float_abi new_float_abi)
+{
+  abi_xlen = new_xlen;
+  float_abi = new_float_abi;
+}
+
 int
 md_parse_option (int c, const char *arg)
 {
   switch (c)
     {
-    case OPTION_MRVC:
-      riscv_set_rvc (TRUE);
-      break;
-
-    case OPTION_MNO_RVC:
-      riscv_set_rvc (FALSE);
-      break;
-
-    case OPTION_MFLOAT_ABI:
-      if (strcmp (arg, "soft") == 0)
-	float_abi = FLOAT_ABI_SOFT;
-      else if (strcmp (arg, "single") == 0)
-	float_abi = FLOAT_ABI_SINGLE;
-      else if (strcmp (arg, "double") == 0)
-	float_abi = FLOAT_ABI_DOUBLE;
-      else if (strcmp (arg, "quad") == 0)
-	float_abi = FLOAT_ABI_QUAD;
-      else
-	return 0;
-      break;
-
-    case OPTION_M32:
-      xlen = 32;
-      break;
-
-    case OPTION_M64:
-      xlen = 64;
-      break;
-
     case OPTION_MARCH:
       riscv_set_arch (arg);
       break;
@@ -1842,31 +1797,23 @@ md_parse_option (int c, const char *arg)
       break;
 
     case OPTION_MABI:
-      if (strcmp (arg, "ilp32") == 0) {
-	xlen = 32;
-	float_abi = FLOAT_ABI_SOFT;
-      } else if (strcmp (arg, "ilp32f") == 0) {
-	xlen = 32;
-	float_abi = FLOAT_ABI_SINGLE;
-      } else if (strcmp (arg, "ilp32d") == 0) {
-	xlen = 32;
-	float_abi = FLOAT_ABI_DOUBLE;
-      } else if (strcmp (arg, "ilp32q") == 0) {
-	xlen = 32;
-	float_abi = FLOAT_ABI_QUAD;
-      } else if (strcmp (arg, "lp64") == 0) {
-	xlen = 64;
-	float_abi = FLOAT_ABI_SOFT;
-      } else if (strcmp (arg, "lp64f") == 0) {
-	xlen = 64;
-	float_abi = FLOAT_ABI_SINGLE;
-      } else if (strcmp (arg, "lp64d") == 0) {
-	xlen = 64;
-	float_abi = FLOAT_ABI_DOUBLE;
-      } else if (strcmp (arg, "lp64q") == 0) {
-	xlen = 64;
-	float_abi = FLOAT_ABI_QUAD;
-      } else
+      if (strcmp (arg, "ilp32") == 0)
+	riscv_set_abi (32, FLOAT_ABI_SOFT);
+      else if (strcmp (arg, "ilp32f") == 0)
+	riscv_set_abi (32, FLOAT_ABI_SINGLE);
+      else if (strcmp (arg, "ilp32d") == 0)
+	riscv_set_abi (32, FLOAT_ABI_DOUBLE);
+      else if (strcmp (arg, "ilp32q") == 0)
+	riscv_set_abi (32, FLOAT_ABI_QUAD);
+      else if (strcmp (arg, "lp64") == 0)
+	riscv_set_abi (64, FLOAT_ABI_SOFT);
+      else if (strcmp (arg, "lp64f") == 0)
+	riscv_set_abi (64, FLOAT_ABI_SINGLE);
+      else if (strcmp (arg, "lp64d") == 0)
+	riscv_set_abi (64, FLOAT_ABI_DOUBLE);
+      else if (strcmp (arg, "lp64q") == 0)
+	riscv_set_abi (64, FLOAT_ABI_QUAD);
+      else
 	return 0;
       break;
 
@@ -1883,6 +1830,8 @@ riscv_after_parse_args (void)
   if (riscv_subsets == NULL)
     riscv_set_arch ("RVIMAFD");
 
+  riscv_set_rvc (riscv_subset_supports ("C"));
+
   if (xlen == 0)
     {
       if (strcmp (default_arch, "riscv32") == 0)
@@ -1892,6 +1841,14 @@ riscv_after_parse_args (void)
       else
 	as_bad ("unknown default architecture `%s'", default_arch);
     }
+
+  /* Infer ABI from ISA if not specified on command line.  */
+  if (abi_xlen == 0)
+    abi_xlen = xlen;
+  else if (abi_xlen > xlen)
+    as_bad ("can't have %d-bit ABI on %d-bit ISA", abi_xlen, xlen);
+  else if (abi_xlen < xlen)
+    as_bad ("%d-bit ABI not yet supported on %d-bit ISA", abi_xlen, xlen);
 
   if (float_abi == FLOAT_ABI_DEFAULT)
     {
