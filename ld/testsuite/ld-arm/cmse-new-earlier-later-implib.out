@@ -1,3 +1,0 @@
-.*: Entry function `exported_entry_veneer3' disappeared from secure code.
-.*: Start address of `.gnu.sgstubs' is different from previous link.
-.*: cannot size stub section: Invalid operation
