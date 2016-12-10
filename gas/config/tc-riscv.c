@@ -637,6 +637,31 @@ md_begin (void)
   record_alignment (text_section, riscv_opts.rvc ? 1 : 2);
 }
 
+static insn_t
+riscv_apply_const_reloc (bfd_reloc_code_real_type reloc_type, bfd_vma value)
+{
+  switch (reloc_type)
+    {
+    case BFD_RELOC_32:
+      return value;
+
+    case BFD_RELOC_RISCV_HI20:
+    case BFD_RELOC_RISCV_HI20_RELAX:
+      return ENCODE_UTYPE_IMM (RISCV_CONST_HIGH_PART (value));
+
+    case BFD_RELOC_RISCV_LO12_S:
+    case BFD_RELOC_RISCV_LO12_S_RELAX:
+      return ENCODE_STYPE_IMM (value);
+
+    case BFD_RELOC_RISCV_LO12_I:
+    case BFD_RELOC_RISCV_LO12_I_RELAX:
+      return ENCODE_ITYPE_IMM (value);
+
+    default:
+      abort ();
+    }
+}
+
 /* Output an instruction.  IP is the instruction information.
    ADDRESS_EXPR is an operand of the instruction to be used with
    RELOC_TYPE.  */
@@ -665,43 +690,20 @@ append_insn (struct riscv_cl_insn *ip, expressionS *address_expr,
 	  return;
 	}
       else if (address_expr->X_op == O_constant)
+	ip->insn_opcode |= riscv_apply_const_reloc (reloc_type,
+						    address_expr->X_add_number);
+      else
 	{
-	  switch (reloc_type)
-	    {
-	    case BFD_RELOC_32:
-	      ip->insn_opcode |= address_expr->X_add_number;
-	      goto append;
+	  howto = bfd_reloc_type_lookup (stdoutput, reloc_type);
+	  if (howto == NULL)
+	    as_bad (_("Unsupported RISC-V relocation number %d"), reloc_type);
 
-	    case BFD_RELOC_RISCV_HI20:
-	      {
-		insn_t imm = RISCV_CONST_HIGH_PART (address_expr->X_add_number);
-		ip->insn_opcode |= ENCODE_UTYPE_IMM (imm);
-		goto append;
-	      }
-
-	    case BFD_RELOC_RISCV_LO12_S:
-	      ip->insn_opcode |= ENCODE_STYPE_IMM (address_expr->X_add_number);
-	      goto append;
-
-	    case BFD_RELOC_RISCV_LO12_I:
-	      ip->insn_opcode |= ENCODE_ITYPE_IMM (address_expr->X_add_number);
-	      goto append;
-
-	    default:
-	      break;
-	    }
+	  ip->fixp = fix_new_exp (ip->frag, ip->where,
+				  bfd_get_reloc_size (howto),
+				  address_expr, FALSE, reloc_type);
 	}
-
-	howto = bfd_reloc_type_lookup (stdoutput, reloc_type);
-	if (howto == NULL)
-	  as_bad (_("Unsupported RISC-V relocation number %d"), reloc_type);
-
-	ip->fixp = fix_new_exp (ip->frag, ip->where,
-				bfd_get_reloc_size (howto),
-				address_expr, FALSE, reloc_type);
     }
 
-append:
   add_fixed_insn (ip);
   install_insn (ip);
 }
@@ -1884,6 +1886,30 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
 
   switch (fixP->fx_r_type)
     {
+    case BFD_RELOC_RISCV_HI20:
+    case BFD_RELOC_RISCV_HI20_RELAX:
+    case BFD_RELOC_RISCV_LO12_I:
+    case BFD_RELOC_RISCV_LO12_I_RELAX:
+    case BFD_RELOC_RISCV_LO12_S:
+    case BFD_RELOC_RISCV_LO12_S_RELAX:
+      {
+	insn_t val = riscv_apply_const_reloc (fixP->fx_r_type, *valP);
+	bfd_putl32 (bfd_getl32 (buf) | val, buf);
+	break;
+      }
+
+    case BFD_RELOC_RISCV_GOT_HI20:
+    case BFD_RELOC_RISCV_PCREL_HI20:
+    case BFD_RELOC_RISCV_ADD8:
+    case BFD_RELOC_RISCV_ADD16:
+    case BFD_RELOC_RISCV_ADD32:
+    case BFD_RELOC_RISCV_ADD64:
+    case BFD_RELOC_RISCV_SUB8:
+    case BFD_RELOC_RISCV_SUB16:
+    case BFD_RELOC_RISCV_SUB32:
+    case BFD_RELOC_RISCV_SUB64:
+      break;
+
     case BFD_RELOC_RISCV_TLS_GOT_HI20:
     case BFD_RELOC_RISCV_TLS_GD_HI20:
     case BFD_RELOC_RISCV_TLS_DTPREL32:
@@ -1896,26 +1922,6 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
     case BFD_RELOC_RISCV_TPREL_LO12_S_RELAX:
     case BFD_RELOC_RISCV_TPREL_ADD:
       S_SET_THREAD_LOCAL (fixP->fx_addsy);
-      /* Fall through.  */
-
-    case BFD_RELOC_RISCV_GOT_HI20:
-    case BFD_RELOC_RISCV_PCREL_HI20:
-    case BFD_RELOC_RISCV_HI20:
-    case BFD_RELOC_RISCV_HI20_RELAX:
-    case BFD_RELOC_RISCV_LO12_I:
-    case BFD_RELOC_RISCV_LO12_I_RELAX:
-    case BFD_RELOC_RISCV_LO12_S:
-    case BFD_RELOC_RISCV_LO12_S_RELAX:
-    case BFD_RELOC_RISCV_ADD8:
-    case BFD_RELOC_RISCV_ADD16:
-    case BFD_RELOC_RISCV_ADD32:
-    case BFD_RELOC_RISCV_ADD64:
-    case BFD_RELOC_RISCV_SUB8:
-    case BFD_RELOC_RISCV_SUB16:
-    case BFD_RELOC_RISCV_SUB32:
-    case BFD_RELOC_RISCV_SUB64:
-      gas_assert (fixP->fx_addsy != NULL);
-      /* Nothing needed to do.  The value comes from the reloc entry.  */
       break;
 
     case BFD_RELOC_64:
