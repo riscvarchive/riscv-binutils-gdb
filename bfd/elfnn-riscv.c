@@ -569,7 +569,6 @@ riscv_elf_check_relocs (bfd *abfd, struct bfd_link_info *info,
 	  break;
 
 	case R_RISCV_CALL_PLT:
-	case R_RISCV_CALL_PLT_RELAX:
 	  /* This symbol requires a procedure linkage table entry.  We
 	     actually build the entry in adjust_dynamic_symbol,
 	     because this might be a case of linking PIC code without
@@ -584,7 +583,6 @@ riscv_elf_check_relocs (bfd *abfd, struct bfd_link_info *info,
 	  break;
 
 	case R_RISCV_CALL:
-	case R_RISCV_CALL_RELAX:
 	case R_RISCV_JAL:
 	case R_RISCV_BRANCH:
 	case R_RISCV_RVC_BRANCH:
@@ -596,7 +594,6 @@ riscv_elf_check_relocs (bfd *abfd, struct bfd_link_info *info,
 	  goto static_reloc;
 
 	case R_RISCV_TPREL_HI20:
-	case R_RISCV_TPREL_HI20_RELAX:
 	  if (!bfd_link_executable (info))
 	    return bad_static_reloc (abfd, r_type, h);
 	  if (h != NULL)
@@ -604,7 +601,6 @@ riscv_elf_check_relocs (bfd *abfd, struct bfd_link_info *info,
 	  goto static_reloc;
 
 	case R_RISCV_HI20:
-	case R_RISCV_HI20_RELAX:
 	  if (bfd_link_pic (info))
 	    return bad_static_reloc (abfd, r_type, h);
 	  /* Fall through.  */
@@ -825,7 +821,6 @@ riscv_elf_gc_sweep_hook (bfd *abfd,
 	  break;
 
 	case R_RISCV_HI20:
-	case R_RISCV_HI20_RELAX:
 	case R_RISCV_PCREL_HI20:
 	case R_RISCV_COPY:
 	case R_RISCV_JUMP_SLOT:
@@ -834,7 +829,6 @@ riscv_elf_gc_sweep_hook (bfd *abfd,
 	case R_RISCV_32:
 	case R_RISCV_BRANCH:
 	case R_RISCV_CALL:
-	case R_RISCV_CALL_RELAX:
 	case R_RISCV_JAL:
 	case R_RISCV_RVC_BRANCH:
 	case R_RISCV_RVC_JUMP:
@@ -843,7 +837,6 @@ riscv_elf_gc_sweep_hook (bfd *abfd,
 	  /* Fall through.  */
 
 	case R_RISCV_CALL_PLT:
-	case R_RISCV_CALL_PLT_RELAX:
 	  if (h != NULL)
 	    {
 	      if (h->plt.refcount > 0)
@@ -1487,9 +1480,7 @@ perform_relocation (const reloc_howto_type *howto,
   switch (ELFNN_R_TYPE (rel->r_info))
     {
     case R_RISCV_HI20:
-    case R_RISCV_HI20_RELAX:
     case R_RISCV_TPREL_HI20:
-    case R_RISCV_TPREL_HI20_RELAX:
     case R_RISCV_PCREL_HI20:
     case R_RISCV_GOT_HI20:
     case R_RISCV_TLS_GOT_HI20:
@@ -1500,29 +1491,23 @@ perform_relocation (const reloc_howto_type *howto,
       break;
 
     case R_RISCV_LO12_I:
-    case R_RISCV_LO12_I_RELAX:
     case R_RISCV_GPREL_I:
     case R_RISCV_TPREL_LO12_I:
-    case R_RISCV_TPREL_LO12_I_RELAX:
     case R_RISCV_TPREL_I:
     case R_RISCV_PCREL_LO12_I:
       value = ENCODE_ITYPE_IMM (value);
       break;
 
     case R_RISCV_LO12_S:
-    case R_RISCV_LO12_S_RELAX:
     case R_RISCV_GPREL_S:
     case R_RISCV_TPREL_LO12_S:
-    case R_RISCV_TPREL_LO12_S_RELAX:
     case R_RISCV_TPREL_S:
     case R_RISCV_PCREL_LO12_S:
       value = ENCODE_STYPE_IMM (value);
       break;
 
     case R_RISCV_CALL:
-    case R_RISCV_CALL_RELAX:
     case R_RISCV_CALL_PLT:
-    case R_RISCV_CALL_PLT_RELAX:
       if (ARCH_SIZE > 32 && !VALID_UTYPE_IMM (RISCV_CONST_HIGH_PART (value)))
 	return bfd_reloc_overflow;
       value = ENCODE_UTYPE_IMM (RISCV_CONST_HIGH_PART (value))
@@ -1834,6 +1819,7 @@ riscv_elf_relocate_section (bfd *output_bfd,
       switch (r_type)
 	{
 	case R_RISCV_NONE:
+	case R_RISCV_RELAX:
 	case R_RISCV_TPREL_ADD:
 	case R_RISCV_COPY:
 	case R_RISCV_JUMP_SLOT:
@@ -1842,14 +1828,11 @@ riscv_elf_relocate_section (bfd *output_bfd,
 	  continue;
 
 	case R_RISCV_HI20:
-	case R_RISCV_HI20_RELAX:
 	case R_RISCV_BRANCH:
 	case R_RISCV_RVC_BRANCH:
 	case R_RISCV_RVC_LUI:
 	case R_RISCV_LO12_I:
-	case R_RISCV_LO12_I_RELAX:
 	case R_RISCV_LO12_S:
-	case R_RISCV_LO12_S_RELAX:
 	  /* These require no special handling beyond perform_relocation.  */
 	  break;
 
@@ -1955,9 +1938,7 @@ riscv_elf_relocate_section (bfd *output_bfd,
 	  break;
 
 	case R_RISCV_CALL_PLT:
-	case R_RISCV_CALL_PLT_RELAX:
 	case R_RISCV_CALL:
-	case R_RISCV_CALL_RELAX:
 	case R_RISCV_JAL:
 	case R_RISCV_RVC_JUMP:
 	  if (bfd_link_pic (info) && h != NULL && h->plt.offset != MINUS_ONE)
@@ -1969,14 +1950,11 @@ riscv_elf_relocate_section (bfd *output_bfd,
 	  break;
 
 	case R_RISCV_TPREL_HI20:
-	case R_RISCV_TPREL_HI20_RELAX:
 	  relocation = tpoff (info, relocation);
 	  break;
 
 	case R_RISCV_TPREL_LO12_I:
-	case R_RISCV_TPREL_LO12_I_RELAX:
 	case R_RISCV_TPREL_LO12_S:
-	case R_RISCV_TPREL_LO12_S_RELAX:
 	  relocation = tpoff (info, relocation);
 	  break;
 
@@ -2758,7 +2736,7 @@ _bfd_riscv_relax_call (bfd *abfd, asection *sec, asection *sym_sec,
       auipc = MATCH_JALR | (rd << OP_SH_RD);
     }
 
-  /* Replace the R_RISCV_CALL_RELAX reloc.  */
+  /* Replace the R_RISCV_CALL reloc.  */
   rel->r_info = ELFNN_R_INFO (ELFNN_R_SYM (rel->r_info), r_type);
   /* Replace the AUIPC.  */
   bfd_put (8 * len, abfd, auipc, contents + rel->r_offset);
@@ -2816,15 +2794,15 @@ _bfd_riscv_relax_lui (bfd *abfd,
       unsigned sym = ELFNN_R_SYM (rel->r_info);
       switch (ELFNN_R_TYPE (rel->r_info))
 	{
-	case R_RISCV_LO12_I_RELAX:
+	case R_RISCV_LO12_I:
 	  rel->r_info = ELFNN_R_INFO (sym, R_RISCV_GPREL_I);
 	  return TRUE;
 
-	case R_RISCV_LO12_S_RELAX:
+	case R_RISCV_LO12_S:
 	  rel->r_info = ELFNN_R_INFO (sym, R_RISCV_GPREL_S);
 	  return TRUE;
 
-	case R_RISCV_HI20_RELAX:
+	case R_RISCV_HI20:
 	  /* We can delete the unnecessary LUI and reloc.  */
 	  rel->r_info = ELFNN_R_INFO (0, R_RISCV_NONE);
 	  *again = TRUE;
@@ -2838,7 +2816,7 @@ _bfd_riscv_relax_lui (bfd *abfd,
   /* Can we relax LUI to C.LUI?  Alignment might move the section forward;
      account for this assuming page alignment at worst.  */
   if (use_rvc
-      && ELFNN_R_TYPE (rel->r_info) == R_RISCV_HI20_RELAX
+      && ELFNN_R_TYPE (rel->r_info) == R_RISCV_HI20
       && VALID_RVC_LUI_IMM (RISCV_CONST_HIGH_PART (symval))
       && VALID_RVC_LUI_IMM (RISCV_CONST_HIGH_PART (symval + ELF_MAXPAGESIZE)))
     {
@@ -2850,7 +2828,7 @@ _bfd_riscv_relax_lui (bfd *abfd,
       lui = (lui & (OP_MASK_RD << OP_SH_RD)) | MATCH_C_LUI;
       bfd_put_32 (abfd, lui, contents + rel->r_offset);
 
-      /* Replace the R_RISCV_HI20_RELAX reloc.  */
+      /* Replace the R_RISCV_HI20 reloc.  */
       rel->r_info = ELFNN_R_INFO (ELFNN_R_SYM (rel->r_info), R_RISCV_RVC_LUI);
 
       *again = TRUE;
@@ -2879,15 +2857,15 @@ _bfd_riscv_relax_tls_le (bfd *abfd,
   BFD_ASSERT (rel->r_offset + 4 <= sec->size);
   switch (ELFNN_R_TYPE (rel->r_info))
     {
-    case R_RISCV_TPREL_LO12_I_RELAX:
+    case R_RISCV_TPREL_LO12_I:
       rel->r_info = ELFNN_R_INFO (ELFNN_R_SYM (rel->r_info), R_RISCV_TPREL_I);
       return TRUE;
 
-    case R_RISCV_TPREL_LO12_S_RELAX:
+    case R_RISCV_TPREL_LO12_S:
       rel->r_info = ELFNN_R_INFO (ELFNN_R_SYM (rel->r_info), R_RISCV_TPREL_S);
       return TRUE;
 
-    case R_RISCV_TPREL_HI20_RELAX:
+    case R_RISCV_TPREL_HI20:
     case R_RISCV_TPREL_ADD:
       /* We can delete the unnecessary instruction and reloc.  */
       rel->r_info = ELFNN_R_INFO (0, R_RISCV_NONE);
@@ -2986,28 +2964,38 @@ _bfd_riscv_relax_section (bfd *abfd, asection *sec,
     {
       asection *sym_sec;
       Elf_Internal_Rela *rel = relocs + i;
-      relax_func_t relax_func = NULL;
+      relax_func_t relax_func;
       int type = ELFNN_R_TYPE (rel->r_info);
       bfd_vma symval;
 
       if (info->relax_pass == 0)
 	{
-	  if (type == R_RISCV_CALL_RELAX || type == R_RISCV_CALL_PLT_RELAX)
+	  if (type == R_RISCV_CALL || type == R_RISCV_CALL_PLT)
 	    relax_func = _bfd_riscv_relax_call;
-	  else if (type == R_RISCV_HI20_RELAX
-		   || type == R_RISCV_LO12_I_RELAX
-		   || type == R_RISCV_LO12_S_RELAX)
+	  else if (type == R_RISCV_HI20
+		   || type == R_RISCV_LO12_I
+		   || type == R_RISCV_LO12_S)
 	    relax_func = _bfd_riscv_relax_lui;
-	  else if (type == R_RISCV_TPREL_HI20_RELAX
+	  else if (type == R_RISCV_TPREL_HI20
 		   || type == R_RISCV_TPREL_ADD
-		   || type == R_RISCV_TPREL_LO12_I_RELAX
-		   || type == R_RISCV_TPREL_LO12_S_RELAX)
+		   || type == R_RISCV_TPREL_LO12_I
+		   || type == R_RISCV_TPREL_LO12_S)
 	    relax_func = _bfd_riscv_relax_tls_le;
+	  else
+	    continue;
+
+	  /* Only relax this reloc if it is paired with R_RISCV_RELAX.  */
+	  if (i == sec->reloc_count - 1
+	      || ELFNN_R_TYPE ((rel + 1)->r_info) != R_RISCV_RELAX
+	      || rel->r_offset != (rel + 1)->r_offset)
+	    continue;
+
+	  /* Skip over the R_RISCV_RELAX.  */
+	  i++;
 	}
       else if (type == R_RISCV_ALIGN)
 	relax_func = _bfd_riscv_relax_align;
-
-      if (!relax_func)
+      else
 	continue;
 
       data->relocs = relocs;
