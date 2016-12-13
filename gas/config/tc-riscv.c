@@ -129,55 +129,49 @@ riscv_add_subset (const char *subset)
   riscv_subsets = s;
 }
 
-/* Set which ISA and extensions are available.  Formally, ISA strings must
-   begin with RV32 or RV64, but we allow the prefix to be omitted.
+/* Set which ISA and extensions are available.  */
 
-   FIXME: Version numbers are not supported yet.  */
 static void
-riscv_set_arch (const char *p)
+riscv_set_arch (const char *s)
 {
-  const char *all_subsets = "IMAFDC";
+  const char *all_subsets = "imafdc";
   const char *extension = NULL;
-  int i;
+  const char *p = s;
 
-  if (strncasecmp (p, "RV32", 4) == 0)
+  if (strncmp (p, "rv32", 4) == 0)
     {
       xlen = 32;
       p += 4;
     }
-  else if (strncasecmp (p, "RV64", 4) == 0)
+  else if (strncmp (p, "rv64", 4) == 0)
     {
       xlen = 64;
       p += 4;
     }
-  else if (strncasecmp (p, "RV", 2) == 0)
-    p += 2;
+  else
+    as_fatal ("-march=%s: ISA string must begin with rv32 or rv64", s);
 
-  switch (TOUPPER (*p))
+  switch (*p)
     {
-      case 'I':
+      case 'i':
 	break;
 
-      case 'G':
+      case 'g':
 	p++;
-	/* Fall through.  */
-
-      case '\0':
-	for (i = 0; all_subsets[i] != '\0'; i++)
+	for ( ; *all_subsets != 'c'; all_subsets++)
 	  {
-	    const char subset[] = {all_subsets[i], '\0'};
+	    const char subset[] = {*all_subsets, '\0'};
 	    riscv_add_subset (subset);
 	  }
 	break;
 
       default:
-	as_fatal ("`I' must be the first ISA subset name specified (got %c)",
-		  *p);
+	as_fatal ("-march=%s: first ISA subset must be `i' or `g'", s);
     }
 
   while (*p)
     {
-      if (TOUPPER (*p) == 'X')
+      if (*p == 'x')
 	{
 	  char *subset = xstrdup (p), *q = subset;
 
@@ -186,8 +180,8 @@ riscv_set_arch (const char *p)
 	  *q = '\0';
 
 	  if (extension)
-	    as_fatal ("only one eXtension is supported (found %s and %s)",
-		      extension, subset);
+	    as_fatal ("-march=%s: only one non-standard extension is supported"
+		      " (found `%s' and `%s')", s, extension, subset);
 	  extension = subset;
 	  riscv_add_subset (subset);
 	  p += strlen (subset);
@@ -195,7 +189,7 @@ riscv_set_arch (const char *p)
 	}
       else if (*p == '_')
 	p++;
-      else if ((all_subsets = strchr (all_subsets, TOUPPER (*p))) != NULL)
+      else if ((all_subsets = strchr (all_subsets, *p)) != NULL)
 	{
 	  const char subset[] = {*p, 0};
 	  riscv_add_subset (subset);
@@ -203,7 +197,7 @@ riscv_set_arch (const char *p)
 	  p++;
 	}
       else
-	as_fatal ("unsupported ISA subset %c", *p);
+	as_fatal ("-march=%s: unsupported ISA subset `%c'", s, *p);
     }
 }
 
@@ -1829,11 +1823,6 @@ md_parse_option (int c, const char *arg)
 void
 riscv_after_parse_args (void)
 {
-  if (riscv_subsets == NULL)
-    riscv_set_arch ("RVIMAFD");
-
-  riscv_set_rvc (riscv_subset_supports ("C"));
-
   if (xlen == 0)
     {
       if (strcmp (default_arch, "riscv32") == 0)
@@ -1843,6 +1832,11 @@ riscv_after_parse_args (void)
       else
 	as_bad ("unknown default architecture `%s'", default_arch);
     }
+
+  if (riscv_subsets == NULL)
+    riscv_set_arch (xlen == 64 ? "rv64g" : "rv32g");
+
+  riscv_set_rvc (riscv_subset_supports ("c"));
 
   /* Infer ABI from ISA if not specified on command line.  */
   if (abi_xlen == 0)
