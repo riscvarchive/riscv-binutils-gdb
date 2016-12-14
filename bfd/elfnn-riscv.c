@@ -2759,7 +2759,7 @@ _bfd_riscv_relax_call (bfd *abfd, asection *sec, asection *sym_sec,
 
 /* Traverse all output sections and return the max alignment.  */
 
-static unsigned int
+static bfd_vma
 _bfd_riscv_get_max_alignment (asection *sec)
 {
   unsigned int max_alignment_power = 0;
@@ -2771,7 +2771,7 @@ _bfd_riscv_get_max_alignment (asection *sec)
 	max_alignment_power = o->alignment_power;
     }
 
-  return 1 << max_alignment_power;
+  return (bfd_vma) 1 << max_alignment_power;
 }
 
 /* Relax non-PIC global variable references.  */
@@ -2783,7 +2783,7 @@ _bfd_riscv_relax_lui (bfd *abfd,
 		      struct bfd_link_info *link_info,
 		      Elf_Internal_Rela *rel,
 		      bfd_vma symval,
-		      unsigned int max_alignment,
+		      bfd_vma max_alignment,
 		      bfd_vma reserve_size,
 		      bfd_boolean *again)
 {
@@ -2900,7 +2900,7 @@ _bfd_riscv_relax_align (bfd *abfd, asection *sec,
 			struct bfd_link_info *link_info ATTRIBUTE_UNUSED,
 			Elf_Internal_Rela *rel,
 			bfd_vma symval,
-			unsigned int max_alignment ATTRIBUTE_UNUSED,
+			bfd_vma max_alignment ATTRIBUTE_UNUSED,
 			bfd_vma reserve_size ATTRIBUTE_UNUSED,
 			bfd_boolean *again ATTRIBUTE_UNUSED)
 {
