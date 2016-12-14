@@ -71,6 +71,9 @@ extern void riscv_after_parse_args (void);
 #define md_parse_long_option(arg) riscv_parse_long_option (arg)
 extern int riscv_parse_long_option (const char *);
 
+#define md_pre_output_hook riscv_pre_output_hook()
+extern void riscv_pre_output_hook (void);
+
 /* Let the linker resolve all the relocs due to relaxation.  */
 #define tc_fix_adjustable(fixp) 0
 #define md_allow_local_subtract(l,r,s) 0

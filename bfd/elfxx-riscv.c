@@ -758,6 +758,81 @@ static reloc_howto_type howto_table[] =
 	 0,				/* src_mask */
 	 0,				/* dst_mask */
 	 FALSE),			/* pcrel_offset */
+
+  /* 6-bit in-place addition, for local label subtraction.  */
+  HOWTO (R_RISCV_SUB6,			/* type */
+	 0,				/* rightshift */
+	 0,				/* size */
+	 8,				/* bitsize */
+	 FALSE,				/* pc_relative */
+	 0,				/* bitpos */
+	 complain_overflow_dont,	/* complain_on_overflow */
+	 bfd_elf_generic_reloc,		/* special_function */
+	 "R_RISCV_SUB6",		/* name */
+	 FALSE,				/* partial_inplace */
+	 0,				/* src_mask */
+	 0x3f,				/* dst_mask */
+	 FALSE),			/* pcrel_offset */
+
+  /* 6-bit in-place setting, for local label subtraction.  */
+  HOWTO (R_RISCV_SET6,			/* type */
+	 0,				/* rightshift */
+	 0,				/* size */
+	 8,				/* bitsize */
+	 FALSE,				/* pc_relative */
+	 0,				/* bitpos */
+	 complain_overflow_dont,	/* complain_on_overflow */
+	 bfd_elf_generic_reloc,		/* special_function */
+	 "R_RISCV_SET6",		/* name */
+	 FALSE,				/* partial_inplace */
+	 0,				/* src_mask */
+	 0x3f,				/* dst_mask */
+	 FALSE),			/* pcrel_offset */
+
+  /* 8-bit in-place setting, for local label subtraction.  */
+  HOWTO (R_RISCV_SET8,			/* type */
+	 0,				/* rightshift */
+	 0,				/* size */
+	 8,				/* bitsize */
+	 FALSE,				/* pc_relative */
+	 0,				/* bitpos */
+	 complain_overflow_dont,	/* complain_on_overflow */
+	 bfd_elf_generic_reloc,		/* special_function */
+	 "R_RISCV_SET8",		/* name */
+	 FALSE,				/* partial_inplace */
+	 0,				/* src_mask */
+	 MINUS_ONE,			/* dst_mask */
+	 FALSE),			/* pcrel_offset */
+
+  /* 16-bit in-place setting, for local label subtraction.  */
+  HOWTO (R_RISCV_SET16,			/* type */
+	 0,				/* rightshift */
+	 1,				/* size */
+	 16,				/* bitsize */
+	 FALSE,				/* pc_relative */
+	 0,				/* bitpos */
+	 complain_overflow_dont,	/* complain_on_overflow */
+	 bfd_elf_generic_reloc,		/* special_function */
+	 "R_RISCV_SET16",		/* name */
+	 FALSE,				/* partial_inplace */
+	 0,				/* src_mask */
+	 MINUS_ONE,			/* dst_mask */
+	 FALSE),			/* pcrel_offset */
+
+  /* 32-bit in-place setting, for local label subtraction.  */
+  HOWTO (R_RISCV_SET32,			/* type */
+	 0,				/* rightshift */
+	 2,				/* size */
+	 32,				/* bitsize */
+	 FALSE,				/* pc_relative */
+	 0,				/* bitpos */
+	 complain_overflow_dont,	/* complain_on_overflow */
+	 bfd_elf_generic_reloc,		/* special_function */
+	 "R_RISCV_SET32",		/* name */
+	 FALSE,				/* partial_inplace */
+	 0,				/* src_mask */
+	 MINUS_ONE,			/* dst_mask */
+	 FALSE),			/* pcrel_offset */
 };
 
 /* A mapping from BFD reloc types to RISC-V ELF reloc types.  */
@@ -814,6 +889,11 @@ static const struct elf_reloc_map riscv_reloc_map[] =
   { BFD_RELOC_RISCV_TPREL_I, R_RISCV_TPREL_I },
   { BFD_RELOC_RISCV_TPREL_S, R_RISCV_TPREL_S },
   { BFD_RELOC_RISCV_RELAX, R_RISCV_RELAX },
+  { BFD_RELOC_RISCV_SUB6, R_RISCV_SUB6 },
+  { BFD_RELOC_RISCV_SET6, R_RISCV_SET6 },
+  { BFD_RELOC_RISCV_SET8, R_RISCV_SET8 },
+  { BFD_RELOC_RISCV_SET16, R_RISCV_SET16 },
+  { BFD_RELOC_RISCV_SET32, R_RISCV_SET32 },
 };
 
 /* Given a BFD reloc type, return a howto structure.  */

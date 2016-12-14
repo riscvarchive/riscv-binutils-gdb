@@ -1550,10 +1550,15 @@ perform_relocation (const reloc_howto_type *howto,
     case R_RISCV_ADD16:
     case R_RISCV_ADD32:
     case R_RISCV_ADD64:
+    case R_RISCV_SUB6:
     case R_RISCV_SUB8:
     case R_RISCV_SUB16:
     case R_RISCV_SUB32:
     case R_RISCV_SUB64:
+    case R_RISCV_SET6:
+    case R_RISCV_SET8:
+    case R_RISCV_SET16:
+    case R_RISCV_SET32:
     case R_RISCV_TLS_DTPREL32:
     case R_RISCV_TLS_DTPREL64:
       break;
@@ -1833,6 +1838,10 @@ riscv_elf_relocate_section (bfd *output_bfd,
 	case R_RISCV_RVC_LUI:
 	case R_RISCV_LO12_I:
 	case R_RISCV_LO12_S:
+	case R_RISCV_SET6:
+	case R_RISCV_SET8:
+	case R_RISCV_SET16:
+	case R_RISCV_SET32:
 	  /* These require no special handling beyond perform_relocation.  */
 	  break;
 
@@ -1926,6 +1935,7 @@ riscv_elf_relocate_section (bfd *output_bfd,
 	  }
 	  break;
 
+	case R_RISCV_SUB6:
 	case R_RISCV_SUB8:
 	case R_RISCV_SUB16:
 	case R_RISCV_SUB32:

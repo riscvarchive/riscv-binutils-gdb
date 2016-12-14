@@ -28,6 +28,7 @@
 #include "itbl-ops.h"
 #include "dwarf2dbg.h"
 #include "dw2gencfi.h"
+#include "struc-symbol.h"
 
 #include "elf/riscv.h"
 #include "opcode/riscv.h"
@@ -1835,6 +1836,7 @@ md_pcrel_from (fixS *fixP)
 void
 md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
 {
+  unsigned int subtype;
   bfd_byte *buf = (bfd_byte *) (fixP->fx_frag->fr_literal + fixP->fx_where);
   bfd_boolean relaxable = FALSE;
 
@@ -1857,6 +1859,7 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
     case BFD_RELOC_RISCV_ADD16:
     case BFD_RELOC_RISCV_ADD32:
     case BFD_RELOC_RISCV_ADD64:
+    case BFD_RELOC_RISCV_SUB6:
     case BFD_RELOC_RISCV_SUB8:
     case BFD_RELOC_RISCV_SUB16:
     case BFD_RELOC_RISCV_SUB32:
@@ -1882,6 +1885,7 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
     case BFD_RELOC_32:
     case BFD_RELOC_16:
     case BFD_RELOC_8:
+    case BFD_RELOC_RISCV_CFA:
       if (fixP->fx_addsy && fixP->fx_subsy)
 	{
 	  fixP->fx_next = xmemdup (fixP, sizeof (*fixP), sizeof (*fixP));
@@ -1910,6 +1914,49 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
 	    case BFD_RELOC_8:
 	      fixP->fx_r_type = BFD_RELOC_RISCV_ADD8;
 	      fixP->fx_next->fx_r_type = BFD_RELOC_RISCV_SUB8;
+	      break;
+
+	    case BFD_RELOC_RISCV_CFA:
+	      /* Load the byte to get the subtype.  */
+	      subtype = bfd_get_8 (NULL, &fixP->fx_frag->fr_literal[fixP->fx_where]);
+	      switch (subtype)
+		{
+		case DW_CFA_advance_loc1:
+		  fixP->fx_where++;
+		  fixP->fx_next->fx_where++;
+		  fixP->fx_r_type = BFD_RELOC_RISCV_SET8;
+		  fixP->fx_next->fx_r_type = BFD_RELOC_RISCV_SUB8;
+		  break;
+
+		case DW_CFA_advance_loc2:
+		  fixP->fx_size = 2;
+		  fixP->fx_where++;
+		  fixP->fx_next->fx_size = 2;
+		  fixP->fx_next->fx_where++;
+		  fixP->fx_r_type = BFD_RELOC_RISCV_SET16;
+		  fixP->fx_next->fx_r_type = BFD_RELOC_RISCV_SUB16;
+		  break;
+
+		case DW_CFA_advance_loc4:
+		  fixP->fx_size = 4;
+		  fixP->fx_where++;
+		  fixP->fx_next->fx_size = 4;
+		  fixP->fx_next->fx_where++;
+		  fixP->fx_r_type = BFD_RELOC_RISCV_SET32;
+		  fixP->fx_next->fx_r_type = BFD_RELOC_RISCV_SUB32;
+		  break;
+
+		default:
+		  if (subtype < 0x80 && (subtype & 0x40))
+		    {
+		      /* DW_CFA_advance_loc */
+		      fixP->fx_r_type = BFD_RELOC_RISCV_SET6;
+		      fixP->fx_next->fx_r_type = BFD_RELOC_RISCV_SUB6;
+		    }
+		  else
+		    as_fatal (_("internal error: bad CFA value #%d"), subtype);
+		  break;
+		}
 	      break;
 
 	    default:
@@ -1995,6 +2042,44 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
       fixP->fx_next->fx_r_type = BFD_RELOC_RISCV_RELAX;
     }
 }
+
+/* Because the value of .cfi_remember_state may changed after relaxation,
+   we insert a fix to relocate it again in link-time.  */
+
+void
+riscv_pre_output_hook (void)
+{
+  frchainS *frchP;
+  asection *s;
+
+  for (s = stdoutput->sections; s; s = s->next)
+    for (frchP = seg_info (s)->frchainP; frchP; frchP = frchP->frch_next)
+      {
+	fragS *fragP;
+
+	for (fragP = frchP->frch_root; fragP; fragP = fragP->fr_next)
+	  {
+	    if (fragP->fr_type == rs_cfa)
+	      {
+		fragS *loc4_frag;
+		expressionS exp;
+
+		symbolS *add_symbol = fragP->fr_symbol->sy_value.X_add_symbol;
+		symbolS *op_symbol = fragP->fr_symbol->sy_value.X_op_symbol;
+
+		exp.X_op = O_subtract;
+		exp.X_add_symbol = add_symbol;
+		exp.X_add_number = 0;
+		exp.X_op_symbol = op_symbol;
+
+		loc4_frag = (fragS *) fragP->fr_opcode;
+		fix_new_exp (loc4_frag, (int) fragP->fr_offset, 1, &exp, 0,
+			     BFD_RELOC_RISCV_CFA);
+	      }
+	  }
+      }
+}
+
 
 /* This structure is used to hold a stack of .option values.  */
 
