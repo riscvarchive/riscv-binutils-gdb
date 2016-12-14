@@ -2691,7 +2691,7 @@ riscv_relax_delete_bytes (bfd *abfd, asection *sec, bfd_vma addr, size_t count)
 typedef bfd_boolean (*relax_func_t) (bfd *, asection *, asection *,
 				     struct bfd_link_info *,
 				     Elf_Internal_Rela *,
-				     bfd_vma, bfd_vma, bfd_boolean *);
+				     bfd_vma, bfd_vma, bfd_vma, bfd_boolean *);
 
 /* Relax AUIPC + JALR into JAL.  */
 
@@ -2701,6 +2701,7 @@ _bfd_riscv_relax_call (bfd *abfd, asection *sec, asection *sym_sec,
 		       Elf_Internal_Rela *rel,
 		       bfd_vma symval,
 		       bfd_vma max_alignment,
+		       bfd_vma reserve_size ATTRIBUTE_UNUSED,
 		       bfd_boolean *again)
 {
   bfd_byte *contents = elf_section_data (sec)->this_hdr.contents;
@@ -2783,6 +2784,7 @@ _bfd_riscv_relax_lui (bfd *abfd,
 		      Elf_Internal_Rela *rel,
 		      bfd_vma symval,
 		      bfd_vma max_alignment,
+		      bfd_vma reserve_size,
 		      bfd_boolean *again)
 {
   bfd_byte *contents = elf_section_data (sec)->this_hdr.contents;
@@ -2798,8 +2800,10 @@ _bfd_riscv_relax_lui (bfd *abfd,
   /* Is the reference in range of x0 or gp?
      Valid gp range conservatively because of alignment issue.  */
   if (VALID_ITYPE_IMM (symval)
-      || (symval >= gp && VALID_ITYPE_IMM (symval - gp + max_alignment))
-      || (symval < gp && VALID_ITYPE_IMM (symval - gp - max_alignment)))
+      || (symval >= gp
+	  && VALID_ITYPE_IMM (symval - gp + max_alignment + reserve_size))
+      || (symval < gp
+	  && VALID_ITYPE_IMM (symval - gp - max_alignment - reserve_size)))
     {
       unsigned sym = ELFNN_R_SYM (rel->r_info);
       switch (ELFNN_R_TYPE (rel->r_info))
@@ -2858,6 +2862,7 @@ _bfd_riscv_relax_tls_le (bfd *abfd,
 			 Elf_Internal_Rela *rel,
 			 bfd_vma symval,
 			 bfd_vma max_alignment ATTRIBUTE_UNUSED,
+			 bfd_vma reserve_size ATTRIBUTE_UNUSED,
 			 bfd_boolean *again)
 {
   /* See if this symbol is in range of tp.  */
@@ -2896,6 +2901,7 @@ _bfd_riscv_relax_align (bfd *abfd, asection *sec,
 			Elf_Internal_Rela *rel,
 			bfd_vma symval,
 			bfd_vma max_alignment ATTRIBUTE_UNUSED,
+			bfd_vma reserve_size ATTRIBUTE_UNUSED,
 			bfd_boolean *again ATTRIBUTE_UNUSED)
 {
   bfd_byte *contents = elf_section_data (sec)->this_hdr.contents;
@@ -2948,7 +2954,7 @@ _bfd_riscv_relax_section (bfd *abfd, asection *sec,
   Elf_Internal_Rela *relocs;
   bfd_boolean ret = FALSE;
   unsigned int i;
-  bfd_vma max_alignment;
+  bfd_vma max_alignment, reserve_size = 0;
 
   *again = FALSE;
 
@@ -3030,6 +3036,8 @@ _bfd_riscv_relax_section (bfd *abfd, asection *sec,
 	  /* A local symbol.  */
 	  Elf_Internal_Sym *isym = ((Elf_Internal_Sym *) symtab_hdr->contents
 				    + ELFNN_R_SYM (rel->r_info));
+	  reserve_size = (isym->st_size - rel->r_addend) > isym->st_size
+	    ? 0 : isym->st_size - rel->r_addend;
 
 	  if (isym->st_shndx == SHN_UNDEF)
 	    sym_sec = sec, symval = sec_addr (sec) + rel->r_offset;
@@ -3063,13 +3071,16 @@ _bfd_riscv_relax_section (bfd *abfd, asection *sec,
 	  else
 	    symval = sec_addr (h->root.u.def.section) + h->root.u.def.value;
 
+	  if (h->type != STT_FUNC)
+	    reserve_size =
+	      (h->size - rel->r_addend) > h->size ? 0 : h->size - rel->r_addend;
 	  sym_sec = h->root.u.def.section;
 	}
 
       symval += rel->r_addend;
 
       if (!relax_func (abfd, sec, sym_sec, info, rel, symval,
-		       max_alignment, again))
+		       max_alignment, reserve_size, again))
 	goto fail;
     }
 
