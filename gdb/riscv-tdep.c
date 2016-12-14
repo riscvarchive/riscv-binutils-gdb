@@ -183,7 +183,6 @@ riscv_breakpoint_kind_from_pc (struct gdbarch *gdbarch, CORE_ADDR *pcptr)
 static const gdb_byte *
 riscv_sw_breakpoint_from_kind (struct gdbarch *gdbarch, int kind, int *size)
 {
-  /* TODO: Support C.EBREAK for compressed (16-bit) insns.  */
   static const gdb_byte ebreak[] = { 0x73, 0x00, 0x10, 0x00, };
   static const gdb_byte c_ebreak[] = { 0x02, 0x90 };
 
