@@ -158,35 +158,44 @@ static const struct register_alias riscv_register_aliases[] =
 #undef DECLARE_CSR
 };
 
-static const gdb_byte *
-riscv_breakpoint_from_pc (struct gdbarch *gdbarch,
-			  CORE_ADDR      *bp_addr,
-			  int            *bp_size)
-{
-  /* TODO: Support C.EBREAK for compressed (16-bit) insns.  */
-  /* TODO: Support NOPs for >=6 byte insns.  */
-  static const gdb_byte sbreak_insn[] = { 0x73, 0x00, 0x10, 0x00, };
-
-  *bp_size = 4;
-
-  return sbreak_insn;
-}
-
 static int
 riscv_breakpoint_kind_from_pc (struct gdbarch *gdbarch, CORE_ADDR *pcptr)
 {
-  /* TODO: Support C.EBREAK for compressed (16-bit) insns.  */
-  /* TODO: Support NOPs for >=6 byte insns.  */
-  return 4;
+  if (gdbarch_tdep (gdbarch)->supports_compressed_isa == SUP_UNKNOWN)
+    {
+      /* TODO: Because we try to read misa, it is not possible to set a
+         breakpoint before connecting to a live target. A suggested workaround is
+         to look at the ELF file in this case.  */
+      struct frame_info *frame = get_current_frame ();
+      uint32_t misa = get_frame_register_unsigned (frame, RISCV_CSR_MISA_REGNUM);
+      if (misa & (1<<2))
+        gdbarch_tdep (gdbarch)->supports_compressed_isa = SUP_YES;
+      else
+        gdbarch_tdep (gdbarch)->supports_compressed_isa = SUP_NO;
+    }
+
+  if (gdbarch_tdep (gdbarch)->supports_compressed_isa == SUP_YES)
+    return 2;
+  else
+    return 4;
 }
 
 static const gdb_byte *
 riscv_sw_breakpoint_from_kind (struct gdbarch *gdbarch, int kind, int *size)
 {
-  /* TODO: Support C.EBREAK for compressed (16-bit) insns.  */
-  /* TODO: Support NOPs for >=6 byte insns.  */
-  gdb_assert(kind == 4);
-  return riscv_breakpoint_from_pc(gdbarch, NULL, size);
+  static const gdb_byte ebreak[] = { 0x73, 0x00, 0x10, 0x00, };
+  static const gdb_byte c_ebreak[] = { 0x02, 0x90 };
+
+  *size = kind;
+  switch (kind)
+    {
+    case 2:
+      return c_ebreak;
+    case 4:
+      return ebreak;
+    default:
+      gdb_assert(0);
+    }
 }
 
 static struct value *
@@ -1219,6 +1228,7 @@ riscv_gdbarch_init (struct gdbarch_info info,
   gdbarch = gdbarch_alloc (&info, tdep);
 
   tdep->riscv_abi = abi;
+  tdep->supports_compressed_isa = SUP_UNKNOWN;
 
   /* Target data types.  */
   set_gdbarch_short_bit (gdbarch, 16);
@@ -1232,7 +1242,6 @@ riscv_gdbarch_init (struct gdbarch_info info,
 
   /* Information about the target architecture.  */
   set_gdbarch_return_value (gdbarch, riscv_return_value);
-  set_gdbarch_breakpoint_from_pc (gdbarch, riscv_breakpoint_from_pc);
   set_gdbarch_breakpoint_kind_from_pc (gdbarch, riscv_breakpoint_kind_from_pc);
   set_gdbarch_sw_breakpoint_from_kind (gdbarch, riscv_sw_breakpoint_from_kind);
   set_gdbarch_print_insn (gdbarch, print_insn_riscv);
