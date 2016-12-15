@@ -161,23 +161,23 @@ static const struct register_alias riscv_register_aliases[] =
 static int
 riscv_breakpoint_kind_from_pc (struct gdbarch *gdbarch, CORE_ADDR *pcptr)
 {
-  if (gdbarch_tdep (gdbarch)->supports_compressed_isa == UNKNOWN) {
+  if (gdbarch_tdep (gdbarch)->supports_compressed_isa == SUP_UNKNOWN)
+  {
     /* TODO: Because we try to read misa, it is not possible to set a
      * breakpoint before connecting to a live target. A suggested workaround is
      * to look at the ELF file in this case. */
     struct frame_info *frame = get_current_frame ();
     uint32_t misa = get_frame_register_unsigned (frame, RISCV_CSR_MISA_REGNUM);
     if (misa & (1<<2))
-      gdbarch_tdep (gdbarch)->supports_compressed_isa = YES;
+      gdbarch_tdep (gdbarch)->supports_compressed_isa = SUP_YES;
     else
-      gdbarch_tdep (gdbarch)->supports_compressed_isa = NO;
+      gdbarch_tdep (gdbarch)->supports_compressed_isa = SUP_NO;
   }
 
-  if (gdbarch_tdep (gdbarch)->supports_compressed_isa == YES) {
+  if (gdbarch_tdep (gdbarch)->supports_compressed_isa == SUP_YES)
     return 2;
-  } else {
+  else
     return 4;
-  }
 }
 
 static const gdb_byte *
@@ -187,14 +187,15 @@ riscv_sw_breakpoint_from_kind (struct gdbarch *gdbarch, int kind, int *size)
   static const gdb_byte c_ebreak[] = { 0x02, 0x90 };
 
   *size = kind;
-  switch (kind) {
+  switch (kind)
+    {
     case 2:
       return c_ebreak;
     case 4:
       return ebreak;
     default:
       gdb_assert(0);
-  }
+    }
 }
 
 static struct value *
@@ -1227,7 +1228,7 @@ riscv_gdbarch_init (struct gdbarch_info info,
   gdbarch = gdbarch_alloc (&info, tdep);
 
   tdep->riscv_abi = abi;
-  tdep->supports_compressed_isa = UNKNOWN;
+  tdep->supports_compressed_isa = SUP_UNKNOWN;
 
   /* Target data types.  */
   set_gdbarch_short_bit (gdbarch, 16);

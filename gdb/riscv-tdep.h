@@ -69,7 +69,7 @@ enum {
 
 #define RISCV_LAST_REGNUM (RISCV_NUM_REGS - 1)
 
-typedef enum { UNKNOWN, YES, NO } supported_t;
+typedef enum { SUP_UNKNOWN, SUP_YES, SUP_NO } supported_t;
 
 /* RISC-V specific per-architecture information.  */
 struct gdbarch_tdep
