@@ -2216,9 +2216,9 @@ riscv_make_nops (char *buf, bfd_vma bytes)
 bfd_boolean
 riscv_frag_align_code (int n)
 {
-  bfd_vma bytes = (bfd_vma) 1 << n;
+  bfd_vma bytes = (bfd_vma)1 << n;
   bfd_vma min_text_alignment_order = riscv_opts.rvc ? 1 : 2;
-  bfd_vma min_text_alignment = (bfd_vma) 1 << min_text_alignment_order;
+  bfd_vma min_text_alignment = (bfd_vma)1 << min_text_alignment_order;
 
   /* First, get back to minimal alignment.  */
   frag_align_code (min_text_alignment_order, 0);
