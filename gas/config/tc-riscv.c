@@ -197,6 +197,12 @@ riscv_set_arch (const char *s)
 	  all_subsets++;
 	  p++;
 	}
+      else if (*p == 'q')
+	{
+	  const char subset[] = {*p, 0};
+	  riscv_add_subset (subset);
+	  p++;
+	}
       else
 	as_fatal ("-march=%s: unsupported ISA subset `%c'", s, *p);
     }
@@ -1817,8 +1823,12 @@ riscv_after_parse_args (void)
       float_abi = FLOAT_ABI_SOFT;
 
       for (subset = riscv_subsets; subset != NULL; subset = subset->next)
-	if (strcasecmp (subset->name, "D") == 0)
-	  float_abi = FLOAT_ABI_DOUBLE;
+	{
+	  if (strcasecmp (subset->name, "D") == 0)
+	    float_abi = FLOAT_ABI_DOUBLE;
+	  if (strcasecmp (subset->name, "Q") == 0)
+	    float_abi = FLOAT_ABI_QUAD;
+	}
     }
 
   /* Insert float_abi into the EF_RISCV_FLOAT_ABI field of elf_flags.  */
@@ -2216,9 +2226,9 @@ riscv_make_nops (char *buf, bfd_vma bytes)
 bfd_boolean
 riscv_frag_align_code (int n)
 {
-  bfd_vma bytes = (bfd_vma) 1 << n;
+  bfd_vma bytes = (bfd_vma)1 << n;
   bfd_vma min_text_alignment_order = riscv_opts.rvc ? 1 : 2;
-  bfd_vma min_text_alignment = (bfd_vma) 1 << min_text_alignment_order;
+  bfd_vma min_text_alignment = (bfd_vma)1 << min_text_alignment_order;
 
   /* First, get back to minimal alignment.  */
   frag_align_code (min_text_alignment_order, 0);
