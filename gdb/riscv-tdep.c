@@ -404,14 +404,22 @@ riscv_register_type (struct gdbarch *gdbarch,
 
   if (regnum < RISCV_FIRST_FP_REGNUM)
     {
+      /*
+       * GPRs and especially the PC are listed as unsigned so that gdb can
+       * interpret them as addresses without any problems. Specifically, if a
+       * user runs "x/i $pc" then they should see the instruction at the PC.
+       * But on a 32-bit system, with a signed PC of eg. 0x8000_0000, gdb will
+       * internally sign extend the value and then attempt to read from
+       * 0xffff_ffff_8000_0000, which it then concludes it can't read.
+       */
       switch (regsize)
 	{
 	case 4:
-	  return builtin_type (gdbarch)->builtin_int32;
+	  return builtin_type (gdbarch)->builtin_uint32;
 	case 8:
-	  return builtin_type (gdbarch)->builtin_int64;
+	  return builtin_type (gdbarch)->builtin_uint64;
 	case 16:
-	  return builtin_type (gdbarch)->builtin_int128;
+	  return builtin_type (gdbarch)->builtin_uint128;
 	default:
 	  internal_error (__FILE__, __LINE__,
 			  _("unknown isa regsize %i"), regsize);
