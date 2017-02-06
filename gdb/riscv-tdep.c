@@ -57,6 +57,7 @@
 #include "dwarf2-frame.h"
 #include "user-regs.h"
 #include "valprint.h"
+#include "common-defs.h"
 #include "opcode/riscv-opc.h"
 #include <algorithm>
 
@@ -158,10 +159,42 @@ static const struct register_alias riscv_register_aliases[] =
 #undef DECLARE_CSR
 };
 
+static enum auto_boolean use_compressed_breakpoints;
+/*
+static void
+show_use_compressed_breakpoints (struct ui_file *file, int from_tty,
+			    struct cmd_list_element *c,
+			    const char *value)
+{
+  fprintf_filtered (file,
+		    _("Debugger's behavior regarding "
+		      "compressed breakpoints is %s.\n"),
+		    value);
+}
+*/
+
+static struct cmd_list_element *setriscvcmdlist = NULL;
+static struct cmd_list_element *showriscvcmdlist = NULL;
+
+static void
+show_riscv_command (char *args, int from_tty)
+{
+  help_list (showriscvcmdlist, "show riscv ", all_commands, gdb_stdout);
+}
+
+static void
+set_riscv_command (char *args, int from_tty)
+{
+  printf_unfiltered
+    ("\"set riscv\" must be followed by an appropriate subcommand.\n");
+  help_list (setriscvcmdlist, "set riscv ", all_commands, gdb_stdout);
+}
+
 static int
 riscv_breakpoint_kind_from_pc (struct gdbarch *gdbarch, CORE_ADDR *pcptr)
 {
-  if (gdbarch_tdep (gdbarch)->supports_compressed_isa == SUP_UNKNOWN)
+  if (use_compressed_breakpoints == AUTO_BOOLEAN_AUTO) {
+    if (gdbarch_tdep (gdbarch)->supports_compressed_isa == AUTO_BOOLEAN_AUTO)
     {
       /* TODO: Because we try to read misa, it is not possible to set a
          breakpoint before connecting to a live target. A suggested workaround is
@@ -169,15 +202,20 @@ riscv_breakpoint_kind_from_pc (struct gdbarch *gdbarch, CORE_ADDR *pcptr)
       struct frame_info *frame = get_current_frame ();
       uint32_t misa = get_frame_register_unsigned (frame, RISCV_CSR_MISA_REGNUM);
       if (misa & (1<<2))
-        gdbarch_tdep (gdbarch)->supports_compressed_isa = SUP_YES;
+        gdbarch_tdep (gdbarch)->supports_compressed_isa = AUTO_BOOLEAN_TRUE;
       else
-        gdbarch_tdep (gdbarch)->supports_compressed_isa = SUP_NO;
+        gdbarch_tdep (gdbarch)->supports_compressed_isa = AUTO_BOOLEAN_FALSE;
     }
 
-  if (gdbarch_tdep (gdbarch)->supports_compressed_isa == SUP_YES)
+    if (gdbarch_tdep (gdbarch)->supports_compressed_isa == AUTO_BOOLEAN_TRUE)
+      return 2;
+    else
+      return 4;
+  } else if (use_compressed_breakpoints == AUTO_BOOLEAN_TRUE) {
     return 2;
-  else
+  } else {
     return 4;
+  }
 }
 
 static const gdb_byte *
@@ -1236,7 +1274,7 @@ riscv_gdbarch_init (struct gdbarch_info info,
   gdbarch = gdbarch_alloc (&info, tdep);
 
   tdep->riscv_abi = abi;
-  tdep->supports_compressed_isa = SUP_UNKNOWN;
+  tdep->supports_compressed_isa = AUTO_BOOLEAN_AUTO;
 
   /* Target data types.  */
   set_gdbarch_short_bit (gdbarch, 16);
@@ -1336,4 +1374,28 @@ void
 _initialize_riscv_tdep (void)
 {
   gdbarch_register (bfd_arch_riscv, riscv_gdbarch_init, NULL);
+
+  /* Add root prefix command for all "set riscv"/"show riscv" commands.  */
+  add_prefix_cmd ("riscv", no_class, set_riscv_command,
+      _("RISC-V specific commands."),
+      &setriscvcmdlist, "set riscv ", 0, &setlist);
+
+  add_prefix_cmd ("riscv", no_class, show_riscv_command,
+      _("RISC-V specific commands."),
+      &showriscvcmdlist, "show riscv ", 0, &showlist);
+
+  use_compressed_breakpoints = AUTO_BOOLEAN_AUTO;
+  add_setshow_auto_boolean_cmd ("use_compressed_breakpoints", no_class,
+      &use_compressed_breakpoints,
+      _("Configure whether to use compressed breakpoints."),
+      _("Show whether to use compressed breakpoints."),
+      _("\
+Debugging compressed code requires compressed breakpoints to be used. If left\n\
+to 'auto' then gdb will use them if $misa indicates the C extension is\n\
+supported. If that doesn't give the correct behavior, then this option can be\n\
+used."),
+      NULL,
+      NULL,
+      &setriscvcmdlist,
+      &showriscvcmdlist);
 }
