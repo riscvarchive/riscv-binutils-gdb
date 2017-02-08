@@ -160,18 +160,6 @@ static const struct register_alias riscv_register_aliases[] =
 };
 
 static enum auto_boolean use_compressed_breakpoints;
-/*
-static void
-show_use_compressed_breakpoints (struct ui_file *file, int from_tty,
-			    struct cmd_list_element *c,
-			    const char *value)
-{
-  fprintf_filtered (file,
-		    _("Debugger's behavior regarding "
-		      "compressed breakpoints is %s.\n"),
-		    value);
-}
-*/
 
 static struct cmd_list_element *setriscvcmdlist = NULL;
 static struct cmd_list_element *showriscvcmdlist = NULL;
