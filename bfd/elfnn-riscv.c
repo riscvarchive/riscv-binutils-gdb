@@ -2590,6 +2590,22 @@ _bfd_riscv_elf_merge_private_bfd_data (bfd *ibfd, struct bfd_link_info *info)
   if (!is_riscv_elf (ibfd) || !is_riscv_elf (obfd))
     return TRUE;
 
+  if ((new_flags & EF_RISCV_RESERVED) != 0)
+    {
+      (*_bfd_error_handler)
+        (_("%B: Unknown ELF flag `%x'"),
+	 ibfd, new_flags);
+      return FALSE;
+    }
+
+  if ((old_flags & EF_RISCV_RESERVED) != 0)
+    {
+      (*_bfd_error_handler)
+        (_("%B: Unknown ELF flag `%x'"),
+	 obfd, old_flags);
+      return FALSE;
+    }
+
   if (strcmp (bfd_get_target (ibfd), bfd_get_target (obfd)) != 0)
     {
       (*_bfd_error_handler)

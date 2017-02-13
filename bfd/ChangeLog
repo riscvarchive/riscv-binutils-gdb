@@ -1,5 +1,10 @@
 2017-02-13  Palmer Dabbelt  <palmer@dabbelt.com>
 
+	* elfnn-riscv.c (_bfd_riscv_elf_merge_private_bfd_data): Check the
+	reserved bits in e_flags for ibfd and obfd.
+
+2017-02-13  Palmer Dabbelt  <palmer@dabbelt.com>
+
 	* elfnn-riscv.c (riscv_global_pointer_value): Change _gp to
 	__global_pointer$.
 
