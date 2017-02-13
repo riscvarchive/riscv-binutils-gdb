@@ -109,4 +109,7 @@ END_RELOC_NUMBERS (R_RISCV_max)
 /* File uses the quad-float ABI.  */
 #define EF_RISCV_FLOAT_ABI_QUAD 0x0006
 
+/* Bits in the ELF header than must be zero. */
+#define EF_RISCV_RESERVED (~(EF_RISCV_RVC | EF_RISCV_FLOAT_ABI))
+
 #endif /* _ELF_RISCV_H */
