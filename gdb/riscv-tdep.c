@@ -190,6 +190,8 @@ set_riscv_command (char *args, int from_tty)
   help_list (setriscvcmdlist, "set riscv ", all_commands, gdb_stdout);
 }
 
+/* Implement the breakpoint_kind_from_pc gdbarch method.  */
+
 static int
 riscv_breakpoint_kind_from_pc (struct gdbarch *gdbarch, CORE_ADDR *pcptr)
 {
@@ -217,6 +219,8 @@ riscv_breakpoint_kind_from_pc (struct gdbarch *gdbarch, CORE_ADDR *pcptr)
     return 4;
   }
 }
+
+/* Implement the sw_breakpoint_from_kind gdbarch method.  */
 
 static const gdb_byte *
 riscv_sw_breakpoint_from_kind (struct gdbarch *gdbarch, int kind, int *size)
@@ -280,6 +284,8 @@ register_name (struct gdbarch *gdbarch,
   return NULL;
 }
 
+/* Implement the register_name gdbarch method.  */
+
 static const char *
 riscv_register_name (struct gdbarch *gdbarch,
 		     int regnum)
@@ -342,6 +348,8 @@ riscv_store_return_value (struct type *type,
       valbuf += regsize;
     }
 }
+
+/* Implement the return_value gdbarch method.  */
 
 static enum return_value_convention
 riscv_return_value (struct gdbarch  *gdbarch,
@@ -416,6 +424,8 @@ riscv_return_value (struct gdbarch  *gdbarch,
   return RETURN_VALUE_REGISTER_CONVENTION;
 }
 
+/* Implement the pseudo_register_read gdbarch method.  */
+
 static enum register_status
 riscv_pseudo_register_read (struct gdbarch *gdbarch,
 			    struct regcache *regcache,
@@ -425,6 +435,8 @@ riscv_pseudo_register_read (struct gdbarch *gdbarch,
   return regcache_raw_read (regcache, regnum, buf);
 }
 
+/* Implement the pseudo_register_write gdbarch method.  */
+
 static void
 riscv_pseudo_register_write (struct gdbarch *gdbarch,
 			     struct regcache *regcache,
@@ -433,6 +445,8 @@ riscv_pseudo_register_write (struct gdbarch *gdbarch,
 {
   regcache_raw_write (regcache, cookednum, buf);
 }
+
+/* Implement the register_type gdbarch method.  */
 
 static struct type *
 riscv_register_type (struct gdbarch *gdbarch,
@@ -752,6 +766,8 @@ riscv_print_register_formatted (struct ui_file *file, struct frame_info *frame,
   fprintf_filtered (file, "\n");
 }
 
+/* Implement the register_reggroup_p gdbarch method.  */
+
 static int
 riscv_register_reggroup_p (struct gdbarch  *gdbarch,
 			   int regnum,
@@ -801,6 +817,8 @@ riscv_register_reggroup_p (struct gdbarch  *gdbarch,
   else
     internal_error (__FILE__, __LINE__, _("unhandled reggroup"));
 }
+
+/* Implement the print_registers_info gdbarch method.  */
 
 static void
 riscv_print_registers_info (struct gdbarch    *gdbarch,
@@ -1038,6 +1056,8 @@ riscv_scan_prologue (struct gdbarch *gdbarch,
   return end_prologue_addr;
 }
 
+/* Implement the riscv_skip_prologue gdbarch method.  */
+
 static CORE_ADDR
 riscv_skip_prologue (struct gdbarch *gdbarch,
 		     CORE_ADDR       pc)
@@ -1141,11 +1161,15 @@ riscv_push_dummy_call (struct gdbarch *gdbarch,
   return sp;
 }
 
+/* Implement the frame_align gdbarch method.  */
+
 static CORE_ADDR
 riscv_frame_align (struct gdbarch *gdbarch, CORE_ADDR addr)
 {
   return align_down (addr, 16);
 }
+
+/* Implement the unwind_pc gdbarch method.  */
 
 static CORE_ADDR
 riscv_unwind_pc (struct gdbarch *gdbarch, struct frame_info *next_frame)
@@ -1153,11 +1177,15 @@ riscv_unwind_pc (struct gdbarch *gdbarch, struct frame_info *next_frame)
   return frame_unwind_register_unsigned (next_frame, RISCV_PC_REGNUM);
 }
 
+/* Implement the unwind_sp gdbarch method.  */
+
 static CORE_ADDR
 riscv_unwind_sp (struct gdbarch *gdbarch, struct frame_info *next_frame)
 {
   return frame_unwind_register_unsigned (next_frame, RISCV_SP_REGNUM);
 }
+
+/* Implement the dummy_id gdbarch method.  */
 
 static struct frame_id
 riscv_dummy_id (struct gdbarch *gdbarch, struct frame_info *this_frame)
