@@ -61,6 +61,14 @@
 #include "opcode/riscv-opc.h"
 #include <algorithm>
 
+#define DECLARE_INSN(INSN_NAME, INSN_MATCH, INSN_MASK) \
+static inline bool is_ ## INSN_NAME ## _insn (long insn) \
+{ \
+  return (insn & INSN_MASK) == INSN_MATCH; \
+}
+#include "opcode/riscv-opc.h"
+#undef DECLARE_INSN
+
 struct riscv_frame_cache
 {
   CORE_ADDR base;
@@ -825,6 +833,11 @@ reset_saved_regs (struct gdbarch *gdbarch, struct riscv_frame_cache *this_cache)
     this_cache->saved_regs[i].addr = 0;
 }
 
+static int riscv_decode_register_index(unsigned long opcode, int offset)
+{
+    return (opcode >> offset) & 0x1F;
+}
+
 static CORE_ADDR
 riscv_scan_prologue (struct gdbarch *gdbarch,
 		     CORE_ADDR start_pc, CORE_ADDR limit_pc,
@@ -861,20 +874,19 @@ riscv_scan_prologue (struct gdbarch *gdbarch,
       int reg, rs1, imm12, rs2, offset12, funct3;
 
       /* Fetch the instruction.  */
-      /* FIXME: Use riscv-opc.h's instruction parsing macros, not these
-         hand-written ones.  */
       inst = riscv_fetch_instruction (gdbarch, cur_pc);
-      opcode = inst & 0x7F;
-      reg = (inst >> 7) & 0x1F;
-      rs1 = (inst >> 15) & 0x1F;
+
+      /* Decode the instruction.  These offsets are defined in the RISC-V ISA
+       * manual.  */
+      reg = riscv_decode_register_index(inst, 7);
+      rs1 = riscv_decode_register_index(inst, 15);
+      rs2 = riscv_decode_register_index(inst, 20);
       imm12 = (inst >> 20) & 0xFFF;
-      rs2 = (inst >> 20) & 0x1F;
       offset12 = (((inst >> 25) & 0x7F) << 5) + ((inst >> 7) & 0x1F);
-      funct3 = (inst >> 12) & 0x7;
 
       /* Look for common stack adjustment insns.  */
-      if ((opcode == 0x13 || opcode == 0x1B) && reg == RISCV_SP_REGNUM
-	  && rs1 == RISCV_SP_REGNUM)
+      if ((is_addi_insn(inst) || is_addiw_insn(inst))
+	  && reg == RISCV_SP_REGNUM && rs1 == RISCV_SP_REGNUM)
 	{
 	  /* addi sp, sp, -i */
 	  /* addiw sp, sp, -i */
@@ -884,17 +896,18 @@ riscv_scan_prologue (struct gdbarch *gdbarch,
 	    break;
 	  seen_sp_adjust = 1;
 	}
-      else if (opcode == 0x23 && funct3 == 0x2 && rs1 == RISCV_SP_REGNUM)
+      else if (is_sw_insn(inst) && rs1 == RISCV_SP_REGNUM)
 	{
 	  /* sw reg, offset(sp) */
 	  set_reg_offset (gdbarch, this_cache, rs1, sp + offset12);
 	}
-      else if (opcode == 0x23 && funct3 == 0x3 && rs1 == RISCV_SP_REGNUM)
+      else if (is_sd_insn(inst) && rs1 == RISCV_SP_REGNUM)
 	{
 	  /* sd reg, offset(sp) */
 	  set_reg_offset (gdbarch, this_cache, rs1, sp + offset12);
 	}
-      else if (opcode == 0x13 && reg == RISCV_FP_REGNUM && rs1 == RISCV_SP_REGNUM)
+      else if (is_addi_insn(inst) && reg == RISCV_FP_REGNUM
+	       && rs1 == RISCV_SP_REGNUM)
 	{
 	  /* addi s0, sp, size */
 	  if ((long)imm12 != frame_offset)
@@ -915,8 +928,9 @@ riscv_scan_prologue (struct gdbarch *gdbarch,
 	      goto restart;
 	    }
 	}
-      else if ((opcode == 0x33 || opcode == 0x3B) && reg == RISCV_FP_REGNUM
-	       && rs1 == RISCV_SP_REGNUM && rs2 == RISCV_ZERO_REGNUM)
+      else if ((is_add_insn(inst) || is_addw_insn(inst))
+	       && reg == RISCV_FP_REGNUM && rs1 == RISCV_SP_REGNUM
+               && rs2 == RISCV_ZERO_REGNUM)
 	{
 	  /* add s0, sp, 0 */
 	  /* addw s0, sp, 0 */
@@ -936,15 +950,16 @@ riscv_scan_prologue (struct gdbarch *gdbarch,
 		}
 	    }
 	}
-      else if (opcode == 0x23 && funct3 == 0x2 && rs1 == RISCV_FP_REGNUM)
+      else if (is_sw_insn(inst) && rs1 == RISCV_FP_REGNUM)
 	{
 	  /* sw reg, offset(s0) */
 	  set_reg_offset (gdbarch, this_cache, rs1, frame_addr + offset12);
 	}
       else if (reg == RISCV_GP_REGNUM
-	       && (opcode == 0x17 || opcode == 0x37
-		   || (opcode == 0x13 && rs1 == RISCV_GP_REGNUM)
-		   || (opcode == 0x33 && (rs1 == RISCV_GP_REGNUM
+	       && (is_auipc_insn(inst)
+                   || is_lui_insn(inst)
+		   || (is_addi_insn(inst) && rs1 == RISCV_GP_REGNUM)
+		   || (is_add_insn(inst) && (rs1 == RISCV_GP_REGNUM
 					  || rs2 == RISCV_GP_REGNUM))))
 	{
 	  /* auipc gp, n */
