@@ -517,98 +517,21 @@ riscv_register_type (struct gdbarch *gdbarch,
     }
 }
 
-/* TODO: Replace all this with tdesc XML files.  */
-static void
-riscv_read_fp_register_single (struct frame_info *frame, int regno,
-			       gdb_byte *rare_buffer)
-{
-  struct gdbarch *gdbarch = get_frame_arch (frame);
-  int raw_size = register_size (gdbarch, regno);
-  gdb_byte *raw_buffer = (gdb_byte *) alloca (raw_size);
-
-  if (!deprecated_frame_register_read (frame, regno, raw_buffer))
-    error (_("can't read register %d (%s)"), regno,
-	   gdbarch_register_name (gdbarch, regno));
-
-  if (raw_size == 8)
-    {
-      int offset;
-
-      if (gdbarch_byte_order (gdbarch) == BFD_ENDIAN_BIG)
-	offset = 4;
-      else
-	offset = 0;
-
-      memcpy (rare_buffer, raw_buffer + offset, 4);
-    }
-  else
-    memcpy (rare_buffer, raw_buffer, 4);
-}
-
-static void
-riscv_read_fp_register_double (struct frame_info *frame, int regno,
-			       gdb_byte *rare_buffer)
-{
-  struct gdbarch *gdbarch = get_frame_arch (frame);
-  int raw_size = register_size (gdbarch, regno);
-
-  if (raw_size == 8)
-    {
-      if (!deprecated_frame_register_read (frame, regno, rare_buffer))
-	error (_("can't read register %d (%s)"), regno,
-	       gdbarch_register_name (gdbarch, regno));
-    }
-  else
-    internal_error (__FILE__, __LINE__,
-		    _("%s: size says 32-bits, read is 64-bits."), __func__);
-}
-
 static void
 riscv_print_fp_register (struct ui_file *file, struct frame_info *frame,
 			 int regnum)
 {
   struct gdbarch *gdbarch = get_frame_arch (frame);
-  gdb_byte *raw_buffer;
   struct value_print_options opts;
-  double val;
-  int inv;
   const char *regname;
-
-  raw_buffer = (gdb_byte *) alloca (2 * register_size (gdbarch, RISCV_FIRST_FP_REGNUM));
+  value *val = get_frame_register_value(frame, regnum);
 
   fprintf_filtered (file, "%-15s", gdbarch_register_name (gdbarch, regnum));
 
-  if (register_size (gdbarch, regnum) == 4)
-    {
-      riscv_read_fp_register_single (frame, regnum, raw_buffer);
-      val = unpack_double (builtin_type (gdbarch)->builtin_float, raw_buffer,
-			   &inv);
-
-      get_formatted_print_options (&opts, 'x');
-      print_scalar_formatted (raw_buffer,
-			      builtin_type (gdbarch)->builtin_float,
-			      &opts, 'w', file);
-
-      if (!inv)
-	fprintf_filtered (file, "\t%-17.9g", val);
-    }
-  else
-    {
-      riscv_read_fp_register_double (frame, regnum, raw_buffer);
-      val = unpack_double (builtin_type (gdbarch)->builtin_double, raw_buffer,
-			   &inv);
-
-      get_formatted_print_options (&opts, 'x');
-      print_scalar_formatted (raw_buffer,
-			      builtin_type (gdbarch)->builtin_double,
-			      &opts, 'g', file);
-
-      if (!inv)
-	fprintf_filtered (file, "\t%-24.17g", val);
-    }
-
-  if (inv)
-    fprintf_filtered (file, "\t<invalid>");
+  val_print_scalar_formatted (value_type (val),
+			      value_embedded_offset (val),
+			      val,
+			      &opts, 0, file);
 }
 
 static void
