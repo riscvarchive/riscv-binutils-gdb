@@ -2312,6 +2312,9 @@ reg_store (sim_cpu *cpu, int rn, unsigned char *buf, int len)
 
   switch (rn)
     {
+    case SIM_RISCV_ZERO_REGNUM:
+      /* Always return len to avoid warning/error in gdbsim_store_register.  */
+      return len;
     case SIM_RISCV_RA_REGNUM ... SIM_RISCV_T6_REGNUM:
       memcpy (&cpu->regs[rn], buf, len);
       return len;
