@@ -1566,7 +1566,7 @@ execute_i (SIM_CPU *cpu, unsigned_word iw, const struct riscv_opcode *op)
 				   cpu->regs[rs1] + i_imm)));
       break;
     case MATCH_LHU:
-      TRACE_INSN (cpu, "lbu %s, %"PRIiTW"(%s); // ",
+      TRACE_INSN (cpu, "lhu %s, %"PRIiTW"(%s); // ",
 		  rd_name, i_imm, rs1_name);
       store_rd (cpu, rd,
 	sim_core_read_unaligned_2 (cpu, cpu->pc, read_map,
