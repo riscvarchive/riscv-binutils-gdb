@@ -1,5 +1,9 @@
 2017-04-03  Palmer Dabbelt  <palmer@dabbelt.com>
 
+	* config/tc-riscv.c (riscv_pre_output_hook) <frag>: No longer const.
+
+2017-04-03  Palmer Dabbelt  <palmer@dabbelt.com>
+
 	* config/tc-riscv.c (riscv_clear_subsets): Cast argument to free to
 	avoid const warnings.
 
