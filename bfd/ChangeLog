@@ -1,3 +1,8 @@
+2017-05-01  Palmer Dabbelt  <palmer@dabbelt.com>
+
+	* config.bfd (riscv32-*): Enable unconditionally.
+	(riscv64-*): Likewise.
+
 2017-04-29  Alan Modra  <amodra@gmail.com>
 
 	PR 21432
