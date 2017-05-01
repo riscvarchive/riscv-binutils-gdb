@@ -1436,19 +1436,16 @@ case "${targ}" in
     targ_selvecs="powerpc_pei_le_vec powerpc_pei_vec powerpc_pe_le_vec powerpc_pe_vec"
     ;;
 
-#ifdef BFD64
   riscv32-*-*)
     targ_defvec=riscv_elf32_vec
-    targ_selvecs="riscv_elf32_vec"
+    targ_selvecs="riscv_elf32_vec riscv_elf64_vec"
     want64=true
     ;;
-
   riscv64-*-*)
     targ_defvec=riscv_elf64_vec
     targ_selvecs="riscv_elf32_vec riscv_elf64_vec"
     want64=true
     ;;
-#endif
 
   rl78-*-elf)
     targ_defvec=rl78_elf32_vec
