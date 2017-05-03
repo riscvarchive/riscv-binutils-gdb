@@ -1,0 +1,176 @@
+commit c6f578b62090bbbf8458aa75fe1638a922e8d338
+Author: Andrew Waterman <andrew@sifive.com>
+Date:   Mon Mar 13 12:46:33 2017 -0700
+
+    RISC-V: Fix [dis]assembly of srai/srli
+    
+    These were simple copy/paste errors from the compressed left shift
+    pattern, which can't have a 0-register.
+
+
+commit 5fa45e35a3f36846b2f5a20f921d06705d66854f
+Author: Kuan-Lin Chen <rufus@andestech.com>
+Date:   Thu Feb 2 15:27:18 2017 +0800
+
+    RISC-V: Fix the offset of CFA relocation.
+    
+    gas/ChangeLog:
+    
+    2017-03-02  Kuan-Lin Chen  <rufus@andestech.com>
+    
+            * config/tc-riscv.c (md_apply_fix): Compute the correct offsets
+            for CFA relocations.
+
+
+commit 4fc0b698948d38d317913bd9c9452648b304710d
+Author: Kuan-Lin Chen <rufus@andestech.com>
+Date:   Fri Feb 10 14:58:52 2017 +0800
+
+    RISC-V: Fix DW_CFA_advance_loc relocation.
+
+    gas/ChangeLog:
+
+    2017-03-02  Kuan-Lin Chen  <rufus@andestech.com>
+
+            * config/tc-riscv.c (md_apply_fix): Set fx_frag and
+            fx_next->fx_frag for CFA_advance_loc relocations.
+
+
+commit 055955206e6669310f7e76eb62eef8a9b33a55f5
+Author: Kuan-Lin Chen <rufus@andestech.com>
+Date:   Thu Mar 2 14:54:32 2017 +0800
+
+    RISC-V: Define DWARF2_USE_FIXED_ADVANCE_PC.
+    
+    gas/ChangeLog
+    
+    2017-03-02  Kuan-Lin Chen  <rufus@andestech.com>
+    
+            * config/tc-riscv.h (HWARD2_USE_FIXED_ADVANCE_PC): New define.
+
+
+commit 01174b8167028669286a9e94b0a6cd22ce53ac69
+Author: Kito Cheng <kito.cheng@gmail.com>
+Date:   Tue Mar 7 19:56:40 2017 +0800
+
+    RISC-V: Fix assembler for c.addi, rd can be x0
+
+    opcodes/ChangeLog:
+
+    2017-03-14  Kito Cheng  <kito.cheng@gmail.com>
+
+            * riscv-opc.c (riscv_opcodes) <c.addi>: Use match_opcode.
+
+
+commit 84c7e072406343e28efad492a0f709028867e67c
+Author: Kito Cheng <kito.cheng@gmail.com>
+Date:   Tue Mar 7 18:15:02 2017 +0800
+
+    RISC-V: Fix assembler for c.li, c.andi and c.addiw
+
+     - They can accept 0 in imm field
+
+     2017-03-14  Kito Cheng  <kito.cheng@gmail.com>
+
+           * riscv-opc.c (riscv_opcodes> <c.li>: Use the 'o' immediate encoding.
+           <c.andi>: Likewise.
+           <c.addiw> Likewise.
+
+
+commit 49dfd6d9347ada18f5b21d7a9d24b43b77ed80b7
+Author: Palmer Dabbelt <palmer@dabbelt.com>
+Date:   Tue Mar 21 08:36:44 2017 -0700
+
+    Sanitize RISC-V GAS help text, documentation
+
+    It looks like I missed the GAS help text when going through all the
+    documentation last time, so it printed some of the old-format (never
+    upstream) arguments.  I fixed this, and when I went to check doc/ I
+    noticed it was missing the '-fpic'/'-fno-pic' options.
+
+    2017-03-21  Palmer Dabbbelt  <palmer@dabbelt.com>
+
+            * config/tc-riscv.c (md_show_usage): Remove defuct -m32, -m64,
+            -msoft-float, -mhard-float, -mno-rvc, and -mrvc options; and don't
+            print an invalid default ISA string.
+            * doc/c-riscv.texi (OPTIONS): Add -fpic and -fno-pic options.
+
+
+commit e7294f7f33835ebe754f8518c02d8983aa4dc641
+Author: Andrew Waterman <andrew@sifive.com>
+Date:   Wed Mar 22 02:09:56 2017 -0700
+
+    Add physical memory protection CSRs
+
+    2017-03-27  Andrew Waterman  <andrew@sifive.com>
+
+           * opcode/riscv-opc.h (CSR_PMPCFG0): New define.
+           (CSR_PMPCFG1): Likewise.
+           (CSR_PMPCFG2): Likewise.
+           (CSR_PMPCFG3): Likewise.
+           (CSR_PMPADDR0): Likewise.
+           (CSR_PMPADDR1): Likewise.
+           (CSR_PMPADDR2): Likewise.
+           (CSR_PMPADDR3): Likewise.
+           (CSR_PMPADDR4): Likewise.
+           (CSR_PMPADDR5): Likewise.
+           (CSR_PMPADDR6): Likewise.
+           (CSR_PMPADDR7): Likewise.
+           (CSR_PMPADDR8): Likewise.
+           (CSR_PMPADDR9): Likewise.
+           (CSR_PMPADDR10): Likewise.
+           (CSR_PMPADDR11): Likewise.
+           (CSR_PMPADDR12): Likewise.
+           (CSR_PMPADDR13): Likewise.
+           (CSR_PMPADDR14): Likewise.
+           (CSR_PMPADDR15): Likewise.
+           (pmpcfg0): Declare register.
+           (pmpcfg1): Likewise.
+           (pmpcfg2): Likewise.
+           (pmpcfg3): Likewise.
+           (pmpaddr0): Likewise.
+           (pmpaddr1): Likewise.
+           (pmpaddr2): Likewise.
+           (pmpaddr3): Likewise.
+           (pmpaddr4): Likewise.
+           (pmpaddr5): Likewise.
+           (pmpaddr6): Likewise.
+           (pmpaddr7): Likewise.
+           (pmpaddr8): Likewise.
+           (pmpaddr9): Likewise.
+           (pmpaddr10): Likewise.
+           (pmpaddr11): Likewise.
+           (pmpaddr12): Likewise.
+           (pmpaddr13): Likewise.
+           (pmpaddr14): Likewise.
+           (pmpaddr15): Likewise.
+
+
+commit e101f93030828e5d743ef7f13fb101dc018515a3
+Author: Palmer Dabbelt <palmer@dabbelt.com>
+Date:   Wed Mar 29 16:05:40 2017 -0700
+
+    Allow ISA subsets to be disabled
+
+    Without this patch, passing "-march=rv64ic -march=rv64i" results in
+    you getting a "RV64IC" toolchain, which isn't expected.
+
+    gas/ChangeLog:
+
+    2017-03-30  Palmer Dabbelt  <palmer@dabbelt.com>
+
+           * config/tc-riscv.c (riscv_clear_subsets): New function.
+           (riscv_add_subset): Call riscv_clear_subsets and riscv_set_rvc to
+           clear RVC when it's been previously set.
+
+
+commit bb580b80d725957409456677088504a95f26933d
+Author: Palmer Dabbelt <palmer@dabbelt.com>
+Date:   Mon Apr 3 09:03:57 2017 -0700
+
+    RISC-V: Avoid a const warning
+
+    2017-04-03  Palmer Dabbelt  <palmer@dabbelt.com>
+
+           * config/tc-riscv.c (riscv_clear_subsets): Cast argument to free to
+           avoid const warnings.
