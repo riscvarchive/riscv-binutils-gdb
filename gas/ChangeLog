@@ -1,3 +1,8 @@
+2017-05-11  Andrew Waterman  <andrew@sifive.com>
+
+	* config/tc-riscv.c (riscv_ip): Changes as_warn to as_bad for improper
+	shift amounts.
+
 2017-05-19  Jose E. Marchesi  <jose.marchesi@oracle.com>
 
 	* config/tc-sparc.c (sparc_arch_table): Entries for `sparc6',
