@@ -1,3 +1,8 @@
+2017-05-11  Andrew Waterman  <andrew@sifive.com>
+
+	* config/tc-riscv.c (riscv_ip): Changes as_warn to as_bad for improper
+	shift amounts.
+
 2017-04-03  Palmer Dabbelt  <palmer@dabbelt.com>
 
 	* config/tc-riscv.c (riscv_clear_subsets): Cast argument to free to

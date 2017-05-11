@@ -1439,8 +1439,8 @@ rvc_lui:
 	      my_getExpression (imm_expr, s);
 	      check_absolute_expr (ip, imm_expr);
 	      if ((unsigned long) imm_expr->X_add_number > 31)
-		as_warn (_("Improper shift amount (%lu)"),
-			 (unsigned long) imm_expr->X_add_number);
+		as_bad (_("Improper shift amount (%lu)"),
+			(unsigned long) imm_expr->X_add_number);
 	      INSERT_OPERAND (SHAMTW, *ip, imm_expr->X_add_number);
 	      imm_expr->X_op = O_absent;
 	      s = expr_end;
@@ -1450,8 +1450,8 @@ rvc_lui:
 	      my_getExpression (imm_expr, s);
 	      check_absolute_expr (ip, imm_expr);
 	      if ((unsigned long) imm_expr->X_add_number >= xlen)
-		as_warn (_("Improper shift amount (%lu)"),
-			 (unsigned long) imm_expr->X_add_number);
+		as_bad (_("Improper shift amount (%lu)"),
+			(unsigned long) imm_expr->X_add_number);
 	      INSERT_OPERAND (SHAMT, *ip, imm_expr->X_add_number);
 	      imm_expr->X_op = O_absent;
 	      s = expr_end;
@@ -1461,8 +1461,8 @@ rvc_lui:
 	      my_getExpression (imm_expr, s);
 	      check_absolute_expr (ip, imm_expr);
 	      if ((unsigned long) imm_expr->X_add_number > 31)
-		as_warn (_("Improper CSRxI immediate (%lu)"),
-			 (unsigned long) imm_expr->X_add_number);
+		as_bad (_("Improper CSRxI immediate (%lu)"),
+			(unsigned long) imm_expr->X_add_number);
 	      INSERT_OPERAND (RS1, *ip, imm_expr->X_add_number);
 	      imm_expr->X_op = O_absent;
 	      s = expr_end;
@@ -1476,8 +1476,8 @@ rvc_lui:
 		  my_getExpression (imm_expr, s);
 		  check_absolute_expr (ip, imm_expr);
 		  if ((unsigned long) imm_expr->X_add_number > 0xfff)
-		    as_warn (_("Improper CSR address (%lu)"),
-			     (unsigned long) imm_expr->X_add_number);
+		    as_bad (_("Improper CSR address (%lu)"),
+			    (unsigned long) imm_expr->X_add_number);
 		  INSERT_OPERAND (CSR, *ip, imm_expr->X_add_number);
 		  imm_expr->X_op = O_absent;
 		  s = expr_end;
