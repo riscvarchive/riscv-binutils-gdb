@@ -1,3 +1,8 @@
+2017-05-11  Andrew Waterman  <andrew@sifive.com>
+
+	* config/tc-riscv.c (riscv_ip): Changes as_warn to as_bad for improper
+	shift amounts.
+
 2017-05-03  Maciej W. Rozycki  <macro@imgtec.com>
 
 	* config/tc-mips.c (RELAX_MIPS16_ENCODE): Add `pic', `sym32' and
