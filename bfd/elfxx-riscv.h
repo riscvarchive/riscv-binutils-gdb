@@ -23,6 +23,8 @@
 #include "elf/common.h"
 #include "elf/internal.h"
 
+#define R_RISCV_DELETE 127
+
 extern reloc_howto_type *
 riscv_reloc_name_lookup (bfd *, const char *);
 
