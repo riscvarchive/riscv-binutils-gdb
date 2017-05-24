@@ -292,9 +292,11 @@ struct riscv_opcode
 
 /* Instruction is a simple alias (e.g. "mv" for "addi").  */
 #define	INSN_ALIAS		0x00000001
+/* Instruction or alias is unavailable under -mstrict-operands.  */
+#define INSN_LAX		0x00000002
 /* Instruction is actually a macro.  It should be ignored by the
    disassembler, and requires special treatment by the assembler.  */
-#define INSN_MACRO		0xffffffff
+#define INSN_MACRO		0x00000004
 
 /* This is a list of macro expanded instructions.
 

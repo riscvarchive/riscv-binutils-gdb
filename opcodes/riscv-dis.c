@@ -424,6 +424,9 @@ riscv_disassemble_insn (bfd_vma memaddr, insn_t word, disassemble_info *info)
 	  /* Does the opcode match?  */
 	  if (! (op->match_func) (op, word))
 	    continue;
+	  /* Is this a lax-operand alias only used for assembly?  */
+	  if (op->pinfo & INSN_LAX)
+	    continue;
 	  /* Is this a pseudo-instruction and may we print it as such?  */
 	  if (no_aliases && (op->pinfo & INSN_ALIAS))
 	    continue;

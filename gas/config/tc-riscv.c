@@ -76,6 +76,7 @@ struct riscv_set_options
   int pic; /* Generate position-independent code.  */
   int rvc; /* Generate RVC code.  */
   int relax; /* Emit relocs the linker is allowed to relax.  */
+  int strict_operands; /* Disallow lax aliases.  */
 };
 
 static struct riscv_set_options riscv_opts =
@@ -83,6 +84,7 @@ static struct riscv_set_options riscv_opts =
   0,	/* pic */
   0,	/* rvc */
   1,	/* relax */
+  0,	/* strict_operands */
 };
 
 static void
@@ -630,7 +632,7 @@ md_begin (void)
 
       do
 	{
-	  if (riscv_opcodes[i].pinfo != INSN_MACRO)
+	  if (!(riscv_opcodes[i].pinfo & INSN_MACRO))
 	    {
 	      if (!validate_riscv_insn (&riscv_opcodes[i]))
 		as_fatal (_("Broken assembler.  No assembly attempted."));
@@ -1207,7 +1209,8 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
   argsStart = s;
   for ( ; insn && insn->name && strcmp (insn->name, str) == 0; insn++)
     {
-      if (!riscv_subset_supports (insn->subset))
+      if (!riscv_subset_supports (insn->subset)
+	  || (riscv_opts.strict_operands && (insn->pinfo & INSN_LAX)))
 	continue;
 
       create_insn (ip, insn);
@@ -1223,7 +1226,7 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 	  switch (*args)
 	    {
 	    case '\0': 	/* End of args.  */
-	      if (insn->pinfo != INSN_MACRO)
+	      if (!(insn->pinfo & INSN_MACRO))
 		{
 		  if (!insn->match_func (insn, ip->insn_opcode))
 		    break;
@@ -1703,7 +1706,7 @@ md_assemble (char *str)
       return;
     }
 
-  if (insn.insn_mo->pinfo == INSN_MACRO)
+  if (insn.insn_mo->pinfo & INSN_MACRO)
     macro (&insn, &imm_expr, &imm_reloc);
   else
     append_insn (&insn, &imm_expr, imm_reloc);
@@ -1728,6 +1731,8 @@ enum options
   OPTION_MARCH = OPTION_MD_BASE,
   OPTION_PIC,
   OPTION_NO_PIC,
+  OPTION_STRICT_OPERANDS,
+  OPTION_NO_STRICT_OPERANDS,
   OPTION_MABI,
   OPTION_END_OF_ENUM
 };
@@ -1738,6 +1743,8 @@ struct option md_longopts[] =
   {"fPIC", no_argument, NULL, OPTION_PIC},
   {"fpic", no_argument, NULL, OPTION_PIC},
   {"fno-pic", no_argument, NULL, OPTION_NO_PIC},
+  {"mstrict-operands", no_argument, NULL, OPTION_STRICT_OPERANDS},
+  {"mno-strict-operands", no_argument, NULL, OPTION_NO_STRICT_OPERANDS},
   {"mabi", required_argument, NULL, OPTION_MABI},
 
   {NULL, no_argument, NULL, 0}
@@ -1775,6 +1782,14 @@ md_parse_option (int c, const char *arg)
 
     case OPTION_PIC:
       riscv_opts.pic = TRUE;
+      break;
+
+    case OPTION_NO_STRICT_OPERANDS:
+      riscv_opts.strict_operands = FALSE;
+      break;
+
+    case OPTION_STRICT_OPERANDS:
+      riscv_opts.strict_operands = TRUE;
       break;
 
     case OPTION_MABI:
