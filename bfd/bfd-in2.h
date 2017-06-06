@@ -4770,6 +4770,7 @@ number for the SBIC, SBIS, SBI and CBI instructions  */
   BFD_RELOC_RISCV_SET16,
   BFD_RELOC_RISCV_SET32,
   BFD_RELOC_RISCV_DELETE,
+  BFD_RELOC_RISCV_32_PCREL,
 
 /* Renesas RL78 Relocations.  */
   BFD_RELOC_RL78_NEG8,
