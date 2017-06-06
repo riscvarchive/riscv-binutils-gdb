@@ -910,6 +910,7 @@ static const struct elf_reloc_map riscv_reloc_map[] =
   { BFD_RELOC_RISCV_SET8, R_RISCV_SET8 },
   { BFD_RELOC_RISCV_SET16, R_RISCV_SET16 },
   { BFD_RELOC_RISCV_SET32, R_RISCV_SET32 },
+  { BFD_RELOC_RISCV_DELETE, R_RISCV_DELETE },
 };
 
 /* Given a BFD reloc type, return a howto structure.  */
