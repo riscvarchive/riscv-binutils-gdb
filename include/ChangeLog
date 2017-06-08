@@ -1,3 +1,7 @@
+2017-06-26  Kuan-Lin Chen  <rufus@andestech.com>
+
+	* elf/riscv.h (R_RISCV_32_PCREL): New.
+
 2017-07-02  Jan Kratochvil  <jan.kratochvil@redhat.com>
 
 	* dwarf2.def (DW_IDX_compile_unit, DW_IDX_type_unit, DW_IDX_die_offset)
