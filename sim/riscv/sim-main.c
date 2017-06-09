@@ -2228,10 +2228,20 @@ void step_once (SIM_CPU *cpu)
       break;
     }
 
-  /* TODO: Handle overflow into high 32 bits.  */
   /* TODO: Try to use a common counter and only update on demand (reads).  */
-  ++cpu->csr.cycle;
-  ++cpu->csr.instret;
+  if (RISCV_XLEN (cpu) == 32)
+    {
+      unsigned_word old_cycle = cpu->csr.cycle++;
+
+      /* Increase cycleh if cycle is overflowed.  */
+      if (old_cycle > cpu->csr.cycle)
+	cpu->csr.cycleh++;
+    }
+  else
+    ++cpu->csr.cycle;
+
+  cpu->csr.instret = cpu->csr.cycle;
+  cpu->csr.instreth = cpu->csr.cycleh;
 
   cpu->pc = pc;
 }
@@ -2360,6 +2370,10 @@ void initialize_cpu (SIM_DESC sd, SIM_CPU *cpu, int mhartid)
 
   cpu->csr.mimpid = 0x8000;
   cpu->csr.mhartid = mhartid;
+  cpu->csr.cycle = 0;
+  cpu->csr.cycleh = 0;
+  cpu->csr.instret = 0;
+  cpu->csr.instreth = 0;
 }
 
 /* Some utils don't like having a NULL environ.  */
