@@ -442,7 +442,7 @@ nds32_parse_opcode (struct nds32_opcode *opc, bfd_vma pc ATTRIBUTE_UNUSED,
 	      else if (op == N32_OP6_JI)
 		{
 		  /* FIXME: Handle relocation.  */
-		  if (info->flags & INSN_HAS_RELOC)
+		  if (info->reloc)
 		    pc = 0;
 		  /* Check if insn32 in ex9 table.  */
 		  if (parse_mode & NDS32_PARSE_EX9IT)

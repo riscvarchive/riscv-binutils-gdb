@@ -1817,6 +1817,7 @@ disassemble_bytes (struct disassemble_info * inf,
 	      inf->bytes_per_line = 0;
 	      inf->bytes_per_chunk = 0;
 	      inf->flags = disassemble_all ? DISASSEMBLE_DATA : 0;
+	      inf->reloc = NULL;
 	      if (machine)
 		inf->flags |= USER_SPECIFIED_MACHINE_TYPE;
 
@@ -1847,7 +1848,7 @@ disassemble_bytes (struct disassemble_info * inf,
 		      || (distance_to_rel > 0
 			  && distance_to_rel < (bfd_signed_vma) (previous_octets/ opb)))
 		    {
-		      inf->flags |= INSN_HAS_RELOC;
+		      inf->reloc = **relppp;
 		      aux->reloc = **relppp;
 		    }
 		}
