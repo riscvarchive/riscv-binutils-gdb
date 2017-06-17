@@ -107,9 +107,6 @@ typedef struct disassemble_info
      The top 16 bits are reserved for public use (and are documented here).
      The bottom 16 bits are for the internal use of the disassembler.  */
   unsigned long flags;
-  /* Set if the disassembler has determined that there are one or more
-     relocations associated with the instruction being disassembled.  */
-#define INSN_HAS_RELOC	 (1 << 31)
   /* Set if the user has requested the disassembly of data as well as code.  */
 #define DISASSEMBLE_DATA (1 << 30)
   /* Set if the user has specifically set the machine type encoded in the
@@ -192,6 +189,9 @@ typedef struct disassemble_info
 
   /* Whether the disassembler always needs the relocations.  */
   bfd_boolean disassembler_needs_relocs;
+
+  /* A reloc that might coorespond to this instruction.  */
+  arelent *reloc;
 
   /* Results from instruction decoders.  Not all decoders yet support
      this information.  This info is set each time an instruction is
