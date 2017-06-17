@@ -645,6 +645,12 @@ disassemble_init_for_target (struct disassemble_info * info)
       info->disassembler_needs_relocs = TRUE;
       break;
 #endif
+#ifdef ARCH_riscv
+    case bfd_arch_riscv:
+      fprintf(stderr, "RISC-V needs relocs\n");
+      info->disassembler_needs_relocs = TRUE;
+      break;
+#endif
 #ifdef ARCH_m32c
     case bfd_arch_m32c:
       /* This processor in fact is little endian.  The value set here
