@@ -2980,7 +2980,7 @@ print_insn_aarch64_word (bfd_vma pc,
   info->target = 0;
   info->target2 = 0;
 
-  if (info->flags & INSN_HAS_RELOC)
+  if (info->reloc)
     /* If the instruction has a reloc associated with it, then
        the offset field in the instruction will actually be the
        addend for the reloc.  (If we are using REL type relocs).

@@ -566,7 +566,7 @@ print_insn_score32 (bfd_vma pc, struct disassemble_info *info, long given)
                       {
                         int target;
 
-                        if (info->flags & INSN_HAS_RELOC)
+                        if (info->reloc)
                           pc = 0;
                         target = (pc & 0xfe000000) | (given & 0x01fffffe);
                         (*info->print_address_func) (target, info);
@@ -742,7 +742,7 @@ print_insn_score16 (bfd_vma pc, struct disassemble_info *info, long given)
                       {
                         int target;
 
-                        if (info->flags & INSN_HAS_RELOC)
+                        if (info->reloc)
                           pc = 0;
 
                         target = (pc & 0xfffff000) | (given & 0x00000ffe);

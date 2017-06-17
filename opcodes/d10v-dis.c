@@ -121,7 +121,7 @@ print_operand (struct d10v_operand *oper,
 	      neg = 1;
 	    }
 	  num = num << 2;
-	  if (info->flags & INSN_HAS_RELOC)
+	  if (info->reloc)
 	    (*info->print_address_func) (num & PC_MASK, info);
 	  else
 	    {

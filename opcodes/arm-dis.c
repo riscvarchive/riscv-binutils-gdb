@@ -6758,7 +6758,7 @@ print_insn (bfd_vma pc, struct disassemble_info *info, bfd_boolean little)
       info->memory_error_func (status, pc, info);
       return -1;
     }
-  if (info->flags & INSN_HAS_RELOC)
+  if (info->reloc)
     /* If the instruction has a reloc associated with it, then
        the offset field in the instruction will actually be the
        addend for the reloc.  (We are using REL type relocs).
