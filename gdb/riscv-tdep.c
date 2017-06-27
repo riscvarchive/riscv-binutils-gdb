@@ -1257,7 +1257,6 @@ riscv_gdbarch_init (struct gdbarch_info info,
   set_gdbarch_return_value (gdbarch, riscv_return_value);
   set_gdbarch_breakpoint_kind_from_pc (gdbarch, riscv_breakpoint_kind_from_pc);
   set_gdbarch_sw_breakpoint_from_kind (gdbarch, riscv_sw_breakpoint_from_kind);
-  set_gdbarch_print_insn (gdbarch, print_insn_riscv);
 
   /* Register architecture.  */
   set_gdbarch_pseudo_register_read (gdbarch, riscv_pseudo_register_read);
