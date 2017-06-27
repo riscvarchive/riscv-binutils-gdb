@@ -93,7 +93,7 @@ extern void initialize_cpu (SIM_DESC, SIM_CPU *, int);
 extern void initialize_env (SIM_DESC, const char * const *argv,
 			    const char * const *env);
 
-#define DEFAULT_MEM_SIZE (16 * 1024 * 1024)
+#define DEFAULT_MEM_SIZE (64 * 1024 * 1024)
 
 #define RISCV_XLEN(cpu) MACH_WORD_BITSIZE (CPU_MACH (cpu))
 
