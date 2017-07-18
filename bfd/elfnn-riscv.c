@@ -2746,21 +2746,26 @@ riscv_init_pcgp_relocs (riscv_pcgp_relocs *p)
   return TRUE;
 }
 
-static bfd_boolean
-riscv_free_pcgp_relocs (riscv_pcgp_relocs *p, bfd *abfd, asection *sec)
+static void
+riscv_free_pcgp_relocs (riscv_pcgp_relocs *p,
+			bfd *abfd ATTRIBUTE_UNUSED,
+			asection *sec ATTRIBUTE_UNUSED)
 {
-  for (riscv_pcgp_hi_reloc *c = p->hi; c != NULL;)
+  riscv_pcgp_hi_reloc *c;
+  riscv_pcgp_lo_reloc *l;
+
+  for (c = p->hi; c != NULL;)
     {
       riscv_pcgp_hi_reloc *next = c->next;
       free (c);
       c = next;
     }
 
-  for (riscv_pcgp_lo_reloc *c = p->lo; c != NULL;)
+  for (l = p->lo; l != NULL;)
     {
-      riscv_pcgp_lo_reloc *next = c->next;
-      free (c);
-      c = next;
+      riscv_pcgp_lo_reloc *next = l->next;
+      free (l);
+      l = next;
     }
 }
 
@@ -2785,7 +2790,9 @@ riscv_record_pcgp_hi_reloc (riscv_pcgp_relocs *p, bfd_vma hi_sec_off,
 static riscv_pcgp_hi_reloc *
 riscv_find_pcgp_hi_reloc(riscv_pcgp_relocs *p, bfd_vma hi_sec_off)
 {
-  for (riscv_pcgp_hi_reloc *c = p->hi; c != NULL; c = c->next)
+  riscv_pcgp_hi_reloc *c;
+
+  for (c = p->hi; c != NULL; c = c->next)
     if (c->hi_sec_off == hi_sec_off)
       return c;
   return NULL;
@@ -2795,8 +2802,9 @@ static bfd_boolean
 riscv_delete_pcgp_hi_reloc(riscv_pcgp_relocs *p, bfd_vma hi_sec_off)
 {
   bfd_boolean out = FALSE;
+  riscv_pcgp_hi_reloc *c;
 
-  for (riscv_pcgp_hi_reloc *c = p->hi; c != NULL; c = c->next)
+  for (c = p->hi; c != NULL; c = c->next)
       if (c->hi_sec_off == hi_sec_off)
 	out = TRUE;
 
@@ -2807,8 +2815,9 @@ static bfd_boolean
 riscv_use_pcgp_hi_reloc(riscv_pcgp_relocs *p, bfd_vma hi_sec_off)
 {
   bfd_boolean out = FALSE;
+  riscv_pcgp_hi_reloc *c;
 
-  for (riscv_pcgp_hi_reloc *c = p->hi; c != NULL; c = c->next)
+  for (c = p->hi; c != NULL; c = c->next)
     if (c->hi_sec_off == hi_sec_off)
       out = TRUE;
 
@@ -2830,14 +2839,18 @@ riscv_record_pcgp_lo_reloc (riscv_pcgp_relocs *p, bfd_vma hi_sec_off)
 static bfd_boolean
 riscv_find_pcgp_lo_reloc (riscv_pcgp_relocs *p, bfd_vma hi_sec_off)
 {
-  for (riscv_pcgp_lo_reloc *c = p->lo; c != NULL; c = c->next)
+  riscv_pcgp_lo_reloc *c;
+
+  for (c = p->lo; c != NULL; c = c->next)
     if (c->hi_sec_off == hi_sec_off)
       return TRUE;
   return FALSE;
 }
 
 static bfd_boolean
-riscv_delete_pcgp_lo_reloc(riscv_pcgp_relocs *p, bfd_vma lo_sec_off, size_t bytes)
+riscv_delete_pcgp_lo_reloc (riscv_pcgp_relocs *p ATTRIBUTE_UNUSED,
+			    bfd_vma lo_sec_off ATTRIBUTE_UNUSED,
+			    size_t bytes ATTRIBUTE_UNUSED)
 {
   return TRUE;
 }
