@@ -198,6 +198,31 @@ set_riscv_command (char *args, int from_tty)
   help_list (setriscvcmdlist, "set riscv ", all_commands, gdb_stdout);
 }
 
+static uint32_t
+cached_misa ()
+{
+  static bool read = false;
+  static uint32_t value = 0;
+
+  if (!read) {
+    struct frame_info *frame = get_current_frame ();
+    TRY
+      {
+        value = get_frame_register_unsigned (frame, RISCV_CSR_MISA_REGNUM);
+      }
+    CATCH (ex, RETURN_MASK_ERROR)
+      {
+        // In old cores, $misa might live at 0xf10
+        value = get_frame_register_unsigned (frame,
+            RISCV_CSR_MISA_REGNUM - 0x301 + 0xf10);
+      }
+    END_CATCH
+    read = true;
+  }
+
+  return value;
+}
+
 /* Implement the breakpoint_kind_from_pc gdbarch method.  */
 
 static int
@@ -209,8 +234,7 @@ riscv_breakpoint_kind_from_pc (struct gdbarch *gdbarch, CORE_ADDR *pcptr)
       /* TODO: Because we try to read misa, it is not possible to set a
          breakpoint before connecting to a live target. A suggested workaround is
          to look at the ELF file in this case.  */
-      struct frame_info *frame = get_current_frame ();
-      uint32_t misa = get_frame_register_unsigned (frame, RISCV_CSR_MISA_REGNUM);
+      uint32_t misa = cached_misa();
       if (misa & (1<<2))
         gdbarch_tdep (gdbarch)->supports_compressed_isa = AUTO_BOOLEAN_TRUE;
       else
@@ -731,9 +755,12 @@ riscv_register_reggroup_p (struct gdbarch  *gdbarch,
 	        || regnum == RISCV_CSR_FRM_REGNUM);
   else if (reggroup == general_reggroup)
     return regnum < RISCV_FIRST_FP_REGNUM;
-  else if (reggroup == restore_reggroup || reggroup == save_reggroup)
-    return regnum <= RISCV_LAST_FP_REGNUM;
-  else if (reggroup == system_reggroup) {
+  else if (reggroup == restore_reggroup || reggroup == save_reggroup) {
+    if (cached_misa() & ((1<<('F'-'A')) | (1<<('D'-'A')) | (1<<('Q'-'A'))))
+      return regnum <= RISCV_LAST_FP_REGNUM;
+    else
+      return regnum < RISCV_FIRST_FP_REGNUM;
+  } else if (reggroup == system_reggroup) {
     if (regnum == RISCV_PRIV_REGNUM)
       return 1;
     if (regnum < RISCV_FIRST_CSR_REGNUM || regnum > RISCV_LAST_CSR_REGNUM)
