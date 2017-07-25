@@ -32,6 +32,9 @@
 
 #define MINUS_ONE ((bfd_vma)0 - 1)
 
+static bfd_reloc_status_type riscv_elf_add_sub_reloc
+(bfd *, arelent *, asymbol *, void *, asection *, bfd *, char **);
+
 /* The relocation table used for SHT_RELA sections.  */
 
 static reloc_howto_type howto_table[] =
@@ -480,7 +483,7 @@ static reloc_howto_type howto_table[] =
 	 FALSE,				/* pc_relative */
 	 0,				/* bitpos */
 	 complain_overflow_dont,	/* complain_on_overflow */
-	 bfd_elf_generic_reloc,		/* special_function */
+	 riscv_elf_add_sub_reloc,	/* special_function */
 	 "R_RISCV_ADD8",		/* name */
 	 FALSE,				/* partial_inplace */
 	 0,				/* src_mask */
@@ -495,7 +498,7 @@ static reloc_howto_type howto_table[] =
 	 FALSE,				/* pc_relative */
 	 0,				/* bitpos */
 	 complain_overflow_dont,	/* complain_on_overflow */
-	 bfd_elf_generic_reloc,		/* special_function */
+	 riscv_elf_add_sub_reloc,	/* special_function */
 	 "R_RISCV_ADD16",		/* name */
 	 FALSE,				/* partial_inplace */
 	 0,				/* src_mask */
@@ -510,7 +513,7 @@ static reloc_howto_type howto_table[] =
 	 FALSE,				/* pc_relative */
 	 0,				/* bitpos */
 	 complain_overflow_dont,	/* complain_on_overflow */
-	 bfd_elf_generic_reloc,		/* special_function */
+	 riscv_elf_add_sub_reloc,	/* special_function */
 	 "R_RISCV_ADD32",		/* name */
 	 FALSE,				/* partial_inplace */
 	 0,				/* src_mask */
@@ -525,7 +528,7 @@ static reloc_howto_type howto_table[] =
 	 FALSE,				/* pc_relative */
 	 0,				/* bitpos */
 	 complain_overflow_dont,	/* complain_on_overflow */
-	 bfd_elf_generic_reloc,		/* special_function */
+	 riscv_elf_add_sub_reloc,	/* special_function */
 	 "R_RISCV_ADD64",		/* name */
 	 FALSE,				/* partial_inplace */
 	 0,				/* src_mask */
@@ -540,7 +543,7 @@ static reloc_howto_type howto_table[] =
 	 FALSE,				/* pc_relative */
 	 0,				/* bitpos */
 	 complain_overflow_dont,	/* complain_on_overflow */
-	 bfd_elf_generic_reloc,		/* special_function */
+	 riscv_elf_add_sub_reloc,	/* special_function */
 	 "R_RISCV_SUB8",		/* name */
 	 FALSE,				/* partial_inplace */
 	 0,				/* src_mask */
@@ -555,7 +558,7 @@ static reloc_howto_type howto_table[] =
 	 FALSE,				/* pc_relative */
 	 0,				/* bitpos */
 	 complain_overflow_dont,	/* complain_on_overflow */
-	 bfd_elf_generic_reloc,		/* special_function */
+	 riscv_elf_add_sub_reloc,	/* special_function */
 	 "R_RISCV_SUB16",		/* name */
 	 FALSE,				/* partial_inplace */
 	 0,				/* src_mask */
@@ -570,7 +573,7 @@ static reloc_howto_type howto_table[] =
 	 FALSE,				/* pc_relative */
 	 0,				/* bitpos */
 	 complain_overflow_dont,	/* complain_on_overflow */
-	 bfd_elf_generic_reloc,		/* special_function */
+	 riscv_elf_add_sub_reloc,	/* special_function */
 	 "R_RISCV_SUB32",		/* name */
 	 FALSE,				/* partial_inplace */
 	 0,				/* src_mask */
@@ -585,7 +588,7 @@ static reloc_howto_type howto_table[] =
 	 FALSE,				/* pc_relative */
 	 0,				/* bitpos */
 	 complain_overflow_dont,	/* complain_on_overflow */
-	 bfd_elf_generic_reloc,		/* special_function */
+	 riscv_elf_add_sub_reloc,	/* special_function */
 	 "R_RISCV_SUB64",		/* name */
 	 FALSE,				/* partial_inplace */
 	 0,				/* src_mask */
@@ -767,7 +770,7 @@ static reloc_howto_type howto_table[] =
 	 FALSE,				/* pc_relative */
 	 0,				/* bitpos */
 	 complain_overflow_dont,	/* complain_on_overflow */
-	 bfd_elf_generic_reloc,		/* special_function */
+	 riscv_elf_add_sub_reloc,	/* special_function */
 	 "R_RISCV_SUB6",		/* name */
 	 FALSE,				/* partial_inplace */
 	 0,				/* src_mask */
@@ -950,4 +953,39 @@ riscv_elf_rtype_to_howto (unsigned int r_type)
       return NULL;
     }
   return &howto_table[r_type];
+}
+
+/* specail_function of RISCV_ADD and RISCV_SUB relocations.  */
+static bfd_reloc_status_type
+riscv_elf_add_sub_reloc (bfd *abfd, arelent *reloc_entry, asymbol *symbol,
+			 void *data, asection *input_section,
+			 bfd *output_bfd,
+			 char **error_message ATTRIBUTE_UNUSED)
+{
+  reloc_howto_type *howto = reloc_entry->howto;
+  bfd_vma relocation;
+
+  if (output_bfd != NULL
+      && (symbol->flags & BSF_SECTION_SYM) == 0
+      && (!reloc_entry->howto->partial_inplace || reloc_entry->addend == 0))
+    {
+      reloc_entry->address += input_section->output_offset;
+      return bfd_reloc_ok;
+    }
+
+  if (output_bfd != NULL)
+    return bfd_reloc_continue;
+
+  relocation = symbol->value + symbol->section->output_section->vma
+    + symbol->section->output_offset + reloc_entry->addend;
+  bfd_vma old_value = bfd_get (howto->bitsize, abfd,
+			       data + reloc_entry->address);
+  if (howto->type == R_RISCV_ADD8 || howto->type == R_RISCV_ADD16
+      || howto->type == R_RISCV_ADD32 || howto->type == R_RISCV_ADD64)
+    relocation = old_value + relocation;
+  else
+    relocation = old_value - relocation;
+  bfd_put (howto->bitsize, abfd, relocation, data + reloc_entry->address);
+
+  return bfd_reloc_ok;
 }
