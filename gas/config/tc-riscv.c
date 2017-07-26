@@ -200,7 +200,6 @@ riscv_set_arch (const char *s)
 	  extension = subset;
 	  riscv_add_subset (subset);
 	  p += strlen (subset);
-	  free (subset);
 	}
       else if (*p == '_')
 	p++;
@@ -220,6 +219,8 @@ riscv_set_arch (const char *s)
       else
 	as_fatal ("-march=%s: unsupported ISA subset `%c'", s, *p);
     }
+
+  free (extension);
 }
 
 /* Handle of the OPCODE hash table.  */
