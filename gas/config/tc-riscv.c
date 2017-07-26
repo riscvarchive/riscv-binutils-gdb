@@ -147,7 +147,7 @@ riscv_add_subset (const char *subset)
 static void
 riscv_set_arch (const char *s)
 {
-  const char *all_subsets = "imafdc";
+  const char *all_subsets = "imafdqc";
   const char *extension = NULL;
   const char *p = s;
 
@@ -173,7 +173,7 @@ riscv_set_arch (const char *s)
 
       case 'g':
 	p++;
-	for ( ; *all_subsets != 'c'; all_subsets++)
+	for ( ; *all_subsets != 'q'; all_subsets++)
 	  {
 	    const char subset[] = {*all_subsets, '\0'};
 	    riscv_add_subset (subset);
@@ -208,12 +208,6 @@ riscv_set_arch (const char *s)
 	  const char subset[] = {*p, 0};
 	  riscv_add_subset (subset);
 	  all_subsets++;
-	  p++;
-	}
-      else if (*p == 'q')
-	{
-	  const char subset[] = {*p, 0};
-	  riscv_add_subset (subset);
 	  p++;
 	}
       else
