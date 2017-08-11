@@ -1770,7 +1770,12 @@ execute_i (SIM_CPU *cpu, unsigned_word iw, const struct riscv_opcode *op)
 		if (cpu->a0 == 0)
 		  cpu->a0 = cpu->endbrk;
 		else
-		  cpu->endbrk = cpu->a0;
+		  {
+		    if (cpu->a0 >= DEFAULT_MEM_SIZE)
+		      cpu->a0 = -1;
+		    else
+		      cpu->endbrk = cpu->a0;
+		  }
 		break;
 	      }
 	    case TARGET_SYS_gettimeofday:
