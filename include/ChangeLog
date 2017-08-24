@@ -1,3 +1,7 @@
+2017-08-24  Kito Cheng  <kito.cheng@gmail.com>
+
+	* elf/riscv.h (EF_RISCV_RVE): New define.
+
 2017-11-07  Palmer Dabbelt  <palmer@dabbelt.com>
 
 	* opcode/riscv-opc.h (sptbr): Rename to satp.
