@@ -1,3 +1,10 @@
+2017-08-24  Kito Cheng  <kito.cheng@gmail.com>
+	    Monk Chiang  <sh.chiang04@gmail.com>
+
+	* config/tc-riscv.c (riscv_set_arch): Support RV32E.
+	(riscv_set_rve) New function.
+	(reg_lookup_internal): Check register is available for RV32E.
+
 2017-08-23  James Clarke  <jrtc27@jrtc27.com>
 
 	* config/tc-sparc.c (tc_gen_reloc): Convert BFD_RELOC_8/16/32/64
