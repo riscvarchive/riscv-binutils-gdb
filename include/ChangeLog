@@ -1,3 +1,7 @@
+2017-08-24  Kito Cheng  <kito.cheng@gmail.com>
+
+	* elf/riscv.h (EF_RISCV_RVE): New define.
+
 2017-11-16  Tamar Christina  <tamar.christina@arm.com>
 
 	* opcode/aarch64.h: (AARCH64_FEATURE_F16_FML): New.

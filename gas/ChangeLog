@@ -1,3 +1,10 @@
+2017-08-24  Kito Cheng  <kito.cheng@gmail.com>
+	    Monk Chiang  <sh.chiang04@gmail.com>
+
+	* config/tc-riscv.c (riscv_set_arch): Support RV32E.
+	(riscv_set_rve) New function.
+	(reg_lookup_internal): Check register is available for RV32E.
+
 2017-11-16  Tamar Christina  <tamar.christina@arm.com>
 
 	* config/tc-aarch64.c (fp16fml): New.

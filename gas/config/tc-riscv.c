@@ -75,6 +75,7 @@ struct riscv_set_options
 {
   int pic; /* Generate position-independent code.  */
   int rvc; /* Generate RVC code.  */
+  int rve; /* Generate RVE code.  */
   int relax; /* Emit relocs the linker is allowed to relax.  */
 };
 
@@ -82,6 +83,7 @@ static struct riscv_set_options riscv_opts =
 {
   0,	/* pic */
   0,	/* rvc */
+  0,	/* rve */
   1,	/* relax */
 };
 
@@ -92,6 +94,15 @@ riscv_set_rvc (bfd_boolean rvc_value)
     elf_flags |= EF_RISCV_RVC;
 
   riscv_opts.rvc = rvc_value;
+}
+
+static void
+riscv_set_rve (bfd_boolean rve_value)
+{
+  if (rve_value)
+    elf_flags |= EF_RISCV_RVE;
+
+  riscv_opts.rve = rve_value;
 }
 
 struct riscv_subset
@@ -171,6 +182,17 @@ riscv_set_arch (const char *s)
       case 'i':
 	break;
 
+      case 'e':
+	p++;
+	riscv_add_subset ("e");
+	riscv_add_subset ("i");
+	riscv_set_rve (TRUE);
+
+	if (xlen > 32)
+	  as_fatal ("-march=%s: rv%de is not a valid base ISA", s, xlen);
+
+	break;
+
       case 'g':
 	p++;
 	for ( ; *all_subsets != 'q'; all_subsets++)
@@ -181,7 +203,7 @@ riscv_set_arch (const char *s)
 	break;
 
       default:
-	as_fatal ("-march=%s: first ISA subset must be `i' or `g'", s);
+	as_fatal ("-march=%s: first ISA subset must be `e', `i' or `g'", s);
     }
 
   while (*p)
@@ -214,6 +236,18 @@ riscv_set_arch (const char *s)
       else
 	as_fatal ("-march=%s: unsupported ISA subset `%c'", s, *p);
     }
+
+  if (riscv_subset_supports ("e") && riscv_subset_supports ("f"))
+    as_fatal ("-march=%s: rv32e does not support the `f' extension", s);
+
+  if (riscv_subset_supports ("d") && !riscv_subset_supports ("f"))
+    as_fatal ("-march=%s: `d' extension requires `f' extension", s);
+
+  if (riscv_subset_supports ("q") && !riscv_subset_supports ("d"))
+    as_fatal ("-march=%s: `q' extension requires `d' extension", s);
+
+  if (riscv_subset_supports ("q") && xlen < 64)
+    as_fatal ("-march=%s: rv32 does not support the `q' extension", s);
 
   free (extension);
 }
@@ -438,6 +472,10 @@ reg_lookup_internal (const char *s, enum reg_class class)
 
   if (r == NULL || DECODE_REG_CLASS (r) != class)
     return -1;
+
+  if (riscv_opts.rve && class == RCLASS_GPR && DECODE_REG_NUM (r) > 15)
+    return -1;
+
   return DECODE_REG_NUM (r);
 }
 
