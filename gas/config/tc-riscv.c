@@ -255,6 +255,9 @@ riscv_set_arch (const char *s)
 /* Handle of the OPCODE hash table.  */
 static struct hash_control *op_hash = NULL;
 
+/* Handle of the type of .insn hash table.  */
+static struct hash_control *insn_type_hash = NULL;
+
 /* This array holds the chars that always start a comment.  If the
     pre-processor is disabled, these aren't very useful */
 const char comment_chars[] = "#";
@@ -528,12 +531,16 @@ arg_lookup (char **s, const char *const *array, size_t size, unsigned *regnop)
    by the match/mask part of the instruction definition, or by the
    operand list.  */
 static bfd_boolean
-validate_riscv_insn (const struct riscv_opcode *opc)
+validate_riscv_insn (const struct riscv_opcode *opc, int length)
 {
   const char *p = opc->args;
   char c;
   insn_t used_bits = opc->mask;
-  int insn_width = 8 * riscv_insn_length (opc->match);
+  int insn_width;
+  if (length == 0)
+    insn_width = 8 * riscv_insn_length (opc->match);
+  else
+    insn_width = 8 * length;
   insn_t required_bits = ~0ULL >> (64 - insn_width);
 
   if ((used_bits & opc->match) != (opc->match & required_bits))
@@ -576,8 +583,44 @@ validate_riscv_insn (const struct riscv_opcode *opc)
 	  case '>': used_bits |= ENCODE_RVC_IMM (-1U); break;
 	  case 'T': USE_BITS (OP_MASK_CRS2, OP_SH_CRS2); break;
 	  case 'D': USE_BITS (OP_MASK_CRS2S, OP_SH_CRS2S); break;
+	  case 'F': /* funct */
+	    switch (c = *p++)
+	      {
+	      case '4': USE_BITS (OP_MASK_CFUNCT4, OP_SH_CFUNCT4); break;
+	      case '3': USE_BITS (OP_MASK_CFUNCT3, OP_SH_CFUNCT3); break;
+	      default:
+		as_bad (_("internal: bad RISC-V opcode"
+			  " (unknown operand type `CF%c'): %s %s"),
+			c, opc->name, opc->args);
+		return FALSE;
+	      }
+	    break;
 	  default:
 	    as_bad (_("internal: bad RISC-V opcode (unknown operand type `C%c'): %s %s"),
+		    c, opc->name, opc->args);
+	    return FALSE;
+	  }
+	break;
+      case 'F': /* funct */
+	switch (c = *p++)
+	  {
+	  case '7': USE_BITS (OP_MASK_FUNCT7, OP_SH_FUNCT7); break;
+	  case '3': USE_BITS (OP_MASK_FUNCT3, OP_SH_FUNCT3); break;
+	  default:
+	    as_bad (_("internal: bad RISC-V opcode"
+		      " (unknown operand type `F%c'): %s %s"),
+		    c, opc->name, opc->args);
+	    return FALSE;
+	  }
+	break;
+      case 'O': /* opcode */
+	switch (c = *p++)
+	  {
+	  case '4': USE_BITS (OP_MASK_OP, OP_SH_OP); break;
+	  case '2': USE_BITS (OP_MASK_OP2, OP_SH_OP2); break;
+	  default:
+	    as_bad (_("internal: bad RISC-V opcode"
+		      " (unknown operand type `F%c'): %s %s"),
 		    c, opc->name, opc->args);
 	    return FALSE;
 	  }
@@ -593,6 +636,7 @@ validate_riscv_insn (const struct riscv_opcode *opc)
       case 'E':	USE_BITS (OP_MASK_CSR,		OP_SH_CSR);	break;
       case 'I': break;
       case 'R':	USE_BITS (OP_MASK_RS3,		OP_SH_RS3);	break;
+      case 'r':	USE_BITS (OP_MASK_RS3,		OP_SH_RS3);	break;
       case 'S':	USE_BITS (OP_MASK_RS1,		OP_SH_RS1);	break;
       case 'U':	USE_BITS (OP_MASK_RS1,		OP_SH_RS1);	/* fallthru */
       case 'T':	USE_BITS (OP_MASK_RS2,		OP_SH_RS2);	break;
@@ -666,12 +710,42 @@ md_begin (void)
 	{
 	  if (riscv_opcodes[i].pinfo != INSN_MACRO)
 	    {
-	      if (!validate_riscv_insn (&riscv_opcodes[i]))
+	      if (!validate_riscv_insn (&riscv_opcodes[i], 0))
 		as_fatal (_("Broken assembler.  No assembly attempted."));
 	    }
 	  ++i;
 	}
       while (riscv_opcodes[i].name && !strcmp (riscv_opcodes[i].name, name));
+    }
+
+  i = 0;
+  insn_type_hash = hash_new ();
+  while (riscv_insn_types[i].name)
+    {
+      const char *name = riscv_insn_types[i].name;
+      const char *hash_error =
+	hash_insert (insn_type_hash, name, (void *) &riscv_insn_types[i]);
+
+      if (hash_error)
+	{
+	  fprintf (stderr, _("internal error: can't hash `%s': %s\n"),
+		   riscv_insn_types[i].name, hash_error);
+	  /* Probably a memory allocation problem?  Give up now.  */
+	  as_fatal (_("Broken assembler.  No assembly attempted."));
+	}
+
+      do
+	{
+	  if (riscv_insn_types[i].pinfo != INSN_MACRO)
+	    {
+	      if (!validate_riscv_insn (&riscv_insn_types[i],
+					name[0] == 'c' ? 2 : 4))
+		as_fatal (_("Broken assembler.  No assembly attempted."));
+	    }
+	  ++i;
+	}
+      while (riscv_insn_types[i].name
+	     && !strcmp (riscv_insn_types[i].name, name));
     }
 
   reg_names_hash = hash_new ();
@@ -1232,6 +1306,13 @@ riscv_parse_operands (char *s, struct riscv_cl_insn *ip,
 	    {
 	      if (!insn->match_func (insn, ip->insn_opcode))
 		break;
+	      /* For .insn, insn->match and insn->mask are 0.  */
+	      if (riscv_insn_length ((insn->match == 0 && insn->mask == 0)
+				     ? ip->insn_opcode
+				     : insn->match) == 2
+		  && !riscv_opts.rvc)
+		break;
+
 	      if (riscv_insn_length (insn->match) == 2 && !riscv_opts.rvc)
 		break;
 	    }
@@ -1420,6 +1501,44 @@ rvc_lui:
 		break;
 	      INSERT_OPERAND (CRS2, *ip, regno);
 	      continue;
+	    case 'F':
+	      switch (*++args)
+		{
+		  case '4':
+		    if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
+			|| imm_expr->X_op != O_constant
+			|| imm_expr->X_add_number <= 0
+			|| imm_expr->X_add_number >= 16)
+		      {
+			as_bad (_("bad value for funct4 field, "
+				  "value must be 0...15"));
+			break;
+		      }
+
+		    INSERT_OPERAND (CFUNCT4, *ip, imm_expr->X_add_number);
+		    imm_expr->X_op = O_absent;
+		    s = expr_end;
+		    continue;
+		  case '3':
+		    if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
+			|| imm_expr->X_op != O_constant
+			|| imm_expr->X_add_number <= 0
+			|| imm_expr->X_add_number >= 8)
+		      {
+			as_bad (_("bad value for funct3 field, "
+				  "value must be 0 ~ 7"));
+			break;
+		      }
+
+		    INSERT_OPERAND (CFUNCT3, *ip, imm_expr->X_add_number);
+		    imm_expr->X_op = O_absent;
+		    s = expr_end;
+		    continue;
+		  default:
+		    as_bad (_("bad RVC FUNCT field specifier 'CF%c'\n"),
+			    *args);
+		}
+	      break;
 	    default:
 	      as_bad (_("bad RVC field specifier 'C%c'\n"), *args);
 	    }
@@ -1513,6 +1632,7 @@ rvc_lui:
 	case 'd':	/* Destination register.  */
 	case 's':	/* Source register.  */
 	case 't':	/* Target register.  */
+	case 'r':	/* RS3 register.  */
 	  if (reg_lookup (&s, RCLASS_GPR, &regno))
 	    {
 	      c = *args;
@@ -1530,6 +1650,9 @@ rvc_lui:
 		  INSERT_OPERAND (RD, *ip, regno);
 		  break;
 		case 't':
+		  INSERT_OPERAND (RS2, *ip, regno);
+		  break;
+		case 'r':
 		  INSERT_OPERAND (RS2, *ip, regno);
 		  break;
 		}
@@ -1669,6 +1792,84 @@ jump:
 	    *imm_reloc = BFD_RELOC_RISCV_CALL;
 	  continue;
 
+	case 'O':
+	  switch (*++args)
+	    {
+	    case '4':
+	      if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
+		  || imm_expr->X_op != O_constant
+		  || imm_expr->X_add_number < 0
+		  || imm_expr->X_add_number >= 128
+		  || (imm_expr->X_add_number & 0x3) != 3)
+		{
+		  as_bad (_("bad value for opcode field, "
+			    "value must be 0...127 and "
+			    "lower 2 bits must be 0x3"));
+		  break;
+		}
+
+	      INSERT_OPERAND (OP, *ip, imm_expr->X_add_number);
+	      imm_expr->X_op = O_absent;
+	      s = expr_end;
+	      continue;
+	    case '2':
+	      if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
+		  || imm_expr->X_op != O_constant
+		  || imm_expr->X_add_number < 0
+		  || imm_expr->X_add_number >= 3)
+		{
+		  as_bad (_("bad value for opcode field, "
+			    "value must be 0...2"));
+		  break;
+		}
+
+	      INSERT_OPERAND (OP2, *ip, imm_expr->X_add_number);
+	      imm_expr->X_op = O_absent;
+	      s = expr_end;
+	      continue;
+	    default:
+	      as_bad (_("bad Opcode field specifier 'O%c'\n"), *args);
+	    }
+	  break;
+
+	case 'F':
+	  switch (*++args)
+	    {
+	    case '7':
+	      if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
+		  || imm_expr->X_op != O_constant
+		  || imm_expr->X_add_number < 0
+		  || imm_expr->X_add_number >= 128)
+		{
+		  as_bad (_("bad value for funct7 field, "
+			    "value must be 0...127"));
+		  break;
+		}
+
+	      INSERT_OPERAND (FUNCT7, *ip, imm_expr->X_add_number);
+	      imm_expr->X_op = O_absent;
+	      s = expr_end;
+	      continue;
+	    case '3':
+	      if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
+		  || imm_expr->X_op != O_constant
+		  || imm_expr->X_add_number < 0
+		  || imm_expr->X_add_number >= 8)
+		{
+		  as_bad (_("bad value for funct3 field, "
+			    "value must be 0...7"));
+		  break;
+		}
+
+	      INSERT_OPERAND (FUNCT3, *ip, imm_expr->X_add_number);
+	      imm_expr->X_op = O_absent;
+	      s = expr_end;
+	      continue;
+	    default:
+	      as_bad (_("bad FUNCT field specifier 'F%c'\n"), *args);
+	    }
+	  break;
+
 	default:
 	  as_fatal (_("internal error: bad argument type %c"), *args);
 	}
@@ -1684,7 +1885,7 @@ jump:
 
 static const char *
 riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
-	  bfd_reloc_code_real_type *imm_reloc)
+	  bfd_reloc_code_real_type *imm_reloc, struct hash_control *hash)
 {
   char *s;
   struct riscv_opcode *insn;
@@ -1701,7 +1902,7 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 	break;
       }
 
-  insn = (struct riscv_opcode *) hash_find (op_hash, str);
+  insn = (struct riscv_opcode *) hash_find (hash, str);
 
   for ( ; insn && insn->name && strcmp (insn->name, str) == 0; insn++)
     {
@@ -1734,7 +1935,7 @@ md_assemble (char *str)
   expressionS imm_expr;
   bfd_reloc_code_real_type imm_reloc = BFD_RELOC_UNUSED;
 
-  const char *error = riscv_ip (str, &insn, &imm_expr, &imm_reloc);
+  const char *error = riscv_ip (str, &insn, &imm_expr, &imm_reloc, op_hash);
 
   if (error)
     {
@@ -2594,6 +2795,37 @@ s_riscv_leb128 (int sign)
   return s_leb128 (sign);
 }
 
+static void
+s_riscv_insn (int x ATTRIBUTE_UNUSED)
+{
+  char *str = input_line_pointer;
+  struct riscv_cl_insn insn;
+  expressionS imm_expr;
+  bfd_reloc_code_real_type imm_reloc = BFD_RELOC_UNUSED;
+  char *n = strchr (str, '\n');
+  if (n)
+    *n = '\0';
+
+  const char *error = riscv_ip (str, &insn, &imm_expr,
+				&imm_reloc, insn_type_hash);
+
+  if (n)
+    input_line_pointer = n;
+  else
+    while (*input_line_pointer++);
+
+  if (error)
+    {
+      as_bad ("%s `%s'", error, str);
+      return;
+    }
+
+  if (insn.insn_mo->pinfo == INSN_MACRO)
+    macro (&insn, &imm_expr, &imm_reloc);
+  else
+    append_insn (&insn, &imm_expr, imm_reloc);
+}
+
 /* Pseudo-op table.  */
 
 static const pseudo_typeS riscv_pseudo_table[] =
@@ -2608,6 +2840,7 @@ static const pseudo_typeS riscv_pseudo_table[] =
   {"bss", s_bss, 0},
   {"uleb128", s_riscv_leb128, 0},
   {"sleb128", s_riscv_leb128, 1},
+  {"insn", s_riscv_insn, 0},
 
   { NULL, NULL, 0 },
 };
