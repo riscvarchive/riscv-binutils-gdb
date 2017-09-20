@@ -686,3 +686,29 @@ const struct riscv_opcode riscv_opcodes[] =
 /* Terminate the list.  */
 {0, 0, 0, 0, 0, 0, 0}
 };
+
+const struct riscv_opcode riscv_insn_types[] =
+{
+/* name,  isa,           operands, match, mask,    match_func, pinfo.  */
+{"r",     "I",   "O4,F3,F7,d,s,t",     0,    0,  match_opcode, 0 },
+{"i",     "I",   "O4,F3,F7,d,s,j",     0,    0,  match_opcode, 0 },
+{"s",     "I",   "O4,F3,F7,t,s,q",     0,    0,  match_opcode, 0 },
+{"s",     "I",  "O4,F3,F7,t,q(s)",     0,    0,  match_opcode, 0 },
+{"b",    "I",   "O4,F3,F7,d,o(s)",     0,    0,  match_opcode, 0 },
+{"u",     "I",     "O4,F3,F7,d,u",     0,    0,  match_opcode, 0 },
+{"j",    "I",      "O4,F3,F7,d,a",     0,    0,  match_opcode, 0 },
+{"r4",    "I", "O4,F3,F7,d,s,t,r",     0,    0,  match_opcode, 0 },
+{"cr",    "C",      "O2,CF4,d,CV",     0,    0,  match_opcode, 0 },
+{"ci",    "C",      "O2,CF3,d,Cj",     0,    0,  match_opcode, 0 },
+{"css",   "C", "O2,CF3,CV,CM(Cc)",     0,    0,  match_opcode, 0 },
+{"css",   "C",  "O2,CF3,CV,Cc,CM",     0,    0,  match_opcode, 0 },
+{"ciw",   "C",  "O2,CF3,Ct,Cc,CK",     0,    0,  match_opcode, 0 },
+{"cl",    "C", "O2,CF3,Ct,Ck(Cs)",     0,    0,  match_opcode, 0 },
+{"cl",    "C",  "O2,CF3,Ct,Cs,Ck",     0,    0,  match_opcode, 0 },
+{"cs",    "C", "O2,CF3,Ct,Ck(Cs)",     0,    0,  match_opcode, 0 },
+{"cs",    "C",  "O2,CF3,Ct,Cs,Ck",     0,    0,  match_opcode, 0 },
+{"cb",    "C",     "O2,CF3,Cs,Cp",     0,    0,  match_opcode, 0 },
+{"cj",    "C",        "O2,CF3,Ca",     0,    0,  match_opcode, 0 },
+/* Terminate the list.  */
+{0, 0, 0, 0, 0, 0, 0}
+};
