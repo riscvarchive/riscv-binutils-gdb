@@ -1,3 +1,12 @@
+2017-10-09  H.J. Lu  <hongjiu.lu@intel.com>
+
+	PR ld/22274
+	* elfnn-riscv.c (riscv_elf_link_hash_table): Add max_alignment.
+	(riscv_elf_link_hash_table_create): Initialize max_alignment to
+	(bfd_vma) -1.
+	(_bfd_riscv_relax_section): Cache the max alignment of output
+	sections if possible.
+
 2017-09-07  Palmer Dabbelt  <palmer@dabbelt.com>
 
 	* (_bfd_riscv_relax_align): Call bfd_set_error and
