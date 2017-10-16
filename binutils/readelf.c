@@ -12042,6 +12042,80 @@ target_specific_reloc_handling (Elf_Internal_Rela * reloc,
 	  }
 	break;
       }
+
+    case EM_RISCV:
+      {
+	static bfd_vma saved_sym1 = 0;
+	static bfd_vma saved_sym2 = 0;
+	bfd_vma size_bytes, multiplier, value;
+
+	switch (reloc_type)
+	  {
+	  case 1: /* R_RISCV_32 */
+	    size_bytes = 4;
+	    multiplier = 0;
+	    goto handle_abs_reloc;
+	  case 2: /* R_RISCV_64 */
+	    size_bytes = 8;
+	    multiplier = 0;
+	    goto handle_abs_reloc;
+
+	  case 33: /* R_RISCV_ADD8  */
+	    size_bytes = 1;
+	    multiplier = 1;
+	    goto handle_add_sub_reloc;
+	  case 34: /* R_RISCV_ADD16 */
+	    size_bytes = 2;
+	    multiplier = 1;
+	    goto handle_add_sub_reloc;
+	  case 35: /* R_RISCV_ADD32 */
+	    size_bytes = 4;
+	    multiplier = 1;
+	    goto handle_add_sub_reloc;
+	  case 36: /* R_RISCV_ADD64 */
+	    size_bytes = 8;
+	    multiplier = 1;
+	    goto handle_add_sub_reloc;
+	  case 37: /* R_RISCV_SUB8  */
+	    size_bytes = 1;
+	    multiplier = -1;
+	    goto handle_add_sub_reloc;
+	  case 38: /* R_RISCV_SUB16 */
+	    size_bytes = 2;
+	    multiplier = -1;
+	    goto handle_add_sub_reloc;
+	  case 39: /* R_RISCV_SUB32 */
+	    size_bytes = 4;
+	    multiplier = -1;
+	    goto handle_add_sub_reloc;
+	  case 40: /* R_RISCV_SUB64 */
+	    size_bytes = 8;
+	    multiplier = -1;
+	    goto handle_add_sub_reloc;
+
+	  default:
+	    return FALSE;
+	  }
+
+	handle_abs_reloc:
+	  /* This symbol is an absolute address, so just push it onto the
+	   * stack.  */
+	  saved_sym2 = saved_sym1;
+	  saved_sym1 = symtab[sym_index].st_value + reloc->r_addend;
+	  return FALSE;
+
+	handle_add_sub_reloc:
+	  /* This symbol is a sum or difference, so compute the original value
+	   * of the relocation by looking at the previous two symbol values.  */
+	  saved_sym2 = saved_sym1;
+	  saved_sym1 = symtab[sym_index].st_value + reloc->r_addend;
+
+	  value = (multiplier * saved_sym1) + (-1 * multiplier * saved_sym2);
+	  if (IN_RANGE (start, end, start + reloc->r_offset, size_bytes)) {
+	    byte_put(start + reloc->r_offset, value, size_bytes);
+	  }
+	  return TRUE;
+      }
     }
 
   return FALSE;
