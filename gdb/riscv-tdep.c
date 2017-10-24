@@ -185,13 +185,13 @@ static struct cmd_list_element *setriscvcmdlist = NULL;
 static struct cmd_list_element *showriscvcmdlist = NULL;
 
 static void
-show_riscv_command (char *args, int from_tty)
+show_riscv_command (const char *args, int from_tty)
 {
   help_list (showriscvcmdlist, "show riscv ", all_commands, gdb_stdout);
 }
 
 static void
-set_riscv_command (char *args, int from_tty)
+set_riscv_command (const char *args, int from_tty)
 {
   printf_unfiltered
     ("\"set riscv\" must be followed by an appropriate subcommand.\n");
