@@ -456,28 +456,6 @@ riscv_return_value (struct gdbarch  *gdbarch,
   return RETURN_VALUE_REGISTER_CONVENTION;
 }
 
-/* Implement the pseudo_register_read gdbarch method.  */
-
-static enum register_status
-riscv_pseudo_register_read (struct gdbarch *gdbarch,
-			    struct regcache *regcache,
-			    int regnum,
-			    gdb_byte *buf)
-{
-  return regcache_raw_read (regcache, regnum, buf);
-}
-
-/* Implement the pseudo_register_write gdbarch method.  */
-
-static void
-riscv_pseudo_register_write (struct gdbarch *gdbarch,
-			     struct regcache *regcache,
-			     int cookednum,
-			     const gdb_byte *buf)
-{
-  regcache_raw_write (regcache, cookednum, buf);
-}
-
 /* Implement the register_type gdbarch method.  */
 
 static struct type *
@@ -1286,10 +1264,7 @@ riscv_gdbarch_init (struct gdbarch_info info,
   set_gdbarch_sw_breakpoint_from_kind (gdbarch, riscv_sw_breakpoint_from_kind);
 
   /* Register architecture.  */
-  set_gdbarch_pseudo_register_read (gdbarch, riscv_pseudo_register_read);
-  set_gdbarch_pseudo_register_write (gdbarch, riscv_pseudo_register_write);
   set_gdbarch_num_regs (gdbarch, RISCV_NUM_REGS);
-  set_gdbarch_num_pseudo_regs (gdbarch, RISCV_NUM_REGS);
   set_gdbarch_sp_regnum (gdbarch, RISCV_SP_REGNUM);
   set_gdbarch_pc_regnum (gdbarch, RISCV_PC_REGNUM);
   set_gdbarch_ps_regnum (gdbarch, RISCV_FP_REGNUM);
