@@ -80,7 +80,7 @@ struct riscv_frame_cache
 static const char * const riscv_gdb_reg_names[RISCV_LAST_FP_REGNUM + 1] =
 {
   "zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
-  "fp", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
+  "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
   "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7",
   "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6",
   "pc",
@@ -107,7 +107,7 @@ static const struct register_alias riscv_register_aliases[] =
   { "x6", 6 },
   { "x7", 7 },
   { "x8", 8 },
-  { "s0", 8 },
+  { "fp", 8 },
   { "x9", 9 },
   { "x10", 10 },
   { "x11", 11 },
