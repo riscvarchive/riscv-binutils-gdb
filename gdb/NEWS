@@ -1,6 +1,21 @@
 		What has changed in GDB?
 	     (Organized release by release)
 
+*** Changes since GDB 8.1
+
+* 'info proc' now works on running processes on FreeBSD systems and core
+  files created on FreeBSD systems.
+
+* New commands
+
+set debug fbsd-nat
+show debug fbsd-nat
+  Control display of debugging info regarding the FreeBSD native target.
+
+* New targets
+
+RiscV ELF			riscv*-*-elf
+
 *** Changes in GDB 8.1
 
 * GDB now supports dynamically creating arbitrary register groups specified
