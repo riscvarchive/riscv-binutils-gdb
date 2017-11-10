@@ -2025,7 +2025,8 @@ gdbarch_num_regs (struct gdbarch *gdbarch)
   /* Check variable changed from pre-default.  */
   gdb_assert (gdbarch->num_regs != -1);
   if (gdbarch_debug >= 2)
-    fprintf_unfiltered (gdb_stdlog, "gdbarch_num_regs called\n");
+    fprintf_unfiltered (gdb_stdlog, "gdbarch_num_regs called -> %d\n",
+                        gdbarch->num_regs);
   return gdbarch->num_regs;
 }
 
@@ -2033,6 +2034,9 @@ void
 set_gdbarch_num_regs (struct gdbarch *gdbarch,
                       int num_regs)
 {
+  if (gdbarch_debug >= 2)
+    fprintf_unfiltered (gdb_stdlog, "set_gdbarch_num_regs(%d) called\n",
+                        num_regs);
   gdbarch->num_regs = num_regs;
 }
 
@@ -2042,7 +2046,8 @@ gdbarch_num_pseudo_regs (struct gdbarch *gdbarch)
   gdb_assert (gdbarch != NULL);
   /* Skip verify of num_pseudo_regs, invalid_p == 0 */
   if (gdbarch_debug >= 2)
-    fprintf_unfiltered (gdb_stdlog, "gdbarch_num_pseudo_regs called\n");
+    fprintf_unfiltered (gdb_stdlog, "gdbarch_num_pseudo_regs called -> %d\n",
+                        gdbarch->num_pseudo_regs);
   return gdbarch->num_pseudo_regs;
 }
 
@@ -3592,7 +3597,8 @@ gdbarch_register_reggroup_p (struct gdbarch *gdbarch, int regnum, struct reggrou
   gdb_assert (gdbarch != NULL);
   gdb_assert (gdbarch->register_reggroup_p != NULL);
   if (gdbarch_debug >= 2)
-    fprintf_unfiltered (gdb_stdlog, "gdbarch_register_reggroup_p called\n");
+    fprintf_unfiltered (gdb_stdlog, "gdbarch_register_reggroup_p(%d) called\n",
+                        regnum);
   return gdbarch->register_reggroup_p (gdbarch, regnum, reggroup);
 }
 
