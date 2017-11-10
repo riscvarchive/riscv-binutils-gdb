@@ -60,6 +60,7 @@
 #include "common-defs.h"
 #include "opcode/riscv-opc.h"
 #include <algorithm>
+#include <map>
 
 #define DECLARE_INSN(INSN_NAME, INSN_MATCH, INSN_MASK) \
 static inline bool is_ ## INSN_NAME ## _insn (long insn) \
@@ -75,19 +76,92 @@ struct riscv_frame_cache
   struct trad_frame_saved_reg *saved_regs;
 };
 
-/* Use the ABI names here because Eclipse can't display names besides what we
- * declare here, and users want to see the ABI names in any case. */
-static const char * const riscv_gdb_reg_names[RISCV_LAST_FP_REGNUM + 1] =
+struct riscv_reg_info
 {
-  "zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
-  "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
-  "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7",
-  "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6",
-  "pc",
-  "ft0", "ft1", "ft2", "ft3", "ft4", "ft5", "ft6", "ft7",
-  "fs0", "fs1", "fa0", "fa1", "fa2", "fa3", "fa4", "fa5",
-  "fa6", "fa7", "fs2", "fs3", "fs4", "fs5", "fs6", "fs7",
-  "fs8", "fs9", "fs10", "fs11", "ft8", "ft9", "ft10", "ft11",
+  int number;
+  // The first name in this list is the one that is considered the canonical
+  // name of the register. This is both the name used internally when possible
+  // as well as the name the user sees. (gdb does not have a concept of
+  // separating those two.)
+  std::vector<const char*> names;
+  // We can't debug a target that doesn't have this register.
+  bool required;
+  const char *feature_name;
+  struct reggroup *group;
+  // Width in bits, 0 for unknown or not present.
+  unsigned width;
+};
+
+static std::vector<struct riscv_reg_info> riscv_reg_info = {
+  {RISCV_ZERO_REGNUM, {"zero", "x0"}, false, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_RA_REGNUM, {"ra", "x1"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_SP_REGNUM, {"sp", "x2"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_GP_REGNUM, {"gp", "x3"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_TP_REGNUM, {"tp", "x4"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_T0_REGNUM, {"t0", "x5"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_T1_REGNUM, {"t1", "x6"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_T2_REGNUM, {"t2", "x7"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_FP_REGNUM, {"s0", "x8", "fp"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_S1_REGNUM, {"s1", "x9"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_A0_REGNUM, {"a0", "x10"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_A1_REGNUM, {"a1", "x11"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_A2_REGNUM, {"a2", "x12"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_A3_REGNUM, {"a3", "x13"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_A4_REGNUM, {"a4", "x14"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_A5_REGNUM, {"a5", "x15"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_A6_REGNUM, {"a6", "x16"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_A7_REGNUM, {"a7", "x17"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_S2_REGNUM, {"s2", "x18"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_S3_REGNUM, {"s3", "x19"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_S4_REGNUM, {"s4", "x20"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_S5_REGNUM, {"s5", "x21"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_S6_REGNUM, {"s6", "x22"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_S7_REGNUM, {"s7", "x23"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_S8_REGNUM, {"s8", "x24"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_S9_REGNUM, {"s9", "x25"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_S10_REGNUM, {"s10", "x26"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_S11_REGNUM, {"s11", "x27"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_T3_REGNUM, {"t3", "x28"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_T4_REGNUM, {"t4", "x29"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_T5_REGNUM, {"t5", "x30"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_T6_REGNUM, {"t6", "x31"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+
+  {RISCV_PC_REGNUM, {"pc"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+
+  {RISCV_FT0_REGNUM, {"f0", "ft0"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FT1_REGNUM, {"f1", "ft1"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FT2_REGNUM, {"f2", "ft2"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FT3_REGNUM, {"f3", "ft3"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FT4_REGNUM, {"f4", "ft4"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FT5_REGNUM, {"f5", "ft5"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FT6_REGNUM, {"f6", "ft6"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FT7_REGNUM, {"f7", "ft7"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FS0_REGNUM, {"f8", "fs0"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FS1_REGNUM, {"f9", "fs1"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FA0_REGNUM, {"f10", "fa0"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FA1_REGNUM, {"f11", "fa1"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FA2_REGNUM, {"f12", "fa2"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FA3_REGNUM, {"f13", "fa3"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FA4_REGNUM, {"f14", "fa4"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FA5_REGNUM, {"f15", "fa5"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FA6_REGNUM, {"f16", "fa6"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FA7_REGNUM, {"f17", "fa7"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FS2_REGNUM, {"f18", "fs2"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FS3_REGNUM, {"f19", "fs3"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FS4_REGNUM, {"f20", "fs4"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FS5_REGNUM, {"f21", "fs5"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FS6_REGNUM, {"f22", "fs6"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FS7_REGNUM, {"f23", "fs7"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FS8_REGNUM, {"f24", "fs8"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FS9_REGNUM, {"f25", "fs9"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FS10_REGNUM, {"f26", "fs10"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FS11_REGNUM, {"f27", "fs11"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FT8_REGNUM, {"f28", "ft8"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FT9_REGNUM, {"f29", "ft9"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FT10_REGNUM, {"f30", "ft10"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FT11_REGNUM, {"f31", "ft11"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+
+  {RISCV_PRIV_REGNUM, {"priv"}, false, "org.gnu.gdb.riscv.virtual", general_reggroup},
 };
 
 struct register_alias
@@ -98,72 +172,6 @@ struct register_alias
 
 static const struct register_alias riscv_register_aliases[] =
 {
-  { "x0", 0 },
-  { "x1", 1 },
-  { "x2", 2 },
-  { "x3", 3 },
-  { "x4", 4 },
-  { "x5", 5 },
-  { "x6", 6 },
-  { "x7", 7 },
-  { "x8", 8 },
-  { "fp", 8 },
-  { "x9", 9 },
-  { "x10", 10 },
-  { "x11", 11 },
-  { "x12", 12 },
-  { "x13", 13 },
-  { "x14", 14 },
-  { "x15", 15 },
-  { "x16", 16 },
-  { "x17", 17 },
-  { "x18", 18 },
-  { "x19", 19 },
-  { "x20", 20 },
-  { "x21", 21 },
-  { "x22", 22 },
-  { "x23", 23 },
-  { "x24", 24 },
-  { "x25", 25 },
-  { "x26", 26 },
-  { "x27", 27 },
-  { "x28", 28 },
-  { "x29", 29 },
-  { "x30", 30 },
-  { "x31", 31 },
-  /* pc is 32.  */
-  { "f0", 33 },
-  { "f1", 34 },
-  { "f2", 35 },
-  { "f3", 36 },
-  { "f4", 37 },
-  { "f5", 38 },
-  { "f6", 39 },
-  { "f7", 40 },
-  { "f8", 41 },
-  { "f9", 42 },
-  { "f10", 43 },
-  { "f11", 44 },
-  { "f12", 45 },
-  { "f13", 46 },
-  { "f14", 47 },
-  { "f15", 48 },
-  { "f16", 49 },
-  { "f17", 50 },
-  { "f18", 51 },
-  { "f19", 52 },
-  { "f20", 53 },
-  { "f21", 54 },
-  { "f22", 55 },
-  { "f23", 56 },
-  { "f24", 57 },
-  { "f25", 58 },
-  { "f26", 59 },
-  { "f27", 60 },
-  { "f28", 61 },
-  { "f29", 62 },
-  { "f30", 63 },
-  { "f31", 64 },
 #define DECLARE_CSR(name, num) { #name, (num) + 65 },
 #include "opcode/riscv-opc.h"
 #undef DECLARE_CSR
@@ -282,49 +290,24 @@ value_of_riscv_user_reg (struct frame_info *frame, const void *baton)
   return value_of_register (*reg_p, frame);
 }
 
-static const char *
-register_name (struct gdbarch *gdbarch,
-	       int regnum,
-	       int prefer_alias)
-{
-  int i;
-  static char buf[20];
-
-  if (tdesc_has_registers (gdbarch_target_desc (gdbarch)))
-    return tdesc_register_name (gdbarch, regnum);
-  /* Prefer to use the alias. */
-  if (prefer_alias &&
-      regnum >= RISCV_ZERO_REGNUM && regnum <= RISCV_LAST_REGNUM)
-    {
-      for (i = 0; i < ARRAY_SIZE (riscv_register_aliases); ++i)
-	if (regnum == riscv_register_aliases[i].regnum)
-	  return riscv_register_aliases[i].name;
-    }
-
-  if (regnum >= RISCV_ZERO_REGNUM && regnum <= RISCV_LAST_FP_REGNUM)
-      return riscv_gdb_reg_names[regnum];
-
-  if (regnum >= RISCV_FIRST_CSR_REGNUM && regnum <= RISCV_LAST_CSR_REGNUM)
-    {
-      sprintf(buf, "csr%d", regnum - RISCV_FIRST_CSR_REGNUM);
-      return buf;
-    }
-
-  if (regnum == RISCV_PRIV_REGNUM)
-    {
-      return "priv";
-    }
-
-  return NULL;
-}
-
 /* Implement the register_name gdbarch method.  */
 
 static const char *
 riscv_register_name (struct gdbarch *gdbarch,
 		     int regnum)
 {
-  return register_name(gdbarch, regnum, 0);
+  int i;
+  static char buf[20];
+
+  for (auto reg_info = riscv_reg_info.begin();
+       reg_info != riscv_reg_info.end(); ++reg_info)
+    if (reg_info->number == regnum)
+      return reg_info->names[0];
+
+  if (tdesc_has_registers (gdbarch_target_desc (gdbarch)))
+    return tdesc_register_name (gdbarch, regnum);
+
+  return NULL;
 }
 
 /* Reads a function return value of type TYPE.  */
@@ -567,12 +550,20 @@ riscv_print_register_formatted (struct ui_file *file, struct frame_info *frame,
       if (!deprecated_frame_register_read (frame, regnum, raw_buffer))
 	{
 	  fprintf_filtered (file, "%-15s[Invalid]\n",
+<<<<<<< HEAD
                             register_name (gdbarch, regnum, prefer_alias));
 	  return;
 	}
 
       fprintf_filtered (file, "%-15s", register_name (gdbarch, regnum,
                   prefer_alias));
+=======
+			    riscv_register_name (gdbarch, regnum));
+	  return;
+	}
+
+      fprintf_filtered (file, "%-15s", riscv_register_name (gdbarch, regnum));
+>>>>>>> Checkpoint. XML registers pass spike32 tests.
       if (gdbarch_byte_order (gdbarch) == BFD_ENDIAN_BIG)
 	offset = register_size (gdbarch, regnum) - register_size (gdbarch, regnum);
       else
@@ -705,58 +696,21 @@ riscv_print_register_formatted (struct ui_file *file, struct frame_info *frame,
 }
 
 /* Implement the register_reggroup_p gdbarch method.  */
-
 static int
 riscv_register_reggroup_p (struct gdbarch  *gdbarch,
 			   int regnum,
 			   struct reggroup *reggroup)
 {
-  int float_p;
-  int raw_p;
-  unsigned int i;
-
-  /* Used by 'info registers' and 'info registers <groupname>'.  */
-
-  if (gdbarch_register_name (gdbarch, regnum) == NULL
-      || gdbarch_register_name (gdbarch, regnum)[0] == '\0')
-    return 0;
-
-  if (reggroup == all_reggroup) {
-    if (regnum < RISCV_FIRST_CSR_REGNUM || regnum == RISCV_PRIV_REGNUM)
-      return 1;
-    /* Only include CSRs that have aliases.  */
-    for (i = 0; i < ARRAY_SIZE (riscv_register_aliases); ++i) {
-	if (regnum == riscv_register_aliases[i].regnum)
+  for (auto reg_info = riscv_reg_info.begin();
+       reg_info != riscv_reg_info.end(); ++reg_info)
+    if (reg_info->number == regnum)
+      {
+        if (reggroup == all_reggroup)
           return 1;
-    }
-    return 0;
-  } else if (reggroup == float_reggroup)
-    return (regnum >= RISCV_FIRST_FP_REGNUM && regnum <= RISCV_LAST_FP_REGNUM)
-	    || (regnum == RISCV_CSR_FCSR_REGNUM
-	        || regnum == RISCV_CSR_FFLAGS_REGNUM
-	        || regnum == RISCV_CSR_FRM_REGNUM);
-  else if (reggroup == general_reggroup)
-    return regnum < RISCV_FIRST_FP_REGNUM;
-  else if (reggroup == restore_reggroup || reggroup == save_reggroup) {
-    if (cached_misa() & ((1<<('F'-'A')) | (1<<('D'-'A')) | (1<<('Q'-'A'))))
-      return regnum <= RISCV_LAST_FP_REGNUM;
-    else
-      return regnum < RISCV_FIRST_FP_REGNUM;
-  } else if (reggroup == system_reggroup) {
-    if (regnum == RISCV_PRIV_REGNUM)
-      return 1;
-    if (regnum < RISCV_FIRST_CSR_REGNUM || regnum > RISCV_LAST_CSR_REGNUM)
-      return 0;
-    /* Only include CSRs that have aliases.  */
-    for (i = 0; i < ARRAY_SIZE (riscv_register_aliases); ++i) {
-	if (regnum == riscv_register_aliases[i].regnum)
-          return 1;
-    }
-    return 0;
-  } else if (reggroup == vector_reggroup)
-    return 0;
-  else
-    internal_error (__FILE__, __LINE__, _("unhandled reggroup"));
+        return reg_info->group == reggroup;
+      }
+
+  return 0;
 }
 
 /* Implement the print_registers_info gdbarch method.  */
@@ -773,10 +727,18 @@ riscv_print_registers_info (struct gdbarch    *gdbarch,
 
   if (regnum != -1)
     {
+<<<<<<< HEAD
       /* Print one specified register.  */
       gdb_assert (regnum <= RISCV_LAST_REGNUM);
       int prefer_alias = regnum >= RISCV_FIRST_CSR_REGNUM;
       if (NULL == register_name (gdbarch, regnum, prefer_alias))
+=======
+      /* Print one specified register.
+       * gdb might ask us to print a register that we don't know about, because
+       * it's in the target description. That still works, because we can ask
+       * gdb to give us register name and contents by number. */
+      if (NULL == riscv_register_name (gdbarch, regnum))
+>>>>>>> Checkpoint. XML registers pass spike32 tests.
         error (_("Not a valid register for the current processor type"));
       riscv_print_register_formatted (file, frame, regnum);
       return;
@@ -1208,7 +1170,7 @@ riscv_gdbarch_init (struct gdbarch_info info,
   struct gdbarch_tdep *tdep;
   const struct bfd_arch_info *binfo = info.bfd_arch_info;
 
-  int abi, i;
+  int abi;
 
   /* For now, base the abi on the elf class.  */
   /* Allow the ELF class to override the register size. Ideally the target
@@ -1268,13 +1230,6 @@ riscv_gdbarch_init (struct gdbarch_info info,
   set_gdbarch_breakpoint_kind_from_pc (gdbarch, riscv_breakpoint_kind_from_pc);
   set_gdbarch_sw_breakpoint_from_kind (gdbarch, riscv_sw_breakpoint_from_kind);
 
-  /* Register architecture.  */
-  set_gdbarch_num_regs (gdbarch, RISCV_NUM_REGS);
-  set_gdbarch_sp_regnum (gdbarch, RISCV_SP_REGNUM);
-  set_gdbarch_pc_regnum (gdbarch, RISCV_PC_REGNUM);
-  set_gdbarch_ps_regnum (gdbarch, RISCV_FP_REGNUM);
-  set_gdbarch_deprecated_fp_regnum (gdbarch, RISCV_FP_REGNUM);
-
   /* Functions to supply register information.  */
   set_gdbarch_register_name (gdbarch, riscv_register_name);
   set_gdbarch_register_type (gdbarch, riscv_register_type);
@@ -1301,42 +1256,131 @@ riscv_gdbarch_init (struct gdbarch_info info,
   dwarf2_append_unwinders (gdbarch);
   frame_unwind_append_unwinder (gdbarch, &riscv_frame_unwind);
 
-  /* Check any target description for validity.  */
+  /* Register time!
+   * We support two ways of dealing with registers:
+   * 1. The server sends gdb an XML description of its registers. This is what
+   * gdb calls tdesc. This way the server can also let us know what registers
+   * actually exist on the target.
+   * 2. Communicate with the target using register numbers only.
+   */
+
+  // First, for our own records, build a structure with all relevant
+  // information about registers.
+  // riscv_reg_info statically gets info about all registers except for the
+  // CSRs. We add those programmatically because there are many of them.
+  struct {
+      const char *name;
+      unsigned num;
+  } named_csr[] = {
+#define DECLARE_CSR(name, num) {#name, RISCV_ ## num ## _REGNUM},
+#include "opcode/riscv-opc.h"
+#undef DECLARE_CSR
+  };
+
+  static bool reg_info_built = false;
+  if (!reg_info_built)
+    {
+      for (unsigned i = 0; i < sizeof(named_csr) / sizeof(*named_csr); i++)
+        {
+          char *generic_name = (char*) malloc(8);
+          sprintf(generic_name, "csr%d", named_csr[i].num - RISCV_FIRST_CSR_REGNUM);
+          struct riscv_reg_info reg = {
+              named_csr[i].num,
+              {named_csr[i].name, generic_name},
+              false,
+              "org.gnu.gdb.riscv.csr",
+              all_reggroup,
+              0
+          };
+
+          riscv_reg_info.push_back(reg);
+        }
+      reg_info_built = true;
+    }
+
+  bool use_tdesc_registers = false;
   if (tdesc_has_registers (info.target_desc))
     {
-      const struct tdesc_feature *feature;
-      struct tdesc_arch_data *tdesc_data;
-      int valid_p;
+      use_tdesc_registers = true;
 
-      feature = tdesc_find_feature (info.target_desc, "org.gnu.gdb.riscv.cpu");
-      if (feature == NULL)
-	goto no_tdata;
+      struct tdesc_arch_data *tdesc_data = tdesc_data_alloc ();
 
-      tdesc_data = tdesc_data_alloc ();
+      std::map<int, const char*> found;
 
-      valid_p = 1;
-      for (i = RISCV_ZERO_REGNUM; i <= RISCV_LAST_FP_REGNUM; ++i)
-        valid_p &= tdesc_numbered_register (feature, tdesc_data, i,
-                                            riscv_gdb_reg_names[i]);
-      for (i = RISCV_FIRST_CSR_REGNUM; i <= RISCV_LAST_CSR_REGNUM; ++i)
+      for (auto reg_info = riscv_reg_info.begin();
+           reg_info != riscv_reg_info.end(); ++reg_info)
         {
-          char buf[20];
-          sprintf (buf, "csr%d", i - RISCV_FIRST_CSR_REGNUM);
-          valid_p &= tdesc_numbered_register (feature, tdesc_data, i, buf);
+          const struct tdesc_feature *feature =
+            tdesc_find_feature (info.target_desc, reg_info->feature_name);
+          int success = 0;
+          if (feature)
+            // Look for this register by any of its names.
+            for (auto name = reg_info->names.begin();
+                 name != reg_info->names.end(); ++name)
+              {
+                success = tdesc_numbered_register (feature, tdesc_data,
+                                                   reg_info->number, *name);
+                if (success)
+                  {
+                    found[reg_info->number] = *name;
+                    break;
+                  }
+              }
+
+          if (!success && reg_info->required)
+            {
+              use_tdesc_registers = false;
+              break;
+            }
         }
 
-      valid_p &= tdesc_numbered_register (feature, tdesc_data, i++, "priv");
+      if (use_tdesc_registers)
+        {
+          // This number apparently must be at least as large as the number of
+          // registers in the target description. (See assertion in
+          // tdesc_use_registers().) But that seems to defeat part of the point
+          // of the target description, so I might be missing something.
+          set_gdbarch_num_regs (gdbarch, RISCV_NUM_REGS);
+          set_gdbarch_sp_regnum (gdbarch, RISCV_SP_REGNUM);
+          set_gdbarch_pc_regnum (gdbarch, RISCV_PC_REGNUM);
+          set_gdbarch_ps_regnum (gdbarch, RISCV_FP_REGNUM);
+          set_gdbarch_deprecated_fp_regnum (gdbarch, RISCV_FP_REGNUM);
+          // This is going to call set_gdbarch_register_reggroup_p (and a few
+          // others; see the end of tdesc_use_registers()).
+          tdesc_use_registers (gdbarch, info.target_desc, tdesc_data);
 
-      if (!valid_p)
-	tdesc_data_cleanup (tdesc_data);
+          // Now go through again, adding aliases.
+          for (auto reg_info = riscv_reg_info.begin();
+               reg_info != riscv_reg_info.end(); ++reg_info)
+            {
+              auto match = found.find(reg_info->number);
+              if (match == found.end())
+                continue;
+              for (auto name = reg_info->names.begin();
+                   name != reg_info->names.end(); ++name)
+                {
+                  if (*name != match->second)
+                    user_reg_add (gdbarch, *name, value_of_riscv_user_reg,
+                                  &reg_info->number);
+                }
+            }
+        }
       else
-	tdesc_use_registers (gdbarch, info.target_desc, tdesc_data);
+        tdesc_data_cleanup (tdesc_data);
     }
- no_tdata:
 
-  for (i = 0; i < ARRAY_SIZE (riscv_register_aliases); ++i)
-    user_reg_add (gdbarch, riscv_register_aliases[i].name,
-		  value_of_riscv_user_reg, &riscv_register_aliases[i].regnum);
+  if (!use_tdesc_registers)
+    {
+      for (unsigned i = 0; i < ARRAY_SIZE (riscv_register_aliases); ++i) {
+          user_reg_add (gdbarch, riscv_register_aliases[i].name,
+                        value_of_riscv_user_reg, &riscv_register_aliases[i].regnum);
+      }
+      set_gdbarch_num_regs (gdbarch, RISCV_NUM_REGS);
+      set_gdbarch_sp_regnum (gdbarch, RISCV_SP_REGNUM);
+      set_gdbarch_pc_regnum (gdbarch, RISCV_PC_REGNUM);
+      set_gdbarch_ps_regnum (gdbarch, RISCV_FP_REGNUM);
+      set_gdbarch_deprecated_fp_regnum (gdbarch, RISCV_FP_REGNUM);
+    }
 
   return gdbarch;
 }
