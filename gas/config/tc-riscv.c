@@ -2220,7 +2220,13 @@ s_riscv_option (int x ATTRIBUTE_UNUSED)
   if (strcmp (name, "rvc") == 0)
     riscv_set_rvc (TRUE);
   else if (strcmp (name, "norvc") == 0)
-    riscv_set_rvc (FALSE);
+    {
+      /* Without the C extension, RISC-V mandates 4-byte instruction alignment.
+       * Users regularly forget to align their code, so we're doing it for them
+       * here.  */
+      riscv_frag_align_code(2);
+      riscv_set_rvc (FALSE);
+    }
   else if (strcmp (name, "pic") == 0)
     riscv_opts.pic = TRUE;
   else if (strcmp (name, "nopic") == 0)
