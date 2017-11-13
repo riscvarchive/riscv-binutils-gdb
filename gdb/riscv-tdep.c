@@ -559,12 +559,11 @@ riscv_register_type (struct gdbarch *gdbarch, int regnum)
 
 /* Helper for riscv_print_registers_info, prints info for a single register
    REGNUM.  */
-
 static void
 riscv_print_one_register_info (struct gdbarch *gdbarch,
-			       struct ui_file *file,
-			       struct frame_info *frame,
-			       int regnum)
+                               struct ui_file *file,
+                               struct frame_info *frame,
+                               int regnum)
 {
   const char *name = gdbarch_register_name (gdbarch, regnum);
   struct value *val = value_of_register (regnum, frame);
@@ -576,7 +575,7 @@ riscv_print_one_register_info (struct gdbarch *gdbarch,
   print_spaces_filtered (value_column_1 - strlen (name), file);
 
   print_raw_format = (value_entirely_available (val)
-		      && !value_optimized_out (val));
+                      && !value_optimized_out (val));
 
   if (TYPE_CODE (regtype) == TYPE_CODE_FLT)
     {
@@ -588,153 +587,160 @@ riscv_print_one_register_info (struct gdbarch *gdbarch,
       opts.deref_ref = 1;
 
       val_print (regtype,
-		 value_embedded_offset (val), 0,
-		 file, 0, val, &opts, current_language);
+                 value_embedded_offset (val), 0,
+                 file, 0, val, &opts, current_language);
 
       if (print_raw_format)
-	{
-	  fprintf_filtered (file, "\t(raw ");
-	  print_hex_chars (file, valaddr, TYPE_LENGTH (regtype), byte_order,
-			   true);
-	  fprintf_filtered (file, ")");
-	}
+        {
+          fprintf_filtered (file, "\t(raw ");
+          print_hex_chars (file, valaddr, TYPE_LENGTH (regtype), byte_order,
+                           true);
+          fprintf_filtered (file, ")");
+        }
     }
   else
     {
       struct value_print_options opts;
 
+      /* Print the register in hex.  */
+      get_formatted_print_options (&opts, 'x');
+      opts.deref_ref = 1;
+      val_print (regtype,
+                 value_embedded_offset (val), 0,
+                 file, 0, val, &opts, current_language);
+
       if (print_raw_format)
-	{
-	  if (regnum == RISCV_CSR_MSTATUS_REGNUM)
-	    {
-	      LONGEST d;
-	      int size = register_size (gdbarch, regnum);
-	      unsigned xlen;
+        {
+          if (regnum == RISCV_CSR_MSTATUS_REGNUM)
+            {
+              LONGEST d;
+              int size = register_size (gdbarch, regnum);
+              unsigned xlen;
 
-	      d = value_as_long (val);
-	      xlen = size * 4;
-	      fprintf_filtered (file,
-				"\tSD:%X VM:%02X MXR:%X PUM:%X MPRV:%X XS:%X "
-				"FS:%X MPP:%x HPP:%X SPP:%X MPIE:%X HPIE:%X "
-				"SPIE:%X UPIE:%X MIE:%X HIE:%X SIE:%X UIE:%X",
-				(int) ((d >> (xlen - 1)) & 0x1),
-				(int) ((d >> 24) & 0x1f),
-				(int) ((d >> 19) & 0x1),
-				(int) ((d >> 18) & 0x1),
-				(int) ((d >> 17) & 0x1),
-				(int) ((d >> 15) & 0x3),
-				(int) ((d >> 13) & 0x3),
-				(int) ((d >> 11) & 0x3),
-				(int) ((d >> 9) & 0x3),
-				(int) ((d >> 8) & 0x1),
-				(int) ((d >> 7) & 0x1),
-				(int) ((d >> 6) & 0x1),
-				(int) ((d >> 5) & 0x1),
-				(int) ((d >> 4) & 0x1),
-				(int) ((d >> 3) & 0x1),
-				(int) ((d >> 2) & 0x1),
-				(int) ((d >> 1) & 0x1),
-				(int) ((d >> 0) & 0x1));
-	    }
-	  else if (regnum == RISCV_CSR_MISA_REGNUM)
-	    {
-	      int base;
-	      unsigned xlen, i;
-	      LONGEST d;
+              d = value_as_long (val);
+              xlen = size * 4;
+              fprintf_filtered (file,
+                                "\tSD:%X VM:%02X MXR:%X PUM:%X MPRV:%X XS:%X "
+                                "FS:%X MPP:%x HPP:%X SPP:%X MPIE:%X HPIE:%X "
+                                "SPIE:%X UPIE:%X MIE:%X HIE:%X SIE:%X UIE:%X",
+                                (int) ((d >> (xlen - 1)) & 0x1),
+                                (int) ((d >> 24) & 0x1f),
+                                (int) ((d >> 19) & 0x1),
+                                (int) ((d >> 18) & 0x1),
+                                (int) ((d >> 17) & 0x1),
+                                (int) ((d >> 15) & 0x3),
+                                (int) ((d >> 13) & 0x3),
+                                (int) ((d >> 11) & 0x3),
+                                (int) ((d >> 9) & 0x3),
+                                (int) ((d >> 8) & 0x1),
+                                (int) ((d >> 7) & 0x1),
+                                (int) ((d >> 6) & 0x1),
+                                (int) ((d >> 5) & 0x1),
+                                (int) ((d >> 4) & 0x1),
+                                (int) ((d >> 3) & 0x1),
+                                (int) ((d >> 2) & 0x1),
+                                (int) ((d >> 1) & 0x1),
+                                (int) ((d >> 0) & 0x1));
+            }
+          else if (regnum == RISCV_CSR_MISA_REGNUM)
+            {
+              int base;
+              unsigned xlen, i;
+              LONGEST d;
 
-	      d = value_as_long (val);
-	      base = d >> 30;
-	      xlen = 16;
+              d = value_as_long (val);
+              base = d >> 30;
+              xlen = 16;
 
-	      for (; base > 0; base--)
-		xlen *= 2;
-	      fprintf_filtered (file, "\tRV%d", xlen);
+              for (; base > 0; base--)
+                xlen *= 2;
+              fprintf_filtered (file, "\tRV%d", xlen);
 
-	      for (i = 0; i < 26; i++)
-		{
-		  if (d & (1 << i))
-		    fprintf_filtered (file, "%c", 'A' + i);
-		}
-	    }
-	  else if (regnum == RISCV_CSR_FCSR_REGNUM
-		   || regnum == RISCV_CSR_FFLAGS_REGNUM
-		   || regnum == RISCV_CSR_FRM_REGNUM)
-	    {
-	      LONGEST d;
+              for (i = 0; i < 26; i++)
+                {
+                  if (d & (1 << i))
+                    fprintf_filtered (file, "%c", 'A' + i);
+                }
+            }
+          else if (regnum == RISCV_CSR_FCSR_REGNUM
+                   || regnum == RISCV_CSR_FFLAGS_REGNUM
+                   || regnum == RISCV_CSR_FRM_REGNUM)
+            {
+              LONGEST d;
 
-	      d = value_as_long (val);
+              d = value_as_long (val);
 
-	      fprintf_filtered (file, "\t");
-	      if (regnum != RISCV_CSR_FRM_REGNUM)
-		fprintf_filtered (file,
-				  "RD:%01X NV:%d DZ:%d OF:%d UF:%d NX:%d",
-				  (int) ((d >> 5) & 0x7),
-				  (int) ((d >> 4) & 0x1),
-				  (int) ((d >> 3) & 0x1),
-				  (int) ((d >> 2) & 0x1),
-				  (int) ((d >> 1) & 0x1),
-				  (int) ((d >> 0) & 0x1));
+              fprintf_filtered (file, "\t");
+              if (regnum != RISCV_CSR_FRM_REGNUM)
+                fprintf_filtered (file,
+                                  "RD:%01X NV:%d DZ:%d OF:%d UF:%d NX:%d",
+                                  (int) ((d >> 5) & 0x7),
+                                  (int) ((d >> 4) & 0x1),
+                                  (int) ((d >> 3) & 0x1),
+                                  (int) ((d >> 2) & 0x1),
+                                  (int) ((d >> 1) & 0x1),
+                                  (int) ((d >> 0) & 0x1));
 
-	      if (regnum != RISCV_CSR_FFLAGS_REGNUM)
-		{
-		  static const char * const sfrm[] =
-		    {
-		      "RNE (round to nearest; ties to even)",
-		      "RTZ (Round towards zero)",
-		      "RDN (Round down towards -INF)",
-		      "RUP (Round up towards +INF)",
-		      "RMM (Round to nearest; ties to max magnitude)",
-		      "INVALID[5]",
-		      "INVALID[6]",
-		      "dynamic rounding mode",
-		    };
-		  int frm = ((regnum == RISCV_CSR_FCSR_REGNUM)
-			     ? (d >> 5) : d) & 0x3;
+              if (regnum != RISCV_CSR_FFLAGS_REGNUM)
+                {
+                  static const char * const sfrm[] =
+                    {
+                      "RNE (round to nearest; ties to even)",
+                      "RTZ (Round towards zero)",
+                      "RDN (Round down towards -INF)",
+                      "RUP (Round up towards +INF)",
+                      "RMM (Round to nearest; ties to max magnitude)",
+                      "INVALID[5]",
+                      "INVALID[6]",
+                      "dynamic rounding mode",
+                    };
+                  int frm = ((regnum == RISCV_CSR_FCSR_REGNUM)
+                             ? (d >> 5) : d) & 0x3;
 
-		  fprintf_filtered (file, "%sFRM:%i [%s]",
-				    (regnum == RISCV_CSR_FCSR_REGNUM
-				     ? " " : ""),
-				    frm, sfrm[frm]);
-		}
-	    }
-	  else if (regnum == RISCV_PRIV_REGNUM)
-	    {
-	      LONGEST d;
-	      uint8_t priv;
+                  fprintf_filtered (file, "%sFRM:%i [%s]",
+                                    (regnum == RISCV_CSR_FCSR_REGNUM
+                                     ? " " : ""),
+                                    frm, sfrm[frm]);
+                }
+            }
+          else if (regnum == RISCV_PRIV_REGNUM)
+            {
+              LONGEST d;
+              uint8_t priv;
 
-	      d = value_as_long (val);
-	      priv = d & 0xff;
+              d = value_as_long (val);
+              priv = d & 0xff;
 
-	      if (priv < 4)
-		{
-		  static const char * const sprv[] =
-		    {
-		      "User/Application",
-		      "Supervisor",
-		      "Hypervisor",
-		      "Machine"
-		    };
-		  fprintf_filtered (file, "\tprv:%d [%s]",
-				    priv, sprv[priv]);
-		}
-	      else
-		fprintf_filtered (file, "\tprv:%d [INVALID]", priv);
-	    }
-	  else
-	    {
-	      /* If not a vector register, print it also according to its
-		 natural format.  */
-	      if (TYPE_VECTOR (regtype) == 0)
-		{
-		  get_user_print_options (&opts);
-		  opts.deref_ref = 1;
-		  fprintf_filtered (file, "\t");
-		  val_print (regtype,
-			     value_embedded_offset (val), 0,
-			     file, 0, val, &opts, current_language);
-		}
-	    }
-	}
+              if (priv < 4)
+                {
+                  static const char * const sprv[] =
+                    {
+                      "User/Application",
+                      "Supervisor",
+                      "Hypervisor",
+                      "Machine"
+                    };
+                  fprintf_filtered (file, "\tprv:%d [%s]",
+                                    priv, sprv[priv]);
+                }
+              else
+                fprintf_filtered (file, "\tprv:%d [INVALID]", priv);
+            }
+          else
+            {
+              /* If not a vector register, print it also according to its
+                 natural format.  */
+              if (TYPE_VECTOR (regtype) == 0)
+                {
+                  get_user_print_options (&opts);
+                  opts.deref_ref = 1;
+                  fprintf_filtered (file, "\t");
+                  val_print (regtype,
+                             value_embedded_offset (val), 0,
+                             file, 0, val, &opts, current_language);
+                }
+            }
+        }
     }
   fprintf_filtered (file, "\n");
 }
@@ -768,8 +774,6 @@ riscv_print_registers_info (struct gdbarch *gdbarch,
 {
   if (regnum != -1)
     {
-      /* Print one specified register.  */
-      gdb_assert (regnum <= RISCV_LAST_REGNUM);
       /* Print one specified register.
        * gdb might ask us to print a register that we don't know about, because
        * it's in the target description. That still works, because we can ask
