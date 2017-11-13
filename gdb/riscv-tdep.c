@@ -543,20 +543,11 @@ riscv_print_register_formatted (struct ui_file *file, struct frame_info *frame,
       if (!deprecated_frame_register_read (frame, regnum, raw_buffer))
 	{
 	  fprintf_filtered (file, "%-15s[Invalid]\n",
-<<<<<<< HEAD
-                            register_name (gdbarch, regnum, prefer_alias));
-	  return;
-	}
-
-      fprintf_filtered (file, "%-15s", register_name (gdbarch, regnum,
-                  prefer_alias));
-=======
 			    riscv_register_name (gdbarch, regnum));
 	  return;
 	}
 
       fprintf_filtered (file, "%-15s", riscv_register_name (gdbarch, regnum));
->>>>>>> Checkpoint. XML registers pass spike32 tests.
       if (gdbarch_byte_order (gdbarch) == BFD_ENDIAN_BIG)
 	offset = register_size (gdbarch, regnum) - register_size (gdbarch, regnum);
       else
@@ -720,18 +711,11 @@ riscv_print_registers_info (struct gdbarch    *gdbarch,
 
   if (regnum != -1)
     {
-<<<<<<< HEAD
-      /* Print one specified register.  */
-      gdb_assert (regnum <= RISCV_LAST_REGNUM);
-      int prefer_alias = regnum >= RISCV_FIRST_CSR_REGNUM;
-      if (NULL == register_name (gdbarch, regnum, prefer_alias))
-=======
       /* Print one specified register.
        * gdb might ask us to print a register that we don't know about, because
        * it's in the target description. That still works, because we can ask
        * gdb to give us register name and contents by number. */
       if (NULL == riscv_register_name (gdbarch, regnum))
->>>>>>> Checkpoint. XML registers pass spike32 tests.
         error (_("Not a valid register for the current processor type"));
       riscv_print_register_formatted (file, frame, regnum);
       return;
