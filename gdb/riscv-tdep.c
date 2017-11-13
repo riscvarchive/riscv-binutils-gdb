@@ -170,13 +170,6 @@ struct register_alias
   int regnum;
 };
 
-static const struct register_alias riscv_register_aliases[] =
-{
-#define DECLARE_CSR(name, num) { #name, (num) + 65 },
-#include "opcode/riscv-opc.h"
-#undef DECLARE_CSR
-};
-
 static enum auto_boolean use_compressed_breakpoints;
 /*
 static void
@@ -1371,10 +1364,14 @@ riscv_gdbarch_init (struct gdbarch_info info,
 
   if (!use_tdesc_registers)
     {
-      for (unsigned i = 0; i < ARRAY_SIZE (riscv_register_aliases); ++i) {
-          user_reg_add (gdbarch, riscv_register_aliases[i].name,
-                        value_of_riscv_user_reg, &riscv_register_aliases[i].regnum);
-      }
+      // Using the built-in list. Just need to add aliases.
+      for (auto reg_info = riscv_reg_info.begin();
+           reg_info != riscv_reg_info.end(); ++reg_info)
+        for (auto name = reg_info->names.begin() + 1;
+             name != reg_info->names.end(); ++name)
+          user_reg_add (gdbarch, *name,
+                        value_of_riscv_user_reg, &reg_info->number);
+
       set_gdbarch_num_regs (gdbarch, RISCV_NUM_REGS);
       set_gdbarch_sp_regnum (gdbarch, RISCV_SP_REGNUM);
       set_gdbarch_pc_regnum (gdbarch, RISCV_PC_REGNUM);
