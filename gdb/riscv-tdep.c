@@ -75,17 +75,19 @@ struct riscv_frame_cache
   struct trad_frame_saved_reg *saved_regs;
 };
 
+/* Use the ABI names here because Eclipse can't display names besides what we
+ * declare here, and users want to see the ABI names in any case. */
 static const char * const riscv_gdb_reg_names[RISCV_LAST_FP_REGNUM + 1] =
 {
-  "x0",  "x1",  "x2",  "x3",  "x4",  "x5",  "x6",  "x7",
-  "x8",  "x9",  "x10", "x11", "x12", "x13", "x14", "x15",
-  "x16", "x17", "x18", "x19", "x20", "x21", "x22", "x23",
-  "x24", "x25", "x26", "x27", "x28", "x29", "x30", "x31",
+  "zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
+  "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
+  "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7",
+  "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6",
   "pc",
-  "f0",  "f1",  "f2",  "f3",  "f4",  "f5",  "f6",  "f7",
-  "f8",  "f9",  "f10", "f11", "f12", "f13", "f14", "f15",
-  "f16", "f17", "f18", "f19", "f20", "f21", "f22", "f23",
-  "f24", "f25", "f26", "f27", "f28", "f29", "f30", "f31",
+  "ft0", "ft1", "ft2", "ft3", "ft4", "ft5", "ft6", "ft7",
+  "fs0", "fs1", "fa0", "fa1", "fa2", "fa3", "fa4", "fa5",
+  "fa6", "fa7", "fs2", "fs3", "fs4", "fs5", "fs6", "fs7",
+  "fs8", "fs9", "fs10", "fs11", "ft8", "ft9", "ft10", "ft11",
 };
 
 struct register_alias
@@ -96,72 +98,72 @@ struct register_alias
 
 static const struct register_alias riscv_register_aliases[] =
 {
-  { "zero", 0 },
-  { "ra", 1 },
-  { "sp", 2 },
-  { "gp", 3 },
-  { "tp", 4 },
-  { "t0", 5 },
-  { "t1", 6 },
-  { "t2", 7 },
+  { "x0", 0 },
+  { "x1", 1 },
+  { "x2", 2 },
+  { "x3", 3 },
+  { "x4", 4 },
+  { "x5", 5 },
+  { "x6", 6 },
+  { "x7", 7 },
+  { "x8", 8 },
   { "fp", 8 },
-  { "s0", 8 },
-  { "s1", 9 },
-  { "a0", 10 },
-  { "a1", 11 },
-  { "a2", 12 },
-  { "a3", 13 },
-  { "a4", 14 },
-  { "a5", 15 },
-  { "a6", 16 },
-  { "a7", 17 },
-  { "s2", 18 },
-  { "s3", 19 },
-  { "s4", 20 },
-  { "s5", 21 },
-  { "s6", 22 },
-  { "s7", 23 },
-  { "s8", 24 },
-  { "s9", 25 },
-  { "s10", 26 },
-  { "s11", 27 },
-  { "t3", 28 },
-  { "t4", 29 },
-  { "t5", 30 },
-  { "t6", 31 },
+  { "x9", 9 },
+  { "x10", 10 },
+  { "x11", 11 },
+  { "x12", 12 },
+  { "x13", 13 },
+  { "x14", 14 },
+  { "x15", 15 },
+  { "x16", 16 },
+  { "x17", 17 },
+  { "x18", 18 },
+  { "x19", 19 },
+  { "x20", 20 },
+  { "x21", 21 },
+  { "x22", 22 },
+  { "x23", 23 },
+  { "x24", 24 },
+  { "x25", 25 },
+  { "x26", 26 },
+  { "x27", 27 },
+  { "x28", 28 },
+  { "x29", 29 },
+  { "x30", 30 },
+  { "x31", 31 },
   /* pc is 32.  */
-  { "ft0", 33 },
-  { "ft1", 34 },
-  { "ft2", 35 },
-  { "ft3", 36 },
-  { "ft4", 37 },
-  { "ft5", 38 },
-  { "ft6", 39 },
-  { "ft7", 40 },
-  { "fs0", 41 },
-  { "fs1", 42 },
-  { "fa0", 43 },
-  { "fa1", 44 },
-  { "fa2", 45 },
-  { "fa3", 46 },
-  { "fa4", 47 },
-  { "fa5", 48 },
-  { "fa6", 49 },
-  { "fa7", 50 },
-  { "fs2", 51 },
-  { "fs3", 52 },
-  { "fs4", 53 },
-  { "fs5", 54 },
-  { "fs6", 55 },
-  { "fs7", 56 },
-  { "fs8", 57 },
-  { "fs9", 58 },
-  { "fs10", 59 },
-  { "fs11", 60 },
-  { "ft8", 61 },
-  { "ft9", 62 },
-  { "ft10", 63 },
-  { "ft11", 64 },
+  { "f0", 33 },
+  { "f1", 34 },
+  { "f2", 35 },
+  { "f3", 36 },
+  { "f4", 37 },
+  { "f5", 38 },
+  { "f6", 39 },
+  { "f7", 40 },
+  { "f8", 41 },
+  { "f9", 42 },
+  { "f10", 43 },
+  { "f11", 44 },
+  { "f12", 45 },
+  { "f13", 46 },
+  { "f14", 47 },
+  { "f15", 48 },
+  { "f16", 49 },
+  { "f17", 50 },
+  { "f18", 51 },
+  { "f19", 52 },
+  { "f20", 53 },
+  { "f21", 54 },
+  { "f22", 55 },
+  { "f23", 56 },
+  { "f24", 57 },
+  { "f25", 58 },
+  { "f26", 59 },
+  { "f27", 60 },
+  { "f28", 61 },
+  { "f29", 62 },
+  { "f30", 63 },
+  { "f31", 64 },
 #define DECLARE_CSR(name, num) { #name, (num) + 65 },
 #include "opcode/riscv-opc.h"
 #undef DECLARE_CSR
@@ -560,15 +562,17 @@ riscv_print_register_formatted (struct ui_file *file, struct frame_info *frame,
       /* Integer type.  */
       int offset, size;
       unsigned long long d;
+      int prefer_alias = regnum >= RISCV_FIRST_CSR_REGNUM;
 
       if (!deprecated_frame_register_read (frame, regnum, raw_buffer))
 	{
 	  fprintf_filtered (file, "%-15s[Invalid]\n",
-			    register_name (gdbarch, regnum, 1));
+                            register_name (gdbarch, regnum, prefer_alias));
 	  return;
 	}
 
-      fprintf_filtered (file, "%-15s", register_name (gdbarch, regnum, 1));
+      fprintf_filtered (file, "%-15s", register_name (gdbarch, regnum,
+                  prefer_alias));
       if (gdbarch_byte_order (gdbarch) == BFD_ENDIAN_BIG)
 	offset = register_size (gdbarch, regnum) - register_size (gdbarch, regnum);
       else
@@ -771,7 +775,8 @@ riscv_print_registers_info (struct gdbarch    *gdbarch,
     {
       /* Print one specified register.  */
       gdb_assert (regnum <= RISCV_LAST_REGNUM);
-      if (NULL == register_name (gdbarch, regnum, 1))
+      int prefer_alias = regnum >= RISCV_FIRST_CSR_REGNUM;
+      if (NULL == register_name (gdbarch, regnum, prefer_alias))
         error (_("Not a valid register for the current processor type"));
       riscv_print_register_formatted (file, frame, regnum);
       return;
