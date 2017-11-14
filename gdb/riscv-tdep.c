@@ -179,6 +179,7 @@ static std::vector<struct riscv_reg_info> riscv_reg_info = {
 
   {RISCV_PRIV_REGNUM, {"priv"}, false, false, "org.gnu.gdb.riscv.virtual", general_reggroup},
 };
+static std::map<int, struct riscv_reg_info *> riscv_reg_map;
 
 /* Maps "pretty" register names onto their GDB register number.  */
 
@@ -471,15 +472,11 @@ riscv_register_name (struct gdbarch *gdbarch,
   int i;
   static char buf[20];
 
-  for (auto reg_info = riscv_reg_info.begin();
-       reg_info != riscv_reg_info.end(); ++reg_info)
-    if (reg_info->number == regnum)
-      return reg_info->names[0];
+  auto match = riscv_reg_map.find(regnum);
+  if (match == riscv_reg_map.end())
+    return NULL;
 
-  if (tdesc_has_registers (gdbarch_target_desc (gdbarch)))
-    return tdesc_register_name (gdbarch, regnum);
-
-  return NULL;
+  return match->second->names[0];
 }
 
 /* Implement the register_type gdbarch method.  */
@@ -751,26 +748,26 @@ static int
 riscv_register_reggroup_p (struct gdbarch  *gdbarch, int regnum,
 			   struct reggroup *reggroup)
 {
-  for (auto reg_info = riscv_reg_info.begin();
-       reg_info != riscv_reg_info.end(); ++reg_info)
-    if (reg_info->number == regnum)
-      {
-        if (reggroup == all_reggroup)
-          return 1;
-        if (reggroup == restore_reggroup || reggroup == save_reggroup)
-          {
-            if (reg_info->number >= RISCV_FIRST_FP_REGNUM && reg_info->number
-                <= RISCV_LAST_FP_REGNUM)
-              return (riscv_read_misa_reg (NULL) & ((1<<('F'-'A')) |
-                                                    (1<<('D'-'A')) |
-                                                    (1<<('Q'-'A')))) ? 1 : 0;
+  auto match = riscv_reg_map.find(regnum);
+  if (match == riscv_reg_map.end())
+    return 0;
 
-            return reg_info->save_restore;
-          }
-        return reg_info->group == reggroup;
-      }
+  struct riscv_reg_info *reg = match->second;
 
-  return 0;
+  if (reggroup == all_reggroup)
+    return 1;
+
+  if (reggroup == restore_reggroup || reggroup == save_reggroup)
+    {
+      if (reg->number >= RISCV_FIRST_FP_REGNUM && reg->number
+          <= RISCV_LAST_FP_REGNUM)
+        return (riscv_read_misa_reg (NULL) & ((1<<('F'-'A')) | (1<<('D'-'A')) |
+                                              (1<<('Q'-'A')))) ? 1 : 0;
+
+      return reg->save_restore;
+    }
+
+  return reg->group == reggroup;
 }
 
 /* Implement the print_registers_info gdbarch method.  This is used by
@@ -2605,6 +2602,7 @@ riscv_gdbarch_init (struct gdbarch_info info,
               auto match = found.find(reg_info->number);
               if (match == found.end())
                 continue;
+              riscv_reg_map[reg_info->number] = &(*reg_info);
               for (auto name = reg_info->names.begin();
                    name != reg_info->names.end(); ++name)
                 {
@@ -2623,10 +2621,13 @@ riscv_gdbarch_init (struct gdbarch_info info,
       // Using the built-in list. Just need to add aliases.
       for (auto reg_info = riscv_reg_info.begin();
            reg_info != riscv_reg_info.end(); ++reg_info)
-        for (auto name = reg_info->names.begin() + 1;
-             name != reg_info->names.end(); ++name)
-          user_reg_add (gdbarch, *name,
-                        value_of_riscv_user_reg, &reg_info->number);
+        {
+          riscv_reg_map[reg_info->number] = &(*reg_info);
+          for (auto name = reg_info->names.begin() + 1;
+               name != reg_info->names.end(); ++name)
+            user_reg_add (gdbarch, *name,
+                          value_of_riscv_user_reg, &reg_info->number);
+        }
 
       set_gdbarch_num_regs (gdbarch, RISCV_NUM_REGS);
       set_gdbarch_sp_regnum (gdbarch, RISCV_SP_REGNUM);
