@@ -102,6 +102,8 @@ struct riscv_reg_info
   std::vector<const char*> names;
   // We can't debug a target that doesn't have this register.
   bool required;
+  // This register must be saved/restored by gdb around function calls.
+  bool save_restore;
   const char *feature_name;
   struct reggroup *group;
   // Width in bits, 0 for unknown or not present.
@@ -109,75 +111,75 @@ struct riscv_reg_info
 };
 
 static std::vector<struct riscv_reg_info> riscv_reg_info = {
-  {RISCV_ZERO_REGNUM, {"zero", "x0"}, false, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_RA_REGNUM, {"ra", "x1"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_SP_REGNUM, {"sp", "x2"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_GP_REGNUM, {"gp", "x3"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_TP_REGNUM, {"tp", "x4"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_T0_REGNUM, {"t0", "x5"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_T1_REGNUM, {"t1", "x6"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_T2_REGNUM, {"t2", "x7"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_FP_REGNUM, {"s0", "x8", "fp"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_S1_REGNUM, {"s1", "x9"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_A0_REGNUM, {"a0", "x10"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_A1_REGNUM, {"a1", "x11"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_A2_REGNUM, {"a2", "x12"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_A3_REGNUM, {"a3", "x13"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_A4_REGNUM, {"a4", "x14"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_A5_REGNUM, {"a5", "x15"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_A6_REGNUM, {"a6", "x16"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_A7_REGNUM, {"a7", "x17"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_S2_REGNUM, {"s2", "x18"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_S3_REGNUM, {"s3", "x19"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_S4_REGNUM, {"s4", "x20"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_S5_REGNUM, {"s5", "x21"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_S6_REGNUM, {"s6", "x22"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_S7_REGNUM, {"s7", "x23"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_S8_REGNUM, {"s8", "x24"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_S9_REGNUM, {"s9", "x25"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_S10_REGNUM, {"s10", "x26"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_S11_REGNUM, {"s11", "x27"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_T3_REGNUM, {"t3", "x28"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_T4_REGNUM, {"t4", "x29"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_T5_REGNUM, {"t5", "x30"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
-  {RISCV_T6_REGNUM, {"t6", "x31"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_ZERO_REGNUM, {"zero", "x0"}, false, false, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_RA_REGNUM, {"ra", "x1"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_SP_REGNUM, {"sp", "x2"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_GP_REGNUM, {"gp", "x3"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_TP_REGNUM, {"tp", "x4"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_T0_REGNUM, {"t0", "x5"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_T1_REGNUM, {"t1", "x6"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_T2_REGNUM, {"t2", "x7"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_FP_REGNUM, {"s0", "x8", "fp"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_S1_REGNUM, {"s1", "x9"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_A0_REGNUM, {"a0", "x10"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_A1_REGNUM, {"a1", "x11"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_A2_REGNUM, {"a2", "x12"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_A3_REGNUM, {"a3", "x13"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_A4_REGNUM, {"a4", "x14"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_A5_REGNUM, {"a5", "x15"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_A6_REGNUM, {"a6", "x16"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_A7_REGNUM, {"a7", "x17"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_S2_REGNUM, {"s2", "x18"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_S3_REGNUM, {"s3", "x19"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_S4_REGNUM, {"s4", "x20"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_S5_REGNUM, {"s5", "x21"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_S6_REGNUM, {"s6", "x22"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_S7_REGNUM, {"s7", "x23"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_S8_REGNUM, {"s8", "x24"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_S9_REGNUM, {"s9", "x25"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_S10_REGNUM, {"s10", "x26"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_S11_REGNUM, {"s11", "x27"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_T3_REGNUM, {"t3", "x28"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_T4_REGNUM, {"t4", "x29"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_T5_REGNUM, {"t5", "x30"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_T6_REGNUM, {"t6", "x31"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
 
-  {RISCV_PC_REGNUM, {"pc"}, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
+  {RISCV_PC_REGNUM, {"pc"}, true, true, "org.gnu.gdb.riscv.cpu", general_reggroup},
 
-  {RISCV_FT0_REGNUM, {"f0", "ft0"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FT1_REGNUM, {"f1", "ft1"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FT2_REGNUM, {"f2", "ft2"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FT3_REGNUM, {"f3", "ft3"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FT4_REGNUM, {"f4", "ft4"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FT5_REGNUM, {"f5", "ft5"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FT6_REGNUM, {"f6", "ft6"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FT7_REGNUM, {"f7", "ft7"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FS0_REGNUM, {"f8", "fs0"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FS1_REGNUM, {"f9", "fs1"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FA0_REGNUM, {"f10", "fa0"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FA1_REGNUM, {"f11", "fa1"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FA2_REGNUM, {"f12", "fa2"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FA3_REGNUM, {"f13", "fa3"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FA4_REGNUM, {"f14", "fa4"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FA5_REGNUM, {"f15", "fa5"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FA6_REGNUM, {"f16", "fa6"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FA7_REGNUM, {"f17", "fa7"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FS2_REGNUM, {"f18", "fs2"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FS3_REGNUM, {"f19", "fs3"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FS4_REGNUM, {"f20", "fs4"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FS5_REGNUM, {"f21", "fs5"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FS6_REGNUM, {"f22", "fs6"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FS7_REGNUM, {"f23", "fs7"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FS8_REGNUM, {"f24", "fs8"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FS9_REGNUM, {"f25", "fs9"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FS10_REGNUM, {"f26", "fs10"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FS11_REGNUM, {"f27", "fs11"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FT8_REGNUM, {"f28", "ft8"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FT9_REGNUM, {"f29", "ft9"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FT10_REGNUM, {"f30", "ft10"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
-  {RISCV_FT11_REGNUM, {"f31", "ft11"}, false, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FT0_REGNUM, {"f0", "ft0"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FT1_REGNUM, {"f1", "ft1"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FT2_REGNUM, {"f2", "ft2"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FT3_REGNUM, {"f3", "ft3"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FT4_REGNUM, {"f4", "ft4"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FT5_REGNUM, {"f5", "ft5"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FT6_REGNUM, {"f6", "ft6"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FT7_REGNUM, {"f7", "ft7"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FS0_REGNUM, {"f8", "fs0"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FS1_REGNUM, {"f9", "fs1"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FA0_REGNUM, {"f10", "fa0"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FA1_REGNUM, {"f11", "fa1"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FA2_REGNUM, {"f12", "fa2"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FA3_REGNUM, {"f13", "fa3"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FA4_REGNUM, {"f14", "fa4"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FA5_REGNUM, {"f15", "fa5"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FA6_REGNUM, {"f16", "fa6"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FA7_REGNUM, {"f17", "fa7"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FS2_REGNUM, {"f18", "fs2"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FS3_REGNUM, {"f19", "fs3"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FS4_REGNUM, {"f20", "fs4"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FS5_REGNUM, {"f21", "fs5"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FS6_REGNUM, {"f22", "fs6"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FS7_REGNUM, {"f23", "fs7"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FS8_REGNUM, {"f24", "fs8"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FS9_REGNUM, {"f25", "fs9"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FS10_REGNUM, {"f26", "fs10"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FS11_REGNUM, {"f27", "fs11"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FT8_REGNUM, {"f28", "ft8"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FT9_REGNUM, {"f29", "ft9"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FT10_REGNUM, {"f30", "ft10"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
+  {RISCV_FT11_REGNUM, {"f31", "ft11"}, false, true, "org.gnu.gdb.riscv.fpu", float_reggroup},
 
-  {RISCV_PRIV_REGNUM, {"priv"}, false, "org.gnu.gdb.riscv.virtual", general_reggroup},
+  {RISCV_PRIV_REGNUM, {"priv"}, false, false, "org.gnu.gdb.riscv.virtual", general_reggroup},
 };
 
 /* Maps "pretty" register names onto their GDB register number.  */
@@ -745,8 +747,8 @@ riscv_print_one_register_info (struct gdbarch *gdbarch,
   fprintf_filtered (file, "\n");
 }
 
-/* Implement the register_reggroup_p gdbarch method.  Is REGNUM a member
-   of REGGROUP?  */
+/* Implement the register_reggroup_p gdbarch method.  Is REGNUM a member of
+ * REGGROUP?  This is only called when there is no target description. */
 static int
 riscv_register_reggroup_p (struct gdbarch  *gdbarch, int regnum,
 			   struct reggroup *reggroup)
@@ -757,6 +759,8 @@ riscv_register_reggroup_p (struct gdbarch  *gdbarch, int regnum,
       {
         if (reggroup == all_reggroup)
           return 1;
+        if (reggroup == restore_reggroup || reggroup == save_reggroup)
+          return reg_info->save_restore;
         return reg_info->group == reggroup;
       }
 
@@ -2526,6 +2530,7 @@ riscv_gdbarch_init (struct gdbarch_info info,
           struct riscv_reg_info reg = {
               named_csr[i].num,
               {named_csr[i].name, generic_name},
+              false,
               false,
               "org.gnu.gdb.riscv.csr",
               all_reggroup,
