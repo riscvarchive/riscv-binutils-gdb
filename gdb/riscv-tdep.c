@@ -760,7 +760,15 @@ riscv_register_reggroup_p (struct gdbarch  *gdbarch, int regnum,
         if (reggroup == all_reggroup)
           return 1;
         if (reggroup == restore_reggroup || reggroup == save_reggroup)
-          return reg_info->save_restore;
+          {
+            if (reg_info->number >= RISCV_FIRST_FP_REGNUM && reg_info->number
+                <= RISCV_LAST_FP_REGNUM)
+              return (riscv_read_misa_reg (NULL) & ((1<<('F'-'A')) |
+                                                    (1<<('D'-'A')) |
+                                                    (1<<('Q'-'A')))) ? 1 : 0;
+
+            return reg_info->save_restore;
+          }
         return reg_info->group == reggroup;
       }
 
