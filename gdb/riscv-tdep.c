@@ -106,8 +106,6 @@ struct riscv_reg_info
   bool save_restore;
   const char *feature_name;
   struct reggroup *group;
-  // Width in bits, 0 for unknown or not present.
-  unsigned width;
 };
 
 static std::vector<struct riscv_reg_info> riscv_reg_info = {
@@ -2541,8 +2539,7 @@ riscv_gdbarch_init (struct gdbarch_info info,
               false,
               false,
               "org.gnu.gdb.riscv.csr",
-              all_reggroup,
-              0
+              all_reggroup
           };
 
           riscv_reg_info.push_back(reg);
