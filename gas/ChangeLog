@@ -1,3 +1,7 @@
+2017-11-14  Jim Wilson  <jimw@sifive.com>
+
+	* testsuite/gas/lns/lns.exp (lns-common-1): Add riscv*-*-* to alt list.
+
 2017-11-07  Jim Wilson  <jimw@sifive.com>
 
 	* config/tc-riscv.c (append_insn): Call frag_wane and frag_new at
