@@ -25,6 +25,7 @@
 
 #include <inttypes.h>
 #include <time.h>
+#include <ctype.h>
 #include <unistd.h>
 #include <sys/time.h>
 
