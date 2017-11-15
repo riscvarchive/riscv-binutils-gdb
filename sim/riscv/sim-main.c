@@ -139,7 +139,7 @@ store_csr (SIM_CPU *cpu, const char *name, int csr, unsigned_word *reg,
       break;
     }
 
-  TRACE_REGISTER (cpu, "wrote CSR %s = %#"PRIxTW, name, val);
+  TRACE_REGISTER (cpu, "wrote CSR %s = %#" PRIxTW, name, val);
 }
 
 static inline unsigned_word
@@ -1430,7 +1430,7 @@ execute_i (SIM_CPU *cpu, unsigned_word iw, const struct riscv_opcode *op)
       store_rd (cpu, rd, EXTEND32 (ashiftrt ((signed32)cpu->regs[rs1], cpu->regs[rs2] & 0x1f)));
       break;
     case MATCH_SRAI:
-      TRACE_INSN (cpu, "srai %s, %s, %"PRIiTW";  // %s = %s >>> %#"PRIxTW,
+      TRACE_INSN (cpu, "srai %s, %s, %" PRIiTW ";  // %s = %s >>> %#"PRIxTW,
 		  rd_name, rs1_name, shamt_imm, rd_name, rs1_name, shamt_imm);
       if (RISCV_XLEN (cpu) == 32)
 	{
@@ -1446,23 +1446,30 @@ execute_i (SIM_CPU *cpu, unsigned_word iw, const struct riscv_opcode *op)
       TRACE_INSN (cpu, "sraiw %s, %s, %"PRIiTW";  // %s = %s >>> %#"PRIxTW,
 		  rd_name, rs1_name, shamt_imm, rd_name, rs1_name, shamt_imm);
       RISCV_ASSERT_RV64 (cpu, "insn: %s", op->name);
-      store_rd (cpu, rd, EXTEND32 (ashiftrt ((signed32)cpu->regs[rs1], shamt_imm)));
+      store_rd (cpu, rd,
+		EXTEND32 (ashiftrt ((signed32)cpu->regs[rs1], shamt_imm)));
       break;
     case MATCH_SLT:
-      TRACE_INSN (cpu, "slt");
-      store_rd (cpu, rd, !!((signed_word)cpu->regs[rs1] < (signed_word)cpu->regs[rs2]));
+      TRACE_INSN (cpu, "slt %s %s %s", rd_name, rs1_name, rs2_name);
+      store_rd (cpu, rd,
+		!!((signed_word)cpu->regs[rs1] < (signed_word)cpu->regs[rs2]));
       break;
     case MATCH_SLTU:
-      TRACE_INSN (cpu, "sltu");
-      store_rd (cpu, rd, !!((unsigned_word)cpu->regs[rs1] < (unsigned_word)cpu->regs[rs2]));
+      TRACE_INSN (cpu, "sltu %s %s %s", rd_name, rs1_name, rs2_name);
+      store_rd (cpu, rd,
+		!!((unsigned_word)cpu->regs[rs1]
+		   < (unsigned_word)cpu->regs[rs2]));
       break;
     case MATCH_SLTI:
-      TRACE_INSN (cpu, "slti");
+      TRACE_INSN (cpu, "slti %s %s %" PRIiTW,
+		  rd_name, rs1_name, i_imm);
       store_rd (cpu, rd, !!((signed_word)cpu->regs[rs1] < (signed_word)i_imm));
       break;
     case MATCH_SLTIU:
-      TRACE_INSN (cpu, "sltiu");
-      store_rd (cpu, rd, !!((unsigned_word)cpu->regs[rs1] < (unsigned_word)i_imm));
+      TRACE_INSN (cpu, "sltiu %s %s %" PRIiTW,
+		  rd_name, rs1_name, i_imm);
+      store_rd (cpu, rd,
+		!!((unsigned_word)cpu->regs[rs1] < (unsigned_word)i_imm));
       break;
     case MATCH_AUIPC:
       TRACE_INSN (cpu, "auipc %s, %"PRIiTW";  // %s = pc + %"PRIiTW,
