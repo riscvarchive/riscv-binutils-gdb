@@ -2529,6 +2529,7 @@ riscv_gdbarch_init (struct gdbarch_info info,
       for (unsigned i = 0; i < sizeof(named_csr) / sizeof(*named_csr); i++)
         {
           char *generic_name = (char*) malloc(8);
+          gdb_assert(named_csr[i].num < 10000);
           sprintf(generic_name, "csr%d", named_csr[i].num - RISCV_FIRST_CSR_REGNUM);
           struct riscv_reg_info reg = {
               named_csr[i].num,

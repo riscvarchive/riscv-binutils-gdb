@@ -3597,8 +3597,8 @@ gdbarch_register_reggroup_p (struct gdbarch *gdbarch, int regnum, struct reggrou
   gdb_assert (gdbarch != NULL);
   gdb_assert (gdbarch->register_reggroup_p != NULL);
   if (gdbarch_debug >= 2)
-    fprintf_unfiltered (gdb_stdlog, "gdbarch_register_reggroup_p(%d) called\n",
-                        regnum);
+    fprintf_unfiltered (gdb_stdlog, "gdbarch_register_reggroup_p(%d, %p) called\n",
+                        regnum, reggroup);
   return gdbarch->register_reggroup_p (gdbarch, regnum, reggroup);
 }
 
