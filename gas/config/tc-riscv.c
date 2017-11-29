@@ -63,6 +63,7 @@ static const char default_arch[] = DEFAULT_ARCH;
 
 static unsigned xlen = 0; /* width of an x-register */
 static unsigned abi_xlen = 0; /* width of a pointer in the ABI */
+static bfd_boolean rve_abi = FALSE;
 
 #define LOAD_ADDRESS_INSN (abi_xlen == 64 ? "ld" : "lw")
 #define ADD32_INSN (xlen == 64 ? "addiw" : "addi")
@@ -99,9 +100,6 @@ riscv_set_rvc (bfd_boolean rvc_value)
 static void
 riscv_set_rve (bfd_boolean rve_value)
 {
-  if (rve_value)
-    elf_flags |= EF_RISCV_RVE;
-
   riscv_opts.rve = rve_value;
 }
 
@@ -1804,10 +1802,11 @@ enum float_abi {
 static enum float_abi float_abi = FLOAT_ABI_DEFAULT;
 
 static void
-riscv_set_abi (unsigned new_xlen, enum float_abi new_float_abi)
+riscv_set_abi (unsigned new_xlen, enum float_abi new_float_abi, bfd_boolean rve)
 {
   abi_xlen = new_xlen;
   float_abi = new_float_abi;
+  rve_abi = rve;
 }
 
 int
@@ -1829,21 +1828,23 @@ md_parse_option (int c, const char *arg)
 
     case OPTION_MABI:
       if (strcmp (arg, "ilp32") == 0)
-	riscv_set_abi (32, FLOAT_ABI_SOFT);
+	riscv_set_abi (32, FLOAT_ABI_SOFT, FALSE);
+      if (strcmp (arg, "ilp32e") == 0)
+	riscv_set_abi (32, FLOAT_ABI_SOFT, TRUE);
       else if (strcmp (arg, "ilp32f") == 0)
-	riscv_set_abi (32, FLOAT_ABI_SINGLE);
+	riscv_set_abi (32, FLOAT_ABI_SINGLE, FALSE);
       else if (strcmp (arg, "ilp32d") == 0)
-	riscv_set_abi (32, FLOAT_ABI_DOUBLE);
+	riscv_set_abi (32, FLOAT_ABI_DOUBLE, FALSE);
       else if (strcmp (arg, "ilp32q") == 0)
-	riscv_set_abi (32, FLOAT_ABI_QUAD);
+	riscv_set_abi (32, FLOAT_ABI_QUAD, FALSE);
       else if (strcmp (arg, "lp64") == 0)
-	riscv_set_abi (64, FLOAT_ABI_SOFT);
+	riscv_set_abi (64, FLOAT_ABI_SOFT, FALSE);
       else if (strcmp (arg, "lp64f") == 0)
-	riscv_set_abi (64, FLOAT_ABI_SINGLE);
+	riscv_set_abi (64, FLOAT_ABI_SINGLE, FALSE);
       else if (strcmp (arg, "lp64d") == 0)
-	riscv_set_abi (64, FLOAT_ABI_DOUBLE);
+	riscv_set_abi (64, FLOAT_ABI_DOUBLE, FALSE);
       else if (strcmp (arg, "lp64q") == 0)
-	riscv_set_abi (64, FLOAT_ABI_QUAD);
+	riscv_set_abi (64, FLOAT_ABI_QUAD, FALSE);
       else
 	return 0;
       break;
@@ -1901,6 +1902,9 @@ riscv_after_parse_args (void)
 	    float_abi = FLOAT_ABI_QUAD;
 	}
     }
+
+  if (rve_abi)
+    elf_flags |= EF_RISCV_RVE;
 
   /* Insert float_abi into the EF_RISCV_FLOAT_ABI field of elf_flags.  */
   elf_flags |= float_abi * (EF_RISCV_FLOAT_ABI & ~(EF_RISCV_FLOAT_ABI << 1));
