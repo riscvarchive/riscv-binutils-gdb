@@ -47,3 +47,89 @@ the soft-float calling convention.
 
 @end table
 @c man end
+
+@node RISC-V-Directives
+@cindex Machine directives
+
+@table @code
+
+@cindex @code{align} directive
+@item .align @var{size-log-2}
+Align to the given boundary, with the size gives as log2 the number of bytes to
+align to.
+
+@cindex Data directives
+@item .half @var{value}
+@itemx .word @var{value}
+@itemx .dword @var{value}
+Emits a half-word, word, or double-word value at the current position.
+
+@cindex DTP-relative data directives
+@item .dtprelword @var{value}
+@itemx .dtpreldword @var{value}
+Emits a DTP-relative word (or double-word) at the current position.
+
+@cindex BSS directive
+@item .bss
+Sets the current section to the BSS section.
+
+@cindex LEB128 directives
+@item .uleb128 @var{value}
+@itemx .sleb128 @var{value}
+Emits a signed or unsigned LEB128 value at the current position.
+
+@cindex Option directive
+@item .option @var{argument}
+Modifies RISC-V specific assembler options in-line with the assembly code.
+This is used when particular instruction sequences must be assembler with a
+specific set of options.  For example, since we relax addressing sequences to
+shorter GP-relative sequences when possible the initial load of GP must not be
+relaxed and should be emitted as something like
+
+.option push
+.option pop
+	la gp, __global_pointer$
+.option pop
+
+in order to produce the expected
+
+	lui gp, %hi(__global_pointer$)
+	addi gp, gp, %lo(__global_pointer$)
+
+instead of just
+
+	addi gp, gp, 0
+
+It's not expected that options are twiddled in this manner during regular use,
+but there are a handful of esoteric cases like the one above where users need
+to disable particular features of the assembler for particular code sequences.
+The complete list of options is shown below:
+
+@table @code
+@item push
+@itemx pop
+Pushes or pops the current option stack.  These should be used whenever
+changing an option in line with assembly code in order to ensure the user's
+command-line options are respected for the bulk of the file being assembled.
+
+@item rvc
+@itemx norvc
+Enables or disables the generation of compressed instructions.  Instructions
+are opportunistically compressed by the RISC-V assembler when possible, but
+sometimes this behavior is not desirable.
+
+@item pic
+@itemx nopic
+Enables or disables position-independent code generation.  Unless you really
+know what you're doing, this should only be at the top of a file.
+
+@item relax
+@itemx norelax
+Enables or disables relaxation.  The RISC-V assembler and linker
+opportunistically relax some code sequences, but sometimes this behavior is not
+desirable.
+@end table
+
+@cindex @code{option} directive
+
+@end table
