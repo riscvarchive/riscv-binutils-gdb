@@ -21,10 +21,22 @@
 #ifndef SIM_MAIN_H
 #define SIM_MAIN_H
 
-#include "tconfig.h"
 #include "sim-basics.h"
 #include "machs.h"
 #include "sim-base.h"
+
+typedef union FRegisterValue
+{
+  uint64_t     v[2];
+  uint32_t     w[4];
+
+  int64_t      V[2];
+  int32_t      W[4];
+
+  float        S[4];
+  double       D[2];
+
+} FRegister;
 
 struct _sim_cpu {
   union {
@@ -40,7 +52,7 @@ struct _sim_cpu {
     };
   };
   union {
-    unsigned_word fpregs[32];
+    FRegister fpregs[32];
     struct {
       /* These are the ABI names.  */
       unsigned_word ft0, ft1, ft2, ft3, ft4, ft5, ft6, ft7;
@@ -51,6 +63,7 @@ struct _sim_cpu {
     };
   };
   sim_cia pc;
+  sim_cia endbrk;
 
   struct {
 #define DECLARE_CSR(name, num) unsigned_word name;
@@ -80,7 +93,7 @@ extern void initialize_cpu (SIM_DESC, SIM_CPU *, int);
 extern void initialize_env (SIM_DESC, const char * const *argv,
 			    const char * const *env);
 
-#define DEFAULT_MEM_SIZE (16 * 1024 * 1024)
+#define DEFAULT_MEM_SIZE (64 * 1024 * 1024)
 
 #define RISCV_XLEN(cpu) MACH_WORD_BITSIZE (CPU_MACH (cpu))
 

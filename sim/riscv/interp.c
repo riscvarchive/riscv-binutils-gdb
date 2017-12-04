@@ -27,6 +27,10 @@
 
 #include "config.h"
 
+#include "libiberty.h"
+#include "bfd.h"
+#include "elf-bfd.h"
+
 #include "sim-main.h"
 #include "sim-options.h"
 
@@ -144,6 +148,27 @@ sim_open (SIM_OPEN_KIND kind, host_callback *callback,
   return sd;
 }
 
+static bfd_vma
+riscv_get_symbol (SIM_DESC sd, const char *sym)
+{
+  long symcount = STATE_PROG_SYMS_COUNT (sd);
+  asymbol **symtab = STATE_PROG_SYMS (sd);
+  int i;
+
+  for (i = 0;i < symcount; ++i)
+    {
+      if (strcmp (sym, bfd_asymbol_name (symtab[i])) == 0)
+	{
+	  bfd_vma sa;
+	  sa = bfd_asymbol_value (symtab[i]);
+	  return sa;
+	}
+    }
+
+  /* Symbol not found.  */
+  return 0;
+}
+
 /* Prepare to run a program that has already been loaded into memory.
 
    Usually you do not need to change things here.  */
@@ -154,6 +179,8 @@ sim_create_inferior (SIM_DESC sd, struct bfd *abfd,
 {
   SIM_CPU *cpu = STATE_CPU (sd, 0);
   sim_cia addr;
+  Elf_Internal_Phdr *phdr;
+  int i, phnum;
 
   /* Set the PC.  */
   if (abfd != NULL)
@@ -161,6 +188,22 @@ sim_create_inferior (SIM_DESC sd, struct bfd *abfd,
   else
     addr = 0;
   sim_pc_set (cpu, addr);
+  phdr = elf_tdata (abfd)->phdr;
+  phnum = elf_elfheader (abfd)->e_phnum;
+
+  /* Try to find _end symbol, and set it to the end of brk.  */
+  trace_load_symbols (sd);
+  cpu->endbrk = riscv_get_symbol (sd, "_end");
+
+  /* If not found, set end of brk to end of all section.  */
+  if (cpu->endbrk == 0)
+    {
+      for (i = 0; i < phnum; i++)
+	{
+	  if (phdr[i].p_paddr + phdr[i].p_memsz > cpu->endbrk)
+	    cpu->endbrk = phdr[i].p_paddr + phdr[i].p_memsz;
+	}
+    }
 
   /* Standalone mode (i.e. `run`) will take care of the argv for us in
      sim_open() -> sim_parse_args().  But in debug mode (i.e. 'target sim'
