@@ -1667,6 +1667,12 @@ struct gdbarch_info
   const struct target_desc *target_desc;
 };
 
+/* Initialize the current architecture based on INFO.  If possible,
+   re-use an architecture from ARCHES, which is a list of
+   architectures already created during this debugging session.
+
+   Called e.g. at program startup, when reading a core file, and when
+   reading a binary file.  */
 typedef struct gdbarch *(gdbarch_init_ftype) (struct gdbarch_info info, struct gdbarch_list *arches);
 typedef void (gdbarch_dump_tdep_ftype) (struct gdbarch *gdbarch, struct ui_file *file);
 
