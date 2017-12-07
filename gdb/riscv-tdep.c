@@ -90,6 +90,8 @@ struct riscv_reg_info
   bool save_restore;
   const char *feature_name;
   struct reggroup *group;
+  // This register actually exists on the target.
+  bool exists;
 };
 
 static std::vector<struct riscv_reg_info> riscv_reg_info = {
@@ -163,6 +165,7 @@ static std::vector<struct riscv_reg_info> riscv_reg_info = {
 
   {RISCV_PRIV_REGNUM, {"priv"}, false, false, "org.gnu.gdb.riscv.virtual", general_reggroup},
 };
+// Map from fixed register number to register's info.
 static std::map<int, struct riscv_reg_info *> riscv_reg_map;
 
 struct register_alias
@@ -689,6 +692,9 @@ riscv_register_reggroup_p (struct gdbarch  *gdbarch,
 
   struct riscv_reg_info *reg = match->second;
 
+  if (!reg->exists)
+    return 0;
+
   if (reggroup == all_reggroup)
     return 1;
 
@@ -1147,15 +1153,170 @@ static const struct frame_unwind riscv_frame_unwind =
   /*.prev_arch     =*/ NULL,
 };
 
+static bool
+registers_init (struct gdbarch *gdbarch, struct gdbarch_info info)
+{
+  /* Register time!
+   * We support two ways of dealing with registers:
+   * 1. The server sends gdb an XML description of its registers. This is what
+   * gdb calls tdesc. This way the server can also let us know what registers
+   * actually exist on the target.
+   * 2. Communicate with the target using register numbers only.
+   */
+
+  // First, for our own records, build a structure with all relevant
+  // information about registers.
+  // riscv_reg_info statically gets info about all registers except for the
+  // CSRs. We add those programmatically because there are many of them.
+  struct {
+      const char *name;
+      unsigned num;
+  } named_csr[] = {
+#define DECLARE_CSR(name, num) {#name, RISCV_ ## num ## _REGNUM},
+#include "opcode/riscv-opc.h"
+#undef DECLARE_CSR
+  };
+
+  static bool reg_info_built = false;
+  if (!reg_info_built)
+    {
+      for (unsigned i = 0; i < sizeof(named_csr) / sizeof(*named_csr); i++)
+        {
+          char *generic_name = (char*) malloc(8);
+          gdb_assert(named_csr[i].num < 10000);
+          sprintf(generic_name, "csr%d", named_csr[i].num - RISCV_FIRST_CSR_REGNUM);
+          struct riscv_reg_info reg = {
+              named_csr[i].num,
+              {named_csr[i].name, generic_name},
+              false,
+              false,
+              "org.gnu.gdb.riscv.csr",
+              all_reggroup
+          };
+
+          riscv_reg_info.push_back(reg);
+        }
+      for (auto reg_info = riscv_reg_info.begin();
+           reg_info != riscv_reg_info.end(); ++reg_info)
+        riscv_reg_map[reg_info->number] = &(*reg_info);
+      reg_info_built = true;
+    }
+
+  for (auto reg_info = riscv_reg_info.begin();
+       reg_info != riscv_reg_info.end(); ++reg_info)
+    {
+      // Start out assuming none of the registers exist.
+      reg_info->exists = false;
+    }
+
+  set_gdbarch_num_regs (gdbarch, RISCV_NUM_REGS);
+
+  bool use_tdesc_registers = false;
+  if (tdesc_has_registers (info.target_desc))
+    {
+      use_tdesc_registers = true;
+
+      struct tdesc_arch_data *tdesc_data = tdesc_data_alloc ();
+
+      std::map<int, const char*> found;
+
+      for (auto reg_info = riscv_reg_info.begin();
+           reg_info != riscv_reg_info.end(); ++reg_info)
+        {
+          const struct tdesc_feature *feature =
+            tdesc_find_feature (info.target_desc, reg_info->feature_name);
+          int success = 0;
+          if (feature)
+            // Look for this register by any of its names.
+            for (auto name = reg_info->names.begin();
+                 name != reg_info->names.end(); ++name)
+              {
+                success = tdesc_numbered_register (feature, tdesc_data,
+                                                   reg_info->number, *name);
+                if (success)
+                  {
+                    found[reg_info->number] = *name;
+                    reg_info->exists = true;
+                    break;
+                  }
+              }
+
+          if (!success && reg_info->required)
+            {
+              use_tdesc_registers = false;
+              fprintf_filtered (gdb_stdout, ">>> don't use tdesc because %s is missing\n",
+                                reg_info->names[0]);
+              break;
+            }
+        }
+
+      if (use_tdesc_registers)
+        {
+          // This is going to call set_gdbarch_register_reggroup_p (and a few
+          // others; see the end of tdesc_use_registers()).
+          tdesc_use_registers (gdbarch, info.target_desc, tdesc_data);
+
+          // Now go through again, adding aliases.
+          for (auto reg_info = riscv_reg_info.begin();
+               reg_info != riscv_reg_info.end(); ++reg_info)
+            {
+              auto match = found.find(reg_info->number);
+              if (match == found.end())
+                continue;
+              for (auto name = reg_info->names.begin();
+                   name != reg_info->names.end(); ++name)
+                {
+                  if (*name != match->second)
+                    user_reg_add (gdbarch, *name, value_of_riscv_user_reg,
+                                  &reg_info->number);
+                }
+            }
+        }
+      else
+        tdesc_data_cleanup (tdesc_data);
+    }
+
+  if (!use_tdesc_registers)
+    {
+      // Using the built-in list. Just need to add aliases.
+      for (auto reg_info = riscv_reg_info.begin();
+           reg_info != riscv_reg_info.end(); ++reg_info)
+        {
+          reg_info->exists = true;
+          for (auto name = reg_info->names.begin() + 1;
+               name != reg_info->names.end(); ++name)
+            user_reg_add (gdbarch, *name,
+                          value_of_riscv_user_reg, &reg_info->number);
+        }
+    }
+
+  return use_tdesc_registers;
+}
+
 static struct gdbarch *
 riscv_gdbarch_init (struct gdbarch_info info,
 		    struct gdbarch_list *arches)
 {
-  struct gdbarch *gdbarch;
+  /*
+   * Note that this function gets called multiple times, for different reasons.
+   * It gets called when we connect to a debug server, and called twice when
+   * the `file` command is used. In the very last case we don't get a
+   * target_desc, even if one was provided when connecting to the target.
+   */
+
   struct gdbarch_tdep *tdep;
   const struct bfd_arch_info *binfo = info.bfd_arch_info;
 
   int abi;
+
+  fprintf_filtered (gdb_stdout, ">>> riscv_gdbarch_init()\n");
+  fprintf_filtered (gdb_stdout, ">>>     bits_per_word=%d\n", binfo->bits_per_word);
+  fprintf_filtered (gdb_stdout, ">>>     tdesc_has_register() -> %d\n",
+                    tdesc_has_registers (info.target_desc));
+  fprintf_filtered (gdb_stdout, ">>>     info.abfd=%p\n", info.abfd);
+  if (info.abfd) {
+      fprintf_filtered (gdb_stdout, ">>>     flavour=%d\n", bfd_get_flavour (info.abfd));
+  }
 
   /* For now, base the abi on the elf class.  */
   /* Allow the ELF class to override the register size. Ideally the target
@@ -1172,6 +1333,40 @@ riscv_gdbarch_init (struct gdbarch_info info,
       else
         internal_error (__FILE__, __LINE__, _("unknown ELF header class %d"), eclass);
     }
+  else if (tdesc_has_registers (info.target_desc))
+    {
+      // Look for x1. x0 might not exist since it's fixed.
+      const struct tdesc_feature *feature =
+        tdesc_find_feature (info.target_desc, riscv_reg_info[1].feature_name);
+      if (!feature)
+        internal_error (__FILE__, __LINE__,
+                        _("feature %s missing from target description"),
+                        riscv_reg_info[1].feature_name);
+
+      int size = 0;
+      for (auto name = riscv_reg_info[1].names.begin();
+           size <= 0 && name != riscv_reg_info[1].names.end(); ++name)
+        {
+          if (tdesc_unnumbered_register (feature, *name))
+            {
+              size = tdesc_register_size (feature, *name);
+              fprintf_filtered (gdb_stdout, ">>>     size of %s is %d\n", *name, size);
+            }
+        }
+
+      switch (size) {
+        case 32:
+          abi = RISCV_ABI_FLAG_RV32I;
+          break;
+        case 64:
+          abi = RISCV_ABI_FLAG_RV64I;
+          break;
+        default:
+          internal_error (__FILE__, __LINE__,
+                          _("target description for %s has unsupported size %d"),
+                          riscv_reg_info[1].names[0], size);
+      }
+    }
   else
     {
       if (binfo->bits_per_word == 32)
@@ -1183,19 +1378,29 @@ riscv_gdbarch_init (struct gdbarch_info info,
             binfo->bits_per_word);
     }
 
+  fprintf_filtered (gdb_stdout, ">>>     abi=%d\n", abi);
+
   /* Find a candidate among the list of pre-declared architectures.  */
   for (arches = gdbarch_list_lookup_by_info (arches, &info);
        arches != NULL;
        arches = gdbarch_list_lookup_by_info (arches->next, &info))
-    if (gdbarch_tdep (arches->gdbarch)->riscv_abi == abi)
-      return arches->gdbarch;
+    {
+      fprintf_filtered (gdb_stdout, ">>>     found arch with abi %d\n",
+                        gdbarch_tdep (arches->gdbarch)->riscv_abi);
+      if (gdbarch_tdep (arches->gdbarch)->riscv_abi == abi)
+        {
+          fprintf_filtered (gdb_stdout, ">>>     found arch!\n");
+          registers_init (arches->gdbarch, info);
+          return arches->gdbarch;
+        }
+    }
 
   /* None found, so create a new architecture from the information provided.
      Can't initialize all the target dependencies until we actually know which
      target we are talking to, but put in some defaults for now.  */
 
   tdep = (struct gdbarch_tdep *) xmalloc (sizeof *tdep);
-  gdbarch = gdbarch_alloc (&info, tdep);
+  struct gdbarch *gdbarch = gdbarch_alloc (&info, tdep);
 
   tdep->riscv_abi = abi;
   tdep->supports_compressed_isa = AUTO_BOOLEAN_AUTO;
@@ -1241,140 +1446,12 @@ riscv_gdbarch_init (struct gdbarch_info info,
   dwarf2_append_unwinders (gdbarch);
   frame_unwind_append_unwinder (gdbarch, &riscv_frame_unwind);
 
-  /* Register time!
-   * We support two ways of dealing with registers:
-   * 1. The server sends gdb an XML description of its registers. This is what
-   * gdb calls tdesc. This way the server can also let us know what registers
-   * actually exist on the target.
-   * 2. Communicate with the target using register numbers only.
-   */
+  set_gdbarch_sp_regnum (gdbarch, RISCV_SP_REGNUM);
+  set_gdbarch_pc_regnum (gdbarch, RISCV_PC_REGNUM);
+  set_gdbarch_ps_regnum (gdbarch, RISCV_FP_REGNUM);
+  set_gdbarch_deprecated_fp_regnum (gdbarch, RISCV_FP_REGNUM);
 
-  // First, for our own records, build a structure with all relevant
-  // information about registers.
-  // riscv_reg_info statically gets info about all registers except for the
-  // CSRs. We add those programmatically because there are many of them.
-  struct {
-      const char *name;
-      unsigned num;
-  } named_csr[] = {
-#define DECLARE_CSR(name, num) {#name, RISCV_ ## num ## _REGNUM},
-#include "opcode/riscv-opc.h"
-#undef DECLARE_CSR
-  };
-
-  static bool reg_info_built = false;
-  if (!reg_info_built)
-    {
-      for (unsigned i = 0; i < sizeof(named_csr) / sizeof(*named_csr); i++)
-        {
-          char *generic_name = (char*) malloc(8);
-          gdb_assert(named_csr[i].num < 10000);
-          sprintf(generic_name, "csr%d", named_csr[i].num - RISCV_FIRST_CSR_REGNUM);
-          struct riscv_reg_info reg = {
-              named_csr[i].num,
-              {named_csr[i].name, generic_name},
-              false,
-              false,
-              "org.gnu.gdb.riscv.csr",
-              all_reggroup
-          };
-
-          riscv_reg_info.push_back(reg);
-        }
-      reg_info_built = true;
-    }
-
-  bool use_tdesc_registers = false;
-  if (tdesc_has_registers (info.target_desc))
-    {
-      use_tdesc_registers = true;
-
-      struct tdesc_arch_data *tdesc_data = tdesc_data_alloc ();
-
-      std::map<int, const char*> found;
-
-      for (auto reg_info = riscv_reg_info.begin();
-           reg_info != riscv_reg_info.end(); ++reg_info)
-        {
-          const struct tdesc_feature *feature =
-            tdesc_find_feature (info.target_desc, reg_info->feature_name);
-          int success = 0;
-          if (feature)
-            // Look for this register by any of its names.
-            for (auto name = reg_info->names.begin();
-                 name != reg_info->names.end(); ++name)
-              {
-                success = tdesc_numbered_register (feature, tdesc_data,
-                                                   reg_info->number, *name);
-                if (success)
-                  {
-                    found[reg_info->number] = *name;
-                    break;
-                  }
-              }
-
-          if (!success && reg_info->required)
-            {
-              use_tdesc_registers = false;
-              break;
-            }
-        }
-
-      if (use_tdesc_registers)
-        {
-          // This number apparently must be at least as large as the number of
-          // registers in the target description. (See assertion in
-          // tdesc_use_registers().) But that seems to defeat part of the point
-          // of the target description, so I might be missing something.
-          set_gdbarch_num_regs (gdbarch, RISCV_NUM_REGS);
-          set_gdbarch_sp_regnum (gdbarch, RISCV_SP_REGNUM);
-          set_gdbarch_pc_regnum (gdbarch, RISCV_PC_REGNUM);
-          set_gdbarch_ps_regnum (gdbarch, RISCV_FP_REGNUM);
-          set_gdbarch_deprecated_fp_regnum (gdbarch, RISCV_FP_REGNUM);
-          // This is going to call set_gdbarch_register_reggroup_p (and a few
-          // others; see the end of tdesc_use_registers()).
-          tdesc_use_registers (gdbarch, info.target_desc, tdesc_data);
-
-          // Now go through again, adding aliases.
-          for (auto reg_info = riscv_reg_info.begin();
-               reg_info != riscv_reg_info.end(); ++reg_info)
-            {
-              auto match = found.find(reg_info->number);
-              if (match == found.end())
-                continue;
-              riscv_reg_map[reg_info->number] = &(*reg_info);
-              for (auto name = reg_info->names.begin();
-                   name != reg_info->names.end(); ++name)
-                {
-                  if (*name != match->second)
-                    user_reg_add (gdbarch, *name, value_of_riscv_user_reg,
-                                  &reg_info->number);
-                }
-            }
-        }
-      else
-        tdesc_data_cleanup (tdesc_data);
-    }
-
-  if (!use_tdesc_registers)
-    {
-      // Using the built-in list. Just need to add aliases.
-      for (auto reg_info = riscv_reg_info.begin();
-           reg_info != riscv_reg_info.end(); ++reg_info)
-        {
-          riscv_reg_map[reg_info->number] = &(*reg_info);
-          for (auto name = reg_info->names.begin() + 1;
-               name != reg_info->names.end(); ++name)
-            user_reg_add (gdbarch, *name,
-                          value_of_riscv_user_reg, &reg_info->number);
-        }
-
-      set_gdbarch_num_regs (gdbarch, RISCV_NUM_REGS);
-      set_gdbarch_sp_regnum (gdbarch, RISCV_SP_REGNUM);
-      set_gdbarch_pc_regnum (gdbarch, RISCV_PC_REGNUM);
-      set_gdbarch_ps_regnum (gdbarch, RISCV_FP_REGNUM);
-      set_gdbarch_deprecated_fp_regnum (gdbarch, RISCV_FP_REGNUM);
-    }
+  registers_init (gdbarch, info);
 
   return gdbarch;
 }
