@@ -1244,8 +1244,6 @@ registers_init (struct gdbarch *gdbarch, struct gdbarch_info info)
           if (!success && reg_info->required)
             {
               use_tdesc_registers = false;
-              fprintf_filtered (gdb_stdout, ">>> don't use tdesc because %s is missing\n",
-                                reg_info->names[0]);
               break;
             }
         }
@@ -1309,15 +1307,6 @@ riscv_gdbarch_init (struct gdbarch_info info,
 
   int abi;
 
-  fprintf_filtered (gdb_stdout, ">>> riscv_gdbarch_init()\n");
-  fprintf_filtered (gdb_stdout, ">>>     bits_per_word=%d\n", binfo->bits_per_word);
-  fprintf_filtered (gdb_stdout, ">>>     tdesc_has_register() -> %d\n",
-                    tdesc_has_registers (info.target_desc));
-  fprintf_filtered (gdb_stdout, ">>>     info.abfd=%p\n", info.abfd);
-  if (info.abfd) {
-      fprintf_filtered (gdb_stdout, ">>>     flavour=%d\n", bfd_get_flavour (info.abfd));
-  }
-
   /* For now, base the abi on the elf class.  */
   /* Allow the ELF class to override the register size. Ideally the target
    * (OpenOCD/spike/...) would communicate the register size to gdb instead. */
@@ -1348,10 +1337,7 @@ riscv_gdbarch_init (struct gdbarch_info info,
            size <= 0 && name != riscv_reg_info[1].names.end(); ++name)
         {
           if (tdesc_unnumbered_register (feature, *name))
-            {
-              size = tdesc_register_size (feature, *name);
-              fprintf_filtered (gdb_stdout, ">>>     size of %s is %d\n", *name, size);
-            }
+            size = tdesc_register_size (feature, *name);
         }
 
       switch (size) {
@@ -1378,21 +1364,13 @@ riscv_gdbarch_init (struct gdbarch_info info,
             binfo->bits_per_word);
     }
 
-  fprintf_filtered (gdb_stdout, ">>>     abi=%d\n", abi);
-
   /* Find a candidate among the list of pre-declared architectures.  */
   for (arches = gdbarch_list_lookup_by_info (arches, &info);
        arches != NULL;
        arches = gdbarch_list_lookup_by_info (arches->next, &info))
     {
-      fprintf_filtered (gdb_stdout, ">>>     found arch with abi %d\n",
-                        gdbarch_tdep (arches->gdbarch)->riscv_abi);
       if (gdbarch_tdep (arches->gdbarch)->riscv_abi == abi)
-        {
-          fprintf_filtered (gdb_stdout, ">>>     found arch!\n");
-          registers_init (arches->gdbarch, info);
-          return arches->gdbarch;
-        }
+        return arches->gdbarch;
     }
 
   /* None found, so create a new architecture from the information provided.
