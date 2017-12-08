@@ -543,11 +543,11 @@ riscv_print_register_formatted (struct ui_file *file, struct frame_info *frame,
       if (!deprecated_frame_register_read (frame, regnum, raw_buffer))
 	{
 	  fprintf_filtered (file, "%-15s[Invalid]\n",
-			    riscv_register_name (gdbarch, regnum));
+			    gdbarch_register_name (gdbarch, regnum));
 	  return;
 	}
 
-      fprintf_filtered (file, "%-15s", riscv_register_name (gdbarch, regnum));
+      fprintf_filtered (file, "%-15s", gdbarch_register_name (gdbarch, regnum));
       if (gdbarch_byte_order (gdbarch) == BFD_ENDIAN_BIG)
 	offset = register_size (gdbarch, regnum) - register_size (gdbarch, regnum);
       else
@@ -729,7 +729,7 @@ riscv_print_registers_info (struct gdbarch    *gdbarch,
        * gdb might ask us to print a register that we don't know about, because
        * it's in the target description. That still works, because we can ask
        * gdb to give us register name and contents by number. */
-      if (NULL == riscv_register_name (gdbarch, regnum))
+      if (NULL == gdbarch_register_name (gdbarch, regnum))
         error (_("Not a valid register for the current processor type"));
       riscv_print_register_formatted (file, frame, regnum);
       return;
@@ -744,7 +744,7 @@ riscv_print_registers_info (struct gdbarch    *gdbarch,
       /* Zero never changes, so might as well hide by default.  */
       if (regnum == RISCV_ZERO_REGNUM && !all)
         continue;
-      if (riscv_register_reggroup_p(gdbarch, regnum, reggroup))
+      if (gdbarch_register_reggroup_p(gdbarch, regnum, reggroup))
         riscv_print_register_formatted (file, frame, regnum);
     }
 }
