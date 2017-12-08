@@ -791,7 +791,7 @@ riscv_print_registers_info (struct gdbarch *gdbarch,
        * gdb might ask us to print a register that we don't know about, because
        * it's in the target description. That still works, because we can ask
        * gdb to give us register name and contents by number. */
-      if (NULL == riscv_register_name (gdbarch, regnum))
+      if (NULL == gdbarch_register_name (gdbarch, regnum))
         error (_("Not a valid register for the current processor type"));
       riscv_print_one_register_info (gdbarch, file, frame, regnum);
     }
