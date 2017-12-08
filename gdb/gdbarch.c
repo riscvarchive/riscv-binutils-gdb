@@ -124,6 +124,19 @@ pstring_list (const char *const *list)
 
 /* Maintain the struct gdbarch object.  */
 
+/**
+ * Note that it is normal during GDB operation that several different gdbarch
+ * objects are in use, which have somewhat different contents and are used for
+ * different purposes.
+ *
+ * In particular, there are gdbarch objects that describe a *target* (i.e. an
+ * inferior GDB is operating on) -- those use target descriptions, and care
+ * about registers etc.
+ *
+ * But then there are also gdbarch objects that are used solely when looking at
+ * an *object file*, without involving any connection to a target -- those
+ * don't have target descriptions, and don't care about registers.
+ */
 struct gdbarch
 {
   /* Has this architecture been fully initialized?  */
