@@ -106,8 +106,6 @@ struct riscv_reg_info
   bool save_restore;
   const char *feature_name;
   struct reggroup *group;
-  // This register actually exists on the target.
-  bool exists;
 };
 
 static std::vector<struct riscv_reg_info> riscv_reg_info = {
@@ -756,9 +754,6 @@ riscv_register_reggroup_p (struct gdbarch  *gdbarch, int regnum,
     return 0;
 
   struct riscv_reg_info *reg = match->second;
-
-  if (!reg->exists)
-    return 0;
 
   if (reggroup == all_reggroup)
     return 1;
@@ -2379,8 +2374,7 @@ static const struct frame_unwind riscv_frame_unwind =
 static bool
 registers_init (struct gdbarch *gdbarch, struct gdbarch_info info)
 {
-  /* Register time!
-   * We support two ways of dealing with registers:
+  /* We support two ways of dealing with registers:
    * 1. The server sends gdb an XML description of its registers. This is what
    * gdb calls tdesc. This way the server can also let us know what registers
    * actually exist on the target.
@@ -2425,13 +2419,6 @@ registers_init (struct gdbarch *gdbarch, struct gdbarch_info info)
       reg_info_built = true;
     }
 
-  for (auto reg_info = riscv_reg_info.begin();
-       reg_info != riscv_reg_info.end(); ++reg_info)
-    {
-      // Start out assuming none of the registers exist.
-      reg_info->exists = false;
-    }
-
   set_gdbarch_num_regs (gdbarch, RISCV_NUM_REGS);
 
   bool use_tdesc_registers = false;
@@ -2459,7 +2446,6 @@ registers_init (struct gdbarch *gdbarch, struct gdbarch_info info)
                 if (success)
                   {
                     found[reg_info->number] = *name;
-                    reg_info->exists = true;
                     break;
                   }
               }
@@ -2519,7 +2505,6 @@ registers_init (struct gdbarch *gdbarch, struct gdbarch_info info)
       for (auto reg_info = riscv_reg_info.begin();
            reg_info != riscv_reg_info.end(); ++reg_info)
         {
-          reg_info->exists = true;
           for (auto name = reg_info->names.begin() + 1;
                name != reg_info->names.end(); ++name)
             user_reg_add (gdbarch, *name,
