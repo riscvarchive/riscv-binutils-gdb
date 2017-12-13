@@ -1,3 +1,8 @@
+2017-12-13  Jim Wilson  <jimw@sifive.com>
+
+	PR 22599
+	* testsuite/gas/riscv/fsxxi.d, testsuite/gas/riscv/fsxxi.s: New.
+
 2017-12-03  Jim Wilson  <jimw@sifive.com>
 
 	* doc/c-riscv.texi (RISC-V-Directives): Move @section immediately after
