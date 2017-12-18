@@ -1281,21 +1281,15 @@ riscv_gdbarch_init (struct gdbarch_info info,
 		    struct gdbarch_list *arches)
 {
   /*
-   * Note that this function gets called multiple times, for different reasons.
-   * It gets called when we connect to a debug server, and called twice when
-   * the `file` command is used. In the very last case we don't get a
-   * target_desc, even if one was provided when connecting to the target.
+   * Note that this function is called for different purposes: Some gdbarchs
+   * are used just to inspect files. Others are used to interact with a live
+   * target. gdb will create at least one of each in a typical debug session.
    */
 
   struct gdbarch_tdep *tdep;
   const struct bfd_arch_info *binfo = info.bfd_arch_info;
 
   int abi;
-
-  /* For now, base the abi on the elf class.  */
-  /* Allow the ELF class to override the register size. Ideally the target
-   * (OpenOCD/spike/...) would communicate the register size to gdb instead. */
-  abi = RISCV_ABI_FLAG_RV32I;
   if (info.abfd && bfd_get_flavour (info.abfd) == bfd_target_elf_flavour)
     {
       unsigned char eclass = elf_elfheader (info.abfd)->e_ident[EI_CLASS];
