@@ -2532,10 +2532,9 @@ riscv_gdbarch_init (struct gdbarch_info info,
 		    struct gdbarch_list *arches)
 {
   /*
-   * Note that this function gets called multiple times, for different reasons.
-   * It gets called when we connect to a debug server, and called twice when
-   * the `file` command is used. In the very last case we don't get a
-   * target_desc, even if one was provided when connecting to the target.
+   * Note that this function is called for different purposes: Some gdbarchs
+   * are used just to inspect files. Others are used to interact with a live
+   * target. gdb will create at least one of each in a typical debug session.
    */
 
   struct gdbarch *gdbarch;
