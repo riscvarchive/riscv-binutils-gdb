@@ -1764,6 +1764,7 @@ execute_i (SIM_CPU *cpu, unsigned_word iw, const struct riscv_opcode *op)
 
 	  switch (cpu->a7)
 	    {
+#ifndef __MINGW32__
 	    case TARGET_SYS_link:
 	      {
 		char oldpath[1024], newpath[1024];
@@ -1772,6 +1773,7 @@ execute_i (SIM_CPU *cpu, unsigned_word iw, const struct riscv_opcode *op)
 		cpu->a0 = link (oldpath, newpath);
 		break;
 	      }
+#endif
 	    case TARGET_SYS_brk:
 	      {
 		/* FIXME: Check the invalid access.  */
