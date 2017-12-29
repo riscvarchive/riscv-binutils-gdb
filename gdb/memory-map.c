@@ -17,6 +17,8 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
+#include <inttypes.h>
+
 #include "defs.h"
 #include "memory-map.h"
 
@@ -184,6 +186,10 @@ parse_memory_map (const char *memory_map)
   struct cleanup *back_to;
   struct memory_map_parsing_data data = { NULL };
 
+  printf_unfiltered (">>> Memory map:\n");
+  printf_unfiltered ("%s\n", memory_map);
+  printf_unfiltered (">>> End of memory map\n");
+
   data.memory_map = &result;
   back_to = make_cleanup (clear_result, &result);
   if (gdb_xml_parse_quick (_("target memory map"), NULL, memory_map_elements,
@@ -191,6 +197,12 @@ parse_memory_map (const char *memory_map)
     {
       /* Parsed successfully, keep the result.  */
       discard_cleanups (back_to);
+      printf_unfiltered (">>> parsed memory map:\n");
+      struct mem_region *region;
+      for (auto i = 0; VEC_iterate (mem_region_s, result, i, region); i++)
+        printf_unfiltered (">>>   0x%" PRIx64 " -- 0x%" PRIx64 "; n=%d, "
+                           "enabled=%d, access_mode=%d\n", region->lo, region->hi,
+                           region->number, region->enabled_p, region->attrib.mode);
       return result;
     }
 

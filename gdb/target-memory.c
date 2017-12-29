@@ -18,6 +18,8 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
+#include <inttypes.h>
+
 #include "defs.h"
 #include "vec.h"
 #include "target.h"
@@ -105,6 +107,12 @@ split_regular_and_flash_blocks (VEC(memory_write_request_s) *blocks,
   struct mem_region *region;
   CORE_ADDR cur_address;
 
+  struct memory_write_request *request;
+  printf_unfiltered (">>> split blocks:\n");
+  for (auto i = 0; VEC_iterate (memory_write_request_s, blocks, i, request); i++)
+    printf_unfiltered (">>>   0x%" PRIx64 " -- 0x%" PRIx64 "\n",
+                       request->begin, request->end);
+
   /* This implementation runs in O(length(regions)*length(blocks)) time.
      However, in most cases the number of blocks will be small, so this does
      not matter.
@@ -126,6 +134,15 @@ split_regular_and_flash_blocks (VEC(memory_write_request_s) *blocks,
       if (cur_address == 0)
 	break;
     }
+
+  printf_unfiltered (">>> flash blocks:\n");
+  for (auto i = 0; VEC_iterate (memory_write_request_s, *flash_blocks, i, request); i++)
+    printf_unfiltered (">>>   0x%" PRIx64 " -- 0x%" PRIx64 "\n",
+                       request->begin, request->end);
+  printf_unfiltered (">>> regular blocks:\n");
+  for (auto i = 0; VEC_iterate (memory_write_request_s, *regular_blocks, i, request); i++)
+    printf_unfiltered (">>>   0x%" PRIx64 " -- 0x%" PRIx64 "\n",
+                       request->begin, request->end);
 }
 
 /* Given an ADDRESS, if BEGIN is non-NULL this function sets *BEGIN
