@@ -667,7 +667,7 @@ GDB_AC_WITH_DIR([JIT_READER_DIR], [jit-reader-dir],
 
 AC_ARG_WITH(expat,
   AS_HELP_STRING([--with-expat], [include expat support (auto/yes/no)]),
-  [], [with_expat=auto])
+  [], [with_expat=yes])
 AC_MSG_CHECKING([whether to use expat])
 AC_MSG_RESULT([$with_expat])
 
