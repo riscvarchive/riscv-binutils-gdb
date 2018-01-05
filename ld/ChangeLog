@@ -1,3 +1,9 @@
+2018-01-05  Jim Wilson  <jimw@sifive.com>
+
+	* emulparams/elf32lriscv-defs.sh (GENERATE_SHLIB_SCRIPT): Move inside
+	case on $target, and don't set for riscv*-elf targets.
+	(GENERATE_PIE_SCRIPT): Likewise.
+
 2017-12-06  Jim Wilson  <jimw@sifive.com>
 
 	* testsuite/ld-elf/interleave-0.d, testsuite/ld-elf/interleave-4.d,
