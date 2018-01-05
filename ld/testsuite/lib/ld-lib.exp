@@ -1823,6 +1823,7 @@ proc check_shared_lib_support { } {
 	 && ![istarget or1k*-*-*]
 	 && ![istarget pj-*-*]
 	 && ![istarget pru-*-*]
+	 && ![istarget riscv*-*-elf]
 	 && ![istarget rl78-*-*]
 	 && ![istarget rx-*-*]
 	 && ![istarget spu-*-*]
