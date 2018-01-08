@@ -121,10 +121,10 @@ $(srcdir)/config.in: @MAINT@ $(srcdir)/configure
 
 # Dependencies.
 
-decContext.$(objext): decContext.c decContext.h decNumberLocal.h \
-	decContextSymbols.h
-decNumber.$(objext):  decNumber.c decNumber.h decContext.h decNumberLocal.h \
-	decNumberSymbols.h
+decContext.$(objext): $(srcdir)/decContext.c $(srcdir)/decContext.h $(srcdir)/decNumberLocal.h \
+	$(srcdir)/decContextSymbols.h
+decNumber.$(objext):  $(srcdir)/decNumber.c $(srcdir)/decNumber.h $(srcdir)/decContext.h $(srcdir)/decNumberLocal.h \
+	$(srcdir)/decNumberSymbols.h
 decimal32.$(objext):  $(srcdir)/$(enable_decimal_float)/decimal32.c \
    $(srcdir)/$(enable_decimal_float)/decimal32.h \
    $(srcdir)/$(enable_decimal_float)/decimal32Symbols.h \
