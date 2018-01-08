@@ -279,16 +279,26 @@ reg_buffer::save (register_read_ftype cooked_read)
     {
       if (gdbarch_register_reggroup_p (gdbarch, regnum, save_reggroup))
 	{
-	  gdb_byte *dst_buf = register_buffer (regnum);
-	  enum register_status status = cooked_read (regnum, dst_buf);
+          gdb_byte *dst_buf = register_buffer (regnum);
+          TRY
+            {
+              enum register_status status = cooked_read (regnum, dst_buf);
 
-	  gdb_assert (status != REG_UNKNOWN);
+              gdb_assert (status != REG_UNKNOWN);
 
-	  if (status != REG_VALID)
-	    memset (dst_buf, 0, register_size (gdbarch, regnum));
+              if (status != REG_VALID)
+                memset (dst_buf, 0, register_size (gdbarch, regnum));
 
-	  m_register_status[regnum] = status;
-	}
+              m_register_status[regnum] = status;
+            }
+          CATCH (ex, RETURN_MASK_ERROR)
+            {
+              memset (dst_buf, 0, register_size (gdbarch, regnum));
+
+              m_register_status[regnum] = REG_UNKNOWN;
+            }
+          END_CATCH
+        }
     }
 }
 
