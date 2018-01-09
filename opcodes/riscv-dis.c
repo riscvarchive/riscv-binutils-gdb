@@ -99,6 +99,8 @@ arg_print (struct disassemble_info *info, unsigned long val,
 static void
 maybe_print_address (struct riscv_private_data *pd, int base_reg, int offset)
 {
+  if (base_reg == 0)
+    pd->hi_addr[base_reg] = 0;
   if (pd->hi_addr[base_reg] != (bfd_vma)-1)
     {
       pd->print_addr = pd->hi_addr[base_reg] + offset;
