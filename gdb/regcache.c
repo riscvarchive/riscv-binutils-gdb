@@ -323,6 +323,21 @@ regcache_save (struct regcache *regcache,
   regcache->save (cooked_read, src);
 }
 
+struct catch_cooked_read_args {
+    enum register_status status;  // result of function call
+    regcache_cooked_read_ftype *cooked_read;
+    void *src;
+    int regnum;
+    gdb_byte *buf;
+};
+
+static int catch_cooked_read (struct ui_out *uiout, void *args)
+{
+  struct catch_cooked_read_args *a = (struct catch_cooked_read_args *) args;
+  a->status = a->cooked_read (a->src, a->regnum, a->buf);
+  return 0;
+}
+
 void
 regcache::save (regcache_cooked_read_ftype *cooked_read,
 		void *src)
@@ -345,16 +360,27 @@ regcache::save (regcache_cooked_read_ftype *cooked_read,
     {
       if (gdbarch_register_reggroup_p (gdbarch, regnum, save_reggroup))
 	{
-	  gdb_byte *dst_buf = register_buffer (regnum);
-	  enum register_status status = cooked_read (src, regnum, dst_buf);
+          struct catch_cooked_read_args args = {
+              .status = REG_UNKNOWN,
+              .cooked_read = cooked_read,
+              .src = src,
+              .regnum = regnum,
+              .buf = register_buffer (regnum)
+          };
+          if (catch_exceptions (current_uiout, catch_cooked_read, &args,
+                                RETURN_MASK_ERROR) == 0)
+            {
+              gdb_assert (args.status != REG_UNKNOWN);
 
-	  gdb_assert (status != REG_UNKNOWN);
+              if (args.status != REG_VALID)
+                memset (args.buf, 0, register_size (gdbarch, regnum));
 
-	  if (status != REG_VALID)
-	    memset (dst_buf, 0, register_size (gdbarch, regnum));
-
-	  m_register_status[regnum] = status;
-	}
+              m_register_status[regnum] = args.status;
+            } else {
+                memset (args.buf, 0, register_size (gdbarch, regnum));
+                m_register_status[regnum] = REG_UNKNOWN;
+            }
+        }
     }
 }
 
