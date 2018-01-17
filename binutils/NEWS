@@ -1,5 +1,10 @@
 -*- text -*-
 
+Changes in 2.31:
+
+* Add --verilog-data-width option to objcopy for verilog targets to control
+  width of data elements in verilog hex format.
+
 Changes in 2.30:
 
 * Add --debug-dump=links option to readelf and --dwarf=links option to objdump

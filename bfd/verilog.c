@@ -58,6 +58,10 @@
 #include "libiberty.h"
 #include "safe-ctype.h"
 
+/* modified by obcopy.c
+   data width in bytes */
+unsigned int VerilogDataWidth = 1;
+
 /* Macros for converting between hex and binary.  */
 
 static const char digs[] = "0123456789ABCDEF";
@@ -197,10 +201,21 @@ verilog_write_record (bfd *abfd,
   bfd_size_type wrlen;
 
   /* Write the data.  */
-  for (src = data; src < end; src++)
+  for (src = data; src < end; src += VerilogDataWidth)
     {
-      TOHEX (dst, *src);
-      dst += 2;
+      int i;
+      if (bfd_little_endian(abfd))
+	for (i = VerilogDataWidth-1; i >= 0; i--)
+	  {
+	    TOHEX (dst, src[i]);
+	    dst += 2;
+	  }
+      else
+	for (i = 0; i < (int)VerilogDataWidth; i++)
+	  {
+	    TOHEX (dst, src[i]);
+	    dst += 2;
+	  }
       *dst++ = ' ';
     }
   *dst++ = '\r';
