@@ -333,7 +333,7 @@ riscv_extract_return_value (struct type *type,
 			    gdb_byte *dst,
 			    int regnum)
 {
-  struct gdbarch *gdbarch = get_regcache_arch (regs);
+  struct gdbarch *gdbarch = regs->arch ();
   enum bfd_endian byte_order = gdbarch_byte_order (gdbarch);
   int regsize = riscv_isa_regsize (gdbarch);
   bfd_byte *valbuf = dst;
@@ -361,7 +361,7 @@ riscv_store_return_value (struct type *type,
 			  const gdb_byte *src,
 			  int regnum)
 {
-  struct gdbarch *gdbarch = get_regcache_arch (regs);
+  struct gdbarch *gdbarch = regs->arch ();
   int regsize = riscv_isa_regsize (gdbarch);
   const bfd_byte *valbuf = src;
 

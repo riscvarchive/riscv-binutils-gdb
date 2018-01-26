@@ -1829,7 +1829,7 @@ md_parse_option (int c, const char *arg)
     case OPTION_MABI:
       if (strcmp (arg, "ilp32") == 0)
 	riscv_set_abi (32, FLOAT_ABI_SOFT, FALSE);
-      if (strcmp (arg, "ilp32e") == 0)
+      else if (strcmp (arg, "ilp32e") == 0)
 	riscv_set_abi (32, FLOAT_ABI_SOFT, TRUE);
       else if (strcmp (arg, "ilp32f") == 0)
 	riscv_set_abi (32, FLOAT_ABI_SINGLE, FALSE);
