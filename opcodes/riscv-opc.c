@@ -56,6 +56,14 @@ const char * const riscv_fpr_names_abi[NFPR] = {
   "fs8", "fs9", "fs10", "fs11", "ft8", "ft9", "ft10", "ft11"
 };
 
+const char * const riscv_vpr_names_numeric[NVPR] =
+{
+  "v0",   "v1",   "v2",   "v3",   "v4",   "v5",   "v6",   "v7",
+  "v8",   "v9",   "v10",  "v11",  "v12",  "v13",  "v14",  "v15",
+  "v16",  "v17",  "v18",  "v19",  "v20",  "v21",  "v22",  "v23",
+  "v24",  "v25",  "v26",  "v27",  "v28",  "v29",  "v30",  "v31"
+};
+
 /* The order of overloaded instructions matters.  Label arguments and
    register arguments look the same. Instructions that can have either
    for arguments must apear in the correct order in this table for the
@@ -79,6 +87,8 @@ const char * const riscv_fpr_names_abi[NFPR] = {
 #define MASK_AQ (OP_MASK_AQ << OP_SH_AQ)
 #define MASK_RL (OP_MASK_RL << OP_SH_RL)
 #define MASK_AQRL (MASK_AQ | MASK_RL)
+
+#define MASK_VMASK (OP_MASK_VMASK << OP_SH_VMASK)
 
 static int
 match_opcode (const struct riscv_opcode *op, insn_t insn)
@@ -729,6 +739,20 @@ const struct riscv_opcode riscv_opcodes[] =
 {"sfence.vma","I",   "s",    MATCH_SFENCE_VMA, MASK_SFENCE_VMA | MASK_RS2, match_opcode, INSN_ALIAS },
 {"sfence.vma","I",   "s,t",  MATCH_SFENCE_VMA, MASK_SFENCE_VMA, match_opcode, 0 },
 {"wfi",       "I",   "",     MATCH_WFI, MASK_WFI, match_opcode, 0 },
+
+/* Vector instruction subset */
+{"vld",       "V",   "Vd,Vo(s)",  MATCH_VLD, MASK_VLD | MASK_VMASK, match_opcode, 0 },
+{"vld",       "V",   "Vd,Vo(s),Vm",  MATCH_VLD, MASK_VLD, match_opcode, 0 },
+{"vst",       "V",   "Vu,Vq(s)",  MATCH_VST, MASK_VST | MASK_VMASK, match_opcode, 0 },
+{"vst",       "V",   "Vu,Vq(s),Vm",  MATCH_VST, MASK_VST, match_opcode, 0 },
+{"vadd",      "V",   "Vd,Vs,Vt",  MATCH_VADD, MASK_VADD | MASK_VMASK, match_opcode, 0 },
+{"vadd",      "V",   "Vd,Vs,Vt,Vm",  MATCH_VADD, MASK_VADD, match_opcode, 0 },
+{"vaddi",     "V",   "Vd,Vs,Vi",  MATCH_VADDI, MASK_VADDI | MASK_VMASK, match_opcode, 0 },
+{"vaddi",     "V",   "Vd,Vs,Vi,Vm",  MATCH_VADDI, MASK_VADDI, match_opcode, 0 },
+{"vinsert",   "V",   "Vd,s,t",  MATCH_VINSERT, MASK_VINSERT | MASK_VMASK, match_opcode, 0 },
+{"vinsert",   "V",   "Vd,s,t,Vm",  MATCH_VINSERT, MASK_VINSERT, match_opcode, 0 },
+{"vextract",  "V",   "d,Vs,t",  MATCH_VEXTRACT, MASK_VEXTRACT | MASK_VMASK, match_opcode, 0 },
+{"vextract",  "V",   "d,Vs,t,Vm",  MATCH_VEXTRACT, MASK_VEXTRACT, match_opcode, 0 },
 
 /* Terminate the list.  */
 {0, 0, 0, 0, 0, 0, 0}

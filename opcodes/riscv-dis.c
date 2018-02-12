@@ -40,6 +40,7 @@ struct riscv_private_data
 
 static const char * const *riscv_gpr_names;
 static const char * const *riscv_fpr_names;
+static const char * const *riscv_vpr_names;
 
 /* Other options.  */
 static int no_aliases;	/* If set disassemble as most general inst.  */
@@ -49,6 +50,7 @@ set_default_riscv_dis_options (void)
 {
   riscv_gpr_names = riscv_gpr_names_abi;
   riscv_fpr_names = riscv_fpr_names_abi;
+  riscv_vpr_names = riscv_vpr_names_numeric;
   no_aliases = 0;
 }
 
@@ -61,6 +63,7 @@ parse_riscv_dis_option (const char *option)
     {
       riscv_gpr_names = riscv_gpr_names_numeric;
       riscv_fpr_names = riscv_fpr_names_numeric;
+      riscv_vpr_names = riscv_vpr_names_numeric;
     }
   else
     {
@@ -206,6 +209,41 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	    case 'D': /* floating-point RS2 x8-x15 */
 	      print (info->stream, "%s",
 		     riscv_fpr_names[EXTRACT_OPERAND (CRS2S, l) + 8]);
+	      break;
+	    }
+	  break;
+
+	case 'V': /* RVV */
+	  switch (*++d)
+	    {
+	    case 'd': /* VD */
+	      print (info->stream, "%s",
+		     riscv_vpr_names[EXTRACT_OPERAND (RD, l)]);
+	      break;
+	    case 's': /* RS1 */
+	      print (info->stream, "%s",
+		     riscv_vpr_names[EXTRACT_OPERAND (RS1, l)]);
+	      break;
+	    case 't': /* RS2 */
+	      print (info->stream, "%s",
+		     riscv_vpr_names[EXTRACT_OPERAND (RS2, l)]);
+	      break;
+	    case 'u': /* RS3 */
+	      print (info->stream, "%s",
+		     riscv_vpr_names[EXTRACT_OPERAND (RS3, l)]);
+	      break;
+	    case 'm': /* mask */
+	      arg_print (info, EXTRACT_OPERAND (VMASK, l),
+		     riscv_vmask, ARRAY_SIZE (riscv_vmask));
+              break;
+	    case 'i':
+	      print (info->stream, "%d", (int)EXTRACT_RVV_IMM (l));
+	      break;
+	    case 'o':
+	      print (info->stream, "%d", (int)EXTRACT_RVV_LOAD_IMM (l));
+	      break;
+	    case 'q':
+	      print (info->stream, "%d", (int)EXTRACT_RVV_STORE_IMM (l));
 	      break;
 	    }
 	  break;

@@ -52,6 +52,11 @@ static const char * const riscv_pred_succ[16] =
   "i", "iw", "ir", "irw", "io", "iow", "ior", "iorw"
 };
 
+static const char * const riscv_vmask[4] =
+{
+  0, "v1t", "v1f", 0
+};
+
 #define RVC_JUMP_BITS 11
 #define RVC_JUMP_REACH ((1ULL << RVC_JUMP_BITS) * RISCV_JUMP_ALIGN)
 
@@ -97,6 +102,12 @@ static const char * const riscv_pred_succ[16] =
   ((RV_X(x, 3, 2) << 1) | (RV_X(x, 10, 2) << 3) | (RV_X(x, 2, 1) << 5) | (RV_X(x, 5, 2) << 6) | (-RV_X(x, 12, 1) << 8))
 #define EXTRACT_RVC_J_IMM(x) \
   ((RV_X(x, 3, 3) << 1) | (RV_X(x, 11, 1) << 4) | (RV_X(x, 2, 1) << 5) | (RV_X(x, 7, 1) << 6) | (RV_X(x, 6, 1) << 7) | (RV_X(x, 9, 2) << 8) | (RV_X(x, 8, 1) << 10) | (-RV_X(x, 12, 1) << 11))
+#define EXTRACT_RVV_IMM(x) \
+  (RV_X(x, 20, 8))
+#define EXTRACT_RVV_LOAD_IMM(x) \
+  (RV_X(x, 27, 5))
+#define EXTRACT_RVV_STORE_IMM(x) \
+  (RV_X(x, 7, 5))
 
 #define ENCODE_ITYPE_IMM(x) \
   (RV_X(x, 0, 12) << 20)
@@ -134,6 +145,12 @@ static const char * const riscv_pred_succ[16] =
   ((RV_X(x, 1, 2) << 3) | (RV_X(x, 3, 2) << 10) | (RV_X(x, 5, 1) << 2) | (RV_X(x, 6, 2) << 5) | (RV_X(x, 8, 1) << 12))
 #define ENCODE_RVC_J_IMM(x) \
   ((RV_X(x, 1, 3) << 3) | (RV_X(x, 4, 1) << 11) | (RV_X(x, 5, 1) << 2) | (RV_X(x, 6, 1) << 7) | (RV_X(x, 7, 1) << 6) | (RV_X(x, 8, 2) << 9) | (RV_X(x, 10, 1) << 8) | (RV_X(x, 11, 1) << 12))
+#define ENCODE_RVV_IMM(x) \
+  (RV_X(x, 0, 8) << 20)
+#define ENCODE_RVV_LOAD_IMM(x) \
+  (RV_X(x, 0, 5) << 27)
+#define ENCODE_RVV_STORE_IMM(x) \
+  (RV_X(x, 0, 5) << 7)
 
 #define VALID_ITYPE_IMM(x) (EXTRACT_ITYPE_IMM(ENCODE_ITYPE_IMM(x)) == (x))
 #define VALID_STYPE_IMM(x) (EXTRACT_STYPE_IMM(ENCODE_STYPE_IMM(x)) == (x))
@@ -153,6 +170,9 @@ static const char * const riscv_pred_succ[16] =
 #define VALID_RVC_SDSP_IMM(x) (EXTRACT_RVC_SDSP_IMM(ENCODE_RVC_SDSP_IMM(x)) == (x))
 #define VALID_RVC_B_IMM(x) (EXTRACT_RVC_B_IMM(ENCODE_RVC_B_IMM(x)) == (x))
 #define VALID_RVC_J_IMM(x) (EXTRACT_RVC_J_IMM(ENCODE_RVC_J_IMM(x)) == (x))
+#define VALID_RVV_IMM(x) (EXTRACT_RVV_IMM(ENCODE_RVV_IMM(x)) == (x))
+#define VALID_RVV_LOAD_IMM(x) (EXTRACT_RVV_LOAD_IMM(ENCODE_RVV_LOAD_IMM(x)) == (x))
+#define VALID_RVV_STORE_IMM(x) (EXTRACT_RVV_STORE_IMM(ENCODE_RVV_STORE_IMM(x)) == (x))
 
 #define RISCV_RTYPE(insn, rd, rs1, rs2) \
   ((MATCH_ ## insn) | ((rd) << OP_SH_RD) | ((rs1) << OP_SH_RS1) | ((rs2) << OP_SH_RS2))
@@ -232,6 +252,13 @@ static const char * const riscv_pred_succ[16] =
 #define OP_MASK_CRS2S 0x7
 #define OP_SH_CRS2S 2
 
+/* RVV fields.  */
+
+#define OP_MASK_VMASK 0x3
+#define OP_SH_VMASK 12
+#define OP_MASK_VIMM 0xff
+#define OP_SH_VIMM 20
+
 /* ABI names for selected x-registers.  */
 
 #define X_RA 1
@@ -245,6 +272,7 @@ static const char * const riscv_pred_succ[16] =
 
 #define NGPR 32
 #define NFPR 32
+#define NVPR 32
 
 /* Replace bits MASK << SHIFT of STRUCT with the equivalent bits in
    VALUE << SHIFT.  VALUE is evaluated exactly once.  */
@@ -338,6 +366,7 @@ extern const char * const riscv_gpr_names_numeric[NGPR];
 extern const char * const riscv_gpr_names_abi[NGPR];
 extern const char * const riscv_fpr_names_numeric[NFPR];
 extern const char * const riscv_fpr_names_abi[NFPR];
+extern const char * const riscv_vpr_names_numeric[NVPR];
 
 extern const struct riscv_opcode riscv_opcodes[];
 

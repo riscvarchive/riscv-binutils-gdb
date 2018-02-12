@@ -147,7 +147,7 @@ riscv_add_subset (const char *subset)
 static void
 riscv_set_arch (const char *s)
 {
-  const char *all_subsets = "imafdqc";
+  const char *all_subsets = "imafdqcv";
   char *extension = NULL;
   const char *p = s;
 
@@ -401,6 +401,7 @@ enum reg_class
 {
   RCLASS_GPR,
   RCLASS_FPR,
+  RCLASS_VPR,
   RCLASS_CSR,
   RCLASS_MAX
 };
@@ -544,6 +545,25 @@ validate_riscv_insn (const struct riscv_opcode *opc)
 	    return FALSE;
 	  }
 	break;
+
+      case 'V': /* RVV */
+	switch (c = *p++)
+	  {
+	  case 'd': USE_BITS (OP_MASK_RD, OP_SH_RD); break;
+	  case 's': USE_BITS (OP_MASK_RS1, OP_SH_RS1); break;
+	  case 't': USE_BITS (OP_MASK_RS2, OP_SH_RS2); break;
+	  case 'u': USE_BITS (OP_MASK_RS3, OP_SH_RS3); break;
+	  case 'm': USE_BITS (OP_MASK_VMASK, OP_SH_VMASK); break;
+	  case 'i': USE_BITS (OP_MASK_VIMM, OP_SH_VIMM); break;
+	  case 'o': USE_BITS (OP_MASK_RS3, OP_SH_RS3); break;
+	  case 'q': USE_BITS (OP_MASK_RD, OP_SH_RD); break;
+	  default:
+	    as_bad (_("internal: bad RISC-V opcode (unknown operand type `V%c'): %s %s"),
+		    c, opc->name, opc->args);
+	    return FALSE;
+	  }
+	break;
+
       case ',': break;
       case '(': break;
       case ')': break;
@@ -641,6 +661,7 @@ md_begin (void)
   hash_reg_names (RCLASS_GPR, riscv_gpr_names_abi, NGPR);
   hash_reg_names (RCLASS_FPR, riscv_fpr_names_numeric, NFPR);
   hash_reg_names (RCLASS_FPR, riscv_fpr_names_abi, NFPR);
+  hash_reg_names (RCLASS_VPR, riscv_vpr_names_numeric, NVPR);
 
 #define DECLARE_CSR(name, num) hash_reg_name (RCLASS_CSR, #name, num);
 #define DECLARE_CSR_ALIAS(name, num) DECLARE_CSR(name, num);
@@ -1469,6 +1490,72 @@ rvc_lui:
 		  continue;
 		default:
 		  as_bad (_("bad RVC field specifier 'C%c'\n"), *args);
+		}
+	      break;
+
+	    case 'V': /* RVV */
+	      switch (*++args)
+		{
+		case 'd': /* VD */
+		  if (!reg_lookup (&s, RCLASS_VPR, &regno))
+		    break;
+		  INSERT_OPERAND (RD, *ip, regno);
+		  continue;
+		case 's': /* VS1 */
+		  if (!reg_lookup (&s, RCLASS_VPR, &regno))
+		    break;
+		  INSERT_OPERAND (RS1, *ip, regno);
+		  continue;
+		case 't': /* VS2 */
+		  if (!reg_lookup (&s, RCLASS_VPR, &regno))
+		    break;
+		  INSERT_OPERAND (RS2, *ip, regno);
+		  continue;
+		case 'u': /* VS3 */
+		  if (!reg_lookup (&s, RCLASS_VPR, &regno))
+		    break;
+		  INSERT_OPERAND (RS3, *ip, regno);
+		  continue;
+		case 'm': /* vmask */
+		  if (arg_lookup (&s, riscv_vmask, ARRAY_SIZE (riscv_vmask), &regno))
+		    {
+		      INSERT_OPERAND (VMASK, *ip, regno);
+		      continue;
+		    }
+		  break;
+		case 'i': /* VIMM */
+		  if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
+		      || imm_expr->X_op != O_constant
+		      || !VALID_RVV_IMM (imm_expr->X_add_number))
+		    break;
+		  ip->insn_opcode |=
+		    ENCODE_RVV_IMM (imm_expr->X_add_number);
+	          s = expr_end;
+		  continue;
+		case 'o': /* vector load offset */
+		  if (riscv_handle_implicit_zero_offset (imm_expr, s))
+		    continue;
+		  if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
+		      || imm_expr->X_op != O_constant
+		      || !VALID_RVV_LOAD_IMM (imm_expr->X_add_number))
+		    break;
+		  ip->insn_opcode |=
+		    ENCODE_RVV_LOAD_IMM (imm_expr->X_add_number);
+	          s = expr_end;
+		  continue;
+		case 'q': /* Vector store offset */
+		  if (riscv_handle_implicit_zero_offset (imm_expr, s))
+		    continue;
+		  if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
+		      || imm_expr->X_op != O_constant
+		      || !VALID_RVV_STORE_IMM (imm_expr->X_add_number))
+		    break;
+		  ip->insn_opcode |=
+		    ENCODE_RVV_STORE_IMM (imm_expr->X_add_number);
+	          s = expr_end;
+		  continue;
+		default:
+		  as_bad (_("bad RVV field specifier 'V%c'\n"), *args);
 		}
 	      break;
 
