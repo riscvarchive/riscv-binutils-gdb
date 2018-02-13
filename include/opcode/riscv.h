@@ -223,7 +223,15 @@ static const char * const riscv_pred_succ[16] =
 #define OP_MASK_CSR		0xfff
 #define OP_SH_CSR		20
 
+#define OP_MASK_FUNCT3         0x7
+#define OP_SH_FUNCT3           12
+#define OP_MASK_FUNCT7         0x7f
+#define OP_SH_FUNCT7           25
+
 /* RVC fields.  */
+
+#define OP_MASK_OP2            0x3
+#define OP_SH_OP2              0
 
 #define OP_MASK_CRS2 0x1f
 #define OP_SH_CRS2 2
@@ -231,6 +239,11 @@ static const char * const riscv_pred_succ[16] =
 #define OP_SH_CRS1S 7
 #define OP_MASK_CRS2S 0x7
 #define OP_SH_CRS2S 2
+
+#define OP_MASK_CFUNCT4                0xf
+#define OP_SH_CFUNCT4          12
+#define OP_MASK_CFUNCT3                0x7
+#define OP_SH_CFUNCT3          13
 
 /* ABI names for selected x-registers.  */
 
@@ -340,5 +353,6 @@ extern const char * const riscv_fpr_names_numeric[NFPR];
 extern const char * const riscv_fpr_names_abi[NFPR];
 
 extern const struct riscv_opcode riscv_opcodes[];
+extern const struct riscv_opcode riscv_insn_types[];
 
 #endif /* _RISCV_H_ */

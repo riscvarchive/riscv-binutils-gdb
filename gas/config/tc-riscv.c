@@ -221,6 +221,9 @@ riscv_set_arch (const char *s)
 /* Handle of the OPCODE hash table.  */
 static struct hash_control *op_hash = NULL;
 
+/* Handle of the type of .insn hash table.  */
+static struct hash_control *insn_type_hash = NULL;
+
 /* This array holds the chars that always start a comment.  If the
     pre-processor is disabled, these aren't very useful */
 const char comment_chars[] = "#";
@@ -490,13 +493,20 @@ arg_lookup (char **s, const char *const *array, size_t size, unsigned *regnop)
    by the match/mask part of the instruction definition, or by the
    operand list.  */
 static bfd_boolean
-validate_riscv_insn (const struct riscv_opcode *opc)
+validate_riscv_insn (const struct riscv_opcode *opc, int length)
 {
   const char *p = opc->args;
   char c;
   insn_t used_bits = opc->mask;
-  int insn_width = 8 * riscv_insn_length (opc->match);
-  insn_t required_bits = ~0ULL >> (64 - insn_width);
+  int insn_width;
+  insn_t required_bits;
+
+  if (length == 0)
+    insn_width = 8 * riscv_insn_length (opc->match);
+  else
+    insn_width = 8 * length;
+
+  required_bits = ~0ULL >> (64 - insn_width);
 
   if ((used_bits & opc->match) != (opc->match & required_bits))
     {
@@ -538,6 +548,18 @@ validate_riscv_insn (const struct riscv_opcode *opc)
 	  case '>': used_bits |= ENCODE_RVC_IMM (-1U); break;
 	  case 'T': USE_BITS (OP_MASK_CRS2, OP_SH_CRS2); break;
 	  case 'D': USE_BITS (OP_MASK_CRS2S, OP_SH_CRS2S); break;
+	  case 'F': /* funct */
+	    switch (c = *p++)
+	      {
+		case '4': USE_BITS (OP_MASK_CFUNCT4, OP_SH_CFUNCT4); break;
+		case '3': USE_BITS (OP_MASK_CFUNCT3, OP_SH_CFUNCT3); break;
+		default:
+		  as_bad (_("internal: bad RISC-V opcode"
+			    " (unknown operand type `CF%c'): %s %s"),
+			  c, opc->name, opc->args);
+		  return FALSE;
+	      }
+	    break;
 	  default:
 	    as_bad (_("internal: bad RISC-V opcode (unknown operand type `C%c'): %s %s"),
 		    c, opc->name, opc->args);
@@ -555,6 +577,7 @@ validate_riscv_insn (const struct riscv_opcode *opc)
       case 'E':	USE_BITS (OP_MASK_CSR,		OP_SH_CSR);	break;
       case 'I': break;
       case 'R':	USE_BITS (OP_MASK_RS3,		OP_SH_RS3);	break;
+      case 'r': USE_BITS (OP_MASK_RS3,          OP_SH_RS3);     break;
       case 'S':	USE_BITS (OP_MASK_RS1,		OP_SH_RS1);	break;
       case 'U':	USE_BITS (OP_MASK_RS1,		OP_SH_RS1);	/* fallthru */
       case 'T':	USE_BITS (OP_MASK_RS2,		OP_SH_RS2);	break;
@@ -573,6 +596,30 @@ validate_riscv_insn (const struct riscv_opcode *opc)
       case '[': break;
       case ']': break;
       case '0': break;
+      case 'F': /* funct */
+	switch (c = *p++)
+	  {
+	    case '7': USE_BITS (OP_MASK_FUNCT7, OP_SH_FUNCT7); break;
+	    case '3': USE_BITS (OP_MASK_FUNCT3, OP_SH_FUNCT3); break;
+	    default:
+	      as_bad (_("internal: bad RISC-V opcode"
+			" (unknown operand type `F%c'): %s %s"),
+		      c, opc->name, opc->args);
+	    return FALSE;
+	  }
+	break;
+      case 'O': /* opcode */
+	switch (c = *p++)
+	  {
+	    case '4': USE_BITS (OP_MASK_OP, OP_SH_OP); break;
+	    case '2': USE_BITS (OP_MASK_OP2, OP_SH_OP2); break;
+	    default:
+	      as_bad (_("internal: bad RISC-V opcode"
+			" (unknown operand type `F%c'): %s %s"),
+		      c, opc->name, opc->args);
+	     return FALSE;
+	  }
+	break;
       default:
 	as_bad (_("internal: bad RISC-V opcode "
 		  "(unknown operand type `%c'): %s %s"),
@@ -596,45 +643,61 @@ struct percent_op_match
   bfd_reloc_code_real_type reloc;
 };
 
-/* This function is called once, at assembler startup time.  It should set up
-   all the tables, etc. that the MD part of the assembler will need.  */
-
-void
-md_begin (void)
+static struct hash_control *
+init_opcode_hash (const struct riscv_opcode *opcodes,
+		  bfd_boolean insn_directive_p)
 {
   int i = 0;
-  unsigned long mach = xlen == 64 ? bfd_mach_riscv64 : bfd_mach_riscv32;
-
-  if (! bfd_set_arch_mach (stdoutput, bfd_arch_riscv, mach))
-    as_warn (_("Could not set architecture and machine"));
-
-  op_hash = hash_new ();
-
-  while (riscv_opcodes[i].name)
+  int length;
+  struct hash_control *hash = hash_new ();
+  while (opcodes[i].name)
     {
-      const char *name = riscv_opcodes[i].name;
+      const char *name = opcodes[i].name;
       const char *hash_error =
-	hash_insert (op_hash, name, (void *) &riscv_opcodes[i]);
+	hash_insert (hash, name, (void *) &opcodes[i]);
 
       if (hash_error)
 	{
 	  fprintf (stderr, _("internal error: can't hash `%s': %s\n"),
-		   riscv_opcodes[i].name, hash_error);
+		   opcodes[i].name, hash_error);
 	  /* Probably a memory allocation problem?  Give up now.  */
 	  as_fatal (_("Broken assembler.  No assembly attempted."));
 	}
 
       do
 	{
-	  if (riscv_opcodes[i].pinfo != INSN_MACRO)
+	  if (opcodes[i].pinfo != INSN_MACRO)
 	    {
-	      if (!validate_riscv_insn (&riscv_opcodes[i]))
+	      if (insn_directive_p)
+		length = ((name[0] == 'c') ? 2 : 4);
+	      else
+		length = 0; /* Let assembler determine the length. */
+	      if (!validate_riscv_insn (&opcodes[i], length))
 		as_fatal (_("Broken assembler.  No assembly attempted."));
 	    }
+	  else
+	    gas_assert (!insn_directive_p);
 	  ++i;
 	}
-      while (riscv_opcodes[i].name && !strcmp (riscv_opcodes[i].name, name));
+      while (opcodes[i].name && !strcmp (opcodes[i].name, name));
     }
+
+  return hash;
+}
+
+/* This function is called once, at assembler startup time.  It should set up
+   all the tables, etc. that the MD part of the assembler will need.  */
+
+void
+md_begin (void)
+{
+  unsigned long mach = xlen == 64 ? bfd_mach_riscv64 : bfd_mach_riscv32;
+
+  if (! bfd_set_arch_mach (stdoutput, bfd_arch_riscv, mach))
+    as_warn (_("Could not set architecture and machine"));
+
+  op_hash = init_opcode_hash (riscv_opcodes, FALSE);
+  insn_type_hash = init_opcode_hash (riscv_insn_types, TRUE);
 
   reg_names_hash = hash_new ();
   hash_reg_names (RCLASS_GPR, riscv_gpr_names_numeric, NGPR);
@@ -1210,7 +1273,7 @@ riscv_handle_implicit_zero_offset (expressionS *expr, const char *s)
 
 static const char *
 riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
-	  bfd_reloc_code_real_type *imm_reloc)
+	  bfd_reloc_code_real_type *imm_reloc, struct hash_control *hash)
 {
   char *s;
   const char *args;
@@ -1233,7 +1296,7 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 	break;
       }
 
-  insn = (struct riscv_opcode *) hash_find (op_hash, str);
+  insn = (struct riscv_opcode *) hash_find (hash, str);
 
   argsStart = s;
   for ( ; insn && insn->name && strcmp (insn->name, str) == 0; insn++)
@@ -1258,7 +1321,12 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 		{
 		  if (!insn->match_func (insn, ip->insn_opcode))
 		    break;
-		  if (riscv_insn_length (insn->match) == 2 && !riscv_opts.rvc)
+
+		  /* For .insn, insn->match and insn->mask are 0.  */
+		  if (riscv_insn_length ((insn->match == 0 && insn->mask == 0)
+					 ? ip->insn_opcode
+					 : insn->match) == 2
+		      && !riscv_opts.rvc)
 		    break;
 		}
 	      if (*s != '\0')
@@ -1467,6 +1535,43 @@ rvc_lui:
 		    break;
 		  INSERT_OPERAND (CRS2, *ip, regno);
 		  continue;
+		case 'F':
+		  switch (*++args)
+		    {
+		      case '4':
+		        if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
+			    || imm_expr->X_op != O_constant
+			    || imm_expr->X_add_number < 0
+			    || imm_expr->X_add_number >= 16)
+			  {
+			    as_bad (_("bad value for funct4 field, "
+				      "value must be 0...15"));
+			    break;
+			  }
+
+			INSERT_OPERAND (CFUNCT4, *ip, imm_expr->X_add_number);
+			imm_expr->X_op = O_absent;
+			s = expr_end;
+			continue;
+		      case '3':
+			if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
+			    || imm_expr->X_op != O_constant
+			    || imm_expr->X_add_number < 0
+			    || imm_expr->X_add_number >= 8)
+			  {
+			    as_bad (_("bad value for funct3 field, "
+				      "value must be 0 ~ 7"));
+			    break;
+			  }
+			INSERT_OPERAND (CFUNCT3, *ip, imm_expr->X_add_number);
+			imm_expr->X_op = O_absent;
+			s = expr_end;
+			continue;
+		      default:
+			as_bad (_("bad FUNCT field specifier 'F%c'\n"), *args);
+		    }
+		  break;
+
 		default:
 		  as_bad (_("bad RVC field specifier 'C%c'\n"), *args);
 		}
@@ -1711,6 +1816,83 @@ jump:
 	      else
 		*imm_reloc = BFD_RELOC_RISCV_CALL;
 	      continue;
+	    case 'O':
+	      switch (*++args)
+		{
+		case '4':
+		  if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
+		      || imm_expr->X_op != O_constant
+		      || imm_expr->X_add_number < 0
+		      || imm_expr->X_add_number >= 128
+		      || (imm_expr->X_add_number & 0x3) != 3)
+		    {
+		      as_bad (_("bad value for opcode field, "
+				"value must be 0...127 and "
+				"lower 2 bits must be 0x3"));
+		      break;
+		    }
+
+		  INSERT_OPERAND (OP, *ip, imm_expr->X_add_number);
+		  imm_expr->X_op = O_absent;
+		  s = expr_end;
+		  continue;
+		case '2':
+		  if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
+		      || imm_expr->X_op != O_constant
+		      || imm_expr->X_add_number < 0
+		      || imm_expr->X_add_number >= 3)
+		    {
+		      as_bad (_("bad value for opcode field, "
+				"value must be 0...2"));
+		      break;
+		    }
+
+		  INSERT_OPERAND (OP2, *ip, imm_expr->X_add_number);
+		  imm_expr->X_op = O_absent;
+		  s = expr_end;
+		  continue;
+		default:
+		  as_bad (_("bad Opcode field specifier 'O%c'\n"), *args);
+		}
+	      break;
+
+	    case 'F':
+	      switch (*++args)
+		{
+		case '7':
+		  if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
+		      || imm_expr->X_op != O_constant
+		      || imm_expr->X_add_number < 0
+		      || imm_expr->X_add_number >= 128)
+		    {
+		      as_bad (_("bad value for funct7 field, "
+				"value must be 0...127"));
+		      break;
+		    }
+
+		  INSERT_OPERAND (FUNCT7, *ip, imm_expr->X_add_number);
+		  imm_expr->X_op = O_absent;
+		  s = expr_end;
+		  continue;
+		case '3':
+		  if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
+		      || imm_expr->X_op != O_constant
+		      || imm_expr->X_add_number < 0
+		      || imm_expr->X_add_number >= 8)
+		    {
+		      as_bad (_("bad value for funct3 field, "
+			        "value must be 0...7"));
+		      break;
+		    }
+
+		  INSERT_OPERAND (FUNCT3, *ip, imm_expr->X_add_number);
+		  imm_expr->X_op = O_absent;
+		  s = expr_end;
+		  continue;
+		default:
+		  as_bad (_("bad FUNCT field specifier 'F%c'\n"), *args);
+		}
+	      break;
 
 	    default:
 	      as_fatal (_("internal error: bad argument type %c"), *args);
@@ -1736,7 +1918,7 @@ md_assemble (char *str)
   expressionS imm_expr;
   bfd_reloc_code_real_type imm_reloc = BFD_RELOC_UNUSED;
 
-  const char *error = riscv_ip (str, &insn, &imm_expr, &imm_reloc);
+  const char *error = riscv_ip (str, &insn, &imm_expr, &imm_reloc, op_hash);
 
   if (error)
     {
@@ -2604,6 +2786,36 @@ s_riscv_leb128 (int sign)
   return s_leb128 (sign);
 }
 
+static void
+s_riscv_insn (int x ATTRIBUTE_UNUSED)
+{
+  char *str = input_line_pointer;
+  struct riscv_cl_insn insn;
+  expressionS imm_expr;
+  bfd_reloc_code_real_type imm_reloc = BFD_RELOC_UNUSED;
+  char *n = strchr (str, '\n');
+  if (n)
+    *n = '\0';
+
+  const char *error = riscv_ip (str, &insn, &imm_expr,
+				&imm_reloc, insn_type_hash);
+
+  if (n)
+    input_line_pointer = n;
+  else
+    while (*input_line_pointer++);
+
+  if (error)
+    {
+      as_bad ("%s `%s'", error, str);
+      return;
+    }
+
+  gas_assert (insn.insn_mo->pinfo != INSN_MACRO);
+
+  append_insn (&insn, &imm_expr, imm_reloc);
+}
+
 /* Pseudo-op table.  */
 
 static const pseudo_typeS riscv_pseudo_table[] =
@@ -2618,6 +2830,7 @@ static const pseudo_typeS riscv_pseudo_table[] =
   {"bss", s_bss, 0},
   {"uleb128", s_riscv_leb128, 0},
   {"sleb128", s_riscv_leb128, 1},
+  {"insn", s_riscv_insn, 0},
 
   { NULL, NULL, 0 },
 };

@@ -733,3 +733,24 @@ const struct riscv_opcode riscv_opcodes[] =
 /* Terminate the list.  */
 {0, 0, 0, 0, 0, 0, 0}
 };
+
+const struct riscv_opcode riscv_insn_types[] =
+{
+/* name,  isa,           operands, match, mask,    match_func, pinfo.  */
+{"r",     "I",   "O4,F3,F7,d,s,t",     0,    0,  match_opcode, 0 },
+{"i",     "I",      "O4,F3,d,s,j",     0,    0,  match_opcode, 0 },
+{"i",     "I",     "O4,F3,d,o(s)",     0,    0,  match_opcode, 0 },
+{"s",     "I",     "O4,F3,d,o(s)",     0,    0,  match_opcode, 0 },
+{"sb",    "I",      "O4,F3,s,t,p",     0,    0,  match_opcode, 0 },
+{"sb",    "I",     "O4,F3,t,q(s)",     0,    0,  match_opcode, 0 },
+{"u",     "I",           "O4,d,u",     0,    0,  match_opcode, 0 },
+{"uj",    "I",           "O4,d,a",     0,    0,  match_opcode, 0 },
+{"cr",    "C",      "O2,CF4,d,CV",     0,    0,  match_opcode, 0 },
+{"ci",    "C",      "O2,CF3,d,Cj",     0,    0,  match_opcode, 0 },
+{"ci",    "C",      "O2,CF3,d,Co",     0,    0,  match_opcode, 0 },
+{"ciw",   "C",      "O2,CF3,d,Co",     0,    0,  match_opcode, 0 },
+{"cb",    "C",     "O2,CF3,Cs,Cp",     0,    0,  match_opcode, 0 },
+{"cj",    "C",        "O2,CF3,Ca",     0,    0,  match_opcode, 0 },
+/* Terminate the list.  */
+{0, 0, 0, 0, 0, 0, 0}
+};
