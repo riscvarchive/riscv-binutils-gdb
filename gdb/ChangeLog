@@ -1,5 +1,10 @@
 2018-08-23  Andrew Burgess  <andrew.burgess@embecosm.com>
 
+	* regcache.c (cooked_read_test): Add riscv to the list of
+	architectures that have a save_reggroup.
+
+2018-08-23  Andrew Burgess  <andrew.burgess@embecosm.com>
+
 	* riscv-tdep.c (riscv_register_name): Remove target description
 	support.
 	(riscv_gdbarch_init): Remove target description check.
