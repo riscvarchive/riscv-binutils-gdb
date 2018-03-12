@@ -1,5 +1,16 @@
 2018-08-23  Andrew Burgess  <andrew.burgess@embecosm.com>
 
+	* riscv-tdep.c (riscv_sw_breakpoint_from_kind): Add localization
+	to error message string.
+	(riscv_register_name): Use xsnprintf instead of sprintf.
+	(riscv_insn::fetch_instruction): Use gdb_assert instead of
+	internal_error.
+	(riscv_print_arg_location): Use gdb_assert_not_reached instead of
+	error.
+	(riscv_push_dummy_call): Likewise.
+
+2018-08-23  Andrew Burgess  <andrew.burgess@embecosm.com>
+
 	* regcache.c (cooked_read_test): Add riscv to the list of
 	architectures that have a save_reggroup.
 
