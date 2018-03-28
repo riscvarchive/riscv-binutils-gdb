@@ -538,7 +538,20 @@ riscv_print_register_formatted (struct ui_file *file, struct frame_info *frame,
       unsigned long long d;
       int prefer_alias = regnum >= RISCV_FIRST_CSR_REGNUM;
 
-      if (!deprecated_frame_register_read (frame, regnum, raw_buffer))
+      int read_result = -1;
+      TRY
+        {
+          read_result = deprecated_frame_register_read (frame, regnum, raw_buffer);
+        }
+      CATCH (ex, RETURN_MASK_ERROR)
+        {
+          fprintf_filtered (file, "%-15s%s\n",
+                            gdbarch_register_name (gdbarch, regnum),
+                            ex.message);
+          return;
+        }
+
+      if (!read_result)
 	{
 	  fprintf_filtered (file, "%-15s[Invalid]\n",
 			    gdbarch_register_name (gdbarch, regnum));
