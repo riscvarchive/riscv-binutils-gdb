@@ -510,7 +510,19 @@ riscv_print_fp_register (struct ui_file *file, struct frame_info *frame,
   struct gdbarch *gdbarch = get_frame_arch (frame);
   struct value_print_options opts;
   const char *regname;
-  value *val = get_frame_register_value(frame, regnum);
+  value *val = NULL;
+
+  TRY
+    {
+      val = get_frame_register_value(frame, regnum);
+    }
+  CATCH (ex, RETURN_MASK_ERROR)
+    {
+      fprintf_filtered (file, "%-15s%s",
+                        gdbarch_register_name (gdbarch, regnum),
+                        ex.message);
+      return;
+    }
 
   fprintf_filtered (file, "%-15s", gdbarch_register_name (gdbarch, regnum));
 
