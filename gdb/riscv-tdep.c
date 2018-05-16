@@ -595,13 +595,13 @@ riscv_print_register_formatted (struct ui_file *file, struct frame_info *frame,
 	    internal_error (__FILE__, __LINE__, _("unknown size for mstatus"));
 	  unsigned xlen = size * 4;
 	  fprintf_filtered (file, "SD:%X", (int)((d >> (xlen-1)) & 0x1));
-          if (size > 4)
-            fprintf_filtered (file, " SXL:%X UXL:%X",
-                              (int)((d >> 34) & 3), (int)((d >> 32) & 3));
+	  if (size > 4)
+	    fprintf_filtered (file, " SXL:%X UXL:%X",
+			      (int)((d >> 34) & 3), (int)((d >> 32) & 3));
 	  fprintf_filtered (file,
-                            " TSR:%X TW:%X TVM:%X MXR:%X SUM:%X MPRV:%X XS:%X "
-                            "FS:%X MPP:%X SPP:%X MPIE:%X SPIE:%X UPIE:%X MIE:%X "
-                            "SIE:%X UIE:%X",
+			    " TSR:%X TW:%X TVM:%X MXR:%X SUM:%X MPRV:%X XS:%X "
+			    "FS:%X MPP:%X SPP:%X MPIE:%X SPIE:%X UPIE:%X MIE:%X "
+			    "SIE:%X UIE:%X",
 			    (int)((d >> 22) & 0x1f),
 			    (int)((d >> 21) & 0x1),
 			    (int)((d >> 20) & 0x1),
