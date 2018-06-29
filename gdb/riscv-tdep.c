@@ -2475,6 +2475,16 @@ registers_init (struct gdbarch *gdbarch, struct gdbarch_info info)
 
       if (use_tdesc_registers)
         {
+          // This number apparently must be at least as large as the number of
+          // registers in the target description. (See assertion in
+          // tdesc_use_registers().) But that seems to defeat part of the point
+          // of the target description, so I might be missing something.
+          set_gdbarch_num_regs (gdbarch, RISCV_NUM_REGS);
+          set_gdbarch_sp_regnum (gdbarch, RISCV_SP_REGNUM);
+          set_gdbarch_pc_regnum (gdbarch, RISCV_PC_REGNUM);
+          set_gdbarch_ps_regnum (gdbarch, RISCV_FP_REGNUM);
+          set_gdbarch_deprecated_fp_regnum (gdbarch, RISCV_FP_REGNUM);
+
           // This is going to call set_gdbarch_register_reggroup_p (and a few
           // others; see the end of tdesc_use_registers()).
           tdesc_use_registers (gdbarch, info.target_desc, tdesc_data);
@@ -2515,6 +2525,11 @@ registers_init (struct gdbarch *gdbarch, struct gdbarch_info info)
             user_reg_add (gdbarch, *name,
                           value_of_riscv_user_reg, &reg_info->number);
         }
+      set_gdbarch_num_regs (gdbarch, RISCV_NUM_REGS);
+      set_gdbarch_sp_regnum (gdbarch, RISCV_SP_REGNUM);
+      set_gdbarch_pc_regnum (gdbarch, RISCV_PC_REGNUM);
+      set_gdbarch_ps_regnum (gdbarch, RISCV_FP_REGNUM);
+      set_gdbarch_deprecated_fp_regnum (gdbarch, RISCV_FP_REGNUM);
     }
 
   return use_tdesc_registers;
