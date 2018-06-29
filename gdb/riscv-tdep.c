@@ -2596,6 +2596,10 @@ riscv_gdbarch_init (struct gdbarch_info info,
           // others; see the end of tdesc_use_registers()).
           tdesc_use_registers (gdbarch, info.target_desc, tdesc_data);
 
+          // Add the all group. No register explicitly belongs to it, but it
+          // does exist and we need to add it so users can use it.
+          reggroup_add (gdbarch, all_reggroup);
+
           // Now go through again, adding aliases.
           for (auto reg_info = riscv_reg_info.begin();
                reg_info != riscv_reg_info.end(); ++reg_info)
