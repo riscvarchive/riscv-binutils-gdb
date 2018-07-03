@@ -622,52 +622,54 @@ riscv_print_one_register_info (struct gdbarch *gdbarch,
 
       if (print_raw_format)
         {
+          int size_bytes = register_size (gdbarch, regnum);
+          LONGEST d = value_as_long (val);
           if (regnum == RISCV_CSR_MSTATUS_REGNUM)
             {
-              LONGEST d;
-              int size = register_size (gdbarch, regnum);
-              unsigned xlen;
+              unsigned xlen = size_bytes * 4;
+              fprintf_filtered (file, "\tSD:%X", (int)((d >> (xlen-1)) & 0x1));
+              if (size_bytes > 4)
+                fprintf_filtered (file, " SXL:%X UXL:%X",
+                                  (int)((d >> 34) & 3), (int)((d >> 32) & 3));
 
-              d = value_as_long (val);
-              xlen = size * 4;
               fprintf_filtered (file,
-                                "\tSD:%X VM:%02X MXR:%X PUM:%X MPRV:%X XS:%X "
-                                "FS:%X MPP:%x HPP:%X SPP:%X MPIE:%X HPIE:%X "
-                                "SPIE:%X UPIE:%X MIE:%X HIE:%X SIE:%X UIE:%X",
-                                (int) ((d >> (xlen - 1)) & 0x1),
-                                (int) ((d >> 24) & 0x1f),
-                                (int) ((d >> 19) & 0x1),
-                                (int) ((d >> 18) & 0x1),
-                                (int) ((d >> 17) & 0x1),
-                                (int) ((d >> 15) & 0x3),
-                                (int) ((d >> 13) & 0x3),
-                                (int) ((d >> 11) & 0x3),
-                                (int) ((d >> 9) & 0x3),
-                                (int) ((d >> 8) & 0x1),
-                                (int) ((d >> 7) & 0x1),
-                                (int) ((d >> 6) & 0x1),
-                                (int) ((d >> 5) & 0x1),
-                                (int) ((d >> 4) & 0x1),
-                                (int) ((d >> 3) & 0x1),
-                                (int) ((d >> 2) & 0x1),
-                                (int) ((d >> 1) & 0x1),
-                                (int) ((d >> 0) & 0x1));
+                                " TSR:%X TW:%X TVM:%X MXR:%X SUM:%X MPRV:%X XS:%X "
+                                "FS:%X MPP:%X SPP:%X MPIE:%X SPIE:%X UPIE:%X MIE:%X "
+                                "SIE:%X UIE:%X",
+                                (int)((d >> 22) & 0x1f),
+                                (int)((d >> 21) & 0x1),
+                                (int)((d >> 20) & 0x1),
+                                (int)((d >> 19) & 0x1),
+                                (int)((d >> 18) & 0x1),
+                                (int)((d >> 17) & 0x1),
+                                (int)((d >> 15) & 0x3),
+                                (int)((d >> 13) & 0x3),
+                                (int)((d >> 11) & 0x3),
+                                (int)((d >> 8) & 0x1),
+                                (int)((d >> 7) & 0x1),
+                                (int)((d >> 5) & 0x1),
+                                (int)((d >> 4) & 0x1),
+                                (int)((d >> 3) & 0x1),
+                                (int)((d >> 1) & 0x1),
+                                (int)((d >> 0) & 0x1));
+
             }
           else if (regnum == RISCV_CSR_MISA_REGNUM)
             {
-              int base;
-              unsigned xlen, i;
-              LONGEST d;
+              unsigned xlen = 0;
+              if (size_bytes >= 16 && sizeof(d) >= 16 && ((d >> 126) & 3) == 3)
+                xlen = 128;
+              if (size_bytes >= 8 && sizeof(d) >= 8 && ((d >> 62) & 3) == 2)
+                xlen = 64;
+              if (size_bytes >= 4 && ((d >> 30) & 3) == 1)
+                xlen = 32;
 
-              d = value_as_long (val);
-              base = d >> 30;
-              xlen = 16;
+              if (xlen)
+                fprintf_filtered (file, "\tRV%d", xlen);
+              else
+                fprintf_filtered (file, "\tRV??");
 
-              for (; base > 0; base--)
-                xlen *= 2;
-              fprintf_filtered (file, "\tRV%d", xlen);
-
-              for (i = 0; i < 26; i++)
+              for (unsigned i = 0; i < 26; i++)
                 {
                   if (d & (1 << i))
                     fprintf_filtered (file, "%c", 'A' + i);
@@ -677,10 +679,6 @@ riscv_print_one_register_info (struct gdbarch *gdbarch,
                    || regnum == RISCV_CSR_FFLAGS_REGNUM
                    || regnum == RISCV_CSR_FRM_REGNUM)
             {
-              LONGEST d;
-
-              d = value_as_long (val);
-
               fprintf_filtered (file, "\t");
               if (regnum != RISCV_CSR_FRM_REGNUM)
                 fprintf_filtered (file,
@@ -716,10 +714,8 @@ riscv_print_one_register_info (struct gdbarch *gdbarch,
             }
           else if (regnum == RISCV_PRIV_REGNUM)
             {
-              LONGEST d;
               uint8_t priv;
 
-              d = value_as_long (val);
               priv = d & 0xff;
 
               if (priv < 4)
