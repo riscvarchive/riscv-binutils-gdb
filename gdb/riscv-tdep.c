@@ -563,14 +563,27 @@ riscv_print_one_register_info (struct gdbarch *gdbarch,
                                struct frame_info *frame,
                                int regnum)
 {
-  const char *name = gdbarch_register_name (gdbarch, regnum);
-  struct value *val = value_of_register (regnum, frame);
-  struct type *regtype = value_type (val);
-  int print_raw_format;
   enum tab_stops { value_column_1 = 15 };
+
+  const char *name = gdbarch_register_name (gdbarch, regnum);
 
   fputs_filtered (name, file);
   print_spaces_filtered (value_column_1 - strlen (name), file);
+
+  struct value *val = NULL;
+  TRY
+    {
+      val = value_of_register (regnum, frame);
+    }
+  CATCH (ex, RETURN_MASK_ERROR)
+    {
+      fprintf_filtered (file, "%s\n", ex.message);
+      return;
+    }
+  END_CATCH
+
+  struct type *regtype = value_type (val);
+  int print_raw_format;
 
   print_raw_format = (value_entirely_available (val)
                       && !value_optimized_out (val));
