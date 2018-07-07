@@ -396,13 +396,11 @@ riscv_isa_flen (struct gdbarch *gdbarch)
 
 /* Return true if the target for GDBARCH has floating point hardware.  */
 
-/* TODO: reintroduce
 static bool
 riscv_has_fp_regs (struct gdbarch *gdbarch)
 {
   return (riscv_isa_flen (gdbarch) > 0);
 }
-*/
 
 /* Return true if GDBARCH is using any of the floating point hardware ABIs.  */
 
@@ -764,10 +762,9 @@ riscv_register_reggroup_p (struct gdbarch  *gdbarch, int regnum,
 
   if (reggroup == restore_reggroup || reggroup == save_reggroup)
     {
-      if (reg->number >= RISCV_FIRST_FP_REGNUM && reg->number
-          <= RISCV_LAST_FP_REGNUM)
-        return (riscv_read_misa_reg (NULL) & ((1<<('F'-'A')) | (1<<('D'-'A')) |
-                                              (1<<('Q'-'A')))) ? 1 : 0;
+      if (reg->number >= RISCV_FIRST_FP_REGNUM &&
+          reg->number <= RISCV_LAST_FP_REGNUM)
+        return riscv_has_fp_regs (gdbarch);
 
       return reg->save_restore;
     }
