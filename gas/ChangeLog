@@ -1,3 +1,7 @@
+2018-07-27  Jim Wilson  <jimw@sifive.com>
+
+	* configure.tgt (riscv*): Accept as alias for riscv32*.
+
 2018-07-18  Nick Clifton  <nickc@redhat.com>
 
 	2.31.1 Release point.
