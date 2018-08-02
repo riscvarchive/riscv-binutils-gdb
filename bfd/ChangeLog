@@ -1,3 +1,8 @@
+2018-08-02  Jim Wilson  <jimw@sifive.com>
+
+	* elfnn-riscv.c (riscv_elf_create_dynamic_sections): For .tdata.dyn,
+	add SEC_LINKER_CREATED flag.
+
 2018-07-18  Nick Clifton  <nickc@redhat.com>
 
 	2.31.1 Release point.
