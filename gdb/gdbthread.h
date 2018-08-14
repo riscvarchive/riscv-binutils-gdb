@@ -168,10 +168,19 @@ struct thread_suspend_state
 
   /* Record the pc of the thread the last time it stopped.  (This is
      not the current thread's PC as that may have changed since the
-     last stop, e.g., "return" command, or "p $pc = 0xf000").  This is
-     used in coordination with stop_reason and waitstatus_pending_p:
-     if the thread's PC is changed since it last stopped, a pending
-     breakpoint waitstatus is discarded.  */
+     last stop, e.g., "return" command, or "p $pc = 0xf000").
+
+     - If the thread's PC has not changed since the thread last
+       stopped, then proceed skips a breakpoint at the current PC,
+       otherwise we let the thread run into the breakpoint.
+
+     - If the thread has an unprocessed event pending, as indicated by
+       waitstatus_pending_p, this is used in coordination with
+       stop_reason: if the thread's PC has changed since the thread
+       last stopped, a pending breakpoint waitstatus is discarded.
+
+     - If the thread is running, this is set to -1, to avoid leaving
+       it with a stale value, to make it easier to catch bugs.  */
   CORE_ADDR stop_pc;
 };
 
@@ -208,7 +217,7 @@ public:
   {
     /* If this is the current thread, or there's code out there that
        relies on it existing (refcount > 0) we can't delete yet.  */
-    return (refcount () == 0 && !ptid_equal (ptid, inferior_ptid));
+    return (refcount () == 0 && ptid != inferior_ptid);
   }
 
   /* Mark this thread as running and notify observers.  */
@@ -373,7 +382,7 @@ public:
 /* A gdb::ref_ptr pointer to a thread_info.  */
 
 using thread_info_ref
-  = gdb::ref_ptr<thread_info, refcounted_object_ref_policy>;
+  = gdb::ref_ptr<struct thread_info, refcounted_object_ref_policy>;
 
 /* Create an empty thread list, or empty the existing one.  */
 extern void init_thread_list (void);
@@ -393,12 +402,12 @@ extern struct thread_info *add_thread_with_info (ptid_t ptid,
 						 struct private_thread_info *);
 
 /* Delete an existing thread list entry.  */
-extern void delete_thread (thread_info *thread);
+extern void delete_thread (struct thread_info *thread);
 
 /* Delete an existing thread list entry, and be quiet about it.  Used
    after the process this thread having belonged to having already
    exited, for example.  */
-extern void delete_thread_silent (thread_info *thread);
+extern void delete_thread_silent (struct thread_info *thread);
 
 /* Delete a step_resume_breakpoint from the thread database.  */
 extern void delete_step_resume_breakpoint (struct thread_info *);
@@ -448,15 +457,15 @@ struct thread_info *find_thread_by_handle (struct value *thread_handle,
 					   struct inferior *inf);
 
 /* Finds the first thread of the specified inferior.  */
-extern thread_info *first_thread_of_inferior (inferior *inf);
+extern struct thread_info *first_thread_of_inferior (inferior *inf);
 
 /* Returns any thread of inferior INF, giving preference to the
    current thread.  */
-extern thread_info *any_thread_of_inferior (inferior *inf);
+extern struct thread_info *any_thread_of_inferior (inferior *inf);
 
 /* Returns any non-exited thread of inferior INF, giving preference to
    the current thread, and to not executing threads.  */
-extern thread_info *any_live_thread_of_inferior (inferior *inf);
+extern struct thread_info *any_live_thread_of_inferior (inferior *inf);
 
 /* Change the ptid of thread OLD_PTID to NEW_PTID.  */
 void thread_change_ptid (ptid_t old_ptid, ptid_t new_ptid);
@@ -493,13 +502,12 @@ extern struct thread_info *iterate_over_threads (thread_callback_func, void *);
 extern int thread_count (void);
 
 /* Switch context to thread THR.  Also sets the STOP_PC global.  */
-extern void switch_to_thread (thread_info *thr);
+extern void switch_to_thread (struct thread_info *thr);
 
 /* Switch context to no thread selected.  */
 extern void switch_to_no_thread ();
 
-/* Switch from one thread to another.  Does not read registers and
-   sets STOP_PC to -1.  */
+/* Switch from one thread to another.  Does not read registers.  */
 extern void switch_to_thread_no_regs (struct thread_info *thread);
 
 /* Marks or clears thread(s) PTID as resumed.  If PTID is
@@ -660,7 +668,7 @@ class enable_thread_stack_temporaries
 {
 public:
 
-  explicit enable_thread_stack_temporaries (thread_info *thr)
+  explicit enable_thread_stack_temporaries (struct thread_info *thr)
     : m_thr (thr)
   {
     gdb_assert (m_thr != NULL);
@@ -683,17 +691,17 @@ public:
 
 private:
 
-  thread_info *m_thr;
+  struct thread_info *m_thr;
 };
 
-extern bool thread_stack_temporaries_enabled_p (thread_info *tp);
+extern bool thread_stack_temporaries_enabled_p (struct thread_info *tp);
 
-extern void push_thread_stack_temporary (thread_info *tp, struct value *v);
+extern void push_thread_stack_temporary (struct thread_info *tp, struct value *v);
 
-extern value *get_last_thread_stack_temporary (thread_info *tp);
+extern value *get_last_thread_stack_temporary (struct thread_info *tp);
 
 extern bool value_in_thread_stack_temporaries (struct value *,
-					       thread_info *thr);
+					       struct thread_info *thr);
 
 /* Add TP to the end of its inferior's pending step-over chain.  */
 
@@ -723,7 +731,7 @@ extern void validate_registers_access (void);
 
 /* Check whether it makes sense to access a register of THREAD at this point.
    Returns true if registers may be accessed; false otherwise.  */
-extern bool can_access_registers_thread (thread_info *thread);
+extern bool can_access_registers_thread (struct thread_info *thread);
 
 /* Returns whether to show which thread hit the breakpoint, received a
    signal, etc. and ended up causing a user-visible stop.  This is

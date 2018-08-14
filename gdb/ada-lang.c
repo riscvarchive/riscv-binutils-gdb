@@ -5205,8 +5205,6 @@ is_package_name (const char *name)
      to NAME not existing in our list of symbols.  There is only one
      small complication with library-level functions (see below).  */
 
-  char *fun_name;
-
   /* If it is a function that has not been defined at library level,
      then we should be able to look it up in the symbols.  */
   if (standard_lookup (name, NULL, VAR_DOMAIN) != NULL)
@@ -5220,9 +5218,9 @@ is_package_name (const char *name)
   if (strstr (name, "__") != NULL)
     return 0;
 
-  fun_name = xstrprintf ("_ada_%s", name);
+  std::string fun_name = string_printf ("_ada_%s", name);
 
-  return (standard_lookup (fun_name, NULL, VAR_DOMAIN) == NULL);
+  return (standard_lookup (fun_name.c_str (), NULL, VAR_DOMAIN) == NULL);
 }
 
 /* Return nonzero if SYM corresponds to a renaming entity that is
@@ -5786,7 +5784,6 @@ ada_lookup_symbol_list_worker (const lookup_name_info &lookup_name,
 {
   int syms_from_global_search;
   int ndefns;
-  int results_size;
   auto_obstack obstack;
 
   ada_add_all_symbols (&obstack, block, lookup_name,
@@ -12108,7 +12105,7 @@ ada_exception_support_info_sniffer (void)
      loaded.  If it is not started, this may mean that the symbol is
      in a shared library.  */
 
-  if (ptid_get_pid (inferior_ptid) == 0)
+  if (inferior_ptid.pid () == 0)
     error (_("Unable to insert catchpoint. Try to start the program first."));
 
   /* At this point, we know that we are debugging an Ada program and

@@ -731,7 +731,12 @@ arc_elf_merge_attributes (bfd *ibfd, struct bfd_link_info *info)
 	    out_attr[i].i = in_attr[i].i;
 	  break;
 
+	  /* The CPU name is given by the vendor, just choose an
+	     existing one if missing or different.  There are no fail
+	     criteria if they different or both missing.  */
 	case Tag_ARC_CPU_name:
+	  if (!out_attr[i].s && in_attr[i].s)
+	    out_attr[i].s = _bfd_elf_attr_strdup (obfd, in_attr[i].s);
 	  break;
 
 	case Tag_ARC_ABI_rf16:
@@ -763,7 +768,9 @@ arc_elf_merge_attributes (bfd *ibfd, struct bfd_link_info *info)
 
 	    BFD_ASSERT (in_attr[i].i < 3);
 	    BFD_ASSERT (out_attr[i].i < 3);
-	    if (out_attr[i].i != 0 && in_attr[i].i != 0
+	    if (out_attr[i].i == 0)
+	      out_attr[i].i = in_attr[i].i;
+	    else if (out_attr[i].i != 0 && in_attr[i].i != 0
 		&& out_attr[i].i != in_attr[i].i)
 	      {
 		_bfd_error_handler
@@ -788,7 +795,9 @@ arc_elf_merge_attributes (bfd *ibfd, struct bfd_link_info *info)
 	  if (!tagname)
 	    tagname = "ABI exceptions";
 
-	  if (out_attr[i].i != 0 && in_attr[i].i != 0
+	  if (out_attr[i].i == 0)
+	    out_attr[i].i = in_attr[i].i;
+	  else if (out_attr[i].i != 0 && in_attr[i].i != 0
 	      && out_attr[i].i != in_attr[i].i)
 	    {
 	      _bfd_error_handler
@@ -803,6 +812,11 @@ arc_elf_merge_attributes (bfd *ibfd, struct bfd_link_info *info)
 
 	case Tag_ARC_ISA_config:
 	  /* It is handled in Tag_ARC_CPU_base.  */
+	  break;
+
+	case Tag_ARC_ATR_version:
+	  if (out_attr[i].i == 0)
+	    out_attr[i].i = in_attr[i].i;
 	  break;
 
 	default:
@@ -903,14 +917,16 @@ arc_elf_merge_private_bfd_data (bfd *ibfd, struct bfd_link_info *info)
 	       && !bfd_elf_get_obj_attr_int (ibfd, OBJ_ATTR_PROC,
 					     Tag_ARC_CPU_base))
 	{
-	  /* Warn if different flags.  */
-	  _bfd_error_handler
-	    /* xgettext:c-format */
-	    (_("%pB: uses different e_flags (%#x) fields than "
-	       "previous modules (%#x)"),
-	     ibfd, in_flags, out_flags);
 	  if (in_flags && out_flags)
-	    return FALSE;
+	    {
+	      /* Warn if different flags.  */
+	      _bfd_error_handler
+		/* xgettext:c-format */
+		(_("%pB: uses different e_flags (%#x) fields than "
+		   "previous modules (%#x)"),
+		 ibfd, in_flags, out_flags);
+	      return FALSE;
+	    }
 	  /* MWDT doesnt set the eflags hence make sure we choose the
 	     eflags set by gcc.  */
 	  in_flags = in_flags > out_flags ? in_flags : out_flags;
@@ -2880,6 +2896,7 @@ elf32_arc_section_from_shdr (bfd *abfd,
 {
   switch (hdr->sh_type)
     {
+    case 0x0c: /* MWDT specific section, don't complain about it.  */
     case SHT_ARC_ATTRIBUTES:
       break;
 

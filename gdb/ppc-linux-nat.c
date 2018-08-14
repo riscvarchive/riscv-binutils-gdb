@@ -532,11 +532,9 @@ static void
 fetch_register (struct regcache *regcache, int tid, int regno)
 {
   struct gdbarch *gdbarch = regcache->arch ();
-  struct gdbarch_tdep *tdep = gdbarch_tdep (gdbarch);
   /* This isn't really an address.  But ptrace thinks of it as one.  */
   CORE_ADDR regaddr = ppc_register_u_addr (gdbarch, regno);
   int bytes_transferred;
-  unsigned int offset;         /* Offset of registers within the u area.  */
   gdb_byte buf[PPC_MAX_REGISTER_SIZE];
 
   if (altivec_register_p (gdbarch, regno))
@@ -630,8 +628,6 @@ fetch_register (struct regcache *regcache, int tid, int regno)
 static int
 fetch_all_gp_regs (struct regcache *regcache, int tid)
 {
-  struct gdbarch *gdbarch = regcache->arch ();
-  struct gdbarch_tdep *tdep = gdbarch_tdep (gdbarch);
   gdb_gregset_t gregset;
 
   if (ptrace (PTRACE_GETREGS, tid, 0, (void *) &gregset) < 0)
@@ -728,7 +724,6 @@ fetch_fp_regs (struct regcache *regcache, int tid)
 static void 
 fetch_ppc_registers (struct regcache *regcache, int tid)
 {
-  int i;
   struct gdbarch *gdbarch = regcache->arch ();
   struct gdbarch_tdep *tdep = gdbarch_tdep (gdbarch);
 
@@ -1004,8 +999,6 @@ store_register (const struct regcache *regcache, int tid, int regno)
 static int
 store_all_gp_regs (const struct regcache *regcache, int tid, int regno)
 {
-  struct gdbarch *gdbarch = regcache->arch ();
-  struct gdbarch_tdep *tdep = gdbarch_tdep (gdbarch);
   gdb_gregset_t gregset;
 
   if (ptrace (PTRACE_GETREGS, tid, 0, (void *) &gregset) < 0)
@@ -1122,7 +1115,6 @@ store_fp_regs (const struct regcache *regcache, int tid, int regno)
 static void
 store_ppc_registers (const struct regcache *regcache, int tid)
 {
-  int i;
   struct gdbarch *gdbarch = regcache->arch ();
   struct gdbarch_tdep *tdep = gdbarch_tdep (gdbarch);
  
@@ -1224,9 +1216,9 @@ have_ptrace_hwdebug_interface (void)
     {
       int tid;
 
-      tid = ptid_get_lwp (inferior_ptid);
+      tid = inferior_ptid.lwp ();
       if (tid == 0)
-	tid = ptid_get_pid (inferior_ptid);
+	tid = inferior_ptid.pid ();
 
       /* Check for kernel support for PowerPC HWDEBUG ptrace interface.  */
       if (ptrace (PPC_PTRACE_GETHWDBGINFO, tid, 0, &hwdebug_info) >= 0)
@@ -1296,9 +1288,9 @@ ppc_linux_nat_target::can_use_hw_breakpoint (enum bptype type, int cnt, int ot)
       /* We need to know whether ptrace supports PTRACE_SET_DEBUGREG
 	 and whether the target has DABR.  If either answer is no, the
 	 ptrace call will return -1.  Fail in that case.  */
-      tid = ptid_get_lwp (ptid);
+      tid = ptid.lwp ();
       if (tid == 0)
-	tid = ptid_get_pid (ptid);
+	tid = ptid.pid ();
 
       if (ptrace (PTRACE_SET_DEBUGREG, tid, 0, 0) == -1)
 	return 0;
@@ -1407,7 +1399,6 @@ hwdebug_insert_point (struct ppc_hw_breakpoint *b, int tid)
   gdb::unique_xmalloc_ptr<ppc_hw_breakpoint> p (XDUP (ppc_hw_breakpoint, b));
   struct hw_break_tuple *hw_breaks;
   struct thread_points *t;
-  struct hw_break_tuple *tuple;
 
   errno = 0;
   slot = ptrace (PPC_PTRACE_SETHWDEBUG, tid, 0, p.get ());
@@ -1508,7 +1499,7 @@ ppc_linux_nat_target::insert_hw_breakpoint (struct gdbarch *gdbarch,
     }
 
   ALL_LWPS (lp)
-    hwdebug_insert_point (&p, ptid_get_lwp (lp->ptid));
+    hwdebug_insert_point (&p, lp->ptid.lwp ());
 
   return 0;
 }
@@ -1544,7 +1535,7 @@ ppc_linux_nat_target::remove_hw_breakpoint (struct gdbarch *gdbarch,
     }
 
   ALL_LWPS (lp)
-    hwdebug_remove_point (&p, ptid_get_lwp (lp->ptid));
+    hwdebug_remove_point (&p, lp->ptid.lwp ());
 
   return 0;
 }
@@ -1587,7 +1578,7 @@ ppc_linux_nat_target::insert_mask_watchpoint (CORE_ADDR addr,  CORE_ADDR mask,
   p.condition_value = 0;
 
   ALL_LWPS (lp)
-    hwdebug_insert_point (&p, ptid_get_lwp (lp->ptid));
+    hwdebug_insert_point (&p, lp->ptid.lwp ());
 
   return 0;
 }
@@ -1615,7 +1606,7 @@ ppc_linux_nat_target::remove_mask_watchpoint (CORE_ADDR addr, CORE_ADDR mask,
   p.condition_value = 0;
 
   ALL_LWPS (lp)
-    hwdebug_remove_point (&p, ptid_get_lwp (lp->ptid));
+    hwdebug_remove_point (&p, lp->ptid.lwp ());
 
   return 0;
 }
@@ -1625,9 +1616,8 @@ static int
 can_use_watchpoint_cond_accel (void)
 {
   struct thread_points *p;
-  int tid = ptid_get_lwp (inferior_ptid);
+  int tid = inferior_ptid.lwp ();
   int cnt = hwdebug_info.num_condition_regs, i;
-  CORE_ADDR tmp_value;
 
   if (!have_ptrace_hwdebug_interface () || cnt == 0)
     return 0;
@@ -1879,7 +1869,7 @@ ppc_linux_nat_target::insert_watchpoint (CORE_ADDR addr, int len,
       create_watchpoint_request (&p, addr, len, type, cond, 1);
 
       ALL_LWPS (lp)
-	hwdebug_insert_point (&p, ptid_get_lwp (lp->ptid));
+	hwdebug_insert_point (&p, lp->ptid.lwp ());
 
       ret = 0;
     }
@@ -1923,7 +1913,7 @@ ppc_linux_nat_target::insert_watchpoint (CORE_ADDR addr, int len,
       saved_dabr_value = dabr_value;
 
       ALL_LWPS (lp)
-	if (ptrace (PTRACE_SET_DEBUGREG, ptid_get_lwp (lp->ptid), 0,
+	if (ptrace (PTRACE_SET_DEBUGREG, lp->ptid.lwp (), 0,
 		    saved_dabr_value) < 0)
 	  return -1;
 
@@ -1948,7 +1938,7 @@ ppc_linux_nat_target::remove_watchpoint (CORE_ADDR addr, int len,
       create_watchpoint_request (&p, addr, len, type, cond, 0);
 
       ALL_LWPS (lp)
-	hwdebug_remove_point (&p, ptid_get_lwp (lp->ptid));
+	hwdebug_remove_point (&p, lp->ptid.lwp ());
 
       ret = 0;
     }
@@ -1956,7 +1946,7 @@ ppc_linux_nat_target::remove_watchpoint (CORE_ADDR addr, int len,
     {
       saved_dabr_value = 0;
       ALL_LWPS (lp)
-	if (ptrace (PTRACE_SET_DEBUGREG, ptid_get_lwp (lp->ptid), 0,
+	if (ptrace (PTRACE_SET_DEBUGREG, lp->ptid.lwp (), 0,
 		    saved_dabr_value) < 0)
 	  return -1;
 
@@ -1969,7 +1959,7 @@ ppc_linux_nat_target::remove_watchpoint (CORE_ADDR addr, int len,
 void
 ppc_linux_nat_target::low_new_thread (struct lwp_info *lp)
 {
-  int tid = ptid_get_lwp (lp->ptid);
+  int tid = lp->ptid.lwp ();
 
   if (have_ptrace_hwdebug_interface ())
     {
@@ -2008,7 +1998,7 @@ static void
 ppc_linux_thread_exit (struct thread_info *tp, int silent)
 {
   int i;
-  int tid = ptid_get_lwp (tp->ptid);
+  int tid = tp->ptid.lwp ();
   struct hw_break_tuple *hw_breaks;
   struct thread_points *t = NULL, *p;
 
@@ -2057,7 +2047,7 @@ ppc_linux_nat_target::stopped_data_address (CORE_ADDR *addr_p)
       /* The index (or slot) of the *point is passed in the si_errno field.  */
       int slot = siginfo.si_errno;
 
-      t = hwdebug_find_thread_points_by_tid (ptid_get_lwp (inferior_ptid), 0);
+      t = hwdebug_find_thread_points_by_tid (inferior_ptid.lwp (), 0);
 
       /* Find out if this *point is a hardware breakpoint.
 	 If so, we should return 0.  */
@@ -2183,9 +2173,9 @@ ppc_linux_nat_target::auxv_parse (gdb_byte **readptr,
 				  gdb_byte *endptr, CORE_ADDR *typep,
 				  CORE_ADDR *valp)
 {
-  int tid = ptid_get_lwp (inferior_ptid);
+  int tid = inferior_ptid.lwp ();
   if (tid == 0)
-    tid = ptid_get_pid (inferior_ptid);
+    tid = inferior_ptid.pid ();
 
   int sizeof_auxv_field = ppc_linux_target_wordsize (tid);
 
@@ -2210,9 +2200,9 @@ ppc_linux_nat_target::auxv_parse (gdb_byte **readptr,
 const struct target_desc *
 ppc_linux_nat_target::read_description ()
 {
-  int tid = ptid_get_lwp (inferior_ptid);
+  int tid = inferior_ptid.lwp ();
   if (tid == 0)
-    tid = ptid_get_pid (inferior_ptid);
+    tid = inferior_ptid.pid ();
 
   if (have_ptrace_getsetevrregs)
     {

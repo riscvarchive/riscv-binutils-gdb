@@ -1575,6 +1575,25 @@ decode_location_expression (unsigned char * data,
 	  data += bytes_read;
 	  printf ("DW_OP_GNU_const_index <0x%s>", dwarf_vmatoa ("x", uvalue));
 	  break;
+	case DW_OP_GNU_variable_value:
+	  /* FIXME: Strictly speaking for 64-bit DWARF3 files
+	     this ought to be an 8-byte wide computation.  */
+	  if (dwarf_version == -1)
+	    {
+	      printf (_("(DW_OP_GNU_variable_value in frame info)"));
+	      /* No way to tell where the next op is, so just bail.  */
+	      return need_frame_base;
+	    }
+	  if (dwarf_version == 2)
+	    {
+	      SAFE_BYTE_GET_AND_INC (uvalue, data, pointer_size, end);
+	    }
+	  else
+	    {
+	      SAFE_BYTE_GET_AND_INC (uvalue, data, offset_size, end);
+	    }
+	  printf ("DW_OP_GNU_variable_value: <0x%s>", dwarf_vmatoa ("x", uvalue));
+	  break;
 
 	  /* HP extensions.  */
 	case DW_OP_HP_is_value:
@@ -3424,7 +3443,7 @@ display_formatted_table (unsigned char *                   data,
 			 unsigned char *                   end,
 			 const DWARF2_Internal_LineInfo *  linfo,
 			 struct dwarf_section *            section,
-			 const char *                      what)
+			 bfd_boolean                       is_dir)
 {
   unsigned char *format_start, format_count, *format, formati;
   dwarf_vma data_count, datai;
@@ -3440,7 +3459,10 @@ display_formatted_table (unsigned char *                   data,
       data += bytes_read;
       if (data == end)
 	{
-	  warn (_("Corrupt %s format table entry\n"), what);
+	  if (is_dir)
+	    warn (_("Corrupt directory format table entry\n"));
+	  else
+	    warn (_("Corrupt file name format table entry\n"));
 	  return data;
 	}
     }
@@ -3449,18 +3471,28 @@ display_formatted_table (unsigned char *                   data,
   data += bytes_read;
   if (data == end)
     {
-      warn (_("Corrupt %s list\n"), what);
+      if (is_dir)
+	warn (_("Corrupt directory list\n"));
+      else
+	warn (_("Corrupt file name list\n"));
       return data;
     }
 
   if (data_count == 0)
     {
-      printf (_("\n The %s Table is empty.\n"), what);
+      if (is_dir)
+	printf (_("\n The Directory Table is empty.\n"));
+      else
+	printf (_("\n The File Name Table is empty.\n"));
       return data;
     }
 
-  printf (_("\n The %s Table (offset 0x%lx):\n"), what,
-	  (long)(data - start));
+  if (is_dir)
+    printf (_("\n The Directory Table (offset 0x%lx):\n"),
+	    (long) (data - start));
+  else
+    printf (_("\n The File Name Table (offset 0x%lx):\n"),
+	    (long) (data - start));
 
   printf (_("  Entry"));
   /* Delay displaying name as the last entry for better screen layout.  */ 
@@ -3528,7 +3560,10 @@ display_formatted_table (unsigned char *                   data,
 	}
       if (data == end)
 	{
-	  warn (_("Corrupt %s entries list\n"), what);
+	  if (is_dir)
+	    warn (_("Corrupt directory entries list\n"));
+	  else
+	    warn (_("Corrupt file name entries list\n"));
 	  return data;
 	}
       putchar ('\n');
@@ -3636,9 +3671,9 @@ display_debug_lines_raw (struct dwarf_section *  section,
 	      load_debug_section_with_follow (line_str, file);
 
 	      data = display_formatted_table (data, start, end, &linfo, section,
-					      _("Directory"));
+					      TRUE);
 	      data = display_formatted_table (data, start, end, &linfo, section,
-					      _("File name"));
+					      FALSE);
 	    }
 	  else
 	    {
@@ -7283,7 +7318,7 @@ read_cie (unsigned char *start, unsigned char *end,
   if (start == end)
     {
       warn (_("No terminator for augmentation name\n"));
-      return start;
+      goto fail;
     }
 
   if (strcmp (fc->augmentation, "eh") == 0)
@@ -7295,7 +7330,7 @@ read_cie (unsigned char *start, unsigned char *end,
       if (fc->ptr_size < 1 || fc->ptr_size > 8)
 	{
 	  warn (_("Invalid pointer size (%d) in CIE data\n"), fc->ptr_size);
-	  return end;
+	  goto fail;
 	}
 
       GET (fc->segment_size, 1);
@@ -7303,7 +7338,7 @@ read_cie (unsigned char *start, unsigned char *end,
       if (fc->segment_size > 8 || fc->segment_size + fc->ptr_size > 8)
 	{
 	  warn (_("Invalid segment size (%d) in CIE data\n"), fc->segment_size);
-	  return end;
+	  goto fail;
 	}
 
       eh_addr_size = fc->ptr_size;
@@ -7313,8 +7348,10 @@ read_cie (unsigned char *start, unsigned char *end,
       fc->ptr_size = eh_addr_size;
       fc->segment_size = 0;
     }
+
   READ_ULEB (fc->code_factor);
   READ_SLEB (fc->data_factor);
+
   if (version == 1)
     {
       GET (fc->ra, 1);
@@ -7334,7 +7371,7 @@ read_cie (unsigned char *start, unsigned char *end,
 	  warn (_("Augmentation data too long: 0x%s, expected at most %#lx\n"),
 		dwarf_vmatoa ("x", augmentation_data_len),
 		(unsigned long) (end - start));
-	  return end;
+	  goto fail;
 	}
       start += augmentation_data_len;
     }
@@ -7376,6 +7413,12 @@ read_cie (unsigned char *start, unsigned char *end,
       *p_aug = augmentation_data;
     }
   return start;
+
+ fail:
+  free (fc->col_offset);
+  free (fc->col_type);
+  free (fc);
+  return end;
 }
 
 /* Prints out the contents on the DATA array formatted as unsigned bytes.
@@ -7421,10 +7464,10 @@ display_debug_frames (struct dwarf_section *section,
   unsigned char *start = section->start;
   unsigned char *end = start + section->size;
   unsigned char *section_start = start;
-  Frame_Chunk *chunks = 0, *forward_refs = 0;
-  Frame_Chunk *remembered_state = 0;
+  Frame_Chunk *chunks = NULL, *forward_refs = NULL;
+  Frame_Chunk *remembered_state = NULL;
   Frame_Chunk *rs;
-  int is_eh = strcmp (section->name, ".eh_frame") == 0;
+  bfd_boolean is_eh = strcmp (section->name, ".eh_frame") == 0;
   unsigned int length_return;
   unsigned int max_regs = 0;
   const char *bad_reg = _("bad register: ");
@@ -8356,6 +8399,36 @@ display_debug_frames (struct dwarf_section *section,
     }
 
   printf ("\n");
+
+  while (remembered_state != NULL)
+    {
+      rs = remembered_state;
+      remembered_state = rs->next;
+      free (rs->col_type);
+      free (rs->col_offset);
+      rs->next = NULL; /* Paranoia.  */
+      free (rs);
+    }
+
+  while (chunks != NULL)
+    {
+      rs = chunks;
+      chunks = rs->next;
+      free (rs->col_type);
+      free (rs->col_offset);
+      rs->next = NULL; /* Paranoia.  */
+      free (rs);
+    }
+
+  while (forward_refs != NULL)
+    {
+      rs = forward_refs;
+      forward_refs = rs->next;
+      free (rs->col_type);
+      free (rs->col_offset);
+      rs->next = NULL; /* Paranoia.  */
+      free (rs);
+    }
 
   return 1;
 }
@@ -9785,6 +9858,7 @@ load_separate_debug_info (const char *            main_filename,
   if (debugfile == NULL)
     {
       warn (_("Out of memory"));
+      free (canon_dir);
       return NULL;
     }
 

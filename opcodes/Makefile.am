@@ -112,6 +112,7 @@ TARGET_LIBOPCODES_CFILES = \
 	cris-opc.c \
 	crx-dis.c \
 	crx-opc.c \
+	csky-dis.c \
 	d10v-dis.c \
 	d10v-opc.c \
 	d30v-dis.c \
@@ -544,8 +545,10 @@ i386-gen.o: i386-gen.c i386-opc.h $(srcdir)/../include/opcode/i386.h \
 $(srcdir)/i386-tbl.h: $(srcdir)/i386-init.h
 	@echo $@
 
-$(srcdir)/i386-init.h: @MAINT@ i386-gen$(EXEEXT_FOR_BUILD) i386-opc.tbl i386-reg.tbl
-	./i386-gen$(EXEEXT_FOR_BUILD) --srcdir $(srcdir)
+$(srcdir)/i386-init.h: @MAINT@ i386-gen$(EXEEXT_FOR_BUILD) i386-opc.tbl i386-reg.tbl i386-opc.h
+	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) - \
+		< $(srcdir)/i386-opc.tbl \
+		| ./i386-gen$(EXEEXT_FOR_BUILD) --srcdir $(srcdir)
 
 i386-opc.lo: $(srcdir)/i386-tbl.h
 

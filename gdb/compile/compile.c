@@ -57,6 +57,173 @@ static struct cmd_list_element *compile_command_list;
 
 int compile_debug;
 
+/* Object of this type are stored in the compiler's symbol_err_map.  */
+
+struct symbol_error
+{
+  /* The symbol.  */
+
+  const struct symbol *sym;
+
+  /* The error message to emit.  This is malloc'd and owned by the
+     hash table.  */
+
+  char *message;
+};
+
+/* Hash a type_map_instance.  */
+
+static hashval_t
+hash_type_map_instance (const void *p)
+{
+  const struct type_map_instance *inst = (const struct type_map_instance *) p;
+
+  return htab_hash_pointer (inst->type);
+}
+
+/* Check two type_map_instance objects for equality.  */
+
+static int
+eq_type_map_instance (const void *a, const void *b)
+{
+  const struct type_map_instance *insta = (const struct type_map_instance *) a;
+  const struct type_map_instance *instb = (const struct type_map_instance *) b;
+
+  return insta->type == instb->type;
+}
+
+/* Hash function for struct symbol_error.  */
+
+static hashval_t
+hash_symbol_error (const void *a)
+{
+  const struct symbol_error *se = (const struct symbol_error *) a;
+
+  return htab_hash_pointer (se->sym);
+}
+
+/* Equality function for struct symbol_error.  */
+
+static int
+eq_symbol_error (const void *a, const void *b)
+{
+  const struct symbol_error *sea = (const struct symbol_error *) a;
+  const struct symbol_error *seb = (const struct symbol_error *) b;
+
+  return sea->sym == seb->sym;
+}
+
+/* Deletion function for struct symbol_error.  */
+
+static void
+del_symbol_error (void *a)
+{
+  struct symbol_error *se = (struct symbol_error *) a;
+
+  xfree (se->message);
+  xfree (se);
+}
+
+/* Constructor for compile_instance.  */
+
+compile_instance::compile_instance (struct gcc_base_context *gcc_fe,
+				    const char *options)
+  : m_gcc_fe (gcc_fe), m_gcc_target_options (options),
+    m_type_map (htab_create_alloc (10, hash_type_map_instance,
+				   eq_type_map_instance,
+				   xfree, xcalloc, xfree)),
+    m_symbol_err_map (htab_create_alloc (10, hash_symbol_error,
+					 eq_symbol_error, del_symbol_error,
+					 xcalloc, xfree))
+{
+}
+
+/* See compile-internal.h.  */
+
+bool
+compile_instance::get_cached_type (struct type *type, gcc_type &ret) const
+{
+  struct type_map_instance inst, *found;
+
+  inst.type = type;
+  found = (struct type_map_instance *) htab_find (m_type_map.get (), &inst);
+  if (found != NULL)
+    {
+      ret = found->gcc_type_handle;
+      return true;
+    }
+
+  return false;
+}
+
+/* See compile-internal.h.  */
+
+void
+compile_instance::insert_type (struct type *type, gcc_type gcc_type)
+{
+  struct type_map_instance inst, *add;
+  void **slot;
+
+  inst.type = type;
+  inst.gcc_type_handle = gcc_type;
+  slot = htab_find_slot (m_type_map.get (), &inst, INSERT);
+
+  add = (struct type_map_instance *) *slot;
+  /* The type might have already been inserted in order to handle
+     recursive types.  */
+  if (add != NULL && add->gcc_type_handle != gcc_type)
+    error (_("Unexpected type id from GCC, check you use recent enough GCC."));
+
+  if (add == NULL)
+    {
+      add = XNEW (struct type_map_instance);
+      *add = inst;
+      *slot = add;
+    }
+}
+
+/* See compile-internal.h.  */
+
+void
+compile_instance::insert_symbol_error (const struct symbol *sym,
+				       const char *text)
+{
+  struct symbol_error e;
+  void **slot;
+
+  e.sym = sym;
+  slot = htab_find_slot (m_symbol_err_map.get (), &e, INSERT);
+  if (*slot == NULL)
+    {
+      struct symbol_error *e = XNEW (struct symbol_error);
+
+      e->sym = sym;
+      e->message = xstrdup (text);
+      *slot = e;
+    }
+}
+
+/* See compile-internal.h.  */
+
+void
+compile_instance::error_symbol_once (const struct symbol *sym)
+{
+  struct symbol_error search;
+  struct symbol_error *err;
+
+  if (m_symbol_err_map == NULL)
+    return;
+
+  search.sym = sym;
+  err = (struct symbol_error *) htab_find (m_symbol_err_map.get (), &search);
+  if (err == NULL || err->message == NULL)
+    return;
+
+  gdb::unique_xmalloc_ptr<char> message (err->message);
+  err->message = NULL;
+  error (_("%s"), message.get ());
+}
+
 /* Implement "show debug compile".  */
 
 static void
@@ -415,7 +582,7 @@ filter_args (int *argcp, char **argv)
    generated above.  */
 
 static void
-get_args (const struct compile_instance *compiler, struct gdbarch *gdbarch,
+get_args (const compile_instance *compiler, struct gdbarch *gdbarch,
 	  int *argcp, char ***argvp)
 {
   const char *cs_producer_options;
@@ -437,22 +604,12 @@ get_args (const struct compile_instance *compiler, struct gdbarch *gdbarch,
       freeargv (argv_producer);
     }
 
-  build_argc_argv (compiler->gcc_target_options,
+  build_argc_argv (compiler->gcc_target_options ().c_str (),
 		   &argc_compiler, &argv_compiler);
   append_args (argcp, argvp, argc_compiler, argv_compiler);
   freeargv (argv_compiler);
 
   append_args (argcp, argvp, compile_args_argc, compile_args_argv);
-}
-
-/* A cleanup function to destroy a gdb_gcc_instance.  */
-
-static void
-cleanup_compile_instance (void *arg)
-{
-  struct compile_instance *inst = (struct compile_instance *) arg;
-
-  inst->destroy (inst);
 }
 
 /* A helper function suitable for use as the "print_callback" in the
@@ -472,8 +629,6 @@ static compile_file_names
 compile_to_object (struct command_line *cmd, const char *cmd_string,
 		   enum compile_i_scope_types scope)
 {
-  struct compile_instance *compiler;
-  struct cleanup *cleanup;
   const struct block *expr_block;
   CORE_ADDR trash_pc, expr_pc;
   int argc;
@@ -481,7 +636,6 @@ compile_to_object (struct command_line *cmd, const char *cmd_string,
   int ok;
   struct gdbarch *gdbarch = get_current_arch ();
   std::string triplet_rx;
-  char *error_message;
 
   if (!target_has_execution)
     error (_("The program must be running for the compile command to "\
@@ -494,13 +648,13 @@ compile_to_object (struct command_line *cmd, const char *cmd_string,
   if (current_language->la_get_compile_instance == NULL)
     error (_("No compiler support for language %s."),
 	   current_language->la_name);
-  compiler = current_language->la_get_compile_instance ();
-  cleanup = make_cleanup (cleanup_compile_instance, compiler);
 
-  compiler->fe->ops->set_print_callback (compiler->fe, print_callback, NULL);
-
-  compiler->scope = scope;
-  compiler->block = expr_block;
+  compile_instance *compiler_instance
+    = current_language->la_get_compile_instance ();
+  std::unique_ptr<compile_instance> compiler (compiler_instance);
+  compiler->set_print_callback (print_callback, NULL);
+  compiler->set_scope (scope);
+  compiler->set_block (expr_block);
 
   /* From the provided expression, build a scope to pass to the
      compiler.  */
@@ -526,21 +680,20 @@ compile_to_object (struct command_line *cmd, const char *cmd_string,
     error (_("Neither a simple expression, or a multi-line specified."));
 
   std::string code
-    = current_language->la_compute_program (compiler, input, gdbarch,
+    = current_language->la_compute_program (compiler.get (), input, gdbarch,
 					    expr_block, expr_pc);
   if (compile_debug)
     fprintf_unfiltered (gdb_stdlog, "debug output:\n\n%s", code.c_str ());
 
-  if (compiler->fe->ops->version >= GCC_FE_VERSION_1)
-    compiler->fe->ops->set_verbose (compiler->fe, compile_debug);
+  compiler->set_verbose (compile_debug);
 
   if (compile_gcc[0] != 0)
     {
-      if (compiler->fe->ops->version < GCC_FE_VERSION_1)
+      if (compiler->version () < GCC_FE_VERSION_1)
 	error (_("Command 'set compile-gcc' requires GCC version 6 or higher "
 		 "(libcc1 interface version 1 or higher)"));
 
-      compiler->fe->ops->set_driver_filename (compiler->fe, compile_gcc);
+      compiler->set_driver_filename (compile_gcc);
     }
   else
     {
@@ -549,27 +702,19 @@ compile_to_object (struct command_line *cmd, const char *cmd_string,
 
       /* Allow triplets with or without vendor set.  */
       triplet_rx = std::string (arch_rx) + "(-[^-]*)?-" + os_rx;
-
-      if (compiler->fe->ops->version >= GCC_FE_VERSION_1)
-	compiler->fe->ops->set_triplet_regexp (compiler->fe,
-					       triplet_rx.c_str ());
+      compiler->set_triplet_regexp (triplet_rx.c_str ());
     }
 
   /* Set compiler command-line arguments.  */
-  get_args (compiler, gdbarch, &argc, &argv);
+  get_args (compiler.get (), gdbarch, &argc, &argv);
   gdb_argv argv_holder (argv);
 
-  if (compiler->fe->ops->version >= GCC_FE_VERSION_1)
-    error_message = compiler->fe->ops->set_arguments (compiler->fe, argc, argv);
-  else
-    error_message = compiler->fe->ops->set_arguments_v0 (compiler->fe,
-							 triplet_rx.c_str (),
-							 argc, argv);
+  gdb::unique_xmalloc_ptr<char> error_message;
+  error_message.reset (compiler->set_arguments (argc, argv,
+						triplet_rx.c_str ()));
+
   if (error_message != NULL)
-    {
-      make_cleanup (xfree, error_message);
-      error ("%s", error_message);
-    }
+    error ("%s", error_message.get ());
 
   if (compile_debug)
     {
@@ -601,13 +746,8 @@ compile_to_object (struct command_line *cmd, const char *cmd_string,
 			fnames.source_file ());
 
   /* Call the compiler and start the compilation process.  */
-  compiler->fe->ops->set_source_file (compiler->fe, fnames.source_file ());
-
-  if (compiler->fe->ops->version >= GCC_FE_VERSION_1)
-    ok = compiler->fe->ops->compile (compiler->fe, fnames.object_file ());
-  else
-    ok = compiler->fe->ops->compile_v0 (compiler->fe, fnames.object_file (),
-					compile_debug);
+  compiler->set_source_file (fnames.source_file ());
+  ok = compiler->compile (fnames.object_file (), compile_debug);
   if (!ok)
     error (_("Compilation failed."));
 
@@ -617,9 +757,6 @@ compile_to_object (struct command_line *cmd, const char *cmd_string,
 
   /* Keep the source file.  */
   source_remover->keep ();
-
-  do_cleanups (cleanup);
-
   return fnames;
 }
 
@@ -690,6 +827,87 @@ compile_register_name_demangle (struct gdbarch *gdbarch,
 
   error (_("Cannot find gdbarch register \"%s\"."), regname);
 }
+
+/* Forwards to the plug-in.  */
+
+#define FORWARD(OP,...) (m_gcc_fe->ops->OP (m_gcc_fe, ##__VA_ARGS__))
+
+/* See compile-internal.h.  */
+
+void
+compile_instance::set_print_callback
+  (void (*print_function) (void *, const char *), void *datum)
+{
+  FORWARD (set_print_callback, print_function, datum);
+}
+
+/* See compile-internal.h.  */
+
+unsigned int
+compile_instance::version () const
+{
+  return m_gcc_fe->ops->version;
+}
+
+/* See compile-internal.h.  */
+
+void
+compile_instance::set_verbose (int level)
+{
+  if (version () >= GCC_FE_VERSION_1)
+    FORWARD (set_verbose, level);
+}
+
+/* See compile-internal.h.  */
+
+void
+compile_instance::set_driver_filename (const char *filename)
+{
+  if (version () >= GCC_FE_VERSION_1)
+    FORWARD (set_driver_filename, filename);
+}
+
+/* See compile-internal.h.  */
+
+void
+compile_instance::set_triplet_regexp (const char *regexp)
+{
+  if (version () >= GCC_FE_VERSION_1)
+    FORWARD (set_triplet_regexp, regexp);
+}
+
+/* See compile-internal.h.  */
+
+char *
+compile_instance::set_arguments (int argc, char **argv, const char *regexp)
+{
+  if (version () >= GCC_FE_VERSION_1)
+    return FORWARD (set_arguments, argc, argv);
+  else
+    return FORWARD (set_arguments_v0, regexp, argc, argv);
+}
+
+/* See compile-internal.h.  */
+
+void
+compile_instance::set_source_file (const char *filename)
+{
+  FORWARD (set_source_file, filename);
+}
+
+/* See compile-internal.h.  */
+
+bool
+compile_instance::compile (const char *filename, int verbose_level)
+{
+  if (version () >= GCC_FE_VERSION_1)
+    return FORWARD (compile, filename);
+  else
+    return FORWARD (compile_v0, filename, verbose_level);
+}
+
+#undef FORWARD
+
 
 void
 _initialize_compile (void)

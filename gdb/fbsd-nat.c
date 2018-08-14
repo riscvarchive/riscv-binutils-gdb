@@ -92,7 +92,7 @@ int
 fbsd_nat_target::find_memory_regions (find_memory_region_ftype func,
 				      void *obfd)
 {
-  pid_t pid = ptid_get_pid (inferior_ptid);
+  pid_t pid = inferior_ptid.pid ();
   struct kinfo_vmentry *kve;
   uint64_t size;
   int i, nitems;
@@ -166,7 +166,7 @@ int
 fbsd_nat_target::find_memory_regions (find_memory_region_ftype func,
 				      void *obfd)
 {
-  pid_t pid = ptid_get_pid (inferior_ptid);
+  pid_t pid = inferior_ptid.pid ();
   unsigned long start, end, size;
   char protection[4];
   int read, write, exec;
@@ -312,7 +312,7 @@ fbsd_nat_target::info_proc (const char *args, enum info_proc_what what)
   gdb_argv built_argv (args);
   if (built_argv.count () == 0)
     {
-      pid = ptid_get_pid (inferior_ptid);
+      pid = inferior_ptid.pid ();
       if (pid == 0)
 	error (_("No current process: you must name one."));
     }
@@ -674,7 +674,7 @@ fbsd_nat_target::xfer_partial (enum target_object object,
 			       ULONGEST offset, ULONGEST len,
 			       ULONGEST *xfered_len)
 {
-  pid_t pid = ptid_get_pid (inferior_ptid);
+  pid_t pid = inferior_ptid.pid ();
 
   switch (object)
     {
@@ -810,11 +810,11 @@ show_fbsd_nat_debug (struct ui_file *file, int from_tty,
 bool
 fbsd_nat_target::thread_alive (ptid_t ptid)
 {
-  if (ptid_lwp_p (ptid))
+  if (ptid.lwp_p ())
     {
       struct ptrace_lwpinfo pl;
 
-      if (ptrace (PT_LWPINFO, ptid_get_lwp (ptid), (caddr_t) &pl, sizeof pl)
+      if (ptrace (PT_LWPINFO, ptid.lwp (), (caddr_t) &pl, sizeof pl)
 	  == -1)
 	return false;
 #ifdef PL_FLAG_EXITED
@@ -834,11 +834,11 @@ fbsd_nat_target::pid_to_str (ptid_t ptid)
 {
   lwpid_t lwp;
 
-  lwp = ptid_get_lwp (ptid);
+  lwp = ptid.lwp ();
   if (lwp != 0)
     {
       static char buf[64];
-      int pid = ptid_get_pid (ptid);
+      int pid = ptid.pid ();
 
       xsnprintf (buf, sizeof buf, "LWP %d of process %d", lwp, pid);
       return buf;
@@ -856,8 +856,8 @@ fbsd_nat_target::thread_name (struct thread_info *thr)
 {
   struct ptrace_lwpinfo pl;
   struct kinfo_proc kp;
-  int pid = ptid_get_pid (thr->ptid);
-  long lwp = ptid_get_lwp (thr->ptid);
+  int pid = thr->ptid.pid ();
+  long lwp = thr->ptid.lwp ();
   static char buf[sizeof pl.pl_tdname + 1];
 
   /* Note that ptrace_lwpinfo returns the process command in pl_tdname
@@ -926,7 +926,7 @@ fbsd_add_threads (pid_t pid)
 {
   int i, nlwps;
 
-  gdb_assert (!in_thread_list (pid_to_ptid (pid)));
+  gdb_assert (!in_thread_list (ptid_t (pid)));
   nlwps = ptrace (PT_GETNUMLWPS, pid, NULL, 0);
   if (nlwps == -1)
     perror_with_name (("ptrace"));
@@ -939,7 +939,7 @@ fbsd_add_threads (pid_t pid)
 
   for (i = 0; i < nlwps; i++)
     {
-      ptid_t ptid = ptid_build (pid, lwps[i], 0);
+      ptid_t ptid = ptid_t (pid, lwps[i], 0);
 
       if (!in_thread_list (ptid))
 	{
@@ -974,7 +974,7 @@ fbsd_nat_target::update_thread_list ()
 #else
   prune_threads ();
 
-  fbsd_add_threads (ptid_get_pid (inferior_ptid));
+  fbsd_add_threads (inferior_ptid.pid ());
 #endif
 }
 
@@ -1089,10 +1089,10 @@ fbsd_nat_target::resume (ptid_t ptid, int step, enum gdb_signal signo)
   pid_t pid;
 
   /* Don't PT_CONTINUE a process which has a pending vfork done event.  */
-  if (ptid_equal (minus_one_ptid, ptid))
-    pid = ptid_get_pid (inferior_ptid);
+  if (minus_one_ptid == ptid)
+    pid = inferior_ptid.pid ();
   else
-    pid = ptid_get_pid (ptid);
+    pid = ptid.pid ();
   if (fbsd_is_vfork_done_pending (pid))
     return;
 #endif
@@ -1100,9 +1100,9 @@ fbsd_nat_target::resume (ptid_t ptid, int step, enum gdb_signal signo)
   if (debug_fbsd_lwp)
     fprintf_unfiltered (gdb_stdlog,
 			"FLWP: fbsd_resume for ptid (%d, %ld, %ld)\n",
-			ptid_get_pid (ptid), ptid_get_lwp (ptid),
-			ptid_get_tid (ptid));
-  if (ptid_lwp_p (ptid))
+			ptid.pid (), ptid.lwp (),
+			ptid.tid ());
+  if (ptid.lwp_p ())
     {
       /* If ptid is a specific LWP, suspend all other LWPs in the process.  */
       struct thread_info *tp;
@@ -1110,15 +1110,15 @@ fbsd_nat_target::resume (ptid_t ptid, int step, enum gdb_signal signo)
 
       ALL_NON_EXITED_THREADS (tp)
         {
-	  if (ptid_get_pid (tp->ptid) != ptid_get_pid (ptid))
+	  if (tp->ptid.pid () != ptid.pid ())
 	    continue;
 
-	  if (ptid_get_lwp (tp->ptid) == ptid_get_lwp (ptid))
+	  if (tp->ptid.lwp () == ptid.lwp ())
 	    request = PT_RESUME;
 	  else
 	    request = PT_SUSPEND;
 
-	  if (ptrace (request, ptid_get_lwp (tp->ptid), NULL, 0) == -1)
+	  if (ptrace (request, tp->ptid.lwp (), NULL, 0) == -1)
 	    perror_with_name (("ptrace"));
 	}
     }
@@ -1130,10 +1130,10 @@ fbsd_nat_target::resume (ptid_t ptid, int step, enum gdb_signal signo)
 
       ALL_NON_EXITED_THREADS (tp)
         {
-	  if (!ptid_match (tp->ptid, ptid))
+	  if (!tp->ptid.matches (ptid))
 	    continue;
 
-	  if (ptrace (PT_RESUME, ptid_get_lwp (tp->ptid), NULL, 0) == -1)
+	  if (ptrace (PT_RESUME, tp->ptid.lwp (), NULL, 0) == -1)
 	    perror_with_name (("ptrace"));
 	}
       ptid = inferior_ptid;
@@ -1236,7 +1236,7 @@ fbsd_nat_target::wait (ptid_t ptid, struct target_waitstatus *ourstatus,
     {
 #ifndef PTRACE_VFORK
       wptid = fbsd_next_vfork_done ();
-      if (!ptid_equal (wptid, null_ptid))
+      if (wptid != null_ptid)
 	{
 	  ourstatus->kind = TARGET_WAITKIND_VFORK_DONE;
 	  return wptid;
@@ -1249,11 +1249,11 @@ fbsd_nat_target::wait (ptid_t ptid, struct target_waitstatus *ourstatus,
 	  pid_t pid;
 	  int status;
 
-	  pid = ptid_get_pid (wptid);
+	  pid = wptid.pid ();
 	  if (ptrace (PT_LWPINFO, pid, (caddr_t) &pl, sizeof pl) == -1)
 	    perror_with_name (("ptrace"));
 
-	  wptid = ptid_build (pid, pl.pl_lwpid, 0);
+	  wptid = ptid_t (pid, pl.pl_lwpid, 0);
 
 	  if (debug_fbsd_nat)
 	    {
@@ -1274,7 +1274,8 @@ fbsd_nat_target::wait (ptid_t ptid, struct target_waitstatus *ourstatus,
 		 threads might be skipped during post_attach that
 		 have not yet reported their PL_FLAG_EXITED event.
 		 Ignore EXITED events for an unknown LWP.  */
-	      if (in_thread_list (wptid))
+	      thread_info *thr = find_thread_ptid (wptid);
+	      if (thr != nullptr)
 		{
 		  if (debug_fbsd_lwp)
 		    fprintf_unfiltered (gdb_stdlog,
@@ -1283,7 +1284,7 @@ fbsd_nat_target::wait (ptid_t ptid, struct target_waitstatus *ourstatus,
 		  if (print_thread_events)
 		    printf_unfiltered (_("[%s exited]\n"), target_pid_to_str
 				       (wptid));
-		  delete_thread (wptid);
+		  delete_thread (thr);
 		}
 	      if (ptrace (PT_CONTINUE, pid, (caddr_t) 1, 0) == -1)
 		perror_with_name (("ptrace"));
@@ -1297,13 +1298,13 @@ fbsd_nat_target::wait (ptid_t ptid, struct target_waitstatus *ourstatus,
 	     PL_FLAG_BORN in case the first stop reported after
 	     attaching to an existing process is a PL_FLAG_BORN
 	     event.  */
-	  if (in_thread_list (pid_to_ptid (pid)))
+	  if (in_thread_list (ptid_t (pid)))
 	    {
 	      if (debug_fbsd_lwp)
 		fprintf_unfiltered (gdb_stdlog,
 				    "FLWP: using LWP %u for first thread\n",
 				    pl.pl_lwpid);
-	      thread_change_ptid (pid_to_ptid (pid), wptid);
+	      thread_change_ptid (ptid_t (pid), wptid);
 	    }
 
 #ifdef PT_LWP_EVENTS
@@ -1344,7 +1345,7 @@ fbsd_nat_target::wait (ptid_t ptid, struct target_waitstatus *ourstatus,
 
 	      /* Make sure the other end of the fork is stopped too.  */
 	      child_ptid = fbsd_is_child_pending (child);
-	      if (ptid_equal (child_ptid, null_ptid))
+	      if (child_ptid == null_ptid)
 		{
 		  pid = waitpid (child, &status, 0);
 		  if (pid == -1)
@@ -1356,11 +1357,11 @@ fbsd_nat_target::wait (ptid_t ptid, struct target_waitstatus *ourstatus,
 		    perror_with_name (("ptrace"));
 
 		  gdb_assert (pl.pl_flags & PL_FLAG_CHILD);
-		  child_ptid = ptid_build (child, pl.pl_lwpid, 0);
+		  child_ptid = ptid_t (child, pl.pl_lwpid, 0);
 		}
 
 	      /* Enable additional events on the child process.  */
-	      fbsd_enable_proc_events (ptid_get_pid (child_ptid));
+	      fbsd_enable_proc_events (child_ptid.pid ());
 
 #ifndef PTRACE_VFORK
 	      /* For vfork, the child process will have the P_PPWAIT
@@ -1486,7 +1487,7 @@ fbsd_nat_target::follow_fork (int follow_child, int detach_fork)
   if (!follow_child && detach_fork)
     {
       struct thread_info *tp = inferior_thread ();
-      pid_t child_pid = ptid_get_pid (tp->pending_follow.value.related_pid);
+      pid_t child_pid = tp->pending_follow.value.related_pid.pid ();
 
       /* Breakpoints have already been detached from the child by
 	 infrun.c.  */
@@ -1557,7 +1558,7 @@ fbsd_nat_target::remove_vfork_catchpoint (int pid)
 void
 fbsd_nat_target::post_startup_inferior (ptid_t pid)
 {
-  fbsd_enable_proc_events (ptid_get_pid (pid));
+  fbsd_enable_proc_events (pid.pid ());
 }
 
 /* Implement the "post_attach" target_ops method.  */

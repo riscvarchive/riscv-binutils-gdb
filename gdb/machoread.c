@@ -24,7 +24,6 @@
 #include "bfd.h"
 #include "symfile.h"
 #include "objfiles.h"
-#include "buildsym.h"
 #include "gdbcmd.h"
 #include "gdbcore.h"
 #include "mach-o.h"
@@ -793,6 +792,9 @@ macho_symfile_read (struct objfile *objfile, symfile_add_flags symfile_flags)
   bfd *abfd = objfile->obfd;
   long storage_needed;
   std::vector<oso_el> oso_vector;
+  /* We have to hold on to the symbol table until the call to
+     macho_symfile_read_all_oso at the end of this function.  */
+  gdb::def_vector<asymbol *> symbol_table;
 
   /* Get symbols from the symbol table only if the file is an executable.
      The symbol table of object files is not relocated and is expected to
@@ -812,8 +814,7 @@ macho_symfile_read (struct objfile *objfile, symfile_add_flags symfile_flags)
 	{
 	  long symcount;
 
-	  gdb::def_vector<asymbol *> symbol_table (storage_needed
-						   / sizeof (asymbol *));
+	  symbol_table.resize (storage_needed / sizeof (asymbol *));
 
           minimal_symbol_reader reader (objfile);
 

@@ -2411,16 +2411,18 @@ ppc_elf_write_core_note (bfd *abfd, char *buf, int *bufsiz, int note_type, ...)
 	va_start (ap, note_type);
 	memset (data, 0, sizeof (data));
 	strncpy (data + 32, va_arg (ap, const char *), 16);
+#if GCC_VERSION == 8000 || GCC_VERSION == 8001
 	DIAGNOSTIC_PUSH;
-	/* GCC 8.1 warns about 80 equals destination size with
+	/* GCC 8.0 and 8.1 warn about 80 equals destination size with
 	   -Wstringop-truncation:
 	   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85643
 	 */
-#if GCC_VERSION == 8001
 	DIAGNOSTIC_IGNORE_STRINGOP_TRUNCATION;
 #endif
 	strncpy (data + 48, va_arg (ap, const char *), 80);
+#if GCC_VERSION == 8000 || GCC_VERSION == 8001
 	DIAGNOSTIC_POP;
+#endif
 	va_end (ap);
 	return elfcore_write_note (abfd, buf, bufsiz,
 				   "CORE", note_type, data, sizeof (data));
@@ -4713,12 +4715,13 @@ ppc_elf_check_relocs (bfd *abfd,
 
 /* Warn for conflicting Tag_GNU_Power_ABI_FP attributes between IBFD
    and OBFD, and merge non-conflicting ones.  */
-void
+bfd_boolean
 _bfd_elf_ppc_merge_fp_attributes (bfd *ibfd, struct bfd_link_info *info)
 {
   bfd *obfd = info->output_bfd;
   obj_attribute *in_attr, *in_attrs;
   obj_attribute *out_attr, *out_attrs;
+  bfd_boolean ret = TRUE;
 
   in_attrs = elf_known_obj_attributes (ibfd)[OBJ_ATTR_GNU];
   out_attrs = elf_known_obj_attributes (obfd)[OBJ_ATTR_GNU];
@@ -4730,32 +4733,48 @@ _bfd_elf_ppc_merge_fp_attributes (bfd *ibfd, struct bfd_link_info *info)
     {
       int in_fp = in_attr->i & 3;
       int out_fp = out_attr->i & 3;
+      static bfd *last_fp, *last_ld;
 
       if (in_fp == 0)
 	;
       else if (out_fp == 0)
 	{
-	  out_attr->type = 1;
+	  out_attr->type = ATTR_TYPE_FLAG_INT_VAL;
 	  out_attr->i ^= in_fp;
+	  last_fp = ibfd;
 	}
       else if (out_fp != 2 && in_fp == 2)
-	_bfd_error_handler
-	  /* xgettext:c-format */
-	  (_("warning: %pB uses hard float, %pB uses soft float"), obfd, ibfd);
+	{
+	  _bfd_error_handler
+	    /* xgettext:c-format */
+	    (_("%pB uses hard float, %pB uses soft float"),
+	     last_fp, ibfd);
+	  ret = FALSE;
+	}
       else if (out_fp == 2 && in_fp != 2)
-	_bfd_error_handler
-	  /* xgettext:c-format */
-	  (_("warning: %pB uses hard float, %pB uses soft float"), ibfd, obfd);
+	{
+	  _bfd_error_handler
+	    /* xgettext:c-format */
+	    (_("%pB uses hard float, %pB uses soft float"),
+	     ibfd, last_fp);
+	  ret = FALSE;
+	}
       else if (out_fp == 1 && in_fp == 3)
-	_bfd_error_handler
-	  /* xgettext:c-format */
-	  (_("warning: %pB uses double-precision hard float, "
-	     "%pB uses single-precision hard float"), obfd, ibfd);
+	{
+	  _bfd_error_handler
+	    /* xgettext:c-format */
+	    (_("%pB uses double-precision hard float, "
+	       "%pB uses single-precision hard float"), last_fp, ibfd);
+	  ret = FALSE;
+	}
       else if (out_fp == 3 && in_fp == 1)
-	_bfd_error_handler
-	  /* xgettext:c-format */
-	  (_("warning: %pB uses double-precision hard float, "
-	     "%pB uses single-precision hard float"), ibfd, obfd);
+	{
+	  _bfd_error_handler
+	    /* xgettext:c-format */
+	    (_("%pB uses double-precision hard float, "
+	       "%pB uses single-precision hard float"), ibfd, last_fp);
+	  ret = FALSE;
+	}
 
       in_fp = in_attr->i & 0xc;
       out_fp = out_attr->i & 0xc;
@@ -4763,30 +4782,50 @@ _bfd_elf_ppc_merge_fp_attributes (bfd *ibfd, struct bfd_link_info *info)
 	;
       else if (out_fp == 0)
 	{
-	  out_attr->type = 1;
+	  out_attr->type = ATTR_TYPE_FLAG_INT_VAL;
 	  out_attr->i ^= in_fp;
+	  last_ld = ibfd;
 	}
       else if (out_fp != 2 * 4 && in_fp == 2 * 4)
-	_bfd_error_handler
-	  /* xgettext:c-format */
-	  (_("warning: %pB uses 64-bit long double, "
-	     "%pB uses 128-bit long double"), ibfd, obfd);
+	{
+	  _bfd_error_handler
+	    /* xgettext:c-format */
+	    (_("%pB uses 64-bit long double, "
+	       "%pB uses 128-bit long double"), ibfd, last_ld);
+	  ret = FALSE;
+	}
       else if (in_fp != 2 * 4 && out_fp == 2 * 4)
-	_bfd_error_handler
-	  /* xgettext:c-format */
-	  (_("warning: %pB uses 64-bit long double, "
-	     "%pB uses 128-bit long double"), obfd, ibfd);
+	{
+	  _bfd_error_handler
+	    /* xgettext:c-format */
+	    (_("%pB uses 64-bit long double, "
+	       "%pB uses 128-bit long double"), last_ld, ibfd);
+	  ret = FALSE;
+	}
       else if (out_fp == 1 * 4 && in_fp == 3 * 4)
-	_bfd_error_handler
-	  /* xgettext:c-format */
-	  (_("warning: %pB uses IBM long double, "
-	     "%pB uses IEEE long double"), obfd, ibfd);
+	{
+	  _bfd_error_handler
+	    /* xgettext:c-format */
+	    (_("%pB uses IBM long double, "
+	       "%pB uses IEEE long double"), last_ld, ibfd);
+	  ret = FALSE;
+	}
       else if (out_fp == 3 * 4 && in_fp == 1 * 4)
-	_bfd_error_handler
-	  /* xgettext:c-format */
-	  (_("warning: %pB uses IBM long double, "
-	     "%pB uses IEEE long double"), ibfd, obfd);
+	{
+	  _bfd_error_handler
+	    /* xgettext:c-format */
+	    (_("%pB uses IBM long double, "
+	       "%pB uses IEEE long double"), ibfd, last_ld);
+	  ret = FALSE;
+	}
     }
+
+  if (!ret)
+    {
+      out_attr->type = ATTR_TYPE_FLAG_INT_VAL | ATTR_TYPE_FLAG_ERROR;
+      bfd_set_error (bfd_error_bad_value);
+    }
+  return ret;
 }
 
 /* Merge object attributes from IBFD into OBFD.  Warn if
@@ -4797,8 +4836,10 @@ ppc_elf_merge_obj_attributes (bfd *ibfd, struct bfd_link_info *info)
   bfd *obfd;
   obj_attribute *in_attr, *in_attrs;
   obj_attribute *out_attr, *out_attrs;
+  bfd_boolean ret;
 
-  _bfd_elf_ppc_merge_fp_attributes (ibfd, info);
+  if (!_bfd_elf_ppc_merge_fp_attributes (ibfd, info))
+    return FALSE;
 
   obfd = info->output_bfd;
   in_attrs = elf_known_obj_attributes (ibfd)[OBJ_ATTR_GNU];
@@ -4808,17 +4849,20 @@ ppc_elf_merge_obj_attributes (bfd *ibfd, struct bfd_link_info *info)
      merge non-conflicting ones.  */
   in_attr = &in_attrs[Tag_GNU_Power_ABI_Vector];
   out_attr = &out_attrs[Tag_GNU_Power_ABI_Vector];
+  ret = TRUE;
   if (in_attr->i != out_attr->i)
     {
       int in_vec = in_attr->i & 3;
       int out_vec = out_attr->i & 3;
+      static bfd *last_vec;
 
       if (in_vec == 0)
 	;
       else if (out_vec == 0)
 	{
-	  out_attr->type = 1;
+	  out_attr->type = ATTR_TYPE_FLAG_INT_VAL;
 	  out_attr->i = in_vec;
+	  last_vec = ibfd;
 	}
       /* For now, allow generic to transition to AltiVec or SPE
 	 without a warning.  If GCC marked files with their stack
@@ -4829,19 +4873,28 @@ ppc_elf_merge_obj_attributes (bfd *ibfd, struct bfd_link_info *info)
 	;
       else if (out_vec == 1)
 	{
-	  out_attr->type = 1;
+	  out_attr->type = ATTR_TYPE_FLAG_INT_VAL;
 	  out_attr->i = in_vec;
+	  last_vec = ibfd;
 	}
       else if (out_vec < in_vec)
-	_bfd_error_handler
-	  /* xgettext:c-format */
-	  (_("warning: %pB uses AltiVec vector ABI, %pB uses SPE vector ABI"),
-	   obfd, ibfd);
+	{
+	  _bfd_error_handler
+	    /* xgettext:c-format */
+	    (_("%pB uses AltiVec vector ABI, %pB uses SPE vector ABI"),
+	     last_vec, ibfd);
+	  out_attr->type = ATTR_TYPE_FLAG_INT_VAL | ATTR_TYPE_FLAG_ERROR;
+	  ret = FALSE;
+	}
       else if (out_vec > in_vec)
-	_bfd_error_handler
-	  /* xgettext:c-format */
-	  (_("warning: %pB uses AltiVec vector ABI, %pB uses SPE vector ABI"),
-	   ibfd, obfd);
+	{
+	  _bfd_error_handler
+	    /* xgettext:c-format */
+	    (_("%pB uses AltiVec vector ABI, %pB uses SPE vector ABI"),
+	     ibfd, last_vec);
+	  out_attr->type = ATTR_TYPE_FLAG_INT_VAL | ATTR_TYPE_FLAG_ERROR;
+	  ret = FALSE;
+	}
     }
 
   /* Check for conflicting Tag_GNU_Power_ABI_Struct_Return attributes
@@ -4852,30 +4905,43 @@ ppc_elf_merge_obj_attributes (bfd *ibfd, struct bfd_link_info *info)
     {
       int in_struct = in_attr->i & 3;
       int out_struct = out_attr->i & 3;
+      static bfd *last_struct;
 
       if (in_struct == 0 || in_struct == 3)
        ;
       else if (out_struct == 0)
 	{
-	  out_attr->type = 1;
+	  out_attr->type = ATTR_TYPE_FLAG_INT_VAL;
 	  out_attr->i = in_struct;
+	  last_struct = ibfd;
 	}
       else if (out_struct < in_struct)
-	_bfd_error_handler
-	  /* xgettext:c-format */
-	  (_("warning: %pB uses r3/r4 for small structure returns, "
-	     "%pB uses memory"), obfd, ibfd);
+	{
+	  _bfd_error_handler
+	    /* xgettext:c-format */
+	    (_("%pB uses r3/r4 for small structure returns, "
+	       "%pB uses memory"), last_struct, ibfd);
+	  out_attr->type = ATTR_TYPE_FLAG_INT_VAL | ATTR_TYPE_FLAG_ERROR;
+	  ret = FALSE;
+	}
       else if (out_struct > in_struct)
-	_bfd_error_handler
-	  /* xgettext:c-format */
-	  (_("warning: %pB uses r3/r4 for small structure returns, "
-	     "%pB uses memory"), ibfd, obfd);
+	{
+	  _bfd_error_handler
+	    /* xgettext:c-format */
+	    (_("%pB uses r3/r4 for small structure returns, "
+	       "%pB uses memory"), ibfd, last_struct);
+	  out_attr->type = ATTR_TYPE_FLAG_INT_VAL | ATTR_TYPE_FLAG_ERROR;
+	  ret = FALSE;
+	}
+    }
+  if (!ret)
+    {
+      bfd_set_error (bfd_error_bad_value);
+      return FALSE;
     }
 
   /* Merge Tag_compatibility attributes and any common GNU ones.  */
-  _bfd_elf_merge_object_attributes (ibfd, info);
-
-  return TRUE;
+  return _bfd_elf_merge_object_attributes (ibfd, info);
 }
 
 /* Merge backend specific data from an object file to the output
@@ -7320,12 +7386,10 @@ ppc_elf_relax_section (bfd *abfd,
 	    {
 	      if (tsec != NULL)
 		;
-	      else if (isym->st_shndx == SHN_UNDEF)
-		tsec = bfd_und_section_ptr;
 	      else if (isym->st_shndx == SHN_ABS)
 		tsec = bfd_abs_section_ptr;
-	      else if (isym->st_shndx == SHN_COMMON)
-		tsec = bfd_com_section_ptr;
+	      else
+		continue;
 
 	      toff = isym->st_value;
 	      sym_type = ELF_ST_TYPE (isym->st_info);
@@ -7467,6 +7531,17 @@ ppc_elf_relax_section (bfd *abfd,
 	  if (tsec == isec)
 	    continue;
 
+	  /* toff is used for the symbol index when the symbol is
+	     undefined and we're doing a relocatable link, so we can't
+	     support addends.  It would be possible to do so by
+	     putting the addend in one_branch_fixup but addends on
+	     branches are rare so it hardly seems worth supporting.  */
+	  if (bfd_link_relocatable (link_info)
+	      && tsec == bfd_und_section_ptr
+	      && r_type != R_PPC_PLTREL24
+	      && irel->r_addend != 0)
+	    continue;
+
 	  /* There probably isn't any reason to handle symbols in
 	     SEC_MERGE sections;  SEC_MERGE doesn't seem a likely
 	     attribute for a code section, and we are only looking at
@@ -7490,7 +7565,8 @@ ppc_elf_relax_section (bfd *abfd,
 		 a section symbol should not include the addend;  Such an
 		 access is presumed to be an offset from "sym";  The
 		 location of interest is just "sym".  */
-	      if (sym_type == STT_SECTION)
+	      if (sym_type == STT_SECTION
+		  && r_type != R_PPC_PLTREL24)
 		toff += irel->r_addend;
 
 	      toff
@@ -7498,7 +7574,8 @@ ppc_elf_relax_section (bfd *abfd,
 					      elf_section_data (tsec)->sec_info,
 					      toff);
 
-	      if (sym_type != STT_SECTION)
+	      if (sym_type != STT_SECTION
+		  && r_type != R_PPC_PLTREL24)
 		toff += irel->r_addend;
 	    }
 	  /* PLTREL24 addends are special.  */
@@ -7514,6 +7591,16 @@ ppc_elf_relax_section (bfd *abfd,
 	    continue;
 
 	  roff = irel->r_offset;
+
+	  /* Avoid creating a lot of unnecessary fixups when
+	     relocatable if the output section size is such that a
+	     fixup can be created at final link.
+	     The max_branch_offset adjustment allows for some number
+	     of other fixups being needed at final link.  */
+	  if (bfd_link_relocatable (link_info)
+	      && (isec->output_section->rawsize - (isec->output_offset + roff)
+		  < max_branch_offset - (max_branch_offset >> 4)))
+	    continue;
 
 	  /* If the branch is in range, no need to do anything.  */
 	  if (tsec != bfd_und_section_ptr

@@ -1,3 +1,67 @@
+2018-08-14  Jan Vrany  <jan.vrany@fit.cvut.cz>
+
+	* gdb.texinfo (GDB/MI Data Manipulation): Document
+	"-data-disassemble -a addr".
+	(GDB/MI Support Commands): Document "data-disassemble-a-option"
+	feature.
+
+2018-08-07  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* gdb.texinfo (Index Files Speed Up GDB): Add section about
+	symbol index cache.
+
+2018-07-27  Sergio Durigan Junior  <sergiodj@redhat.com>
+
+	* gdb.texinfo (gcore man): Rewrite "Description" and "-o"
+	option sections to further clarify that gcore can take more
+	than one PID, and that "-o" is used to specify a prefix, not a
+	filename.
+
+2018-07-26  Andrew Burgess  <andrew.burgess@embecosm.com>
+
+	* gdb.texinfo (Maintenance Commands): Add description of
+	maintenance command to control dwarf unwinders.
+
+2018-07-12  Philippe Waroquiers  <philippe.waroquiers@skynet.be>
+
+	* gdb.texinfo (Debugging Programs with Multiple Threads):
+	Document changes to 'thread apply'.  Document 'taas'.
+	Document 'tfaas'.
+	(Examining the Stack): Document 'frame apply'.  Document 'faas'.
+
+2018-07-11  Sergio Durigan Junior  <sergiodj@redhat.com>
+	    Jan Kratochvil  <jan.kratochvil@redhat.com>
+	    Paul Fertser  <fercerpav@gmail.com>
+	    Tsutomu Seki  <sekiriki@gmail.com>
+
+	* gdb.texinfo (Remote Connection Commands): Add explanation
+	about new IPv6 support.  Add new connection prefixes.
+
+2018-07-09  Andrew Burgess  <andrew.burgess@embecosm.com>
+
+	* gdb.texinfo (Remote Configuration): Update descriptions for
+	set/show of hardware-watchpoint-limit, hardware-breakpoint-limit,
+	and hardware-watchpoint-length-limit variables.
+
+2018-07-02  Maciej W. Rozycki  <macro@mips.com>
+
+	PR tdep/8282
+	* gdb.texinfo (Source and Machine Code): Document `set
+	disassembler-options' support for the MIPS target.
+
+2018-06-28  Petr Tesarik  <ptesarik@suse.cz>
+
+	* gdb.texinfo (Files): Document "add-symbol-file -o offset".
+
+2018-06-28  Petr Tesarik  <ptesarik@suse.cz>
+
+	* gdb.texinfo (Files): The address argument for "add-symbol-file"
+	is no longer mandatory.
+
+2018-06-28  Petr Tesarik  <ptesarik@suse.cz>
+
+	* gdb.texinfo (Files): Document "symbol-file -o offset".
+
 2018-06-14  Tom de Vries  <tdevries@suse.de>
 
 	* gdb.texinfo (Background Execution): Add @cindex for '&'.

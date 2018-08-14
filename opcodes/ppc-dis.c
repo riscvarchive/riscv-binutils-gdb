@@ -94,6 +94,10 @@ struct ppc_mopt ppc_opts[] = {
     0 },
   { "750cl",   PPC_OPCODE_PPC | PPC_OPCODE_750 | PPC_OPCODE_PPCPS
     , 0 },
+  { "gekko",   PPC_OPCODE_PPC | PPC_OPCODE_750 | PPC_OPCODE_PPCPS
+    , 0 },
+  { "broadway", PPC_OPCODE_PPC | PPC_OPCODE_750 | PPC_OPCODE_PPCPS
+    , 0 },
   { "821",     PPC_OPCODE_PPC | PPC_OPCODE_860,
     0 },
   { "850",     PPC_OPCODE_PPC | PPC_OPCODE_860,
@@ -312,6 +316,9 @@ powerpc_init_dialect (struct disassemble_info *info)
       break;
     case bfd_mach_ppc_601:
       dialect = ppc_parse_cpu (dialect, &sticky, "601");
+      break;
+    case bfd_mach_ppc_750:
+      dialect = ppc_parse_cpu (dialect, &sticky, "750cl");
       break;
     case bfd_mach_ppc_a35:
     case bfd_mach_ppc_rs64ii:
@@ -810,24 +817,30 @@ print_insn_powerpc (bfd_vma memaddr,
   return 4;
 }
 
-const disasm_options_t *
+const disasm_options_and_args_t *
 disassembler_options_powerpc (void)
 {
-  static disasm_options_t *opts = NULL;
+  static disasm_options_and_args_t *opts_and_args;
 
-  if (opts == NULL)
+  if (opts_and_args == NULL)
     {
       size_t i, num_options = ARRAY_SIZE (ppc_opts);
-      opts = XNEW (disasm_options_t);
+      disasm_options_t *opts;
+
+      opts_and_args = XNEW (disasm_options_and_args_t);
+      opts_and_args->args = NULL;
+
+      opts = &opts_and_args->options;
       opts->name = XNEWVEC (const char *, num_options + 1);
+      opts->description = NULL;
+      opts->arg = NULL;
       for (i = 0; i < num_options; i++)
 	opts->name[i] = ppc_opts[i].opt;
       /* The array we return must be NULL terminated.  */
       opts->name[i] = NULL;
-      opts->description = NULL;
     }
 
-  return opts;
+  return opts_and_args;
 }
 
 void

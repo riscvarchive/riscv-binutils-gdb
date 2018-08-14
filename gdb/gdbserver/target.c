@@ -248,7 +248,7 @@ target_wait (ptid_t ptid, struct target_waitstatus *status, int options)
 void
 target_mourn_inferior (ptid_t ptid)
 {
-  (*the_target->mourn) (find_process_pid (ptid_get_pid (ptid)));
+  (*the_target->mourn) (find_process_pid (ptid.pid ()));
 }
 
 /* See target/target.h.  */
@@ -314,29 +314,29 @@ target_pid_to_str (ptid_t ptid)
 {
   static char buf[80];
 
-  if (ptid_equal (ptid, minus_one_ptid))
+  if (ptid == minus_one_ptid)
     xsnprintf (buf, sizeof (buf), "<all threads>");
-  else if (ptid_equal (ptid, null_ptid))
+  else if (ptid == null_ptid)
     xsnprintf (buf, sizeof (buf), "<null thread>");
-  else if (ptid_get_tid (ptid) != 0)
+  else if (ptid.tid () != 0)
     xsnprintf (buf, sizeof (buf), "Thread %d.0x%lx",
-	       ptid_get_pid (ptid), ptid_get_tid (ptid));
-  else if (ptid_get_lwp (ptid) != 0)
+	       ptid.pid (), ptid.tid ());
+  else if (ptid.lwp () != 0)
     xsnprintf (buf, sizeof (buf), "LWP %d.%ld",
-	       ptid_get_pid (ptid), ptid_get_lwp (ptid));
+	       ptid.pid (), ptid.lwp ());
   else
     xsnprintf (buf, sizeof (buf), "Process %d",
-	       ptid_get_pid (ptid));
+	       ptid.pid ());
 
   return buf;
 }
 
 int
-kill_inferior (int pid)
+kill_inferior (process_info *proc)
 {
-  gdb_agent_about_to_close (pid);
+  gdb_agent_about_to_close (proc->pid);
 
-  return (*the_target->kill) (pid);
+  return (*the_target->kill) (proc);
 }
 
 /* Target can do hardware single step.  */

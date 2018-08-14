@@ -1340,7 +1340,8 @@ PowerPC options:\n\
 -m476                   generate code for PowerPC 476\n\
 -m7400, -m7410, -m7450, -m7455\n\
                         generate code for PowerPC 7400/7410/7450/7455\n\
--m750cl                 generate code for PowerPC 750cl\n\
+-m750cl, -mgekko, -mbroadway\n\
+                        generate code for PowerPC 750cl/Gekko/Broadway\n\
 -m821, -m850, -m860     generate code for PowerPC 821/850/860\n"));
   fprintf (stream, _("\
 -mppc64, -m620          generate code for PowerPC 620/625/630\n\
@@ -2084,6 +2085,7 @@ ppc_elf_suffix (char **str_p, expressionS *exp_p)
     MAP64 ("tprel@highera",	BFD_RELOC_PPC64_TPREL16_HIGHERA),
     MAP64 ("tprel@highest",	BFD_RELOC_PPC64_TPREL16_HIGHEST),
     MAP64 ("tprel@highesta",	BFD_RELOC_PPC64_TPREL16_HIGHESTA),
+    MAP64 ("notoc",		BFD_RELOC_PPC64_REL24_NOTOC),
     { (char *) 0, 0, 0, 0,	BFD_RELOC_NONE }
   };
 
@@ -2378,12 +2380,22 @@ ppc_elf_localentry (int ignore ATTRIBUTE_UNUSED)
   if (resolve_expression (&exp)
       && exp.X_op == O_constant)
     {
-      unsigned char encoded = PPC64_SET_LOCAL_ENTRY_OFFSET (exp.X_add_number);
+      unsigned int encoded, ok;
 
-      if (exp.X_add_number != (offsetT) PPC64_LOCAL_ENTRY_OFFSET (encoded))
-        as_bad (_(".localentry expression for `%s' "
-		  "is not a valid power of 2"), S_GET_NAME (sym));
+      ok = 1;
+      if (exp.X_add_number == 1 || exp.X_add_number == 7)
+	encoded = exp.X_add_number << STO_PPC64_LOCAL_BIT;
       else
+	{
+	  encoded = PPC64_SET_LOCAL_ENTRY_OFFSET (exp.X_add_number);
+	  if (exp.X_add_number != (offsetT) PPC64_LOCAL_ENTRY_OFFSET (encoded))
+	    {
+	      as_bad (_(".localentry expression for `%s' "
+			"is not a valid power of 2"), S_GET_NAME (sym));
+	      ok = 0;
+	    }
+	}
+      if (ok)
 	{
 	  bfdsym = symbol_get_bfdsym (sym);
 	  elfsym = elf_symbol_from (bfd_asymbol_bfd (bfdsym), bfdsym);
@@ -6405,6 +6417,7 @@ ppc_force_relocation (fixS *fix)
     case BFD_RELOC_PPC_BA26:
     case BFD_RELOC_PPC_B16:
     case BFD_RELOC_PPC_BA16:
+    case BFD_RELOC_PPC64_REL24_NOTOC:
       /* All branch fixups targeting a localentry symbol must
          force a relocation.  */
       if (fix->fx_addsy)
@@ -6443,6 +6456,7 @@ ppc_fix_adjustable (fixS *fix)
     case BFD_RELOC_PPC_B16_BRNTAKEN:
     case BFD_RELOC_PPC_BA16_BRTAKEN:
     case BFD_RELOC_PPC_BA16_BRNTAKEN:
+    case BFD_RELOC_PPC64_REL24_NOTOC:
       if (fix->fx_addsy)
 	{
 	  asymbol *bfdsym = symbol_get_bfdsym (fix->fx_addsy);

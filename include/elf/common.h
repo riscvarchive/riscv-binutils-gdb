@@ -340,6 +340,7 @@
 #define EM_LANAI	244	/* Lanai 32-bit processor.  */
 #define EM_BPF		247	/* Linux BPF – in-kernel virtual machine.  */
 #define EM_NFP		250	/* Netronome Flow Processor.  */
+#define EM_CSKY		252	/* C-SKY processor family.  */
 
 /* If it is necessary to assign new unofficial EM_* values, please pick large
    random numbers (0x8523, 0xa7f2, etc.) to minimize the chances of collision
@@ -435,6 +436,10 @@
 /* Old constant that might be in use by some software. */
 #define EM_OPENRISC		EM_OR1K
 
+/* C-SKY historically used 39, the same value as MCORE, from which the
+   architecture was derived.  */
+#define EM_CSKY_OLD		EM_MCORE
+
 /* See the above comment before you add a new EM_* value here.  */
 
 /* Values for e_version.  */
@@ -498,7 +503,7 @@
 #define SHT_FINI_ARRAY	  15		/* Array of ptrs to finish functions */
 #define SHT_PREINIT_ARRAY 16		/* Array of ptrs to pre-init funcs */
 #define SHT_GROUP	  17		/* Section contains a section group */
-#define SHT_SYMTAB_SHNDX  18		/* Indicies for SHN_XINDEX entries */
+#define SHT_SYMTAB_SHNDX  18		/* Indices for SHN_XINDEX entries */
 
 #define SHT_LOOS	0x60000000	/* First of OS specific semantics */
 #define SHT_HIOS	0x6fffffff	/* Last of OS specific semantics */

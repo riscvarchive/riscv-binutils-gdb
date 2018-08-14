@@ -326,6 +326,19 @@ DESCRIPTION
 .#define bfd_mach_arm_ep9312	11
 .#define bfd_mach_arm_iWMMXt	12
 .#define bfd_mach_arm_iWMMXt2	13
+.#define bfd_mach_arm_5TEJ      14
+.#define bfd_mach_arm_6         15
+.#define bfd_mach_arm_6KZ       16
+.#define bfd_mach_arm_6T2       17
+.#define bfd_mach_arm_6K        18
+.#define bfd_mach_arm_7         19
+.#define bfd_mach_arm_6M        20
+.#define bfd_mach_arm_6SM       21
+.#define bfd_mach_arm_7EM       22
+.#define bfd_mach_arm_8         23
+.#define bfd_mach_arm_8R        24
+.#define bfd_mach_arm_8M_BASE   25
+.#define bfd_mach_arm_8M_MAIN   26
 .  bfd_arch_nds32,     {* Andes NDS32.  *}
 .#define bfd_mach_n1		1
 .#define bfd_mach_n1h		2
@@ -516,6 +529,15 @@ DESCRIPTION
 .  bfd_arch_nfp,       {* Netronome Flow Processor *}
 .#define bfd_mach_nfp3200	0x3200
 .#define bfd_mach_nfp6000	0x6000
+.  bfd_arch_csky,      {* C-SKY.  *}
+.#define bfd_mach_ck_unknown    0
+.#define bfd_mach_ck510		1
+.#define bfd_mach_ck610		2
+.#define bfd_mach_ck801		3
+.#define bfd_mach_ck802		4
+.#define bfd_mach_ck803		5
+.#define bfd_mach_ck807		6
+.#define bfd_mach_ck810		7
 .  bfd_arch_last
 .  };
 */
@@ -570,6 +592,7 @@ extern const bfd_arch_info_type bfd_cr16_arch;
 extern const bfd_arch_info_type bfd_cr16c_arch;
 extern const bfd_arch_info_type bfd_cris_arch;
 extern const bfd_arch_info_type bfd_crx_arch;
+extern const bfd_arch_info_type bfd_csky_arch;
 extern const bfd_arch_info_type bfd_d10v_arch;
 extern const bfd_arch_info_type bfd_d30v_arch;
 extern const bfd_arch_info_type bfd_dlx_arch;
@@ -660,6 +683,7 @@ static const bfd_arch_info_type * const bfd_archures_list[] =
     &bfd_cr16c_arch,
     &bfd_cris_arch,
     &bfd_crx_arch,
+    &bfd_csky_arch,
     &bfd_d10v_arch,
     &bfd_d30v_arch,
     &bfd_dlx_arch,

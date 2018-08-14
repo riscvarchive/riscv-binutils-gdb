@@ -523,14 +523,14 @@ handle_extended_wait (struct lwp_info **orig_event_lwp, int wstat)
 	  struct thread_info *child_thr;
 	  struct target_desc *tdesc;
 
-	  ptid = ptid_build (new_pid, new_pid, 0);
+	  ptid = ptid_t (new_pid, new_pid, 0);
 
 	  if (debug_threads)
 	    {
 	      debug_printf ("HEW: Got fork event from LWP %ld, "
 			    "new child is %d\n",
-			    ptid_get_lwp (ptid_of (event_thr)),
-			    ptid_get_pid (ptid));
+			    ptid_of (event_thr).lwp (),
+			    ptid.pid ());
 	    }
 
 	  /* Add the new process to the tables and clone the breakpoint
@@ -630,7 +630,7 @@ handle_extended_wait (struct lwp_info **orig_event_lwp, int wstat)
 		      "from LWP %ld, new child is LWP %ld\n",
 		      lwpid_of (event_thr), new_pid);
 
-      ptid = ptid_build (pid_of (event_thr), new_pid, 0);
+      ptid = ptid_t (pid_of (event_thr), new_pid, 0);
       new_lwp = add_lwp (ptid);
 
       /* Either we're going to immediately resume the new thread
@@ -699,7 +699,7 @@ handle_extended_wait (struct lwp_info **orig_event_lwp, int wstat)
 
       /* Get the event ptid.  */
       event_ptid = ptid_of (event_thr);
-      event_pid = ptid_get_pid (event_ptid);
+      event_pid = event_ptid.pid ();
 
       /* Save the syscall list from the execing process.  */
       proc = get_thread_process (event_thr);
@@ -1017,7 +1017,7 @@ linux_create_inferior (const char *program,
 
   linux_add_process (pid, 0);
 
-  ptid = ptid_build (pid, pid, 0);
+  ptid = ptid_t (pid, pid, 0);
   new_lwp = add_lwp (ptid);
   new_lwp->must_set_ptrace_flags = 1;
 
@@ -1052,7 +1052,7 @@ int
 linux_attach_lwp (ptid_t ptid)
 {
   struct lwp_info *new_lwp;
-  int lwpid = ptid_get_lwp (ptid);
+  int lwpid = ptid.lwp ();
 
   if (ptrace (PTRACE_ATTACH, lwpid, (PTRACE_TYPE_ARG3) 0, (PTRACE_TYPE_ARG4) 0)
       != 0)
@@ -1140,7 +1140,7 @@ attach_proc_task_lwp_callback (ptid_t ptid)
   /* Is this a new thread?  */
   if (find_thread_ptid (ptid) == NULL)
     {
-      int lwpid = ptid_get_lwp (ptid);
+      int lwpid = ptid.lwp ();
       int err;
 
       if (debug_threads)
@@ -1185,7 +1185,7 @@ linux_attach (unsigned long pid)
 {
   struct process_info *proc;
   struct thread_info *initial_thread;
-  ptid_t ptid = ptid_build (pid, pid, 0);
+  ptid_t ptid = ptid_t (pid, pid, 0);
   int err;
 
   /* Attach to PID.  We will check for other threads
@@ -1202,7 +1202,7 @@ linux_attach (unsigned long pid)
 
   /* Don't ignore the initial SIGSTOP if we just attached to this
      process.  It will be collected by wait shortly.  */
-  initial_thread = find_thread_ptid (ptid_build (pid, pid, 0));
+  initial_thread = find_thread_ptid (ptid_t (pid, pid, 0));
   initial_thread->last_resume_kind = resume_stop;
 
   /* We must attach to every LWP.  If /proc is mounted, use that to
@@ -1226,13 +1226,13 @@ linux_attach (unsigned long pid)
     {
       struct lwp_info *lwp;
       int wstat, lwpid;
-      ptid_t pid_ptid = pid_to_ptid (pid);
+      ptid_t pid_ptid = ptid_t (pid);
 
       lwpid = linux_wait_for_event_filtered (pid_ptid, pid_ptid,
 					     &wstat, __WALL);
       gdb_assert (lwpid > 0);
 
-      lwp = find_lwp_pid (pid_to_ptid (lwpid));
+      lwp = find_lwp_pid (ptid_t (lwpid));
 
       if (!WIFSTOPPED (wstat) || WSTOPSIG (wstat) != SIGSTOP)
 	{
@@ -1323,8 +1323,8 @@ static void
 kill_wait_lwp (struct lwp_info *lwp)
 {
   struct thread_info *thr = get_lwp_thread (lwp);
-  int pid = ptid_get_pid (ptid_of (thr));
-  int lwpid = ptid_get_lwp (ptid_of (thr));
+  int pid = ptid_of (thr).pid ();
+  int lwpid = ptid_of (thr).lwp ();
   int wstat;
   int res;
 
@@ -1385,14 +1385,9 @@ kill_one_lwp_callback (thread_info *thread, int pid)
 }
 
 static int
-linux_kill (int pid)
+linux_kill (process_info *process)
 {
-  struct process_info *process;
-  struct lwp_info *lwp;
-
-  process = find_process_pid (pid);
-  if (process == NULL)
-    return -1;
+  int pid = process->pid;
 
   /* If we're killing a running inferior, make sure it is stopped
      first, as PTRACE_KILL will not work otherwise.  */
@@ -1405,7 +1400,7 @@ linux_kill (int pid)
 
   /* See the comment in linux_kill_one_lwp.  We did not kill the first
      thread in the list, so do so now.  */
-  lwp = find_lwp_pid (pid_to_ptid (pid));
+  lwp_info *lwp = find_lwp_pid (ptid_t (pid));
 
   if (lwp == NULL)
     {
@@ -1608,14 +1603,9 @@ linux_detach_lwp_callback (thread_info *thread)
 }
 
 static int
-linux_detach (int pid)
+linux_detach (process_info *process)
 {
-  struct process_info *process;
   struct lwp_info *main_lwp;
-
-  process = find_process_pid (pid);
-  if (process == NULL)
-    return -1;
 
   /* As there's a step over already in progress, let it finish first,
      otherwise nesting a stabilize_threads operation on top gets real
@@ -1638,9 +1628,9 @@ linux_detach (int pid)
   /* Detach from the clone lwps first.  If the thread group exits just
      while we're detaching, we must reap the clone lwps before we're
      able to reap the leader.  */
-  for_each_thread (pid, linux_detach_lwp_callback);
+  for_each_thread (process->pid, linux_detach_lwp_callback);
 
-  main_lwp = find_lwp_pid (pid_to_ptid (pid));
+  main_lwp = find_lwp_pid (ptid_t (process->pid));
   linux_detach_one_lwp (main_lwp);
 
   the_target->mourn (process);
@@ -1680,12 +1670,12 @@ linux_mourn (struct process_info *process)
 }
 
 static void
-linux_join (int pid)
+linux_join (process_info *proc)
 {
   int status, ret;
 
   do {
-    ret = my_waitpid (pid, &status, 0);
+    ret = my_waitpid (proc->pid, &status, 0);
     if (WIFEXITED (status) || WIFSIGNALED (status))
       break;
   } while (ret != -1 || errno != ECHILD);
@@ -1878,7 +1868,7 @@ check_zombie_leaders (void)
     pid_t leader_pid = pid_of (proc);
     struct lwp_info *leader_lp;
 
-    leader_lp = find_lwp_pid (pid_to_ptid (leader_pid));
+    leader_lp = find_lwp_pid (ptid_t (leader_pid));
 
     if (debug_threads)
       debug_printf ("leader_pid=%d, leader_lp!=NULL=%d, "
@@ -2363,7 +2353,7 @@ linux_low_filter_event (int lwpid, int wstat)
   struct thread_info *thread;
   int have_stop_pc = 0;
 
-  child = find_lwp_pid (pid_to_ptid (lwpid));
+  child = find_lwp_pid (ptid_t (lwpid));
 
   /* Check for stop events reported by a process we didn't already
      know about - anything not already in our LWP list.
@@ -2391,7 +2381,7 @@ linux_low_filter_event (int lwpid, int wstat)
 			"after exec.\n", lwpid);
 	}
 
-      child_ptid = ptid_build (lwpid, lwpid, 0);
+      child_ptid = ptid_t (lwpid, lwpid, 0);
       child = add_lwp (child_ptid);
       child->stopped = 1;
       current_thread = child->thread;
@@ -2635,7 +2625,7 @@ linux_wait_for_event_filtered (ptid_t wait_ptid, ptid_t filter_ptid,
 
   /* Check for a lwp with a pending status.  */
 
-  if (ptid_equal (filter_ptid, minus_one_ptid) || ptid_is_pid (filter_ptid))
+  if (filter_ptid == minus_one_ptid || filter_ptid.is_pid ())
     {
       event_thread = find_thread_in_random ([&] (thread_info *thread)
 	{
@@ -2647,7 +2637,7 @@ linux_wait_for_event_filtered (ptid_t wait_ptid, ptid_t filter_ptid,
       if (debug_threads && event_thread)
 	debug_printf ("Got a pending child %ld\n", lwpid_of (event_thread));
     }
-  else if (!ptid_equal (filter_ptid, null_ptid))
+  else if (filter_ptid != null_ptid)
     {
       requested_child = find_lwp_pid (filter_ptid);
 
@@ -3159,7 +3149,7 @@ linux_wait_1 (ptid_t ptid,
   else
     any_resumed = 0;
 
-  if (ptid_equal (step_over_bkpt, null_ptid))
+  if (step_over_bkpt == null_ptid)
     pid = linux_wait_for_event (ptid, &w, options);
   else
     {
@@ -3248,7 +3238,7 @@ linux_wait_1 (ptid_t ptid,
      if it's not the single_step_breakpoint we are hitting.
      This avoids that a program would keep trapping a permanent breakpoint
      forever.  */
-  if (!ptid_equal (step_over_bkpt, null_ptid)
+  if (step_over_bkpt != null_ptid
       && event_child->stop_reason == TARGET_STOPPED_BY_SW_BREAKPOINT
       && (event_child->stepping
 	  || !single_step_breakpoint_inserted_here (event_child->stop_pc)))
@@ -3736,7 +3726,7 @@ linux_wait_1 (ptid_t ptid,
 	 from among those that have had events.  Giving equal priority
 	 to all LWPs that have had events helps prevent
 	 starvation.  */
-      if (ptid_equal (ptid, minus_one_ptid))
+      if (ptid == minus_one_ptid)
 	{
 	  event_child->status_pending_p = 1;
 	  event_child->status_pending = w;
@@ -3827,7 +3817,7 @@ linux_wait_1 (ptid_t ptid,
       ourstatus->value.sig = gdb_signal_from_host (WSTOPSIG (w));
     }
 
-  gdb_assert (ptid_equal (step_over_bkpt, null_ptid));
+  gdb_assert (step_over_bkpt == null_ptid);
 
   if (debug_threads)
     {
@@ -3886,14 +3876,14 @@ linux_wait (ptid_t ptid,
       event_ptid = linux_wait_1 (ptid, ourstatus, target_options);
     }
   while ((target_options & TARGET_WNOHANG) == 0
-	 && ptid_equal (event_ptid, null_ptid)
+	 && event_ptid == null_ptid
 	 && ourstatus->kind == TARGET_WAITKIND_IGNORE);
 
   /* If at least one stop was reported, there may be more.  A single
      SIGCHLD can signal more than one child stop.  */
   if (target_is_async_p ()
       && (target_options & TARGET_WNOHANG) != 0
-      && !ptid_equal (event_ptid, null_ptid))
+      && event_ptid != null_ptid)
     async_file_mark ();
 
   return event_ptid;
@@ -4542,13 +4532,13 @@ linux_set_resume_request (thread_info *thread, thread_resume *resume, size_t n)
   for (int ndx = 0; ndx < n; ndx++)
     {
       ptid_t ptid = resume[ndx].thread;
-      if (ptid_equal (ptid, minus_one_ptid)
+      if (ptid == minus_one_ptid
 	  || ptid == thread->id
 	  /* Handle both 'pPID' and 'pPID.-1' as meaning 'all threads
 	     of PID'.  */
-	  || (ptid_get_pid (ptid) == pid_of (thread)
-	      && (ptid_is_pid (ptid)
-		  || ptid_get_lwp (ptid) == -1)))
+	  || (ptid.pid () == pid_of (thread)
+	      && (ptid.is_pid ()
+		  || ptid.lwp () == -1)))
 	{
 	  if (resume[ndx].kind == resume_stop
 	      && thread->last_resume_kind == resume_stop)
@@ -4899,7 +4889,7 @@ finish_step_over (struct lwp_info *lwp)
 static void
 complete_ongoing_step_over (void)
 {
-  if (!ptid_equal (step_over_bkpt, null_ptid))
+  if (step_over_bkpt != null_ptid)
     {
       struct lwp_info *lwp;
       int wstat;
@@ -7558,6 +7548,7 @@ initialize_low (void)
   set_target_ops (&linux_target_ops);
 
   linux_ptrace_init_warnings ();
+  linux_proc_init_warnings ();
 
   sigchld_action.sa_handler = sigchld_handler;
   sigemptyset (&sigchld_action.sa_mask);

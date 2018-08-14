@@ -1142,6 +1142,8 @@ add_specific_symbols (const char *filename, htab_t htab)
       line = eol;
       line_count ++;
     }
+
+  free (buffer);
 }
 
 /* See whether a symbol should be stripped or kept
@@ -1817,6 +1819,7 @@ add_redefine_syms_file (const char *filename)
     fatal (_("%s:%d: premature end of file"), filename, lineno);
 
   free (buf);
+  fclose (file);
 }
 
 /* Copy unknown object file IBFD onto OBFD.
@@ -2174,7 +2177,7 @@ merge_gnu_build_notes (bfd * abfd, asection * sec, bfd_size_type size, bfd_byte 
      3. Eliminate any NT_GNU_BUILD_ATTRIBUTE_OPEN notes that have the same
         full name field as the immediately preceeding note with the same type
 	of name and whose address ranges coincide.
-	IE - it there are gaps in the coverage of the notes, then these gaps
+	IE - if there are gaps in the coverage of the notes, then these gaps
 	must be preserved.
      4. Combine the numeric value of any NT_GNU_BUILD_ATTRIBUTE_OPEN notes
         of type GNU_BUILD_ATTRIBUTE_STACK_SIZE.
@@ -2182,16 +2185,48 @@ merge_gnu_build_notes (bfd * abfd, asection * sec, bfd_size_type size, bfd_byte 
         its description field is empty then the nearest preceeding OPEN note
 	with a non-empty description field must also be preserved *OR* the
 	description field of the note must be changed to contain the starting
-	address to which it refers.  */
+	address to which it refers.
+     6. Notes with the same start and end address can be deleted.  */
   for (pnote = pnotes + 1; pnote < pnotes_end; pnote ++)
     {
       int                      note_type;
       objcopy_internal_note *  back;
       objcopy_internal_note *  prev_open_with_range = NULL;
 
+      /* Rule 6 - delete 0-range notes.  */
+      if (pnote->start == pnote->end)
+	{
+	  duplicate_found = TRUE;
+	  pnote->note.type = 0;
+	  continue;
+	}
+
       /* Rule 2 - preserve function notes.  */
       if (! is_open_note (pnote))
-	continue;
+	{
+	  int iter;
+
+	  /* Check to see if there is an identical previous function note.
+	     This can happen with overlays for example.  */
+	  for (iter = 0, back = pnote -1; back >= pnotes; back --)
+	    {
+	      if (back->start == pnote->start
+		  && back->end == pnote->end
+		  && back->note.namesz == pnote->note.namesz
+		  && memcmp (back->note.namedata, pnote->note.namedata, pnote->note.namesz) == 0)
+		{
+ fprintf (stderr, "DUP FUNXC\n");
+		  duplicate_found = TRUE;
+		  pnote->note.type = 0;
+		  break;
+		}
+
+	      /* Don't scan too far back however.  */
+	      if (iter ++ > 16)
+		break;
+	    }
+	  continue;
+	}
 
       note_type = pnote->note.namedata[attribute_type_byte];
 
@@ -2823,6 +2858,7 @@ copy_object (bfd *ibfd, bfd *obfd, const bfd_arch_info_type *input_arch)
 			     pdump->filename,
 			     strerror (errno));
 		  free (contents);
+		  fclose (f);
 		  return FALSE;
 		}
 	    }
@@ -3153,6 +3189,7 @@ copy_object (bfd *ibfd, bfd *obfd, const bfd_arch_info_type *input_arch)
 						  off, now))
 		    {
 		      bfd_nonfatal_message (NULL, obfd, osections[i], NULL);
+		      free (buf);
 		      return FALSE;
 		    }
 
@@ -3161,6 +3198,10 @@ copy_object (bfd *ibfd, bfd *obfd, const bfd_arch_info_type *input_arch)
 		}
 	    }
 	}
+
+      free (buf);
+      free (gaps);
+      gaps = NULL;
     }
 
   /* Allow the BFD backend to copy any private data it understands
@@ -3271,8 +3312,10 @@ copy_archive (bfd *ibfd, bfd *obfd, const char *output_target,
       /* If the file already exists, make another temp dir.  */
       if (stat (output_name, &buf) >= 0)
 	{
-	  output_name = make_tempdir (output_name);
-	  if (output_name == NULL)
+	  char * tmpdir = make_tempdir (output_name);
+
+	  free (output_name);
+	  if (tmpdir == NULL)
 	    {
 	      non_fatal (_("cannot create tempdir for archive copying (error: %s)"),
 			 strerror (errno));
@@ -3281,11 +3324,11 @@ copy_archive (bfd *ibfd, bfd *obfd, const char *output_target,
 	    }
 
 	  l = (struct name_list *) xmalloc (sizeof (struct name_list));
-	  l->name = output_name;
+	  l->name = tmpdir;
 	  l->next = list;
 	  l->obfd = NULL;
 	  list = l;
-	  output_name = concat (output_name, "/",
+	  output_name = concat (tmpdir, "/",
 				bfd_get_filename (this_element), (char *) 0);
 	}
 
@@ -3392,16 +3435,22 @@ copy_archive (bfd *ibfd, bfd *obfd, const char *output_target,
 
  cleanup_and_exit:
   /* Delete all the files that we opened.  */
-  for (l = list; l != NULL; l = l->next)
-    {
-      if (l->obfd == NULL)
-	rmdir (l->name);
-      else
-	{
-	  bfd_close (l->obfd);
-	  unlink (l->name);
-	}
-    }
+  {
+    struct name_list * next;
+
+    for (l = list; l != NULL; l = next)
+      {
+	if (l->obfd == NULL)
+	  rmdir (l->name);
+	else
+	  {
+	    bfd_close (l->obfd);
+	    unlink (l->name);
+	  }
+	next = l->next;
+	free (l);
+      }
+  }
 
   rmdir (dir);
 }
@@ -4254,7 +4303,7 @@ write_debugging_info (bfd *obfd, void *dhandle,
   if (bfd_get_flavour (obfd) == bfd_target_coff_flavour
       || bfd_get_flavour (obfd) == bfd_target_elf_flavour)
     {
-      bfd_byte *syms, *strings;
+      bfd_byte *syms, *strings = NULL;
       bfd_size_type symsize, stringsize;
       asection *stabsec, *stabstrsec;
       flagword flags;
@@ -4276,6 +4325,7 @@ write_debugging_info (bfd *obfd, void *dhandle,
 	{
 	  bfd_nonfatal_message (NULL, obfd, NULL,
 				_("can't create debugging section"));
+	  free (strings);
 	  return FALSE;
 	}
 
@@ -4289,6 +4339,7 @@ write_debugging_info (bfd *obfd, void *dhandle,
 	{
 	  bfd_nonfatal_message (NULL, obfd, NULL,
 				_("can't set debugging section contents"));
+	  free (strings);
 	  return FALSE;
 	}
 

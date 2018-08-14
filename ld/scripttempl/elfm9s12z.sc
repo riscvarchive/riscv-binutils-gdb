@@ -387,10 +387,10 @@ SECTIONS
 
   ${RELOCATING+${PRE_COMPUTE_DATA_SIZE}}
 
-  /* .install ${RELOCATING-0}:
+  .install ${RELOCATING-0}:
   {
-    . = _data_image_end;
-  } ${RELOCATING+ > ${TEXT_MEMORY}} */
+    . = __data_section_size;
+  } ${RELOCATING+ > ${TEXT_MEMORY}}
 
   /* Relocation for some bss and data sections.  */
   ${RELOCATING-${BSS_DATA_RELOC}}
@@ -401,6 +401,7 @@ SECTIONS
     ${RELOCATING+__bss_start = .;}
     ${RELOCATING+*(.softregs)}
     ${RELOCATING+*(.sbss)}
+    ${RELOCATING+*(.common)}
     ${RELOCATING+*(.scommon)}
 
     *(.dynbss)

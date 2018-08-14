@@ -306,6 +306,26 @@ gcc(1), ld(1), and the Info entries for @file{binutils} and @file{ld}.
 @c Deprecated -- deliberately not documented.
 @c [@b{-h}] [@b{-H}]
 @end ifset
+@ifset CSKY
+
+@emph{Target C-SKY options:}
+   [@b{-march=@var{arch}}] [@b{-mcpu=@var{cpu}}]
+   [@b{-EL}] [@b{-mlittle-endian}] [@b{-EB}] [@b{-mbig-endian}]
+   [@b{-fpic}] [@b{-pic}]
+   [@b{-mljump}] [@b{-mno-ljump}]
+   [@b{-force2bsr}] [@b{-mforce2bsr}] [@b{-no-force2bsr}] [@b{-mno-force2bsr}]
+   [@b{-jsri2bsr}] [@b{-mjsri2bsr}] [@b{-no-jsri2bsr }] [@b{-mno-jsri2bsr}]
+   [@b{-mnolrw }] [@b{-mno-lrw}]
+   [@b{-melrw}] [@b{-mno-elrw}]
+   [@b{-mlaf }] [@b{-mliterals-after-func}]
+   [@b{-mno-laf}] [@b{-mno-literals-after-func}]
+   [@b{-mlabr}] [@b{-mliterals-after-br}]
+   [@b{-mno-labr}] [@b{-mnoliterals-after-br}]
+   [@b{-mistack}] [@b{-mno-istack}]
+   [@b{-mhard-float}] [@b{-mmp}] [@b{-mcp}] [@b{-mcache}]
+   [@b{-msecurity}] [@b{-mtrust}]
+   [@b{-mdsp}] [@b{-medsp}] [@b{-mvdsp}]
+@end ifset
 @ifset D10V
 
 @emph{Target D10V options:}
@@ -424,6 +444,7 @@ gcc(1), ld(1), and the Info entries for @file{binutils} and @file{ld}.
    [@b{-mmcu}] [@b{-mno-mcu}]
    [@b{-mcrc}] [@b{-mno-crc}]
    [@b{-mginv}] [@b{-mno-ginv}]
+   [@b{-mloongson-mmi}] [@b{-mno-loongson-mmi}]
    [@b{-minsn32}] [@b{-mno-insn32}]
    [@b{-mfix7000}] [@b{-mno-fix7000}]
    [@b{-mfix-rm7000}] [@b{-mno-fix-rm7000}]
@@ -475,10 +496,10 @@ gcc(1), ld(1), and the Info entries for @file{binutils} and @file{ld}.
 @emph{Target PowerPC options:}
    [@b{-a32}|@b{-a64}]
    [@b{-mpwrx}|@b{-mpwr2}|@b{-mpwr}|@b{-m601}|@b{-mppc}|@b{-mppc32}|@b{-m603}|@b{-m604}|@b{-m403}|@b{-m405}|
-    @b{-m440}|@b{-m464}|@b{-m476}|@b{-m7400}|@b{-m7410}|@b{-m7450}|@b{-m7455}|@b{-m750cl}|@b{-mppc64}|
-    @b{-m620}|@b{-me500}|@b{-e500x2}|@b{-me500mc}|@b{-me500mc64}|@b{-me5500}|@b{-me6500}|@b{-mppc64bridge}|
-    @b{-mbooke}|@b{-mpower4}|@b{-mpwr4}|@b{-mpower5}|@b{-mpwr5}|@b{-mpwr5x}|@b{-mpower6}|@b{-mpwr6}|
-    @b{-mpower7}|@b{-mpwr7}|@b{-mpower8}|@b{-mpwr8}|@b{-mpower9}|@b{-mpwr9}@b{-ma2}|
+    @b{-m440}|@b{-m464}|@b{-m476}|@b{-m7400}|@b{-m7410}|@b{-m7450}|@b{-m7455}|@b{-m750cl}|@b{-mgekko}|
+    @b{-mbroadway}|@b{-mppc64}|@b{-m620}|@b{-me500}|@b{-e500x2}|@b{-me500mc}|@b{-me500mc64}|@b{-me5500}|
+    @b{-me6500}|@b{-mppc64bridge}|@b{-mbooke}|@b{-mpower4}|@b{-mpwr4}|@b{-mpower5}|@b{-mpwr5}|@b{-mpwr5x}|
+    @b{-mpower6}|@b{-mpwr6}|@b{-mpower7}|@b{-mpwr7}|@b{-mpower8}|@b{-mpwr8}|@b{-mpower9}|@b{-mpwr9}@b{-ma2}|
     @b{-mcell}|@b{-mspe}|@b{-mspe2}|@b{-mtitan}|@b{-me300}|@b{-mcom}]
    [@b{-many}] [@b{-maltivec}|@b{-mvsx}|@b{-mhtm}|@b{-mvle}]
    [@b{-mregnames}|@b{-mno-regnames}]
@@ -757,7 +778,7 @@ configure option.
 @end ifset
 
 @item --help
-Print a summary of the command line options and exit.
+Print a summary of the command-line options and exit.
 
 @item --target-help
 Print a summary of all target specific options and exit.
@@ -976,6 +997,25 @@ the Blackfin processor family.
 @c man begin OPTIONS
 @ifset CRIS
 See the info pages for documentation of the CRIS-specific options.
+@end ifset
+
+@ifset CSKY
+
+@ifclear man
+@xref{C-SKY Options}, for the options available when @value{AS} is
+configured for the C-SKY processor family.
+@end ifclear
+
+@ifset man
+@c man begin OPTIONS
+The following options are available when @value{AS} is configured for
+the C-SKY processor family.
+@c man end
+@c man begin INCLUDE
+@include c-csky.texi
+@c ended inside the included file
+@end ifset
+
 @end ifset
 
 @ifset D10V
@@ -1526,6 +1566,13 @@ Generate code for the Global INValidate (GINV) Application Specific
 Extension.  This tells the assembler to accept GINV instructions.
 @samp{-mno-ginv} turns off this option.
 
+@item -mloongson-mmi
+@itemx -mno-loongson-mmi
+Generate code for the Loongson MultiMedia extensions Instructions (MMI)
+Application Specific Extension.  This tells the assembler to accept MMI
+instructions.
+@samp{-mno-loongson-mmi} turns off this option.
+
 @item -minsn32
 @itemx -mno-insn32
 Only use 32-bit instruction encodings when generating code for the
@@ -1607,12 +1654,12 @@ an MCore processor.
 @item -jsri2bsr
 @itemx -nojsri2bsr
 Enable or disable the JSRI to BSR transformation.  By default this is enabled.
-The command line option @samp{-nojsri2bsr} can be used to disable it.
+The command-line option @samp{-nojsri2bsr} can be used to disable it.
 
 @item -sifilter
 @itemx -nosifilter
 Enable or disable the silicon filter behaviour.  By default this is disabled.
-The default can be overridden by the @samp{-sifilter} command line option.
+The default can be overridden by the @samp{-sifilter} command-line option.
 
 @item -relax
 Alter jump instructions for long displacements.
@@ -2011,7 +2058,7 @@ significant.
 explicitly, as one of the files for @command{@value{AS}} to assemble.
 
 @cindex options, command line
-Except for @samp{--} any command line argument that begins with a
+Except for @samp{--} any command-line argument that begins with a
 hyphen (@samp{-}) is an option.  Each option changes the behavior of
 @command{@value{AS}}.  No option changes the way another option works.  An
 option is a @samp{-} followed by one or more letters; the case of
@@ -2050,7 +2097,7 @@ program.  The source program is made up of one or more files.
 
 You give @command{@value{AS}} a command line that has zero or more input file
 names.  The input files are read (from left file name to right).  A
-command line argument (in any position) that has no special meaning
+command-line argument (in any position) that has no special meaning
 is taken to be an input file name.
 
 If you give @command{@value{AS}} no file names it attempts to read one input file
@@ -2288,7 +2335,7 @@ The letters after @samp{-a} may be combined into one option,
 
 Note if the assembler source is coming from the standard input (e.g.,
 because it
-is being created by @code{@value{GCC}} and the @samp{-pipe} command line switch
+is being created by @code{@value{GCC}} and the @samp{-pipe} command-line switch
 is being used) then the listing will not contain any comments or preprocessor
 directives.  This is because the listing code buffers input source lines from
 stdin only after they have been preprocessed by the assembler.  This reduces
@@ -2383,7 +2430,7 @@ in the object file.  Usually if you do this you also tell the linker
 @node listing
 @section Configuring listing output: @option{--listing}
 
-The listing feature of the assembler can be enabled via the command line switch
+The listing feature of the assembler can be enabled via the command-line switch
 @samp{-a} (@pxref{a}).  This feature combines the input source file(s) with a
 hex dump of the corresponding locations in the output object file, and displays
 them as a listing file.  The format of this listing can be controlled by
@@ -2777,7 +2824,7 @@ specific, and some targets multiple comment characters.  Some targets also have
 line comment characters that only work if they are the first character on a
 line.  Some targets use a sequence of two characters to introduce a line
 comment.  Some targets can also change their line comment characters depending
-upon command line options that have been used.  For more details see the
+upon command-line options that have been used.  For more details see the
 @emph{Syntax} section in the documentation for individual targets.
 
 If the line comment character is the hash sign (@samp{#}) then it still has the
@@ -5700,7 +5747,7 @@ counter, and @code{.nolist} decrements it.  Assembly listings are
 generated whenever the counter is greater than zero.
 
 By default, listings are disabled.  When you enable them (with the
-@samp{-a} command line option; @pxref{Invoking,,Command-Line Options}),
+@samp{-a} command-line option; @pxref{Invoking,,Command-Line Options}),
 the initial value of the listing counter is one.
 
 @node Ln
@@ -7540,6 +7587,9 @@ subject, see the hardware manufacturer's manual.
 @ifset CRIS
 * CRIS-Dependent::              CRIS Dependent Features
 @end ifset
+@ifset CSKY
+* C-SKY-Dependent::             C-SKY Dependent Features
+@end ifset
 @ifset D10V
 * D10V-Dependent::              D10V Dependent Features
 @end ifset
@@ -7721,6 +7771,10 @@ subject, see the hardware manufacturer's manual.
 
 @ifset CRIS
 @include c-cris.texi
+@end ifset
+
+@ifset CSKY
+@include c-csky.texi
 @end ifset
 
 @ifset Renesas-all

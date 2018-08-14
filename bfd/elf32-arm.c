@@ -2174,16 +2174,18 @@ elf32_arm_nabi_write_core_note (bfd *abfd, char *buf, int *bufsiz,
 	va_start (ap, note_type);
 	memset (data, 0, sizeof (data));
 	strncpy (data + 28, va_arg (ap, const char *), 16);
+#if GCC_VERSION == 8000 || GCC_VERSION == 8001
 	DIAGNOSTIC_PUSH;
-	/* GCC 8.1 warns about 80 equals destination size with
+	/* GCC 8.0 and 8.1 warn about 80 equals destination size with
 	   -Wstringop-truncation:
 	   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85643
 	 */
-#if GCC_VERSION == 8001
 	DIAGNOSTIC_IGNORE_STRINGOP_TRUNCATION;
 #endif
 	strncpy (data + 44, va_arg (ap, const char *), 80);
+#if GCC_VERSION == 8000 || GCC_VERSION == 8001
 	DIAGNOSTIC_POP;
+#endif
 	va_end (ap);
 
 	return elfcore_write_note (abfd, buf, bufsiz,
@@ -11500,37 +11502,39 @@ elf32_arm_final_link_relocate (reloc_howto_type *	    howto,
 			   && (ELF_ST_VISIBILITY (h->other) == STV_DEFAULT
 			       || h->root.type != bfd_link_hash_undefweak))
 		    outrel.r_info = ELF32_R_INFO (0, R_ARM_RELATIVE);
-		  else if (globals->fdpic_p)
-		    isrofixup = 1;
 		  else
-		    outrel.r_info = 0;
+		    {
+		      outrel.r_info = 0;
+		      if (globals->fdpic_p)
+			isrofixup = 1;
+		    }
 		  outrel.r_addend = dynreloc_value;
 		}
 
 	      /* The GOT entry is initialized to zero by default.
 		 See if we should install a different value.  */
 	      if (outrel.r_addend != 0
-		  && (outrel.r_info == 0 || globals->use_rel || isrofixup))
+		  && (globals->use_rel || outrel.r_info == 0))
 		{
 		  bfd_put_32 (output_bfd, outrel.r_addend,
 			      sgot->contents + off);
 		  outrel.r_addend = 0;
 		}
 
-	      if (outrel.r_info != 0 && !isrofixup)
+	      if (isrofixup)
+		arm_elf_add_rofixup (output_bfd,
+				     elf32_arm_hash_table(info)->srofixup,
+				     sgot->output_section->vma
+				     + sgot->output_offset + off);
+
+	      else if (outrel.r_info != 0)
 		{
 		  outrel.r_offset = (sgot->output_section->vma
 				     + sgot->output_offset
 				     + off);
 		  elf32_arm_add_dynreloc (output_bfd, info, srelgot, &outrel);
 		}
-	      else if (isrofixup)
-		{
-		  arm_elf_add_rofixup(output_bfd,
-				      elf32_arm_hash_table(info)->srofixup,
-				      sgot->output_section->vma
-				      + sgot->output_offset + off);
-		}
+
 	      h->got.offset |= 1;
 	    }
 	  value = sgot->output_offset + off;
@@ -11551,30 +11555,38 @@ elf32_arm_final_link_relocate (reloc_howto_type *	    howto,
 	    off &= ~1;
 	  else
 	    {
-	      if (globals->use_rel)
+	      Elf_Internal_Rela outrel;
+	      int isrofixup = 0;
+
+	      if (dynreloc_st_type == STT_GNU_IFUNC)
+		outrel.r_info = ELF32_R_INFO (0, R_ARM_IRELATIVE);
+	      else if (bfd_link_pic (info))
+		outrel.r_info = ELF32_R_INFO (0, R_ARM_RELATIVE);
+	      else
+		{
+		  outrel.r_info = 0;
+		  if (globals->fdpic_p)
+		    isrofixup = 1;
+		}
+
+	      /* The GOT entry is initialized to zero by default.
+		 See if we should install a different value.  */
+	      if (globals->use_rel || outrel.r_info == 0)
 		bfd_put_32 (output_bfd, dynreloc_value, sgot->contents + off);
 
-	      if (bfd_link_pic (info) || dynreloc_st_type == STT_GNU_IFUNC)
-		{
-		  Elf_Internal_Rela outrel;
+	      if (isrofixup)
+		arm_elf_add_rofixup (output_bfd,
+				     globals->srofixup,
+				     sgot->output_section->vma
+				     + sgot->output_offset + off);
 
+	      else if (outrel.r_info != 0)
+		{
 		  outrel.r_addend = addend + dynreloc_value;
 		  outrel.r_offset = (sgot->output_section->vma
 				     + sgot->output_offset
 				     + off);
-		  if (dynreloc_st_type == STT_GNU_IFUNC)
-		    outrel.r_info = ELF32_R_INFO (0, R_ARM_IRELATIVE);
-		  else
-		    outrel.r_info = ELF32_R_INFO (0, R_ARM_RELATIVE);
 		  elf32_arm_add_dynreloc (output_bfd, info, srelgot, &outrel);
-		}
-	      else if (globals->fdpic_p)
-		{
-		  /* For FDPIC executables, we use rofixup to fix
-		     address at runtime.  */
-		  arm_elf_add_rofixup(output_bfd, globals->srofixup,
-				      sgot->output_section->vma + sgot->output_offset
-				      + off);
 		}
 
 	      local_got_offsets[r_symndx] |= 1;
@@ -13642,6 +13654,7 @@ bfd_arm_get_mach_from_attributes (bfd * abfd)
 
   switch (arch)
     {
+    case TAG_CPU_ARCH_PRE_V4: return bfd_mach_arm_3M;
     case TAG_CPU_ARCH_V4: return bfd_mach_arm_4;
     case TAG_CPU_ARCH_V4T: return bfd_mach_arm_4T;
     case TAG_CPU_ARCH_V5T: return bfd_mach_arm_5T;
@@ -13679,7 +13692,38 @@ bfd_arm_get_mach_from_attributes (bfd * abfd)
 	return bfd_mach_arm_5TE;
       }
 
+    case TAG_CPU_ARCH_V5TEJ:
+	return bfd_mach_arm_5TEJ;
+    case TAG_CPU_ARCH_V6:
+	return bfd_mach_arm_6;
+    case TAG_CPU_ARCH_V6KZ:
+	return bfd_mach_arm_6KZ;
+    case TAG_CPU_ARCH_V6T2:
+	return bfd_mach_arm_6T2;
+    case TAG_CPU_ARCH_V6K:
+	return bfd_mach_arm_6K;
+    case TAG_CPU_ARCH_V7:
+	return bfd_mach_arm_7;
+    case TAG_CPU_ARCH_V6_M:
+	return bfd_mach_arm_6M;
+    case TAG_CPU_ARCH_V6S_M:
+	return bfd_mach_arm_6SM;
+    case TAG_CPU_ARCH_V7E_M:
+	return bfd_mach_arm_7EM;
+    case TAG_CPU_ARCH_V8:
+	return bfd_mach_arm_8;
+    case TAG_CPU_ARCH_V8R:
+	return bfd_mach_arm_8R;
+    case TAG_CPU_ARCH_V8M_BASE:
+	return bfd_mach_arm_8M_BASE;
+    case TAG_CPU_ARCH_V8M_MAIN:
+	return bfd_mach_arm_8M_MAIN;
+
     default:
+      /* Force entry to be added for any new known Tag_CPU_arch value.  */
+      BFD_ASSERT (arch > MAX_TAG_CPU_ARCH);
+
+      /* Unknown Tag_CPU_arch value.  */
       return bfd_mach_arm_unknown;
     }
 }

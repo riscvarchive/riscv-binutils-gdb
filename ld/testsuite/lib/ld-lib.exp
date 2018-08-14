@@ -542,19 +542,29 @@ proc ld_link_defsyms {} {
 #	as a TCL procedure if surrounded by square brackets, or passed
 #	to "istarget" if not.
 #	This may occur more than once; the target being tested must match
-#	at least one.
+#	at least one.  Otherwise the test will be marked unsupported.
 #
 #   alltargets: TARGET
 #	Only run the test for TARGET.
 #	The syntax for TARGET is as with 'target'.
 #	This may occur more than once; the target being tested must match
-#	all of them.
+#	all of them.  Otherwise the test will be marked unsupported.
 #
 #   notarget: TARGET
 #	Do not run the test for TARGET.
 #	The syntax for TARGET is as with 'target'.
 #	This may occur more than once; the target being tested must not
-#	match any of them.
+#	match any of them.  Otherwise the test will be marked unsupported.
+#
+#   skip: TARGET
+#   anyskip: TARGET
+#   noskip: TARGET
+#	These are exactly the same as "notarget", "alltargets" and
+#	"target" respectively, except that they do nothing at all if the
+#	check fails.  They should only be used in groups, to construct a
+#	single test which is run on all targets but with variant options
+#	or expected output on some targets.  (For example, see
+#	gas/arm/inst.d and gas/arm/wince_inst.d.)
 #
 #   error: REGEX
 #	An error with message matching REGEX must be emitted for the test
@@ -632,6 +642,9 @@ proc run_dump_test { name {extra_options {}} } {
     set opts(target) {}
     set opts(alltargets) {}
     set opts(notarget) {}
+    set opts(skip) {}
+    set opts(anyskip) {}
+    set opts(noskip) {}
     set opts(objdump) {}
     set opts(nm) {}
     set opts(objcopy) {}
@@ -662,6 +675,9 @@ proc run_dump_test { name {extra_options {}} } {
 	    target {}
 	    alltargets {}
 	    notarget {}
+	    skip {}
+	    anyskip {}
+	    noskip {}
 	    warning {}
 	    error {}
 	    source {
@@ -746,10 +762,16 @@ proc run_dump_test { name {extra_options {}} } {
 	    [big_or_little_endian] opts($opt)
     }
 
+    if { $opts(name) == "" } {
+	set testname "$subdir/$name"
+    } else {
+	set testname $opts(name)
+    }
+
     # Decide early whether we should run the test for this target.
-    if { [llength $opts(target)] > 0 } {
+    if { [llength $opts(noskip)] > 0 } {
 	set targmatch 0
-	foreach targ $opts(target) {
+	foreach targ $opts(noskip) {
 	    if [match_target $targ] {
 		set targmatch 1
 		break
@@ -759,13 +781,38 @@ proc run_dump_test { name {extra_options {}} } {
 	    return
 	}
     }
+    foreach targ $opts(anyskip) {
+	if ![match_target $targ] {
+	    return
+	}
+    }
+    foreach targ $opts(skip) {
+	if [match_target $targ] {
+	    return
+	}
+    }
+    if { [llength $opts(target)] > 0 } {
+	set targmatch 0
+	foreach targ $opts(target) {
+	    if [match_target $targ] {
+		set targmatch 1
+		break
+	    }
+	}
+	if { $targmatch == 0 } {
+	    unsupported $testname
+	    return
+	}
+    }
     foreach targ $opts(alltargets) {
 	if ![match_target $targ] {
+	    unsupported $testname
 	    return
 	}
     }
     foreach targ $opts(notarget) {
 	if [match_target $targ] {
+	    unsupported $testname
 	    return
 	}
     }
@@ -782,7 +829,7 @@ proc run_dump_test { name {extra_options {}} } {
 		readelf	{ set program readelf }
 		default
 		{ perror "unrecognized program option $opts(PROG) in $file.d"
-		  unresolved $subdir/$name
+		  unresolved $testname
 		  return }
 	    }
 	} else {
@@ -791,7 +838,7 @@ proc run_dump_test { name {extra_options {}} } {
 		if {$opts($p) != ""} {
 		    if {$program != ""} {
 			perror "ambiguous dump program in $file.d"
-			unresolved $subdir/$name
+			unresolved $testname
 			return
 		    } else {
 			set program $p
@@ -806,15 +853,9 @@ proc run_dump_test { name {extra_options {}} } {
                  && $opts(error) == "" \
                  && $opts(error_output) == "" } {
 	    perror "dump program unspecified in $file.d"
-	    unresolved $subdir/$name
+	    unresolved $testname
 	    return
 	}
-    }
-
-    if { $opts(name) == "" } {
-	set testname "$subdir/$name"
-    } else {
-	set testname $opts(name)
     }
 
     if { $opts(source) == "" } {
@@ -1482,7 +1523,10 @@ proc run_ld_link_exec_tests { ldtests args } {
 	    continue
 	}
 
-	if { [ string match "c++" $lang ] } {
+	if { [ string match "asm" $lang ] } {
+	    set link_proc ld_link
+	    set link_cmd $ld
+	} elseif { [ string match "c++" $lang ] } {
 	    set link_proc ld_link
 	    set link_cmd $CXX
 	} else {
@@ -1798,15 +1842,16 @@ proc check_gc_sections_available { } {
     if {![info exists gc_sections_available_saved]} {
 	# Some targets don't support gc-sections despite whatever's
 	# advertised by ld's options.
-	if {   [istarget d30v-*-*]
+	if {   [istarget alpha-*-*]
+	    || [istarget d30v-*-*]
 	    || [istarget dlx-*-*]
-	    || [istarget pj*-*-*]
-	    || [istarget pru*-*-*]
-	    || [istarget alpha-*-*]
 	    || [istarget hppa*64-*-*]
 	    || [istarget ia64-*-*]
 	    || [istarget mep-*-*]
-	    || [istarget mn10200-*-*] } {
+	    || [istarget mn10200-*-*]
+	    || [istarget pj*-*-*]
+	    || [istarget pru*-*-*]
+	    || [istarget xgate-*-*] } {
 	    set gc_sections_available_saved 0
 	    return 0
 	}
@@ -1861,7 +1906,8 @@ proc is_generic_elf { } {
 	 || [istarget "moxie-*-*"]
 	 || [istarget "msp430-*-*"]
 	 || [istarget "mt-*-*"]
-	 || [istarget "pj*-*-*"] } {
+	 || [istarget "pj*-*-*"]
+	 || [istarget "xgate-*-*"] } {
 	return 1;
     }
     return 0;

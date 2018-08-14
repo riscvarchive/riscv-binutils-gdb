@@ -262,10 +262,14 @@ public:
   /* Add AEXPR to the list, taking ownership.  */
   void add_aexpr (agent_expr_up aexpr);
 
-  void add_register (unsigned int regno);
+  void add_remote_register (unsigned int regno);
+  void add_ax_registers (struct agent_expr *aexpr);
+  void add_local_register (struct gdbarch *gdbarch,
+			   unsigned int regno,
+			   CORE_ADDR scope);
   void add_memrange (struct gdbarch *gdbarch,
 		     int type, bfd_signed_vma base,
-		     unsigned long len);
+		     unsigned long len, CORE_ADDR scope);
   void collect_symbol (struct symbol *sym,
 		       struct gdbarch *gdbarch,
 		       long frame_regno, long frame_offset,
@@ -288,8 +292,9 @@ public:
   { return m_computed; }
 
 private:
-  /* room for up to 256 regs */
-  unsigned char m_regs_mask[32];
+  /* We need the allocator zero-initialize the mask, so we don't use
+     gdb::byte_vector.  */
+  std::vector<unsigned char> m_regs_mask;
 
   std::vector<memrange> m_memranges;
 

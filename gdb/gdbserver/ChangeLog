@@ -1,3 +1,180 @@
+2018-07-22  Simon Marchi  <simon.marchi@polymtl.ca>
+
+	* linux-mips-low.c (mips_collect_ptrace_register): Remove unused
+	variable.
+	(mips_supply_ptrace_register): Likewise.
+
+2018-07-22  Tom Tromey  <tom@tromey.com>
+
+	* configure: Rebuild.
+
+2018-07-22  Tom Tromey  <tom@tromey.com>
+
+	* win32-low.c (win32_create_inferior): Remove unused variables.
+	* gdbreplay.c (remote_open): Remove unused variable.
+	* remote-utils.c (remote_prepare): Remove unused variable.
+	* x86-tdesc.h (X86_TDESC_H): Define.
+	(amd64_expedite_regs): Define conditionally.
+	(i386_expedite_regs): Mark ATTRIBUTE_UNUSED.
+	* linux-x86-tdesc.c (i386_tdescs): Move inside #if.
+	* remote-utils.c (readchar): Remove unused variable.
+
+2018-07-13  Pedro Alves  <palves@redhat.com>
+
+	* linux-low.c (linux_kill): Change parameter to process_info
+	pointer instead of pid.  Adjust.
+	* lynx-low.c (lynx_kill): Likewise.
+	* nto-low.c (nto_kill): Likewise.
+	* spu-low.c (spu_kill): Likewise.
+	* win32-low.c (win32_kill): Likewise.
+	* server.c (handle_v_kill, kill_inferior_callback)
+	(detach_or_kill_for_exit): Adjust.
+	* target.c (kill_inferior): Change parameter to process_info
+	pointer instead of pid.  Adjust.
+	* target.h (struct target_ops) <kill>: Change parameter to
+	process_info pointer instead of pid.  Adjust all implementations
+	and callers.
+	(kill_inferior): Likewise.
+
+2018-07-13  Pedro Alves  <palves@redhat.com>
+
+	* linux-low.c (linux_detach, linux_join): Change parameter to
+	process_info pointer instead of pid.  Adjust.
+	* lynx-low.c (lynx_detach, lynx_join): Likewise.
+	* nto-low.c (nto_detach): Likewise.
+	* spu-low.c (spu_detach, spu_join): Likewise.
+	* win32-low.c (win32_detach, win32_join): Likewise.
+	* server.c (handle_detach, detach_or_kill_for_exit): Adjust.
+	* target.h (struct target_ops) <detach, join>: Change parameter to
+	process_info pointer instead of pid.  Adjust all implementations
+	and callers.
+	(detach_inferior, join_inferior): Rename 'pid' parameter to
+	'proc'.
+
+2018-07-11  Sergio Durigan Junior  <sergiodj@redhat.com>
+	    Jan Kratochvil  <jan.kratochvil@redhat.com>
+	    Paul Fertser  <fercerpav@gmail.com>
+	    Tsutomu Seki  <sekiriki@gmail.com>
+
+	* Makefile.in (SFILES): Add '$(srcdir)/common/netstuff.c'.
+	(OBS): Add 'common/netstuff.o'.
+	(GDBREPLAY_OBS): Likewise.
+	* gdbreplay.c: Include 'wspiapi.h' and 'netstuff.h'.
+	(remote_open): Implement support for IPv6
+	connections.
+	* remote-utils.c: Include 'netstuff.h', 'filestuff.h'
+	and 'wspiapi.h'.
+	(handle_accept_event): Accept connections from IPv6 sources.
+	(remote_prepare): Handle IPv6-style hostnames; implement
+	support for IPv6 connections.
+	(remote_open): Implement support for printing connections from
+	IPv6 sources.
+
+2018-07-11  Pedro Alves  <palves@redhat.com>
+
+	PR gdb/23377
+	* mem-break.c (any_persistent_commands): Add process_info
+	parameter and use it instead of relying on the current process.
+	Change return type to bool.
+	* mem-break.h (any_persistent_commands): Add process_info
+	parameter and change return type to bool.
+	* server.c (handle_detach): Remove require_running_or_return call.
+	Look up the process_info for the process we're about to detach.
+	If not found, return back error to GDB.  Adjust
+	any_persistent_commands call to pass down a process pointer.
+
+2018-07-11  Pedro Alves  <palves@redhat.com>
+
+	* i387-fp.c (i387_cache_to_fsave, cache_to_fxsave)
+	(i387_cache_to_xsave): Use regcache_raw_get_unsigned_by_name
+	instead of collect_register_by_name.
+	* regcache.c (regcache_raw_get_unsigned_by_name): New.
+	* regcache.h (regcache_raw_get_unsigned_by_name): New.
+
+2018-07-04  Vyacheslav Barinov  <v.barinov@samsung.com>
+	    Pedro Alves  <palves@redhat.com>
+
+	* linux-low.c (initialize_low): Call linux_proc_init_warnings.
+
+2018-07-03  Tom Tromey  <tom@tromey.com>
+
+	* linux-low.c: Update.
+	* lynx-low.c: Update.
+	* mem-break.c: Update.
+	* nto-low.c: Update.
+	* remote-utils.c: Update.
+	* server.c: Update.
+	* spu-low.c: Update.
+	* target.c: Update.
+	* win32-low.c: Update.
+
+2018-07-03  Tom Tromey  <tom@tromey.com>
+
+	* server.c: Update.
+
+2018-07-03  Tom Tromey  <tom@tromey.com>
+
+	* linux-low.c: Update.
+
+2018-07-03  Tom Tromey  <tom@tromey.com>
+
+	* target.c: Update.
+
+2018-07-03  Tom Tromey  <tom@tromey.com>
+
+	* linux-low.c: Update.
+	* linux-mips-low.c: Update.
+	* lynx-low.c: Update.
+	* nto-low.c: Update.
+	* remote-utils.c: Update.
+	* server.c: Update.
+	* spu-low.c: Update.
+	* target.c: Update.
+	* thread-db.c: Update.
+
+2018-07-03  Tom Tromey  <tom@tromey.com>
+
+	* linux-low.c: Update.
+	* linux-mips-low.c: Update.
+	* lynx-low.c: Update.
+	* mem-break.c: Update.
+	* nto-low.c: Update.
+	* remote-utils.c: Update.
+	* server.c: Update.
+	* spu-low.c: Update.
+	* target.c: Update.
+	* tracepoint.c: Update.
+
+2018-07-03  Tom Tromey  <tom@tromey.com>
+
+	* linux-low.c: Update.
+	* linux-ppc-low.c: Update.
+	* linux-x86-low.c: Update.
+	* proc-service.c: Update.
+	* server.c: Update.
+	* spu-low.c: Update.
+	* thread-db.c: Update.
+	* win32-low.c: Update.
+
+2018-07-03  Tom Tromey  <tom@tromey.com>
+
+	* linux-low.c: Update.
+	* lynx-low.c: Update.
+	* nto-low.c: Update.
+	* remote-utils.c: Update.
+	* spu-low.c: Update.
+	* thread-db.c: Update.
+	* win32-low.c: Update.
+
+2018-06-29  Joel Brobecker  <brobecker@adacore.com>
+
+	* linux-x86-tdesc.c (amd64_linux_read_description): Add missing
+	parameter in call to 'amd64_create_target_description'.
+
+2018-06-28  Jan Kratochvil  <jan.kratochvil@redhat.com>
+
+	* x86-tdesc.h: Remove executable permission flag.
+
 2018-06-19  Simon Marchi  <simon.marchi@ericsson.com>
 
 	* configure.ac: Remove AC_PREREQ, add missing quoting.

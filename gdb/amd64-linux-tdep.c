@@ -1594,7 +1594,8 @@ amd64_linux_read_description (uint64_t xcr0_features_bit, bool is_x32)
     }
 
   if (*tdesc == NULL)
-    *tdesc = amd64_create_target_description (xcr0_features_bit, is_x32, true);
+    *tdesc = amd64_create_target_description (xcr0_features_bit, is_x32,
+					      true, true);
 
   return *tdesc;
 }
@@ -1650,9 +1651,9 @@ amd64_linux_iterate_over_regset_sections (struct gdbarch *gdbarch,
 {
   struct gdbarch_tdep *tdep = gdbarch_tdep (gdbarch);
 
-  cb (".reg", 27 * 8, &i386_gregset, NULL, cb_data);
-  cb (".reg2", 512, &amd64_fpregset, NULL, cb_data);
-  cb (".reg-xstate",  X86_XSTATE_SIZE (tdep->xcr0),
+  cb (".reg", 27 * 8, 27 * 8, &i386_gregset, NULL, cb_data);
+  cb (".reg2", 512, 512, &amd64_fpregset, NULL, cb_data);
+  cb (".reg-xstate", X86_XSTATE_SIZE (tdep->xcr0), X86_XSTATE_SIZE (tdep->xcr0),
       &amd64_linux_xstateregset, "XSAVE extended state", cb_data);
 }
 

@@ -231,10 +231,10 @@ if ![string match "" $STATIC_LDFLAGS] {
 	fail "Could not link a static executable"
 	set fails [expr $fails + 1]
     }
-    if ![ld_link $ld "tmpdir/static_nonifunc_prog" "-static tmpdir/empty.o"] {
-	fail "Could not link a non-ifunc using static executable"
-	set fails [expr $fails + 1]
-    }
+}
+if ![ld_link $ld "tmpdir/static_nonifunc_prog" "-static tmpdir/empty.o"] {
+    fail "Could not link a non-ifunc using static executable"
+    set fails [expr $fails + 1]
 }
 if ![ld_link $CC "tmpdir/test-1" "-Wl,--no-as-needed,-rpath=./tmpdir tmpdir/test-1.o tmpdir/libshared_ifunc.so"] {
     fail "Could not link test-1"
@@ -702,6 +702,19 @@ run_ld_link_exec_tests [list \
 	"pr18841cn" \
 	"pr18841.out" \
     ] \
+]
+
+# The pr23169 testcase is not valid.  In general, you can't call ifunc
+# resolvers in another binary unless you know what you're doing.  In
+# particular you must ensure that the binary containing the resolver
+# is relocated before the resolver is called (for example, the
+# function addresses returned by the resolver may be loaded from the
+# GOT).
+# That does not happen for the pr23169 testcase where the resolver is
+# in the executable (which is relocated last by ld.so).
+if { [isnative]
+     && !([istarget "powerpc-*-*"] || [istarget "aarch64*-*-*"]) } {
+run_ld_link_exec_tests [list \
     [list \
 	"Run pr23169a" \
 	"$NOPIE_LDFLAGS -Wl,--no-as-needed tmpdir/libpr23169a.so" \
@@ -756,4 +769,4 @@ run_ld_link_exec_tests [list \
 	"pass.out" \
 	"-fPIE -O2 -g" \
     ] \
-]
+]}

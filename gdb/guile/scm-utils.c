@@ -205,7 +205,7 @@ extract_arg (char format_char, SCM arg, void *argp,
 
 	CHECK_TYPE (gdbscm_is_true (scm_string_p (arg)), arg, position,
 		    func_name, _("string"));
-	*arg_ptr = gdbscm_scm_to_c_string (arg);
+	*arg_ptr = gdbscm_scm_to_c_string (arg).release ();
 	break;
       }
     case 't':
@@ -387,7 +387,6 @@ gdbscm_parse_function_args (const char *func_name,
   SCM rest = SCM_EOL;
   /* Keep track of malloc'd strings.  We need to free them upon error.  */
   std::vector<char *> allocated_strings;
-  char *ptr;
 
   have_rest = validate_arg_format (format);
   num_keywords = count_keywords (keywords);

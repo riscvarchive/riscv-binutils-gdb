@@ -302,10 +302,9 @@ is_gdb_breakpoint (enum bkpt_type type)
 	  || type == gdb_breakpoint_Z4);
 }
 
-int
-any_persistent_commands (void)
+bool
+any_persistent_commands (process_info *proc)
 {
-  struct process_info *proc = current_process ();
   struct breakpoint *bp;
   struct point_command_list *cl;
 
@@ -317,11 +316,11 @@ any_persistent_commands (void)
 
 	  for (cl = gdb_bp->command_list; cl != NULL; cl = cl->next)
 	    if (cl->persistence)
-	      return 1;
+	      return true;
 	}
     }
 
-  return 0;
+  return false;
 }
 
 /* Find low-level breakpoint of type TYPE at address ADDR that is not
@@ -1482,7 +1481,7 @@ set_single_step_breakpoint (CORE_ADDR stop_at, ptid_t ptid)
 {
   struct single_step_breakpoint *bp;
 
-  gdb_assert (ptid_get_pid (current_ptid) == ptid_get_pid (ptid));
+  gdb_assert (current_ptid.pid () == ptid.pid ());
 
   bp = (struct single_step_breakpoint *) set_breakpoint_type_at (single_step_breakpoint,
 								stop_at, NULL);
@@ -1501,8 +1500,7 @@ delete_single_step_breakpoints (struct thread_info *thread)
   while (bp)
     {
       if (bp->type == single_step_breakpoint
-	  && ptid_equal (((struct single_step_breakpoint *) bp)->ptid,
-			 ptid_of (thread)))
+	  && ((struct single_step_breakpoint *) bp)->ptid == ptid_of (thread))
 	{
 	  struct thread_info *saved_thread = current_thread;
 
@@ -1598,8 +1596,7 @@ uninsert_single_step_breakpoints (struct thread_info *thread)
   for (bp = proc->breakpoints; bp != NULL; bp = bp->next)
     {
     if (bp->type == single_step_breakpoint
-	&& ptid_equal (((struct single_step_breakpoint *) bp)->ptid,
-		       ptid_of (thread)))
+	&& ((struct single_step_breakpoint *) bp)->ptid == ptid_of (thread))
       {
 	gdb_assert (bp->raw->inserted > 0);
 
@@ -1673,8 +1670,7 @@ has_single_step_breakpoints (struct thread_info *thread)
   while (bp)
     {
       if (bp->type == single_step_breakpoint
-	  && ptid_equal (((struct single_step_breakpoint *) bp)->ptid,
-			 ptid_of (thread)))
+	  && ((struct single_step_breakpoint *) bp)->ptid == ptid_of (thread))
 	return 1;
       else
 	{
@@ -1708,8 +1704,7 @@ reinsert_single_step_breakpoints (struct thread_info *thread)
   for (bp = proc->breakpoints; bp != NULL; bp = bp->next)
     {
       if (bp->type == single_step_breakpoint
-	  && ptid_equal (((struct single_step_breakpoint *) bp)->ptid,
-			 ptid_of (thread)))
+	  && ((struct single_step_breakpoint *) bp)->ptid == ptid_of (thread))
 	{
 	  gdb_assert (bp->raw->inserted > 0);
 

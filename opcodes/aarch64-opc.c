@@ -2516,7 +2516,7 @@ operand_general_constraint_met_p (const aarch64_opnd_info *opnds, int idx,
 	 01		0:Rm
 	 10		M:Rm
 	 11		RESERVED  */
-      if (type == AARCH64_OPND_Em && qualifier == AARCH64_OPND_QLF_S_H
+      if (type == AARCH64_OPND_Em16 && qualifier == AARCH64_OPND_QLF_S_H
 	  && !value_in_range_p (opnd->reglane.regno, 0, 15))
 	{
 	  set_regno_out_of_range_error (mismatch_detail, idx, 0, 15);
@@ -3161,6 +3161,7 @@ aarch64_print_operand (char *buf, size_t size, bfd_vma pc,
     case AARCH64_OPND_Ed:
     case AARCH64_OPND_En:
     case AARCH64_OPND_Em:
+    case AARCH64_OPND_Em16:
     case AARCH64_OPND_SM3_IMM2:
       snprintf (buf, size, "v%d.%s[%" PRIi64 "]", opnd->reglane.regno,
 		aarch64_get_qualifier_name (opnd->qualifier),
@@ -3734,7 +3735,7 @@ const aarch64_sys_reg aarch64_sys_regs [] =
   { "id_aa64afr1_el1",  CPENC(3,0,C0,C5,5),	F_REG_READ }, /* RO */
   { "id_aa64zfr0_el1",  CPENC (3, 0, C0, C4, 4), F_ARCHEXT | F_REG_READ }, /* RO */
   { "clidr_el1",        CPENC(3,1,C0,C0,1),	F_REG_READ }, /* RO */
-  { "csselr_el1",       CPENC(3,2,C0,C0,0),	F_REG_READ }, /* RO */
+  { "csselr_el1",       CPENC(3,2,C0,C0,0),	0 },
   { "vpidr_el2",        CPENC(3,4,C0,C0,0),	0 },
   { "vmpidr_el2",       CPENC(3,4,C0,C0,5),	0 },
   { "sctlr_el1",        CPENC(3,0,C1,C0,0),	0 },
@@ -3794,7 +3795,7 @@ const aarch64_sys_reg aarch64_sys_regs [] =
   { "esr_el2",          CPENC(3,4,C5,C2,0),	0 },
   { "esr_el3",          CPENC(3,6,C5,C2,0),	0 },
   { "esr_el12",		CPENC (3, 5, C5, C2, 0), F_ARCHEXT },
-  { "vsesr_el2",	CPENC (3, 4, C5, C2, 3), F_ARCHEXT | F_REG_READ }, /* RO */
+  { "vsesr_el2",	CPENC (3, 4, C5, C2, 3), F_ARCHEXT },
   { "fpexc32_el2",      CPENC(3,4,C5,C3,0),	0 },
   { "erridr_el1",	CPENC (3, 0, C5, C3, 0), F_ARCHEXT | F_REG_READ }, /* RO */
   { "errselr_el1",	CPENC (3, 0, C5, C3, 1), F_ARCHEXT },
@@ -3878,8 +3879,8 @@ const aarch64_sys_reg aarch64_sys_regs [] =
   { "dbgdtr_el0",        CPENC(2,3,C0, C4, 0),	0 },
   { "dbgdtrrx_el0",      CPENC(2,3,C0, C5, 0),	F_REG_READ  },  /* r */
   { "dbgdtrtx_el0",      CPENC(2,3,C0, C5, 0),	F_REG_WRITE },  /* w */
-  { "osdtrrx_el1",       CPENC(2,0,C0, C0, 2),	F_REG_READ  },  /* r */
-  { "osdtrtx_el1",       CPENC(2,0,C0, C3, 2),	F_REG_WRITE },  /* w */
+  { "osdtrrx_el1",       CPENC(2,0,C0, C0, 2),	0 },
+  { "osdtrtx_el1",       CPENC(2,0,C0, C3, 2),	0 },
   { "oseccr_el1",        CPENC(2,0,C0, C6, 2),	0 },
   { "dbgvcr32_el2",      CPENC(2,4,C0, C7, 0),	0 },
   { "dbgbvr0_el1",       CPENC(2,0,C0, C0, 4),	0 },
@@ -3964,7 +3965,7 @@ const aarch64_sys_reg aarch64_sys_regs [] =
   { "pmsfcr_el1",	 CPENC (3, 0, C9, C9, 4),  F_ARCHEXT },  /* rw */
   { "pmsevfr_el1",	 CPENC (3, 0, C9, C9, 5),  F_ARCHEXT },  /* rw */
   { "pmslatfr_el1",	 CPENC (3, 0, C9, C9, 6),  F_ARCHEXT },  /* rw */
-  { "pmsidr_el1",	 CPENC (3, 0, C9, C9, 7),  F_ARCHEXT | F_REG_READ },  /* ro */
+  { "pmsidr_el1",	 CPENC (3, 0, C9, C9, 7),  F_ARCHEXT },  /* rw */
   { "pmscr_el2",	 CPENC (3, 4, C9, C9, 0),  F_ARCHEXT },  /* rw */
   { "pmscr_el12",	 CPENC (3, 5, C9, C9, 0),  F_ARCHEXT },  /* rw */
   { "pmcr_el0",          CPENC(3,3,C9,C12, 0),	0 },

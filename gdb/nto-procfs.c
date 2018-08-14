@@ -296,7 +296,7 @@ procfs_set_thread (ptid_t ptid)
 {
   pid_t tid;
 
-  tid = ptid_get_tid (ptid);
+  tid = ptid.tid ();
   devctl (ctl_fd, DCMD_PROC_CURTHREAD, &tid, sizeof (tid), 0);
 }
 
@@ -310,8 +310,8 @@ nto_procfs_target::thread_alive (ptid_t ptid)
   procfs_status status;
   int err;
 
-  tid = ptid_get_tid (ptid);
-  pid = ptid_get_pid (ptid);
+  tid = ptid.tid ();
+  pid = ptid.pid ();
 
   if (kill (pid, 0) == -1)
     return false;
@@ -398,7 +398,7 @@ nto_procfs_target::update_thread_list ()
 
   prune_threads ();
 
-  pid = ptid_get_pid (inferior_ptid);
+  pid = inferior_ptid.pid ();
 
   status.tid = 1;
 
@@ -413,7 +413,7 @@ nto_procfs_target::update_thread_list ()
 	   returned different tid, meaning the requested tid no longer exists
 	   (e.g. thread exited).  */
 	continue;
-      ptid = ptid_build (pid, 0, tid);
+      ptid = ptid_t (pid, 0, tid);
       new_thread = find_thread_ptid (ptid);
       if (!new_thread)
 	new_thread = add_thread (ptid);
@@ -713,14 +713,14 @@ nto_procfs_target::attach (const char *args, int from_tty)
 
       if (exec_file)
 	printf_unfiltered ("Attaching to program `%s', %s\n", exec_file,
-			   target_pid_to_str (pid_to_ptid (pid)));
+			   target_pid_to_str (ptid_t (pid)));
       else
 	printf_unfiltered ("Attaching to %s\n",
-			   target_pid_to_str (pid_to_ptid (pid)));
+			   target_pid_to_str (ptid_t (pid)));
 
       gdb_flush (gdb_stdout);
     }
-  inferior_ptid = do_attach (pid_to_ptid (pid));
+  inferior_ptid = do_attach (ptid_t (pid));
   inf = current_inferior ();
   inferior_appeared (inf, pid);
   inf->attach_flag = 1;
@@ -746,7 +746,7 @@ do_attach (ptid_t ptid)
   char path[PATH_MAX];
 
   snprintf (path, PATH_MAX - 1, "%s%s/%d/as",
-	    (nodestr != NULL) ? nodestr : "", "/proc", ptid_get_pid (ptid));
+	    (nodestr != NULL) ? nodestr : "", "/proc", ptid.pid ());
   ctl_fd = open (path, O_RDWR);
   if (ctl_fd == -1)
     error (_("Couldn't open proc file %s, error %d (%s)"), path, errno,
@@ -764,9 +764,9 @@ do_attach (ptid_t ptid)
 
   if (devctl (ctl_fd, DCMD_PROC_STATUS, &status, sizeof (status), 0) == EOK
       && status.flags & _DEBUG_FLAG_STOPPED)
-    SignalKill (nto_node (), ptid_get_pid (ptid), 0, SIGCONT, 0, 0);
+    SignalKill (nto_node (), ptid.pid (), 0, SIGCONT, 0, 0);
   nto_init_solib_absolute_prefix ();
-  return ptid_build (ptid_get_pid (ptid), 0, status.tid);
+  return ptid_t (ptid.pid (), 0, status.tid);
 }
 
 /* Ask the user what to do when an interrupt is received.  */
@@ -810,7 +810,7 @@ nto_procfs_target::wait (ptid_t ptid, struct target_waitstatus *ourstatus,
 
   ourstatus->kind = TARGET_WAITKIND_SPURIOUS;
 
-  if (ptid_equal (inferior_ptid, null_ptid))
+  if (inferior_ptid == null_ptid)
     {
       ourstatus->kind = TARGET_WAITKIND_STOPPED;
       ourstatus->value.sig = GDB_SIGNAL_0;
@@ -873,7 +873,7 @@ nto_procfs_target::wait (ptid_t ptid, struct target_waitstatus *ourstatus,
 	  {
 	    int waitval = 0;
 
-	    waitpid (ptid_get_pid (inferior_ptid), &waitval, WNOHANG);
+	    waitpid (inferior_ptid.pid (), &waitval, WNOHANG);
 	    if (exit_signo)
 	      {
 		/* Abnormal death.  */
@@ -899,7 +899,7 @@ nto_procfs_target::wait (ptid_t ptid, struct target_waitstatus *ourstatus,
 	}
     }
 
-  return ptid_build (status.pid, 0, status.tid);
+  return ptid_t (status.pid, 0, status.tid);
 }
 
 /* Read the current values of the inferior's registers, both the
@@ -1013,12 +1013,12 @@ nto_procfs_target::detach (inferior *inf, int from_tty)
   target_announce_detach ();
 
   if (siggnal)
-    SignalKill (nto_node (), ptid_get_pid (inferior_ptid), 0, 0, 0, 0);
+    SignalKill (nto_node (), inferior_ptid.pid (), 0, 0, 0, 0);
 
   close (ctl_fd);
   ctl_fd = -1;
 
-  pid = ptid_get_pid (inferior_ptid);
+  pid = inferior_ptid.pid ();
   inferior_ptid = null_ptid;
   detach_inferior (pid);
   init_thread_list ();
@@ -1079,10 +1079,10 @@ nto_procfs_target::resume (ptid_t ptid, int step, enum gdb_signal signo)
   procfs_status status;
   sigset_t *run_fault = (sigset_t *) (void *) &run.fault;
 
-  if (ptid_equal (inferior_ptid, null_ptid))
+  if (inferior_ptid == null_ptid)
     return;
 
-  procfs_set_thread (ptid_equal (ptid, minus_one_ptid) ? inferior_ptid :
+  procfs_set_thread (ptid == minus_one_ptid ? inferior_ptid :
 		     ptid);
 
   run.flags = _DEBUG_RUN_FAULT | _DEBUG_RUN_TRACE;
@@ -1113,7 +1113,7 @@ nto_procfs_target::resume (ptid_t ptid, int step, enum gdb_signal signo)
 	{
 	  if (signal_to_pass != status.info.si_signo)
 	    {
-	      SignalKill (nto_node (), ptid_get_pid (inferior_ptid), 0,
+	      SignalKill (nto_node (), inferior_ptid.pid (), 0,
 			  signal_to_pass, 0, 0);
 	      run.flags |= _DEBUG_RUN_CLRFLT | _DEBUG_RUN_CLRSIG;
 	    }
@@ -1135,9 +1135,9 @@ nto_procfs_target::resume (ptid_t ptid, int step, enum gdb_signal signo)
 void
 nto_procfs_target::mourn_inferior ()
 {
-  if (!ptid_equal (inferior_ptid, null_ptid))
+  if (inferior_ptid != null_ptid)
     {
-      SignalKill (nto_node (), ptid_get_pid (inferior_ptid), 0, SIGKILL, 0, 0);
+      SignalKill (nto_node (), inferior_ptid.pid (), 0, SIGKILL, 0, 0);
       close (ctl_fd);
     }
   inferior_ptid = null_ptid;
@@ -1311,7 +1311,7 @@ nto_procfs_target::create_inferior (const char *exec_file,
   if (fds[2] != STDERR_FILENO)
     close (fds[2]);
 
-  inferior_ptid = do_attach (pid_to_ptid (pid));
+  inferior_ptid = do_attach (ptid_t (pid));
   procfs_update_thread_list (ops);
 
   inf = current_inferior ();
@@ -1395,7 +1395,7 @@ nto_procfs_target::store_registers (struct regcache *regcache, int regno)
   char *data;
   ptid_t ptid = regcache->ptid ();
 
-  if (ptid_equal (ptid, null_ptid))
+  if (ptid == null_ptid)
     return;
   procfs_set_thread (ptid);
 
@@ -1468,8 +1468,8 @@ nto_procfs_target::pid_to_str (ptid_t ptid)
   int pid, tid, n;
   struct tidinfo *tip;
 
-  pid = ptid_get_pid (ptid);
-  tid = ptid_get_tid (ptid);
+  pid = ptid.pid ();
+  tid = ptid.tid ();
 
   n = snprintf (buf, 1023, "process %d", pid);
 

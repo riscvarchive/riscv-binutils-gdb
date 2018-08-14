@@ -686,13 +686,11 @@ bfd_elf_record_link_assignment (bfd *output_bfd,
       && !h->def_regular)
     h->root.type = bfd_link_hash_undefined;
 
-  /* If this symbol is not being provided by the linker script, and it is
-     currently defined by a dynamic object, but not by a regular object,
-     then clear out any version information because the symbol will not be
-     associated with the dynamic object any more.  */
-  if (!provide
-      && h->def_dynamic
-      && !h->def_regular)
+  /* If this symbol is currently defined by a dynamic object, but not
+     by a regular object, then clear out any version information because
+     the symbol will not be associated with the dynamic object any
+     more.  */
+  if (h->def_dynamic && !h->def_regular)
     h->verinfo.verdef = NULL;
 
   /* Make sure this symbol is not garbage collected.  */
@@ -2853,10 +2851,14 @@ _bfd_elf_fix_symbol_flags (struct elf_link_hash_entry *h,
       && (h->root.u.def.section->owner->flags & (DYNAMIC | BFD_PLUGIN)) == 0)
     h->def_regular = 1;
 
+  /* Symbols defined in discarded sections shouldn't be dynamic.  */
+  if (h->root.type == bfd_link_hash_undefined && h->indx == -3)
+    (*bed->elf_backend_hide_symbol) (eif->info, h, TRUE);
+
   /* If a weak undefined symbol has non-default visibility, we also
      hide it from the dynamic linker.  */
-  if (ELF_ST_VISIBILITY (h->other) != STV_DEFAULT
-      && h->root.type == bfd_link_hash_undefweak)
+  else if (ELF_ST_VISIBILITY (h->other) != STV_DEFAULT
+	   && h->root.type == bfd_link_hash_undefweak)
     (*bed->elf_backend_hide_symbol) (eif->info, h, TRUE);
 
   /* A hidden versioned symbol in executable should be forced local if
@@ -11715,6 +11717,8 @@ bfd_elf_final_link (bfd *abfd, struct bfd_link_info *info)
   std_attrs_section = get_elf_backend_data (abfd)->obj_attrs_section;
   for (o = abfd->sections; o != NULL; o = o->next)
     {
+      bfd_boolean remove_section = FALSE;
+
       if ((std_attrs_section && strcmp (o->name, std_attrs_section) == 0)
 	  || strcmp (o->name, ".gnu.attributes") == 0)
 	{
@@ -11731,19 +11735,21 @@ bfd_elf_final_link (bfd *abfd, struct bfd_link_info *info)
 	    }
 
 	  attr_size = bfd_elf_obj_attr_size (abfd);
+	  bfd_set_section_size (abfd, o, attr_size);
+	  /* Skip this section later on.  */
+	  o->map_head.link_order = NULL;
 	  if (attr_size)
-	    {
-	      bfd_set_section_size (abfd, o, attr_size);
-	      attr_section = o;
-	      /* Skip this section later on.  */
-	      o->map_head.link_order = NULL;
-	    }
+	    attr_section = o;
 	  else
-	    o->flags |= SEC_EXCLUDE;
+	    remove_section = TRUE;
 	}
       else if ((o->flags & SEC_GROUP) != 0 && o->size == 0)
 	{
 	  /* Remove empty group section from linker output.  */
+	  remove_section = TRUE;
+	}
+      if (remove_section)
+	{
 	  o->flags |= SEC_EXCLUDE;
 	  bfd_section_list_remove (abfd, o);
 	  abfd->section_count--;

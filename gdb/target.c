@@ -219,7 +219,7 @@ int
 default_child_has_all_memory ()
 {
   /* If no inferior selected, then we can't read memory here.  */
-  if (ptid_equal (inferior_ptid, null_ptid))
+  if (inferior_ptid == null_ptid)
     return 0;
 
   return 1;
@@ -229,7 +229,7 @@ int
 default_child_has_memory ()
 {
   /* If no inferior selected, then we can't read memory here.  */
-  if (ptid_equal (inferior_ptid, null_ptid))
+  if (inferior_ptid == null_ptid)
     return 0;
 
   return 1;
@@ -239,7 +239,7 @@ int
 default_child_has_stack ()
 {
   /* If no inferior selected, there's no stack.  */
-  if (ptid_equal (inferior_ptid, null_ptid))
+  if (inferior_ptid == null_ptid)
     return 0;
 
   return 1;
@@ -249,7 +249,7 @@ int
 default_child_has_registers ()
 {
   /* Can't read registers from no inferior.  */
-  if (ptid_equal (inferior_ptid, null_ptid))
+  if (inferior_ptid == null_ptid)
     return 0;
 
   return 1;
@@ -260,7 +260,7 @@ default_child_has_execution (ptid_t the_ptid)
 {
   /* If there's no thread selected, then we can't make it run through
      hoops.  */
-  if (ptid_equal (the_ptid, null_ptid))
+  if (the_ptid == null_ptid)
     return 0;
 
   return 1;
@@ -618,7 +618,7 @@ default_terminal_info (struct target_ops *self, const char *args, int from_tty)
 static ptid_t
 default_get_ada_task_ptid (struct target_ops *self, long lwp, long tid)
 {
-  return ptid_build (ptid_get_pid (inferior_ptid), lwp, tid);
+  return ptid_t (inferior_ptid.pid (), lwp, tid);
 }
 
 static enum exec_direction_kind
@@ -674,9 +674,6 @@ unpush_target (struct target_ops *t)
 bool
 target_stack::unpush (target_ops *t)
 {
-  struct target_ops **cur;
-  struct target_ops *tmp;
-
   if (t->to_stratum == dummy_stratum)
     internal_error (__FILE__, __LINE__,
 		    _("Attempt to unpush the dummy target"));
@@ -1052,7 +1049,7 @@ raw_memory_xfer_partial (struct target_ops *ops, gdb_byte *readbuf,
      first, so that if it fails, we don't write to the cache contents
      that never made it to the target.  */
   if (writebuf != NULL
-      && !ptid_equal (inferior_ptid, null_ptid)
+      && inferior_ptid != null_ptid
       && target_dcache_init_p ()
       && (stack_cache_enabled_p () || code_cache_enabled_p ()))
     {
@@ -1127,7 +1124,7 @@ memory_xfer_partial_1 (struct target_ops *ops, enum target_object object,
 				 &region))
     return TARGET_XFER_E_IO;
 
-  if (!ptid_equal (inferior_ptid, null_ptid))
+  if (inferior_ptid != null_ptid)
     inf = current_inferior ();
   else
     inf = NULL;
@@ -2025,6 +2022,12 @@ target_pre_inferior (int from_tty)
 static int
 dispose_inferior (struct inferior *inf, void *args)
 {
+  /* Not all killed inferiors can, or will ever be, removed from the
+     inferior list.  Killed inferiors clearly don't need to be killed
+     again, so, we're done.  */
+  if (inf->pid == 0)
+    return 0;
+
   thread_info *thread = any_thread_of_inferior (inf);
   if (thread != NULL)
     {
@@ -2153,7 +2156,8 @@ target_resume (ptid_t ptid, int step, enum gdb_signal signal)
 
   registers_changed_ptid (ptid);
   /* We only set the internal executing state here.  The user/frontend
-     running state is set at a higher level.  */
+     running state is set at a higher level.  This also clears the
+     thread's stop_pc as side effect.  */
   set_executing (ptid, 1);
   clear_inline_frame_state (ptid);
 }
@@ -2228,7 +2232,7 @@ default_mourn_inferior (struct target_ops *self)
 void
 target_mourn_inferior (ptid_t ptid)
 {
-  gdb_assert (ptid_equal (ptid, inferior_ptid));
+  gdb_assert (ptid == inferior_ptid);
   current_top_target ()->mourn_inferior ();
 
   /* We no longer need to keep handles on any of the object files.
@@ -3239,9 +3243,9 @@ target_announce_detach (int from_tty)
   if (exec_file == NULL)
     exec_file = "";
 
-  pid = ptid_get_pid (inferior_ptid);
+  pid = inferior_ptid.pid ();
   printf_unfiltered (_("Detaching from program: %s, %s\n"), exec_file,
-		     target_pid_to_str (pid_to_ptid (pid)));
+		     target_pid_to_str (ptid_t (pid)));
   gdb_flush (gdb_stdout);
 }
 
@@ -3284,7 +3288,7 @@ normal_pid_to_str (ptid_t ptid)
 {
   static char buf[32];
 
-  xsnprintf (buf, sizeof buf, "process %d", ptid_get_pid (ptid));
+  xsnprintf (buf, sizeof buf, "process %d", ptid.pid ());
   return buf;
 }
 
@@ -3443,51 +3447,47 @@ target_continue (ptid_t ptid, enum gdb_signal signal)
   target_resume (ptid, 0, signal);
 }
 
-/* Concatenate ELEM to LIST, a comma separate list, and return the
-   result.  The LIST incoming argument is released.  */
+/* Concatenate ELEM to LIST, a comma-separated list.  */
 
-static char *
-str_comma_list_concat_elem (char *list, const char *elem)
+static void
+str_comma_list_concat_elem (std::string *list, const char *elem)
 {
-  if (list == NULL)
-    return xstrdup (elem);
-  else
-    return reconcat (list, list, ", ", elem, (char *) NULL);
+  if (!list->empty ())
+    list->append (", ");
+
+  list->append (elem);
 }
 
 /* Helper for target_options_to_string.  If OPT is present in
    TARGET_OPTIONS, append the OPT_STR (string version of OPT) in RET.
-   Returns the new resulting string.  OPT is removed from
-   TARGET_OPTIONS.  */
+   OPT is removed from TARGET_OPTIONS.  */
 
-static char *
-do_option (int *target_options, char *ret,
+static void
+do_option (int *target_options, std::string *ret,
 	   int opt, const char *opt_str)
 {
   if ((*target_options & opt) != 0)
     {
-      ret = str_comma_list_concat_elem (ret, opt_str);
+      str_comma_list_concat_elem (ret, opt_str);
       *target_options &= ~opt;
     }
-
-  return ret;
 }
 
-char *
+/* See target.h.  */
+
+std::string
 target_options_to_string (int target_options)
 {
-  char *ret = NULL;
+  std::string ret;
 
 #define DO_TARG_OPTION(OPT) \
-  ret = do_option (&target_options, ret, OPT, #OPT)
+  do_option (&target_options, &ret, OPT, #OPT)
 
   DO_TARG_OPTION (TARGET_WNOHANG);
 
   if (target_options != 0)
-    ret = str_comma_list_concat_elem (ret, "unknown???");
+    str_comma_list_concat_elem (&ret, "unknown???");
 
-  if (ret == NULL)
-    ret = xstrdup ("");
   return ret;
 }
 

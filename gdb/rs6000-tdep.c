@@ -3558,7 +3558,6 @@ bfd_uses_spe_extensions (bfd *abfd)
   bfd_size_type size;
   gdb_byte *ptr;
   int success = 0;
-  int vector_abi;
 
   if (!abfd)
     return 0;
@@ -3567,8 +3566,8 @@ bfd_uses_spe_extensions (bfd *abfd)
   /* Using Tag_GNU_Power_ABI_Vector here is a bit of a hack, as the user
      could be using the SPE vector abi without actually using any spe
      bits whatsoever.  But it's close enough for now.  */
-  vector_abi = bfd_elf_get_obj_attr_int (abfd, OBJ_ATTR_GNU,
-					 Tag_GNU_Power_ABI_Vector);
+  int vector_abi = bfd_elf_get_obj_attr_int (abfd, OBJ_ATTR_GNU,
+					     Tag_GNU_Power_ABI_Vector);
   if (vector_abi == 3)
     return 1;
 #endif
@@ -5953,7 +5952,7 @@ rs6000_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
       have_mq = tdesc_numbered_register (feature, tdesc_data, PPC_MQ_REGNUM,
 					 "mq");
 
-      tdesc_wordsize = tdesc_register_size (feature, "pc") / 8;
+      tdesc_wordsize = tdesc_register_bitsize (feature, "pc") / 8;
       if (wordsize == -1)
 	wordsize = tdesc_wordsize;
 
@@ -5984,7 +5983,7 @@ rs6000_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
 	  /* The fpscr register was expanded in isa 2.05 to 64 bits
 	     along with the addition of the decimal floating point
 	     facility.  */
-	  if (tdesc_register_size (feature, "fpscr") > 32)
+	  if (tdesc_register_bitsize (feature, "fpscr") > 32)
 	    have_dfp = 1;
 	}
       else

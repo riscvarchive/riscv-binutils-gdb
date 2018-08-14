@@ -1401,7 +1401,7 @@ record_btrace_target::record_is_replaying (ptid_t ptid)
   struct thread_info *tp;
 
   ALL_NON_EXITED_THREADS (tp)
-    if (ptid_match (tp->ptid, ptid) && btrace_is_replaying (tp))
+    if (tp->ptid.matches (ptid) && btrace_is_replaying (tp))
       return true;
 
   return false;
@@ -1569,8 +1569,6 @@ record_btrace_target::fetch_registers (struct regcache *regcache, int regno)
 void
 record_btrace_target::store_registers (struct regcache *regcache, int regno)
 {
-  struct target_ops *t;
-
   if (!record_btrace_generating_corefile
       && record_is_replaying (regcache->ptid ()))
     error (_("Cannot write registers while replaying."));
@@ -2178,12 +2176,12 @@ record_btrace_target::resume (ptid_t ptid, int step, enum gdb_signal signal)
      For all-stop targets, we only step INFERIOR_PTID and continue others.  */
   if (!target_is_non_stop_p ())
     {
-      gdb_assert (ptid_match (inferior_ptid, ptid));
+      gdb_assert (inferior_ptid.matches (ptid));
 
       ALL_NON_EXITED_THREADS (tp)
-	if (ptid_match (tp->ptid, ptid))
+	if (tp->ptid.matches (ptid))
 	  {
-	    if (ptid_match (tp->ptid, inferior_ptid))
+	    if (tp->ptid.matches (inferior_ptid))
 	      record_btrace_resume_thread (tp, flag);
 	    else
 	      record_btrace_resume_thread (tp, cflag);
@@ -2192,7 +2190,7 @@ record_btrace_target::resume (ptid_t ptid, int step, enum gdb_signal signal)
   else
     {
       ALL_NON_EXITED_THREADS (tp)
-	if (ptid_match (tp->ptid, ptid))
+	if (tp->ptid.matches (ptid))
 	  record_btrace_resume_thread (tp, flag);
     }
 
@@ -2555,7 +2553,7 @@ record_btrace_target::wait (ptid_t ptid, struct target_waitstatus *status,
 
     ALL_NON_EXITED_THREADS (tp)
       {
-	if (ptid_match (tp->ptid, ptid)
+	if (tp->ptid.matches (ptid)
 	    && ((tp->btrace.flags & (BTHR_MOVE | BTHR_STOP)) != 0))
 	  moving.push_back (tp);
       }
@@ -2682,7 +2680,7 @@ record_btrace_target::stop (ptid_t ptid)
       struct thread_info *tp;
 
       ALL_NON_EXITED_THREADS (tp)
-       if (ptid_match (tp->ptid, ptid))
+       if (tp->ptid.matches (ptid))
          {
            tp->btrace.flags &= ~BTHR_MOVE;
            tp->btrace.flags |= BTHR_STOP;
@@ -2805,7 +2803,8 @@ record_btrace_set_replay (struct thread_info *tp,
   /* Start anew from the new replay position.  */
   record_btrace_clear_histories (btinfo);
 
-  stop_pc = regcache_read_pc (get_current_regcache ());
+  inferior_thread ()->suspend.stop_pc
+    = regcache_read_pc (get_current_regcache ());
   print_stack_frame (get_selected_frame (NULL), 1, SRC_AND_LOC, 1);
 }
 
@@ -3084,8 +3083,6 @@ cmd_set_record_btrace_cpu (const char *args, int from_tty)
 static void
 cmd_show_record_btrace_cpu (const char *args, int from_tty)
 {
-  const char *cpu;
-
   if (args != nullptr && *args != 0)
     error (_("Trailing junk: '%s'."), args);
 

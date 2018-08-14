@@ -431,15 +431,15 @@ bfd_get_reloc_size (reloc_howto_type *howto)
 {
   switch (howto->size)
     {
-    case 5: return 3;
     case 0: return 1;
-    case 1: return 2;
-    case 2: return 4;
+    case 1:
+    case -1: return 2;
+    case 2:
+    case -2: return 4;
     case 3: return 0;
     case 4: return 8;
+    case 5: return 3;
     case 8: return 16;
-    case -1: return 2;
-    case -2: return 4;
     default: abort ();
     }
 }
@@ -572,6 +572,100 @@ bfd_reloc_offset_in_range (reloc_howto_type *howto,
      Allow zero length fields (marker relocs or NONE relocs where no
      relocation will be performed) at the end of the section.  */
   return octet <= octet_end && octet + reloc_size <= octet_end;
+}
+
+/* Read and return the section contents at DATA converted to a host
+   integer (bfd_vma).  The number of bytes read is given by the HOWTO.  */
+
+static bfd_vma
+read_reloc (bfd *abfd, bfd_byte *data, reloc_howto_type *howto)
+{
+  switch (howto->size)
+    {
+    case 0:
+      return bfd_get_8 (abfd, data);
+
+    case 1:
+    case -1:
+      return bfd_get_16 (abfd, data);
+
+    case 2:
+    case -2:
+      return bfd_get_32 (abfd, data);
+
+    case 3:
+      break;
+
+#ifdef BFD64
+    case 4:
+      return bfd_get_64 (abfd, data);
+#endif
+
+    case 5:
+      return bfd_get_24 (abfd, data);
+
+    default:
+      abort ();
+    }
+  return 0;
+}
+
+/* Convert VAL to target format and write to DATA.  The number of
+   bytes written is given by the HOWTO.  */
+
+static void
+write_reloc (bfd *abfd, bfd_vma val, bfd_byte *data, reloc_howto_type *howto)
+{
+  switch (howto->size)
+    {
+    case 0:
+      bfd_put_8 (abfd, val, data);
+      break;
+
+    case 1:
+    case -1:
+      bfd_put_16 (abfd, val, data);
+      break;
+
+    case 2:
+    case -2:
+      bfd_put_32 (abfd, val, data);
+      break;
+
+    case 3:
+      break;
+
+#ifdef BFD64
+    case 4:
+      bfd_put_64 (abfd, val, data);
+      break;
+#endif
+
+    case 5:
+      bfd_put_24 (abfd, val, data);
+      break;
+
+    default:
+      abort ();
+    }
+}
+
+/* Apply RELOCATION value to target bytes at DATA, according to
+   HOWTO.  */
+
+static void
+apply_reloc (bfd *abfd, bfd_byte *data, reloc_howto_type *howto,
+	     bfd_vma relocation)
+{
+  bfd_vma val = read_reloc (abfd, data, howto);
+
+  if (howto->size < 0)
+    relocation = -relocation;
+
+  val = ((val & ~howto->dst_mask)
+	 | (((val & howto->src_mask) + relocation) & howto->dst_mask));
+
+  write_reloc (abfd, val, data, howto);
 }
 
 /*
@@ -913,80 +1007,8 @@ space consuming.  For each target:
      =	 R R R R R R R R R R  put into bfd_put<size>
      */
 
-#define DOIT(x) \
-  x = ( (x & ~howto->dst_mask) | (((x & howto->src_mask) +  relocation) & howto->dst_mask))
-
-  switch (howto->size)
-    {
-    case 5:
-      {
-	long x = bfd_get_32 (abfd, (bfd_byte *) data + octets);
-	x >>= 8;
-	DOIT (x);
-	bfd_put_16 (abfd, (bfd_vma) (x >> 8), (bfd_byte *) data + octets);
-	bfd_put_8 (abfd, (x & 0xFF), (unsigned char *) data + 2 + octets);
-      }
-      break;
-
-    case 0:
-      {
-	char x = bfd_get_8 (abfd, (char *) data + octets);
-	DOIT (x);
-	bfd_put_8 (abfd, x, (unsigned char *) data + octets);
-      }
-      break;
-
-    case 1:
-      {
-	short x = bfd_get_16 (abfd, (bfd_byte *) data + octets);
-	DOIT (x);
-	bfd_put_16 (abfd, (bfd_vma) x, (unsigned char *) data + octets);
-      }
-      break;
-    case 2:
-      {
-	long x = bfd_get_32 (abfd, (bfd_byte *) data + octets);
-	DOIT (x);
-	bfd_put_32 (abfd, (bfd_vma) x, (bfd_byte *) data + octets);
-      }
-      break;
-    case -2:
-      {
-	long x = bfd_get_32 (abfd, (bfd_byte *) data + octets);
-	relocation = -relocation;
-	DOIT (x);
-	bfd_put_32 (abfd, (bfd_vma) x, (bfd_byte *) data + octets);
-      }
-      break;
-
-    case -1:
-      {
-	long x = bfd_get_16 (abfd, (bfd_byte *) data + octets);
-	relocation = -relocation;
-	DOIT (x);
-	bfd_put_16 (abfd, (bfd_vma) x, (bfd_byte *) data + octets);
-      }
-      break;
-
-    case 3:
-      /* Do nothing */
-      break;
-
-    case 4:
-#ifdef BFD64
-      {
-	bfd_vma x = bfd_get_64 (abfd, (bfd_byte *) data + octets);
-	DOIT (x);
-	bfd_put_64 (abfd, x, (bfd_byte *) data + octets);
-      }
-#else
-      abort ();
-#endif
-      break;
-    default:
-      return bfd_reloc_other;
-    }
-
+  data = (bfd_byte *) data + octets;
+  apply_reloc (abfd, data, howto, relocation);
   return flag;
 }
 
@@ -1311,59 +1333,8 @@ space consuming.  For each target:
      =	 R R R R R R R R R R  put into bfd_put<size>
      */
 
-#define DOIT(x) \
-  x = ( (x & ~howto->dst_mask) | (((x & howto->src_mask) +  relocation) & howto->dst_mask))
-
   data = (bfd_byte *) data_start + (octets - data_start_offset);
-
-  switch (howto->size)
-    {
-    case 0:
-      {
-	char x = bfd_get_8 (abfd, data);
-	DOIT (x);
-	bfd_put_8 (abfd, x, data);
-      }
-      break;
-
-    case 1:
-      {
-	short x = bfd_get_16 (abfd, data);
-	DOIT (x);
-	bfd_put_16 (abfd, (bfd_vma) x, data);
-      }
-      break;
-    case 2:
-      {
-	long x = bfd_get_32 (abfd, data);
-	DOIT (x);
-	bfd_put_32 (abfd, (bfd_vma) x, data);
-      }
-      break;
-    case -2:
-      {
-	long x = bfd_get_32 (abfd, data);
-	relocation = -relocation;
-	DOIT (x);
-	bfd_put_32 (abfd, (bfd_vma) x, data);
-      }
-      break;
-
-    case 3:
-      /* Do nothing */
-      break;
-
-    case 4:
-      {
-	bfd_vma x = bfd_get_64 (abfd, data);
-	DOIT (x);
-	bfd_put_64 (abfd, x, data);
-      }
-      break;
-    default:
-      return bfd_reloc_other;
-    }
-
+  apply_reloc (abfd, data, howto, relocation);
   return flag;
 }
 
@@ -1442,8 +1413,7 @@ _bfd_relocate_contents (reloc_howto_type *howto,
 			bfd_vma relocation,
 			bfd_byte *location)
 {
-  int size;
-  bfd_vma x = 0;
+  bfd_vma x;
   bfd_reloc_status_type flag;
   unsigned int rightshift = howto->rightshift;
   unsigned int bitpos = howto->bitpos;
@@ -1454,30 +1424,7 @@ _bfd_relocate_contents (reloc_howto_type *howto,
     relocation = -relocation;
 
   /* Get the value we are going to relocate.  */
-  size = bfd_get_reloc_size (howto);
-  switch (size)
-    {
-    default:
-      abort ();
-    case 0:
-      return bfd_reloc_ok;
-    case 1:
-      x = bfd_get_8 (input_bfd, location);
-      break;
-    case 2:
-      x = bfd_get_16 (input_bfd, location);
-      break;
-    case 4:
-      x = bfd_get_32 (input_bfd, location);
-      break;
-    case 8:
-#ifdef BFD64
-      x = bfd_get_64 (input_bfd, location);
-#else
-      abort ();
-#endif
-      break;
-    }
+  x = read_reloc (input_bfd, location, howto);
 
   /* Check for overflow.  FIXME: We may drop bits during the addition
      which we don't check for.  We must either check at every single
@@ -1583,28 +1530,7 @@ _bfd_relocate_contents (reloc_howto_type *howto,
        | (((x & howto->src_mask) + relocation) & howto->dst_mask));
 
   /* Put the relocated value back in the object file.  */
-  switch (size)
-    {
-    default:
-      abort ();
-    case 1:
-      bfd_put_8 (input_bfd, x, location);
-      break;
-    case 2:
-      bfd_put_16 (input_bfd, x, location);
-      break;
-    case 4:
-      bfd_put_32 (input_bfd, x, location);
-      break;
-    case 8:
-#ifdef BFD64
-      bfd_put_64 (input_bfd, x, location);
-#else
-      abort ();
-#endif
-      break;
-    }
-
+  write_reloc (input_bfd, x, location, howto);
   return flag;
 }
 
@@ -1619,34 +1545,10 @@ _bfd_clear_contents (reloc_howto_type *howto,
 		     asection *input_section,
 		     bfd_byte *location)
 {
-  int size;
-  bfd_vma x = 0;
+  bfd_vma x;
 
   /* Get the value we are going to relocate.  */
-  size = bfd_get_reloc_size (howto);
-  switch (size)
-    {
-    default:
-      abort ();
-    case 0:
-      return;
-    case 1:
-      x = bfd_get_8 (input_bfd, location);
-      break;
-    case 2:
-      x = bfd_get_16 (input_bfd, location);
-      break;
-    case 4:
-      x = bfd_get_32 (input_bfd, location);
-      break;
-    case 8:
-#ifdef BFD64
-      x = bfd_get_64 (input_bfd, location);
-#else
-      abort ();
-#endif
-      break;
-    }
+  x = read_reloc (input_bfd, location, howto);
 
   /* Zero out the unwanted bits of X.  */
   x &= ~howto->dst_mask;
@@ -1659,28 +1561,7 @@ _bfd_clear_contents (reloc_howto_type *howto,
     x |= 1;
 
   /* Put the relocated value back in the object file.  */
-  switch (size)
-    {
-    default:
-    case 0:
-      abort ();
-    case 1:
-      bfd_put_8 (input_bfd, x, location);
-      break;
-    case 2:
-      bfd_put_16 (input_bfd, x, location);
-      break;
-    case 4:
-      bfd_put_32 (input_bfd, x, location);
-      break;
-    case 8:
-#ifdef BFD64
-      bfd_put_64 (input_bfd, x, location);
-#else
-      abort ();
-#endif
-      break;
-    }
+  write_reloc (input_bfd, x, location, howto);
 }
 
 /*
@@ -3011,6 +2892,8 @@ ENUMX
   BFD_RELOC_PPC64_ADDR64_LOCAL
 ENUMX
   BFD_RELOC_PPC64_ENTRY
+ENUMX
+  BFD_RELOC_PPC64_REL24_NOTOC
 ENUMDOC
   Power(rs6000) and PowerPC relocations.
 
@@ -7987,6 +7870,139 @@ ENUMX
   BFD_RELOC_WASM32_PLT_SIG
 ENUMDOC
   WebAssembly relocations.
+
+ENUM
+  BFD_RELOC_CKCORE_NONE
+ENUMX
+  BFD_RELOC_CKCORE_ADDR32
+ENUMX
+  BFD_RELOC_CKCORE_PCREL_IMM8BY4
+ENUMX
+  BFD_RELOC_CKCORE_PCREL_IMM11BY2
+ENUMX
+  BFD_RELOC_CKCORE_PCREL_IMM4BY2
+ENUMX
+  BFD_RELOC_CKCORE_PCREL32
+ENUMX
+  BFD_RELOC_CKCORE_PCREL_JSR_IMM11BY2
+ENUMX
+  BFD_RELOC_CKCORE_GNU_VTINHERIT
+ENUMX
+  BFD_RELOC_CKCORE_GNU_VTENTRY
+ENUMX
+  BFD_RELOC_CKCORE_RELATIVE
+ENUMX
+  BFD_RELOC_CKCORE_COPY
+ENUMX
+  BFD_RELOC_CKCORE_GLOB_DAT
+ENUMX
+  BFD_RELOC_CKCORE_JUMP_SLOT
+ENUMX
+  BFD_RELOC_CKCORE_GOTOFF
+ENUMX
+  BFD_RELOC_CKCORE_GOTPC
+ENUMX
+  BFD_RELOC_CKCORE_GOT32
+ENUMX
+  BFD_RELOC_CKCORE_PLT32
+ENUMX
+  BFD_RELOC_CKCORE_ADDRGOT
+ENUMX
+  BFD_RELOC_CKCORE_ADDRPLT
+ENUMX
+  BFD_RELOC_CKCORE_PCREL_IMM26BY2
+ENUMX
+  BFD_RELOC_CKCORE_PCREL_IMM16BY2
+ENUMX
+  BFD_RELOC_CKCORE_PCREL_IMM16BY4
+ENUMX
+  BFD_RELOC_CKCORE_PCREL_IMM10BY2
+ENUMX
+  BFD_RELOC_CKCORE_PCREL_IMM10BY4
+ENUMX
+  BFD_RELOC_CKCORE_ADDR_HI16
+ENUMX
+  BFD_RELOC_CKCORE_ADDR_LO16
+ENUMX
+  BFD_RELOC_CKCORE_GOTPC_HI16
+ENUMX
+  BFD_RELOC_CKCORE_GOTPC_LO16
+ENUMX
+  BFD_RELOC_CKCORE_GOTOFF_HI16
+ENUMX
+  BFD_RELOC_CKCORE_GOTOFF_LO16
+ENUMX
+  BFD_RELOC_CKCORE_GOT12
+ENUMX
+  BFD_RELOC_CKCORE_GOT_HI16
+ENUMX
+  BFD_RELOC_CKCORE_GOT_LO16
+ENUMX
+  BFD_RELOC_CKCORE_PLT12
+ENUMX
+  BFD_RELOC_CKCORE_PLT_HI16
+ENUMX
+  BFD_RELOC_CKCORE_PLT_LO16
+ENUMX
+  BFD_RELOC_CKCORE_ADDRGOT_HI16
+ENUMX
+  BFD_RELOC_CKCORE_ADDRGOT_LO16
+ENUMX
+  BFD_RELOC_CKCORE_ADDRPLT_HI16
+ENUMX
+  BFD_RELOC_CKCORE_ADDRPLT_LO16
+ENUMX
+  BFD_RELOC_CKCORE_PCREL_JSR_IMM26BY2
+ENUMX
+  BFD_RELOC_CKCORE_TOFFSET_LO16
+ENUMX
+  BFD_RELOC_CKCORE_DOFFSET_LO16
+ENUMX
+  BFD_RELOC_CKCORE_PCREL_IMM18BY2
+ENUMX
+  BFD_RELOC_CKCORE_DOFFSET_IMM18
+ENUMX
+  BFD_RELOC_CKCORE_DOFFSET_IMM18BY2
+ENUMX
+  BFD_RELOC_CKCORE_DOFFSET_IMM18BY4
+ENUMX
+  BFD_RELOC_CKCORE_GOTOFF_IMM18
+ENUMX
+  BFD_RELOC_CKCORE_GOT_IMM18BY4
+ENUMX
+  BFD_RELOC_CKCORE_PLT_IMM18BY4
+ENUMX
+  BFD_RELOC_CKCORE_PCREL_IMM7BY4
+ENUMX
+  BFD_RELOC_CKCORE_TLS_LE32
+ENUMX
+  BFD_RELOC_CKCORE_TLS_IE32
+ENUMX
+  BFD_RELOC_CKCORE_TLS_GD32
+ENUMX
+  BFD_RELOC_CKCORE_TLS_LDM32
+ENUMX
+  BFD_RELOC_CKCORE_TLS_LDO32
+ENUMX
+  BFD_RELOC_CKCORE_TLS_DTPMOD32
+ENUMX
+  BFD_RELOC_CKCORE_TLS_DTPOFF32
+ENUMX
+  BFD_RELOC_CKCORE_TLS_TPOFF32
+ENUMX
+  BFD_RELOC_CKCORE_PCREL_FLRW_IMM8BY4
+ENUMX
+  BFD_RELOC_CKCORE_NOJSRI
+ENUMX
+  BFD_RELOC_CKCORE_CALLGRAPH
+ENUMX
+  BFD_RELOC_CKCORE_IRELATIVE
+ENUMX
+  BFD_RELOC_CKCORE_PCREL_BLOOP_IMM4BY4
+ENUMX
+  BFD_RELOC_CKCORE_PCREL_BLOOP_IMM12BY4
+ENUMDOC
+  C-SKY relocations.
 
 ENDSENUM
   BFD_RELOC_UNUSED

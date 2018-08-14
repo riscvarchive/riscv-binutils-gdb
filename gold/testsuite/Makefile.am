@@ -1880,6 +1880,32 @@ ver_test_14.syms: ver_test_14
 ver_test_14: gcctestdir/ld ver_test_main.o ver_test_1.so ver_test_2.so ver_test_4.so ver_test_14.script
 	$(CXXLINK) -Bgcctestdir/ -Wl,--version-script,$(srcdir)/ver_test_14.script -Wl,-E -Wl,-R,. ver_test_main.o ver_test_1.so ver_test_2.so ver_test_4.so
 
+check_SCRIPTS += ver_test_pr23409.sh
+check_DATA += ver_test_pr23409.syms
+ver_test_pr23409.syms: ver_test_pr23409_1.so
+	$(TEST_READELF) --dyn-syms -W $< >$@
+ver_test_pr23409_1.so: gcctestdir/ld ver_test_1.o $(srcdir)/ver_test_pr23409_1.script ver_test_pr23409_2.so
+	gcctestdir/ld -shared -o $@ ver_test_1.o ver_test_pr23409_2.so --version-script $(srcdir)/ver_test_pr23409_1.script
+ver_test_pr23409_2.so: gcctestdir/ld ver_test_1.o $(srcdir)/ver_test_pr23409_2.script
+	gcctestdir/ld -shared -o $@ ver_test_1.o --version-script $(srcdir)/ver_test_pr23409_2.script
+
+check_SCRIPTS += weak_as_needed.sh
+check_DATA += weak_as_needed.stdout
+weak_as_needed.stdout: weak_as_needed_a.so
+	$(TEST_READELF) -dW --dyn-syms $< >$@
+weak_as_needed_a.so: gcctestdir/ld weak_as_needed_a.o weak_as_needed_b.so weak_as_needed_c.so
+	gcctestdir/ld -shared -rpath . -o $@ weak_as_needed_a.o --as-needed weak_as_needed_b.so weak_as_needed_c.so
+weak_as_needed_b.so: gcctestdir/ld weak_as_needed_b.o weak_as_needed_b.script
+	gcctestdir/ld -shared -rpath . -o $@ --version-script $(srcdir)/weak_as_needed_b.script weak_as_needed_b.o
+weak_as_needed_c.so: gcctestdir/ld weak_as_needed_c.o weak_as_needed_c.script
+	gcctestdir/ld -shared -rpath . -o $@ --version-script $(srcdir)/weak_as_needed_c.script weak_as_needed_c.o
+weak_as_needed_a.o: weak_as_needed_a.c
+	$(COMPILE) -c -fpic -o $@ $<
+weak_as_needed_b.o: weak_as_needed_b.c
+	$(COMPILE) -c -fpic -o $@ $<
+weak_as_needed_c.o: weak_as_needed_c.c
+	$(COMPILE) -c -fpic -o $@ $<
+
 check_PROGRAMS += protected_1
 protected_1_SOURCES = \
 	protected_main_1.cc protected_main_2.cc protected_main_3.cc
@@ -2230,7 +2256,7 @@ check_SCRIPTS += plugin_test_1.sh
 check_DATA += plugin_test_1.err
 MOSTLYCLEANFILES += plugin_test_1.err
 plugin_test_1: two_file_test_main.o two_file_test_1.o.syms two_file_test_1b.o.syms two_file_test_2.o.syms empty.o.syms gcctestdir/ld plugin_test.so
-	$(CXXLINK) -Bgcctestdir/ -Wl,--no-demangle,--plugin,"./plugin_test.so",--plugin-opt,"_Z4f13iv" two_file_test_main.o two_file_test_1.o.syms two_file_test_1b.o.syms two_file_test_2.o.syms empty.o.syms 2>plugin_test_1.err
+	$(CXXLINK) -Bgcctestdir/ -Wl,--no-demangle,--emit-relocs,--plugin,"./plugin_test.so",--plugin-opt,"_Z4f13iv" two_file_test_main.o two_file_test_1.o.syms two_file_test_1b.o.syms two_file_test_2.o.syms empty.o.syms 2>plugin_test_1.err
 plugin_test_1.err: plugin_test_1
 	@touch plugin_test_1.err
 
@@ -3236,6 +3262,23 @@ exception_x86_64_bnd_1.o: exception_test_1.cc gcctestdir/as
 	$(CXXCOMPILE) -c -fpic -Bgcctestdir/ -Wa,-madd-bnd-prefix -o $@ $<
 exception_x86_64_bnd_2.o: exception_test_2.cc gcctestdir/as
 	$(CXXCOMPILE) -c -Bgcctestdir/ -Wa,-madd-bnd-prefix -o $@ $<
+endif DEFAULT_TARGET_X86_64
+
+if DEFAULT_TARGET_X86_64
+check_SCRIPTS += gnu_property_test.sh
+check_DATA += gnu_property_test.stdout
+gnu_property_test.stdout: gnu_property_test
+	$(TEST_READELF) -n $< >$@
+gnu_property_test: gcctestdir/ld gnu_property_a.o gnu_property_b.o gnu_property_c.o
+	gcctestdir/ld -o $@ gnu_property_a.o gnu_property_b.o gnu_property_c.o
+gnu_property_main.o: gnu_property_main.c
+	$(COMPILE) -c -o $@ $<
+gnu_property_a.o: gnu_property_a.S
+	$(COMPILE) -c -o $@ $<
+gnu_property_b.o: gnu_property_b.S
+	$(COMPILE) -c -o $@ $<
+gnu_property_c.o: gnu_property_c.S
+	$(COMPILE) -c -o $@ $<
 endif DEFAULT_TARGET_X86_64
 
 check_PROGRAMS += pr22266

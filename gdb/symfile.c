@@ -87,7 +87,7 @@ int readnever_symbol_files;	/* Never read full symbols.  */
 /* Functions this file defines.  */
 
 static void symbol_file_add_main_1 (const char *args, symfile_add_flags add_flags,
-				    objfile_flags flags);
+				    objfile_flags flags, CORE_ADDR reloff);
 
 static const struct sym_fns *find_sym_fns (bfd *);
 
@@ -908,6 +908,9 @@ init_entry_point_info (struct objfile *objfile)
    into an offset from the section VMA's as it appears in the object
    file, and then call the file's sym_offsets function to convert this
    into a format-specific offset table --- a `struct section_offsets'.
+   The sectindex field is used to control the ordering of sections
+   with the same name.  Upon return, it is updated to contain the
+   correspondig BFD section index, or -1 if the section was not found.
 
    ADD_FLAGS encodes verbosity level, whether this is main symbol or
    an extra symbol file such as dynamically loaded code, and wether
@@ -1225,16 +1228,18 @@ symbol_file_add (const char *name, symfile_add_flags add_flags,
 void
 symbol_file_add_main (const char *args, symfile_add_flags add_flags)
 {
-  symbol_file_add_main_1 (args, add_flags, 0);
+  symbol_file_add_main_1 (args, add_flags, 0, 0);
 }
 
 static void
 symbol_file_add_main_1 (const char *args, symfile_add_flags add_flags,
-			objfile_flags flags)
+			objfile_flags flags, CORE_ADDR reloff)
 {
   add_flags |= current_inferior ()->symfile_flags | SYMFILE_MAINLINE;
 
-  symbol_file_add (args, add_flags, NULL, flags);
+  struct objfile *objfile = symbol_file_add (args, add_flags, NULL, flags);
+  if (reloff != 0)
+    objfile_rebase (objfile, reloff);
 
   /* Getting new symbols may change our opinion about
      what is frameless.  */
@@ -1551,6 +1556,7 @@ symbol_file_command (const char *args, int from_tty)
       symfile_add_flags add_flags = 0;
       char *name = NULL;
       bool stop_processing_options = false;
+      CORE_ADDR offset = 0;
       int idx;
       char *arg;
 
@@ -1571,6 +1577,14 @@ symbol_file_command (const char *args, int from_tty)
 	    flags |= OBJF_READNOW;
 	  else if (strcmp (arg, "-readnever") == 0)
 	    flags |= OBJF_READNEVER;
+	  else if (strcmp (arg, "-o") == 0)
+	    {
+	      arg = built_argv[++idx];
+	      if (arg == NULL)
+		error (_("Missing argument to -o"));
+
+	      offset = parse_and_eval_address (arg);
+	    }
 	  else if (strcmp (arg, "--") == 0)
 	    stop_processing_options = true;
 	  else
@@ -1582,7 +1596,7 @@ symbol_file_command (const char *args, int from_tty)
 
       validate_readnow_readnever (flags);
 
-      symbol_file_add_main_1 (name, add_flags, flags);
+      symbol_file_add_main_1 (name, add_flags, flags, offset);
     }
 }
 
@@ -2064,6 +2078,61 @@ print_transfer_performance (struct ui_file *stream,
   uiout->text (".\n");
 }
 
+/* Add an OFFSET to the start address of each section in OBJF, except
+   sections that were specified in ADDRS.  */
+
+static void
+set_objfile_default_section_offset (struct objfile *objf,
+				    const section_addr_info &addrs,
+				    CORE_ADDR offset)
+{
+  /* Add OFFSET to all sections by default.  */
+  std::vector<struct section_offsets> offsets (objf->num_sections,
+					       { { offset } });
+
+  /* Create sorted lists of all sections in ADDRS as well as all
+     sections in OBJF.  */
+
+  std::vector<const struct other_sections *> addrs_sorted
+    = addrs_section_sort (addrs);
+
+  section_addr_info objf_addrs
+    = build_section_addr_info_from_objfile (objf);
+  std::vector<const struct other_sections *> objf_addrs_sorted
+    = addrs_section_sort (objf_addrs);
+
+  /* Walk the BFD section list, and if a matching section is found in
+     ADDRS_SORTED_LIST, set its offset to zero to keep its address
+     unchanged.
+
+     Note that both lists may contain multiple sections with the same
+     name, and then the sections from ADDRS are matched in BFD order
+     (thanks to sectindex).  */
+
+  std::vector<const struct other_sections *>::iterator addrs_sorted_iter
+    = addrs_sorted.begin ();
+  for (const other_sections *objf_sect : objf_addrs_sorted)
+    {
+      const char *objf_name = addr_section_name (objf_sect->name.c_str ());
+      int cmp = -1;
+
+      while (cmp < 0 && addrs_sorted_iter != addrs_sorted.end ())
+	{
+	  const struct other_sections *sect = *addrs_sorted_iter;
+	  const char *sect_name = addr_section_name (sect->name.c_str ());
+	  cmp = strcmp (sect_name, objf_name);
+	  if (cmp <= 0)
+	    ++addrs_sorted_iter;
+	}
+
+      if (cmp == 0)
+	offsets[objf_sect->sectindex].offsets[0] = 0;
+    }
+
+  /* Apply the new section offsets.  */
+  objfile_relocate (objf, offsets.data ());
+}
+
 /* This function allows the addition of incrementally linked object files.
    It does not modify any state in the target, only in the debugger.  */
 /* Note: ezannoni 2000-04-13 This function/command used to have a
@@ -2095,6 +2164,7 @@ add_symbol_file_command (const char *args, int from_tty)
 
   std::vector<sect_opt> sect_opts = { { ".text", NULL } };
   bool stop_processing_options = false;
+  CORE_ADDR offset = 0;
 
   dont_repeat ();
 
@@ -2102,6 +2172,7 @@ add_symbol_file_command (const char *args, int from_tty)
     error (_("add-symbol-file takes a file name and an address"));
 
   bool seen_addr = false;
+  bool seen_offset = false;
   gdb_argv argv (args);
 
   for (arg = argv[0], argcnt = 0; arg != NULL; arg = argv[++argcnt])
@@ -2139,6 +2210,15 @@ add_symbol_file_command (const char *args, int from_tty)
 	  sect_opts.push_back (sect);
 	  argcnt += 2;
 	}
+      else if (strcmp (arg, "-o") == 0)
+	{
+	  arg = argv[++argcnt];
+	  if (arg == NULL)
+	    error (_("Missing argument to -o"));
+
+	  offset = parse_and_eval_address (arg);
+	  seen_offset = true;
+	}
       else if (strcmp (arg, "--") == 0)
 	stop_processing_options = true;
       else
@@ -2150,34 +2230,35 @@ add_symbol_file_command (const char *args, int from_tty)
 
   validate_readnow_readnever (flags);
 
-  /* This command takes at least two arguments.  The first one is a
-     filename, and the second is the address where this file has been
-     loaded.  Abort now if this address hasn't been provided by the
-     user.  */
-  if (!seen_addr)
-    error (_("The address where %s has been loaded is missing"),
-	   filename.get ());
-
   /* Print the prompt for the query below.  And save the arguments into
      a sect_addr_info structure to be passed around to other
      functions.  We have to split this up into separate print
      statements because hex_string returns a local static
      string.  */
 
-  printf_unfiltered (_("add symbol table from file \"%s\" at\n"),
+  printf_unfiltered (_("add symbol table from file \"%s\""),
 		     filename.get ());
   section_addr_info section_addrs;
-  for (sect_opt &sect : sect_opts)
+  std::vector<sect_opt>::const_iterator it = sect_opts.begin ();
+  if (!seen_addr)
+    ++it;
+  for (; it != sect_opts.end (); ++it)
     {
       CORE_ADDR addr;
-      const char *val = sect.value;
-      const char *sec = sect.name;
+      const char *val = it->value;
+      const char *sec = it->name;
 
+      if (section_addrs.empty ())
+	printf_unfiltered (_(" at\n"));
       addr = parse_and_eval_address (val);
 
       /* Here we store the section offsets in the order they were
-         entered on the command line.  */
-      section_addrs.emplace_back (addr, sec, 0);
+         entered on the command line.  Every array element is
+         assigned an ascending section index to preserve the above
+         order over an unstable sorting algorithm.  This dummy
+         index is not used for any other purpose.
+      */
+      section_addrs.emplace_back (addr, sec, section_addrs.size ());
       printf_unfiltered ("\t%s_addr = %s\n", sec,
 			 paddress (gdbarch, addr));
 
@@ -2187,12 +2268,23 @@ add_symbol_file_command (const char *args, int from_tty)
 	 At this point, we don't know what file type this is,
 	 so we can't determine what section names are valid.  */
     }
+  if (seen_offset)
+      printf_unfiltered (_("%s offset by %s\n"),
+			 (section_addrs.empty ()
+			  ? _(" with all sections")
+			  : _("with other sections")),
+			 paddress (gdbarch, offset));
+  else if (section_addrs.empty ())
+    printf_unfiltered ("\n");
 
   if (from_tty && (!query ("%s", "")))
     error (_("Not confirmed."));
 
   objf = symbol_file_add (filename.get (), add_flags, &section_addrs,
 			  flags);
+
+  if (seen_offset)
+    set_objfile_default_section_offset (objf, section_addrs, offset);
 
   add_target_sections_of_objfile (objf);
 
@@ -2516,7 +2608,7 @@ reread_symbols (void)
 	 gdb::observers::new_objfile.notify (NULL) has been called by
 	 clear_symtab_users above.  Notify the new files now.  */
       for (auto iter : new_objfiles)
-	gdb::observers::new_objfile.notify (objfile);
+	gdb::observers::new_objfile.notify (iter);
 
       /* At least one objfile has changed, so we can consider that
          the executable we're debugging has changed too.  */
@@ -3774,19 +3866,22 @@ symbolic debug information."
 
   c = add_cmd ("symbol-file", class_files, symbol_file_command, _("\
 Load symbol table from executable file FILE.\n\
-Usage: symbol-file [-readnow | -readnever] FILE\n\
+Usage: symbol-file [-readnow | -readnever] [-o OFF] FILE\n\
+OFF is an optional offset which is added to each section address.\n\
 The `file' command can also load symbol tables, as well as setting the file\n\
 to execute.\n" READNOW_READNEVER_HELP), &cmdlist);
   set_cmd_completer (c, filename_completer);
 
   c = add_cmd ("add-symbol-file", class_files, add_symbol_file_command, _("\
 Load symbols from FILE, assuming FILE has been dynamically loaded.\n\
-Usage: add-symbol-file FILE ADDR [-readnow | -readnever | \
--s SECT-NAME SECT-ADDR]...\n\
+Usage: add-symbol-file FILE [-readnow | -readnever] [-o OFF] [ADDR] \
+[-s SECT-NAME SECT-ADDR]...\n\
 ADDR is the starting address of the file's text.\n\
 Each '-s' argument provides a section name and address, and\n\
 should be specified if the data and bss segments are not contiguous\n\
-with the text.  SECT-NAME is a section name to be loaded at SECT-ADDR.\n"
+with the text.  SECT-NAME is a section name to be loaded at SECT-ADDR.\n\
+OFF is an optional offset which is added to the default load addresses\n\
+of all sections for which no other address was specified.\n"
 READNOW_READNEVER_HELP),
 	       &cmdlist);
   set_cmd_completer (c, filename_completer);

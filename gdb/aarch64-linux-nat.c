@@ -212,7 +212,7 @@ fetch_gregs_from_thread (struct regcache *regcache)
      and arm.  */
   gdb_static_assert (sizeof (regs) >= 18 * 4);
 
-  tid = ptid_get_lwp (regcache->ptid ());
+  tid = regcache->ptid ().lwp ();
 
   iovec.iov_base = &regs;
   if (gdbarch_bfd_arch_info (gdbarch)->bits_per_word == 32)
@@ -249,7 +249,7 @@ store_gregs_to_thread (const struct regcache *regcache)
   /* Make sure REGS can hold all registers contents on both aarch64
      and arm.  */
   gdb_static_assert (sizeof (regs) >= 18 * 4);
-  tid = ptid_get_lwp (regcache->ptid ());
+  tid = regcache->ptid ().lwp ();
 
   iovec.iov_base = &regs;
   if (gdbarch_bfd_arch_info (gdbarch)->bits_per_word == 32)
@@ -292,7 +292,7 @@ fetch_fpregs_from_thread (struct regcache *regcache)
      and arm.  */
   gdb_static_assert (sizeof regs >= VFP_REGS_SIZE);
 
-  tid = ptid_get_lwp (regcache->ptid ());
+  tid = regcache->ptid ().lwp ();
 
   iovec.iov_base = &regs;
 
@@ -338,7 +338,7 @@ store_fpregs_to_thread (const struct regcache *regcache)
   /* Make sure REGS can hold all VFP registers contents on both aarch64
      and arm.  */
   gdb_static_assert (sizeof regs >= VFP_REGS_SIZE);
-  tid = ptid_get_lwp (regcache->ptid ());
+  tid = regcache->ptid ().lwp ();
 
   iovec.iov_base = &regs;
 
@@ -394,7 +394,7 @@ static void
 fetch_sveregs_from_thread (struct regcache *regcache)
 {
   std::unique_ptr<gdb_byte[]> base
-    = aarch64_sve_get_sveregs (ptid_get_lwp (regcache->ptid ()));
+    = aarch64_sve_get_sveregs (regcache->ptid ().lwp ());
   aarch64_sve_regs_copy_to_reg_buf (regcache, base.get ());
 }
 
@@ -406,7 +406,7 @@ store_sveregs_to_thread (struct regcache *regcache)
 {
   int ret;
   struct iovec iovec;
-  int tid = ptid_get_lwp (regcache->ptid ());
+  int tid = regcache->ptid ().lwp ();
 
   /* Obtain a dump of SVE registers from ptrace.  */
   std::unique_ptr<gdb_byte[]> base = aarch64_sve_get_sveregs (tid);
@@ -540,7 +540,7 @@ aarch64_linux_nat_target::low_new_fork (struct lwp_info *parent,
      new process so that all breakpoints and watchpoints can be
      removed together.  */
 
-  parent_pid = ptid_get_pid (parent->ptid);
+  parent_pid = parent->ptid.pid ();
   parent_state = aarch64_get_debug_reg_state (parent_pid);
   child_state = aarch64_get_debug_reg_state (child_pid);
   *child_state = *parent_state;
@@ -566,8 +566,8 @@ ps_get_thread_area (struct ps_prochandle *ph,
 void
 aarch64_linux_nat_target::post_startup_inferior (ptid_t ptid)
 {
-  low_forget_process (ptid_get_pid (ptid));
-  aarch64_linux_get_debug_reg_capacity (ptid_get_pid (ptid));
+  low_forget_process (ptid.pid ());
+  aarch64_linux_get_debug_reg_capacity (ptid.pid ());
   linux_nat_target::post_startup_inferior (ptid);
 }
 
@@ -597,7 +597,7 @@ aarch64_linux_nat_target::read_description ()
   gdb_byte regbuf[VFP_REGS_SIZE];
   struct iovec iovec;
 
-  tid = ptid_get_lwp (inferior_ptid);
+  tid = inferior_ptid.lwp ();
 
   iovec.iov_base = regbuf;
   iovec.iov_len = VFP_REGS_SIZE;
@@ -687,7 +687,7 @@ aarch64_linux_nat_target::insert_hw_breakpoint (struct gdbarch *gdbarch,
   int len;
   const enum target_hw_bp_type type = hw_execute;
   struct aarch64_debug_reg_state *state
-    = aarch64_get_debug_reg_state (ptid_get_pid (inferior_ptid));
+    = aarch64_get_debug_reg_state (inferior_ptid.pid ());
 
   gdbarch_breakpoint_from_pc (gdbarch, &addr, &len);
 
@@ -720,7 +720,7 @@ aarch64_linux_nat_target::remove_hw_breakpoint (struct gdbarch *gdbarch,
   int len = 4;
   const enum target_hw_bp_type type = hw_execute;
   struct aarch64_debug_reg_state *state
-    = aarch64_get_debug_reg_state (ptid_get_pid (inferior_ptid));
+    = aarch64_get_debug_reg_state (inferior_ptid.pid ());
 
   gdbarch_breakpoint_from_pc (gdbarch, &addr, &len);
 
@@ -753,7 +753,7 @@ aarch64_linux_nat_target::insert_watchpoint (CORE_ADDR addr, int len,
 {
   int ret;
   struct aarch64_debug_reg_state *state
-    = aarch64_get_debug_reg_state (ptid_get_pid (inferior_ptid));
+    = aarch64_get_debug_reg_state (inferior_ptid.pid ());
 
   if (show_debug_regs)
     fprintf_unfiltered (gdb_stdlog,
@@ -785,7 +785,7 @@ aarch64_linux_nat_target::remove_watchpoint (CORE_ADDR addr, int len,
 {
   int ret;
   struct aarch64_debug_reg_state *state
-    = aarch64_get_debug_reg_state (ptid_get_pid (inferior_ptid));
+    = aarch64_get_debug_reg_state (inferior_ptid.pid ());
 
   if (show_debug_regs)
     fprintf_unfiltered (gdb_stdlog,
@@ -819,7 +819,7 @@ bool
 aarch64_linux_nat_target::stopped_data_address (CORE_ADDR *addr_p)
 {
   siginfo_t siginfo;
-  int i, tid;
+  int i;
   struct aarch64_debug_reg_state *state;
 
   if (!linux_nat_get_siginfo (inferior_ptid, &siginfo))
@@ -831,7 +831,7 @@ aarch64_linux_nat_target::stopped_data_address (CORE_ADDR *addr_p)
     return false;
 
   /* Check if the address matches any watched address.  */
-  state = aarch64_get_debug_reg_state (ptid_get_pid (inferior_ptid));
+  state = aarch64_get_debug_reg_state (inferior_ptid.pid ());
   for (i = aarch64_num_wp_regs - 1; i >= 0; --i)
     {
       const unsigned int offset

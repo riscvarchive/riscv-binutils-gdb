@@ -91,13 +91,13 @@ nto_set_thread (ptid_t ptid)
 {
   int res = 0;
 
-  TRACE ("%s pid: %d tid: %ld\n", __func__, ptid_get_pid (ptid),
-	 ptid_get_lwp (ptid));
+  TRACE ("%s pid: %d tid: %ld\n", __func__, ptid.pid (),
+	 ptid.lwp ());
   if (nto_inferior.ctl_fd != -1
-      && !ptid_equal (ptid, null_ptid)
-      && !ptid_equal (ptid, minus_one_ptid))
+      && ptid != null_ptid
+      && ptid != minus_one_ptid)
     {
-      pthread_t tid = ptid_get_lwp (ptid);
+      pthread_t tid = ptid.lwp ();
 
       if (EOK == devctl (nto_inferior.ctl_fd, DCMD_PROC_CURTHREAD, &tid,
 	  sizeof (tid), 0))
@@ -142,7 +142,7 @@ nto_find_new_threads (struct nto_inferior *nto_inferior)
 	{
 	  struct thread_info *ti;
 
-	  ptid = ptid_build (nto_inferior->pid, tid, 0);
+	  ptid = ptid_t (nto_inferior->pid, tid, 0);
 	  ti = find_thread_ptid (ptid);
 	  if (ti != NULL)
 	    {
@@ -157,7 +157,7 @@ nto_find_new_threads (struct nto_inferior *nto_inferior)
       if (status.state != STATE_DEAD)
 	{
 	  TRACE ("Adding thread %d\n", tid);
-	  ptid = ptid_build (nto_inferior->pid, tid, 0);
+	  ptid = ptid_t (nto_inferior->pid, tid, 0);
 	  if (!find_thread_ptid (ptid))
 	    add_thread (ptid, NULL);
 	}
@@ -208,12 +208,12 @@ do_attach (pid_t pid)
       struct process_info *proc;
 
       kill (pid, SIGCONT);
-      ptid = ptid_build (status.pid, status.tid, 0);
+      ptid = ptid_t (status.pid, status.tid, 0);
       the_low_target.arch_setup ();
       proc = add_process (status.pid, 1);
       proc->tdesc = nto_tdesc;
       TRACE ("Adding thread: pid=%d tid=%ld\n", status.pid,
-	     ptid_get_lwp (ptid));
+	     ptid.lwp ());
       nto_find_new_threads (&nto_inferior);
     }
   else
@@ -397,8 +397,10 @@ nto_attach (unsigned long pid)
 /* Send signal to process PID.  */
 
 static int
-nto_kill (int pid)
+nto_kill (process_info *proc)
 {
+  int pid = proc->pid;
+
   TRACE ("%s %d\n", __func__, pid);
   kill (pid, SIGKILL);
   do_detach ();
@@ -408,9 +410,9 @@ nto_kill (int pid)
 /* Detach from process PID.  */
 
 static int
-nto_detach (int pid)
+nto_detach (process_info *proc)
 {
-  TRACE ("%s %d\n", __func__, pid);
+  TRACE ("%s %d\n", __func__, proc->pid);
   do_detach ();
   return 0;
 }
@@ -430,9 +432,9 @@ nto_thread_alive (ptid_t ptid)
 {
   int res;
 
-  TRACE ("%s pid:%d tid:%d\n", __func__, ptid_get_pid (ptid),
-	 ptid_get_lwp (ptid));
-  if (SignalKill (0, ptid_get_pid (ptid), ptid_get_lwp (ptid),
+  TRACE ("%s pid:%d tid:%d\n", __func__, ptid.pid (),
+	 ptid.lwp ());
+  if (SignalKill (0, ptid.pid (), ptid.lwp (),
 		  0, 0, 0) == -1)
     res = 0;
   else
@@ -582,7 +584,7 @@ nto_wait (ptid_t ptid,
 	    int waitval = 0;
 
 	    TRACE ("  TERMINATED\n");
-	    waitpid (ptid_get_pid (ptid), &waitval, WNOHANG);
+	    waitpid (ptid.pid (), &waitval, WNOHANG);
 	    if (nto_inferior.exit_signo)
 	      {
 		/* Abnormal death.  */
@@ -609,7 +611,7 @@ nto_wait (ptid_t ptid,
 	}
     }
 
-  return ptid_build (status.pid, status.tid, 0);
+  return ptid_t (status.pid, status.tid, 0);
 }
 
 /* Fetch inferior's registers for currently selected thread (CURRENT_INFERIOR).
@@ -740,7 +742,7 @@ static void
 nto_request_interrupt (void)
 {
   TRACE ("%s\n", __func__);
-  nto_set_thread (ptid_build (nto_inferior.pid, 1, 0));
+  nto_set_thread (ptid_t (nto_inferior.pid, 1, 0));
   if (EOK != devctl (nto_inferior.ctl_fd, DCMD_PROC_STOP, NULL, 0, 0))
     TRACE ("Error stopping inferior.\n");
 }

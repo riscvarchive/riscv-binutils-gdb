@@ -61,6 +61,7 @@ responsibility among the other maintainers.
   ALPHA            Richard Henderson <rth@twiddle.net>
   AARCH64	   Richard Earnshaw <rearnsha@arm.com>
   AARCH64	   Marcus Shawcroft <marcus.shawcroft@arm.com>
+  ARC		   Claudiu Zissulescu <claziss@synopsys.com>
   ARM		   Nick Clifton <nickc@redhat.com>
   ARM		   Richard Earnshaw <rearnsha@arm.com>
   ARM		   Ramana Radhakrishnan <ramana.radhakrishnan@arm.com>
@@ -72,6 +73,8 @@ responsibility among the other maintainers.
   CR16		   M R Swami Reddy <MR.Swami.Reddy@nsc.com>
   CRIS		   Hans-Peter Nilsson <hp@axis.com>
   CRX		   M R Swami Reddy <MR.Swami.Reddy@nsc.com>
+  C-SKY		   Lifang Xia <lifang_xia@c-sky.com>
+  C-SKY		   Yunhai Shang <yunhai_shang@c-sky.com>
   DLX              Nikolaos Kavvadias <nkavv@physics.auth.gr>
   DWARF2	   Jason Merrill <jason@redhat.com>
   DWARF2	   Jakub Jelinek <jakub@redhat.com>
@@ -102,7 +105,7 @@ responsibility among the other maintainers.
   MEP		   Dave Brolley <brolley@redhat.com>
   METAG            Markos Chandras <markos.chandras@imgtec.com>
   MICROBLAZE	   Michael Eager <eager@eagercon.com>
-  MIPS		   Maciej W. Rozycki <macro@mips.com>
+  MIPS I-IV	   Maciej W. Rozycki <macro@linux-mips.org>
   MMIX		   Hans-Peter Nilsson <hp@bitrange.com>
   MN10300	   Alexandre Oliva <aoliva@redhat.com>
   Moxie		   Anthony Green <green@moxielogic.com>
@@ -121,8 +124,6 @@ responsibility among the other maintainers.
   RISC-V	   Palmer Dabbelt <palmer@sifive.com>
   RISC-V	   Andrew Waterman <andrew@sifive.com>
   RISC-V	   Jim Wilson <jimw@sifive.com>
-  RL78             DJ Delorie <dj@redhat.com>
-  RX               DJ Delorie <dj@redhat.com>
   RX               Nick Clifton <nickc@redhat.com>
   s390, s390x	   Martin Schwidefsky <schwidefsky@de.ibm.com>
   s390, s390x	   Andreas Krebbel <krebbel@linux.vnet.ibm.com>

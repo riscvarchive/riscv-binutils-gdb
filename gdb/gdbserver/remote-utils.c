@@ -26,6 +26,8 @@
 #include "dll.h"
 #include "rsp-low.h"
 #include "gdbthread.h"
+#include "netstuff.h"
+#include "filestuff.h"
 #include <ctype.h>
 #if HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
@@ -63,6 +65,7 @@
 
 #if USE_WIN32API
 #include <winsock2.h>
+#include <wspiapi.h>
 #endif
 
 #if __QNX__
@@ -151,19 +154,18 @@ enable_async_notification (int fd)
 static int
 handle_accept_event (int err, gdb_client_data client_data)
 {
-  struct sockaddr_in sockaddr;
-  socklen_t tmp;
+  struct sockaddr_storage sockaddr;
+  socklen_t len = sizeof (sockaddr);
 
   if (debug_threads)
     debug_printf ("handling possible accept event\n");
 
-  tmp = sizeof (sockaddr);
-  remote_desc = accept (listen_desc, (struct sockaddr *) &sockaddr, &tmp);
+  remote_desc = accept (listen_desc, (struct sockaddr *) &sockaddr, &len);
   if (remote_desc == -1)
     perror_with_name ("Accept failed");
 
   /* Enable TCP keep alive process. */
-  tmp = 1;
+  socklen_t tmp = 1;
   setsockopt (remote_desc, SOL_SOCKET, SO_KEEPALIVE,
 	      (char *) &tmp, sizeof (tmp));
 
@@ -192,8 +194,19 @@ handle_accept_event (int err, gdb_client_data client_data)
   delete_file_handler (listen_desc);
 
   /* Convert IP address to string.  */
-  fprintf (stderr, "Remote debugging from host %s\n",
-	   inet_ntoa (sockaddr.sin_addr));
+  char orig_host[GDB_NI_MAX_ADDR], orig_port[GDB_NI_MAX_PORT];
+
+  int r = getnameinfo ((struct sockaddr *) &sockaddr, len,
+		       orig_host, sizeof (orig_host),
+		       orig_port, sizeof (orig_port),
+		       NI_NUMERICHOST | NI_NUMERICSERV);
+
+  if (r != 0)
+    fprintf (stderr, _("Could not obtain remote address: %s\n"),
+	     gai_strerror (r));
+  else
+    fprintf (stderr, _("Remote debugging from host %s, port %s\n"),
+	     orig_host, orig_port);
 
   enable_async_notification (remote_desc);
 
@@ -218,14 +231,10 @@ void
 remote_prepare (const char *name)
 {
   client_state &cs = get_client_state ();
-  const char *port_str;
 #ifdef USE_WIN32API
   static int winsock_initialized;
 #endif
-  int port;
-  struct sockaddr_in sockaddr;
   socklen_t tmp;
-  char *port_end;
 
   remote_is_stdio = 0;
   if (strcmp (name, STDIO_CONNECTION_NAME) == 0)
@@ -238,16 +247,24 @@ remote_prepare (const char *name)
       return;
     }
 
-  port_str = strchr (name, ':');
-  if (port_str == NULL)
+  struct addrinfo hint;
+  struct addrinfo *ainfo;
+
+  memset (&hint, 0, sizeof (hint));
+  /* Assume no prefix will be passed, therefore we should use
+     AF_UNSPEC.  */
+  hint.ai_family = AF_UNSPEC;
+  hint.ai_socktype = SOCK_STREAM;
+  hint.ai_protocol = IPPROTO_TCP;
+
+  parsed_connection_spec parsed
+    = parse_connection_spec_without_prefix (name, &hint);
+
+  if (parsed.port_str.empty ())
     {
       cs.transport_is_reliable = 0;
       return;
     }
-
-  port = strtoul (port_str + 1, &port_end, 10);
-  if (port_str[1] == '\0' || *port_end != '\0')
-    error ("Bad port argument: %s", name);
 
 #ifdef USE_WIN32API
   if (!winsock_initialized)
@@ -259,8 +276,26 @@ remote_prepare (const char *name)
     }
 #endif
 
-  listen_desc = socket (PF_INET, SOCK_STREAM, IPPROTO_TCP);
-  if (listen_desc == -1)
+  int r = getaddrinfo (parsed.host_str.c_str (), parsed.port_str.c_str (),
+		       &hint, &ainfo);
+
+  if (r != 0)
+    error (_("%s: cannot resolve name: %s"), name, gai_strerror (r));
+
+  scoped_free_addrinfo freeaddrinfo (ainfo);
+
+  struct addrinfo *iter;
+
+  for (iter = ainfo; iter != NULL; iter = iter->ai_next)
+    {
+      listen_desc = gdb_socket_cloexec (iter->ai_family, iter->ai_socktype,
+					iter->ai_protocol);
+
+      if (listen_desc >= 0)
+	break;
+    }
+
+  if (iter == NULL)
     perror_with_name ("Can't open socket");
 
   /* Allow rapid reuse of this port. */
@@ -268,13 +303,24 @@ remote_prepare (const char *name)
   setsockopt (listen_desc, SOL_SOCKET, SO_REUSEADDR, (char *) &tmp,
 	      sizeof (tmp));
 
-  sockaddr.sin_family = PF_INET;
-  sockaddr.sin_port = htons (port);
-  sockaddr.sin_addr.s_addr = INADDR_ANY;
+  switch (iter->ai_family)
+    {
+    case AF_INET:
+      ((struct sockaddr_in *) iter->ai_addr)->sin_addr.s_addr = INADDR_ANY;
+      break;
+    case AF_INET6:
+      ((struct sockaddr_in6 *) iter->ai_addr)->sin6_addr = in6addr_any;
+      break;
+    default:
+      internal_error (__FILE__, __LINE__,
+		      _("Invalid 'ai_family' %d\n"), iter->ai_family);
+    }
 
-  if (bind (listen_desc, (struct sockaddr *) &sockaddr, sizeof (sockaddr))
-      || listen (listen_desc, 1))
+  if (bind (listen_desc, iter->ai_addr, iter->ai_addrlen) != 0)
     perror_with_name ("Can't bind address");
+
+  if (listen (listen_desc, 1) != 0)
+    perror_with_name ("Can't listen on socket");
 
   cs.transport_is_reliable = 1;
 }
@@ -350,18 +396,24 @@ remote_open (const char *name)
 #endif /* USE_WIN32API */
   else
     {
-      int port;
-      socklen_t len;
-      struct sockaddr_in sockaddr;
+      char listen_port[GDB_NI_MAX_PORT];
+      struct sockaddr_storage sockaddr;
+      socklen_t len = sizeof (sockaddr);
 
-      len = sizeof (sockaddr);
-      if (getsockname (listen_desc,
-		       (struct sockaddr *) &sockaddr, &len) < 0
-	  || len < sizeof (sockaddr))
+      if (getsockname (listen_desc, (struct sockaddr *) &sockaddr, &len) < 0)
 	perror_with_name ("Can't determine port");
-      port = ntohs (sockaddr.sin_port);
 
-      fprintf (stderr, "Listening on port %d\n", port);
+      int r = getnameinfo ((struct sockaddr *) &sockaddr, len,
+			   NULL, 0,
+			   listen_port, sizeof (listen_port),
+			   NI_NUMERICSERV);
+
+      if (r != 0)
+	fprintf (stderr, _("Can't obtain port where we are listening: %s"),
+		 gai_strerror (r));
+      else
+	fprintf (stderr, _("Listening on port %s\n"), listen_port);
+
       fflush (stderr);
 
       /* Register the event loop handler.  */
@@ -486,13 +538,13 @@ write_ptid (char *buf, ptid_t ptid)
 
   if (cs.multi_process)
     {
-      pid = ptid_get_pid (ptid);
+      pid = ptid.pid ();
       if (pid < 0)
 	buf += sprintf (buf, "p-%x.", -pid);
       else
 	buf += sprintf (buf, "p%x.", pid);
     }
-  tid = ptid_get_lwp (ptid);
+  tid = ptid.lwp ();
   if (tid < 0)
     buf += sprintf (buf, "-%x", -tid);
   else
@@ -542,7 +594,7 @@ read_ptid (const char *buf, const char **obuf)
 
       if (obuf)
 	*obuf = pp;
-      return ptid_build (pid, tid, 0);
+      return ptid_t (pid, tid, 0);
     }
 
   /* No multi-process.  Just a tid.  */
@@ -555,7 +607,7 @@ read_ptid (const char *buf, const char **obuf)
 
   if (obuf)
     *obuf = pp;
-  return ptid_build (pid, tid, 0);
+  return ptid_t (pid, tid, 0);
 }
 
 /* Write COUNT bytes in BUF to the client.
@@ -849,7 +901,6 @@ static unsigned char *readchar_bufp;
 static int
 readchar (void)
 {
-  client_state &cs = get_client_state ();
   int ch;
 
   if (readchar_bufcnt == 0)
@@ -1222,7 +1273,7 @@ prepare_resume_reply (char *buf, ptid_t ptid,
 	       in GDB will claim this event belongs to inferior_ptid
 	       if we do not specify a thread, and there's no way for
 	       gdbserver to know what inferior_ptid is.  */
-	    if (1 || !ptid_equal (cs.general_thread, ptid))
+	    if (1 || cs.general_thread != ptid)
 	      {
 		int core = -1;
 		/* In non-stop, don't change the general thread behind
@@ -1261,14 +1312,14 @@ prepare_resume_reply (char *buf, ptid_t ptid,
     case TARGET_WAITKIND_EXITED:
       if (cs.multi_process)
 	sprintf (buf, "W%x;process:%x",
-		 status->value.integer, ptid_get_pid (ptid));
+		 status->value.integer, ptid.pid ());
       else
 	sprintf (buf, "W%02x", status->value.integer);
       break;
     case TARGET_WAITKIND_SIGNALLED:
       if (cs.multi_process)
 	sprintf (buf, "X%x;process:%x",
-		 status->value.sig, ptid_get_pid (ptid));
+		 status->value.sig, ptid.pid ());
       else
 	sprintf (buf, "X%02x", status->value.sig);
       break;

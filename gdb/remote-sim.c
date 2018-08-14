@@ -253,7 +253,7 @@ get_sim_inferior_data (struct inferior *inf, int sim_instance_needed)
       set_inferior_data (inf, sim_inferior_data_key, sim_data);
 
       /* Allocate a ptid for this inferior.  */
-      sim_data->remote_sim_ptid = ptid_build (next_pid, 0, next_pid);
+      sim_data->remote_sim_ptid = ptid_t (next_pid, 0, next_pid);
       next_pid++;
 
       /* Initialize the other instance variables.  */
@@ -281,7 +281,7 @@ static struct sim_inferior_data *
 get_sim_inferior_data_by_ptid (ptid_t ptid, int sim_instance_needed)
 {
   struct inferior *inf;
-  int pid = ptid_get_pid (ptid);
+  int pid = ptid.pid ();
 
   if (pid <= 0)
     return NULL;
@@ -377,9 +377,6 @@ end_callbacks (void)
 static int
 gdb_os_write_stdout (host_callback *p, const char *buf, int len)
 {
-  int i;
-  char b[2];
-
   ui_file_write (gdb_stdtarg, buf, len);
   return len;
 }
@@ -660,7 +657,7 @@ gdbsim_target::create_inferior (const char *exec_file,
 			(exec_file ? exec_file : "(NULL)"),
 			args);
 
-  if (ptid_equal (inferior_ptid, sim_data->remote_sim_ptid))
+  if (inferior_ptid == sim_data->remote_sim_ptid)
     kill ();
   remove_breakpoints ();
   init_wait_for_inferior ();
@@ -686,7 +683,7 @@ gdbsim_target::create_inferior (const char *exec_file,
     error (_("Unable to create sim inferior."));
 
   inferior_ptid = sim_data->remote_sim_ptid;
-  inferior_appeared (current_inferior (), ptid_get_pid (inferior_ptid));
+  inferior_appeared (current_inferior (), inferior_ptid.pid ());
   add_thread_silent (inferior_ptid);
 
   insert_breakpoints ();	/* Needed to get correct instruction
@@ -834,9 +831,6 @@ gdbsim_close_inferior (struct inferior *inf, void *arg)
 void
 gdbsim_target::close ()
 {
-  struct sim_inferior_data *sim_data
-    = get_sim_inferior_data (current_inferior (), SIM_INSTANCE_NOT_NEEDED);
-
   if (remote_debug)
     fprintf_unfiltered (gdb_stdlog, "gdbsim_close\n");
 
@@ -925,7 +919,7 @@ gdbsim_target::resume (ptid_t ptid, int step, enum gdb_signal siggnal)
 
   if (sim_data)
     gdbsim_resume_inferior (find_inferior_ptid (ptid), &rd);
-  else if (ptid_equal (ptid, minus_one_ptid))
+  else if (ptid == minus_one_ptid)
     iterate_over_inferiors (gdbsim_resume_inferior, &rd);
   else
     error (_("The program is not being run."));
@@ -1001,7 +995,7 @@ gdbsim_target::wait (ptid_t ptid, struct target_waitstatus *status, int options)
   /* This target isn't able to (yet) resume more than one inferior at a time.
      When ptid is minus_one_ptid, just use the current inferior.  If we're
      given an explicit pid, we'll try to find it and use that instead.  */
-  if (ptid_equal (ptid, minus_one_ptid))
+  if (ptid == minus_one_ptid)
     sim_data = get_sim_inferior_data (current_inferior (),
 				      SIM_INSTANCE_NEEDED);
   else
@@ -1009,7 +1003,7 @@ gdbsim_target::wait (ptid_t ptid, struct target_waitstatus *status, int options)
       sim_data = get_sim_inferior_data_by_ptid (ptid, SIM_INSTANCE_NEEDED);
       if (sim_data == NULL)
 	error (_("Unable to wait for pid %d.  Inferior not found."),
-	       ptid_get_pid (ptid));
+	       ptid.pid ());
       inferior_ptid = ptid;
     }
 
@@ -1187,15 +1181,11 @@ gdbsim_target::files_info ()
 void
 gdbsim_target::mourn_inferior ()
 {
-  struct sim_inferior_data *sim_data
-    = get_sim_inferior_data (current_inferior (), SIM_INSTANCE_NOT_NEEDED);
-
   if (remote_debug)
     fprintf_unfiltered (gdb_stdlog, "gdbsim_mourn_inferior:\n");
 
   remove_breakpoints ();
   generic_mourn_inferior ();
-  delete_thread_silent (sim_data->remote_sim_ptid);
 }
 
 /* Pass the command argument through to the simulator verbatim.  The
@@ -1296,7 +1286,7 @@ gdbsim_target::thread_alive (ptid_t ptid)
   if (sim_data == NULL)
     return false;
 
-  if (ptid_equal (ptid, sim_data->remote_sim_ptid))
+  if (ptid == sim_data->remote_sim_ptid)
     /* The simulators' task is always alive.  */
     return true;
 

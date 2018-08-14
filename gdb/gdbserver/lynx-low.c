@@ -64,14 +64,14 @@ lynx_debug (char *string, ...)
 /* Build a ptid_t given a PID and a LynxOS TID.  */
 
 static ptid_t
-lynx_ptid_build (int pid, long tid)
+lynx_ptid_t (int pid, long tid)
 {
   /* brobecker/2010-06-21: It looks like the LWP field in ptids
      should be distinct for each thread (see write_ptid where it
      writes the thread ID from the LWP).  So instead of storing
      the LynxOS tid in the tid field of the ptid, we store it in
      the lwp field.  */
-  return ptid_build (pid, tid, 0);
+  return ptid_t (pid, tid, 0);
 }
 
 /* Return the process ID of the given PTID.
@@ -83,7 +83,7 @@ lynx_ptid_build (int pid, long tid)
 static int
 lynx_ptid_get_pid (ptid_t ptid)
 {
-  return ptid_get_pid (ptid);
+  return ptid.pid ();
 }
 
 /* Return the LynxOS tid of the given PTID.  */
@@ -91,9 +91,9 @@ lynx_ptid_get_pid (ptid_t ptid)
 static long
 lynx_ptid_get_tid (ptid_t ptid)
 {
-  /* See lynx_ptid_build: The LynxOS tid is stored inside the lwp field
+  /* See lynx_ptid_t: The LynxOS tid is stored inside the lwp field
      of the ptid.  */
-  return ptid_get_lwp (ptid);
+  return ptid.lwp ();
 }
 
 /* For a given PTID, return the associated PID as known by the LynxOS
@@ -294,7 +294,7 @@ lynx_add_threads_after_attach (int pid)
     if ((sscanf (buf, "%d %d", &thread_pid, &thread_tid) == 2
 	 && thread_pid == pid))
     {
-      ptid_t thread_ptid = lynx_ptid_build (pid, thread_tid);
+      ptid_t thread_ptid = lynx_ptid_t (pid, thread_tid);
 
       if (!find_thread_ptid (thread_ptid))
 	{
@@ -312,7 +312,7 @@ lynx_add_threads_after_attach (int pid)
 static int
 lynx_attach (unsigned long pid)
 {
-  ptid_t ptid = lynx_ptid_build (pid, 0);
+  ptid_t ptid = lynx_ptid_t (pid, 0);
 
   if (lynx_ptrace (PTRACE_ATTACH, ptid, 0, 0, 0) != 0)
     error ("Cannot attach to process %lu: %s (%d)\n", pid,
@@ -342,17 +342,17 @@ lynx_resume (struct thread_resume *resume_info, size_t n)
      LynxOS 178 is a little more sensitive, and triggers some
      unexpected signals (Eg SIG61) when we resume the inferior
      using a different thread.  */
-  if (ptid_equal (ptid, minus_one_ptid))
+  if (ptid == minus_one_ptid)
     ptid = current_process()->priv->last_wait_event_ptid;
 
   /* The ptid might still be minus_one_ptid; this can happen between
      the moment we create the inferior or attach to a process, and
      the moment we resume its execution for the first time.  It is
      fine to use the current_thread's ptid in those cases.  */
-  if (ptid_equal (ptid, minus_one_ptid))
+  if (ptid == minus_one_ptid)
     ptid = ptid_of (current_thread);
 
-  regcache_invalidate_pid (ptid_get_pid (ptid));
+  regcache_invalidate_pid (ptid.pid ());
 
   errno = 0;
   lynx_ptrace (request, ptid, 1, signal, 0);
@@ -422,7 +422,7 @@ lynx_wait_1 (ptid_t ptid, struct target_waitstatus *status, int options)
   int wstat;
   ptid_t new_ptid;
 
-  if (ptid_equal (ptid, minus_one_ptid))
+  if (ptid == minus_one_ptid)
     pid = lynx_ptid_get_pid (ptid_of (current_thread));
   else
     pid = BUILDPID (lynx_ptid_get_pid (ptid), lynx_ptid_get_tid (ptid));
@@ -430,7 +430,7 @@ lynx_wait_1 (ptid_t ptid, struct target_waitstatus *status, int options)
 retry:
 
   ret = lynx_waitpid (pid, &wstat);
-  new_ptid = lynx_ptid_build (ret, ((union wait *) &wstat)->w_tid);
+  new_ptid = lynx_ptid_t (ret, ((union wait *) &wstat)->w_tid);
   find_process_pid (ret)->priv->last_wait_event_ptid = new_ptid;
 
   /* If this is a new thread, then add it now.  The reason why we do
@@ -522,15 +522,10 @@ lynx_wait (ptid_t ptid, struct target_waitstatus *status, int options)
 /* Implement the kill target_ops method.  */
 
 static int
-lynx_kill (int pid)
+lynx_kill (process_info *process)
 {
-  ptid_t ptid = lynx_ptid_build (pid, 0);
+  ptid_t ptid = lynx_ptid_t (process->pid, 0);
   struct target_waitstatus status;
-  struct process_info *process;
-
-  process = find_process_pid (pid);
-  if (process == NULL)
-    return -1;
 
   lynx_ptrace (PTRACE_KILL, ptid, 0, 0, 0);
   lynx_wait (ptid, &status, 0);
@@ -541,14 +536,9 @@ lynx_kill (int pid)
 /* Implement the detach target_ops method.  */
 
 static int
-lynx_detach (int pid)
+lynx_detach (process_info *process)
 {
-  ptid_t ptid = lynx_ptid_build (pid, 0);
-  struct process_info *process;
-
-  process = find_process_pid (pid);
-  if (process == NULL)
-    return -1;
+  ptid_t ptid = lynx_ptid_t (process->pid, 0);
 
   lynx_ptrace (PTRACE_DETACH, ptid, 0, 0, 0);
   the_target->mourn (process);
@@ -572,7 +562,7 @@ lynx_mourn (struct process_info *proc)
 /* Implement the join target_ops method.  */
 
 static void
-lynx_join (int pid)
+lynx_join (process_info *proc)
 {
   /* The PTRACE_DETACH is sufficient to detach from the process.
      So no need to do anything extra.  */

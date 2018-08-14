@@ -489,6 +489,7 @@ enum elf_target_id
   AVR_ELF_DATA,
   BFIN_ELF_DATA,
   CRIS_ELF_DATA,
+  CSKY_ELF_DATA,
   FRV_ELF_DATA,
   HPPA32_ELF_DATA,
   HPPA64_ELF_DATA,
@@ -515,7 +516,6 @@ enum elf_target_id
   TIC6X_ELF_DATA,
   X86_64_ELF_DATA,
   XTENSA_ELF_DATA,
-  XGATE_ELF_DATA,
   TILEGX_ELF_DATA,
   TILEPRO_ELF_DATA,
   RISCV_ELF_DATA,
@@ -1699,17 +1699,20 @@ struct bfd_elf_section_data
 
 /* The value of an object attribute.  The type indicates whether the attribute
    holds and integer, a string, or both.  It can also indicate that there can
-   be no default (i.e. all values must be written to file, even zero).  */
+   be no default (i.e. all values must be written to file, even zero), or
+   that the value is in error and should not be written to file.  */
 
 typedef struct obj_attribute
 {
 #define ATTR_TYPE_FLAG_INT_VAL    (1 << 0)
 #define ATTR_TYPE_FLAG_STR_VAL    (1 << 1)
 #define ATTR_TYPE_FLAG_NO_DEFAULT (1 << 2)
+#define ATTR_TYPE_FLAG_ERROR	  (1 << 3)
 
 #define ATTR_TYPE_HAS_INT_VAL(TYPE)	((TYPE) & ATTR_TYPE_FLAG_INT_VAL)
 #define ATTR_TYPE_HAS_STR_VAL(TYPE)	((TYPE) & ATTR_TYPE_FLAG_STR_VAL)
 #define ATTR_TYPE_HAS_NO_DEFAULT(TYPE)	((TYPE) & ATTR_TYPE_FLAG_NO_DEFAULT)
+#define ATTR_TYPE_HAS_ERROR(TYPE)	((TYPE) & ATTR_TYPE_FLAG_ERROR)
 
   int type;
   unsigned int i;
@@ -2545,7 +2548,8 @@ extern unsigned int _bfd_elf_ppc_at_tprel_transform
 /* PowerPC elf_object_p tweak.  */
 extern bfd_boolean _bfd_elf_ppc_set_arch (bfd *);
 /* PowerPC .gnu.attributes handling common to both 32-bit and 64-bit.  */
-extern void _bfd_elf_ppc_merge_fp_attributes (bfd *, struct bfd_link_info *);
+extern bfd_boolean _bfd_elf_ppc_merge_fp_attributes
+  (bfd *, struct bfd_link_info *);
 
 /* Exported interface for writing elf corefile notes.  */
 extern char *elfcore_write_note
@@ -2565,6 +2569,32 @@ extern char *elfcore_write_xstatereg
 extern char *elfcore_write_ppc_vmx
   (bfd *, char *, int *, const void *, int);
 extern char *elfcore_write_ppc_vsx
+  (bfd *, char *, int *, const void *, int);
+extern char *elfcore_write_ppc_tar
+  (bfd *, char *, int *, const void *, int);
+extern char *elfcore_write_ppc_ppr
+  (bfd *, char *, int *, const void *, int);
+extern char *elfcore_write_ppc_dscr
+  (bfd *, char *, int *, const void *, int);
+extern char *elfcore_write_ppc_ebb
+  (bfd *, char *, int *, const void *, int);
+extern char *elfcore_write_ppc_pmu
+  (bfd *, char *, int *, const void *, int);
+extern char *elfcore_write_ppc_tm_cgpr
+  (bfd *, char *, int *, const void *, int);
+extern char *elfcore_write_ppc_tm_cfpr
+  (bfd *, char *, int *, const void *, int);
+extern char *elfcore_write_ppc_tm_cvmx
+  (bfd *, char *, int *, const void *, int);
+extern char *elfcore_write_ppc_tm_cvsx
+  (bfd *, char *, int *, const void *, int);
+extern char *elfcore_write_ppc_tm_spr
+  (bfd *, char *, int *, const void *, int);
+extern char *elfcore_write_ppc_tm_ctar
+  (bfd *, char *, int *, const void *, int);
+extern char *elfcore_write_ppc_tm_cppr
+  (bfd *, char *, int *, const void *, int);
+extern char *elfcore_write_ppc_tm_cdscr
   (bfd *, char *, int *, const void *, int);
 extern char *elfcore_write_s390_timer
   (bfd *, char *, int *, const void *, int);
@@ -2597,6 +2627,8 @@ extern char *elfcore_write_aarch_tls
 extern char *elfcore_write_aarch_hw_break
   (bfd *, char *, int *, const void *, int);
 extern char *elfcore_write_aarch_hw_watch
+  (bfd *, char *, int *, const void *, int);
+extern char *elfcore_write_aarch_sve
   (bfd *, char *, int *, const void *, int);
 extern char *elfcore_write_lwpstatus
   (bfd *, char *, int *, long, int, const void *);
@@ -2673,6 +2705,10 @@ extern elf_property * _bfd_elf_get_property
   (bfd *, unsigned int, unsigned int);
 extern bfd *_bfd_elf_link_setup_gnu_properties
   (struct bfd_link_info *);
+extern bfd_size_type _bfd_elf_convert_gnu_property_size
+  (bfd *, bfd *);
+extern bfd_boolean _bfd_elf_convert_gnu_properties
+  (bfd *, asection *, bfd *, bfd_byte **, bfd_size_type *);
 
 /* The linker may need to keep track of the number of relocs that it
    decides to copy as dynamic relocs in check_relocs for each symbol.

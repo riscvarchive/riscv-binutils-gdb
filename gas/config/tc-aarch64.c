@@ -5099,6 +5099,7 @@ process_omitted_operand (enum aarch64_opnd type, const aarch64_opcode *opcode,
     case AARCH64_OPND_Ed:
     case AARCH64_OPND_En:
     case AARCH64_OPND_Em:
+    case AARCH64_OPND_Em16:
     case AARCH64_OPND_SM3_IMM2:
       operand->reglane.regno = default_value;
       break;
@@ -5574,6 +5575,7 @@ parse_operands (char *str, const aarch64_opcode *opcode)
 	case AARCH64_OPND_Ed:
 	case AARCH64_OPND_En:
 	case AARCH64_OPND_Em:
+	case AARCH64_OPND_Em16:
 	case AARCH64_OPND_SM3_IMM2:
 	  reg_type = REG_TYPE_VN;
 	vector_reg_index:
@@ -6703,6 +6705,22 @@ warn_unpredictable_ldst (aarch64_instruction *instr, char *str)
 	  && opnds[0].reg.regno == opnds[1].reg.regno)
 	    as_warn (_("unpredictable load of register pair -- `%s'"), str);
       break;
+
+    case ldstexcl:
+      /* It is unpredictable if the destination and status registers are the
+	 same.  */
+      if ((aarch64_get_operand_class (opnds[0].type)
+	   == AARCH64_OPND_CLASS_INT_REG)
+	  && (aarch64_get_operand_class (opnds[1].type)
+	      == AARCH64_OPND_CLASS_INT_REG)
+	  && (opnds[0].reg.regno == opnds[1].reg.regno
+	      || opnds[0].reg.regno == opnds[2].reg.regno))
+	as_warn (_("unpredictable: identical transfer and status registers"
+		   " --`%s'"),
+		 str);
+
+      break;
+
     default:
       break;
     }

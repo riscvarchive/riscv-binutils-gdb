@@ -196,6 +196,10 @@ cris-*-* | crisv32-*-*)	targ_emul=criself
 			;;
 crx-*-elf*)		targ_emul=elf32crx
 			;;
+
+csky-*-elf*)		targ_emul=cskyelf ;;
+csky-*-linux*)		targ_emul=cskyelf_linux ;;
+
 d10v-*-*)		targ_emul=d10velf ;;
 d30v-*-*ext*)		targ_emul=d30v_e; targ_extra_emuls="d30velf d30v_o" ;;
 d30v-*-*onchip*)	targ_emul=d30v_o; targ_extra_emuls="d30velf d30v_e" ;;
@@ -632,7 +636,8 @@ pru*-*-*)		targ_emul=pruelf ;;
 riscv32*-*-linux*)	targ_emul=elf32lriscv
 			targ_extra_emuls="elf32lriscv_ilp32f elf32lriscv_ilp32 elf64lriscv elf64lriscv_lp64f elf64lriscv_lp64"
 			targ_extra_libpath=$targ_extra_emuls ;;
-riscv32*-*-*)		targ_emul=elf32lriscv
+riscv-*-* | riscv32*-*-*)
+			targ_emul=elf32lriscv
 			targ_extra_emuls="elf64lriscv"
 			targ_extra_libpath=$targ_extra_emuls ;;
 riscv64*-*-linux*)	targ_emul=elf64lriscv

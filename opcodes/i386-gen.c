@@ -60,7 +60,7 @@ static initializer cpu_flag_init[] =
   { "CPU_I586_FLAGS",
     "CPU_I486_FLAGS|Cpu387|Cpu586" },
   { "CPU_I686_FLAGS",
-    "CPU_I586_FLAGS|Cpu686|Cpu687" },
+    "CPU_I586_FLAGS|Cpu686|Cpu687|CpuCMOV|CpuFXSR" },
   { "CPU_PENTIUMPRO_FLAGS",
     "CPU_I686_FLAGS|CpuNop" },
   { "CPU_P2_FLAGS",
@@ -111,6 +111,10 @@ static initializer cpu_flag_init[] =
     "Cpu387" },
   { "CPU_687_FLAGS",
     "CPU_387_FLAGS|Cpu687" },
+  { "CPU_CMOV_FLAGS",
+    "CpuCMOV" },
+  { "CPU_FXSR_FLAGS",
+    "CpuFXSR" },
   { "CPU_CLFLUSH_FLAGS",
     "CpuClflush" },
   { "CPU_NOP_FLAGS",
@@ -198,7 +202,7 @@ static initializer cpu_flag_init[] =
   { "CPU_AVX2_FLAGS",
     "CPU_AVX_FLAGS|CpuAVX2" },
   { "CPU_AVX512F_FLAGS",
-    "CPU_AVX2_FLAGS|CpuVREX|CpuAVX512F" },
+    "CPU_AVX2_FLAGS|CpuAVX512F" },
   { "CPU_AVX512CD_FLAGS",
     "CPU_AVX512F_FLAGS|CpuAVX512CD" },
   { "CPU_AVX512ER_FLAGS",
@@ -297,6 +301,10 @@ static initializer cpu_flag_init[] =
     "CPU_ANY_687_FLAGS|Cpu387" },
   { "CPU_ANY_687_FLAGS",
     "Cpu687|CpuFISTTP" },
+  { "CPU_ANY_CMOV_FLAGS",
+    "CpuCMOV" },
+  { "CPU_ANY_FXSR_FLAGS",
+    "CpuFXSR" },
   { "CPU_ANY_MMX_FLAGS",
     "CPU_3DNOWA_FLAGS" },
   { "CPU_ANY_SSE_FLAGS",
@@ -316,7 +324,7 @@ static initializer cpu_flag_init[] =
   { "CPU_ANY_AVX2_FLAGS",
     "CpuAVX2" },
   { "CPU_ANY_AVX512F_FLAGS",
-    "CpuVREX|CpuAVX512CD|CpuAVX512ER|CpuAVX512PF|CpuAVX512DQ|CpuAVX512BW|CpuAVX512VL|CpuAVX512IFMA|CpuAVX512VBMI|CpuAVX512_4FMAPS|CpuAVX512_4VNNIW|CpuAVX512_VPOPCNTDQ|CpuAVX512_VBMI2|CpuAVX512_VNNI|CpuAVX512_BITALG|CpuAVX512F" },
+    "CpuAVX512F|CpuAVX512CD|CpuAVX512ER|CpuAVX512PF|CpuAVX512DQ|CpuAVX512BW|CpuAVX512VL|CpuAVX512IFMA|CpuAVX512VBMI|CpuAVX512_4FMAPS|CpuAVX512_4VNNIW|CpuAVX512_VPOPCNTDQ|CpuAVX512_VBMI2|CpuAVX512_VNNI|CpuAVX512_BITALG" },
   { "CPU_ANY_AVX512CD_FLAGS",
     "CpuAVX512CD" },
   { "CPU_ANY_AVX512ER_FLAGS",
@@ -444,10 +452,6 @@ static initializer operand_type_init[] =
     "Reg32|Acc|Dword" },
   { "OPERAND_TYPE_ACC64",
     "Reg64|Acc|Qword" },
-  { "OPERAND_TYPE_INOUTPORTREG",
-    "InOutPortReg" },
-  { "OPERAND_TYPE_REG16_INOUTPORTREG",
-    "Reg16|InOutPortReg" },
   { "OPERAND_TYPE_DISP16_32",
     "Disp16|Disp32" },
   { "OPERAND_TYPE_ANYDISP",
@@ -491,6 +495,8 @@ static bitfield cpu_flags[] =
   BITFIELD (Cpu486),
   BITFIELD (Cpu586),
   BITFIELD (Cpu686),
+  BITFIELD (CpuCMOV),
+  BITFIELD (CpuFXSR),
   BITFIELD (CpuClflush),
   BITFIELD (CpuNop),
   BITFIELD (CpuSYSCALL),
@@ -555,7 +561,6 @@ static bitfield cpu_flags[] =
   BITFIELD (CpuPRFCHW),
   BITFIELD (CpuSMAP),
   BITFIELD (CpuSHA),
-  BITFIELD (CpuVREX),
   BITFIELD (CpuClflushOpt),
   BITFIELD (CpuXSAVES),
   BITFIELD (CpuXSAVEC),
@@ -690,7 +695,6 @@ static bitfield operand_types[] =
   BITFIELD (JumpAbsolute),
   BITFIELD (EsSeg),
   BITFIELD (RegMem),
-  BITFIELD (Mem),
   BITFIELD (Byte),
   BITFIELD (Word),
   BITFIELD (Dword),
@@ -1027,8 +1031,58 @@ output_opcode_modifier (FILE *table, bitfield *modifier, unsigned int size)
   fprintf (table, "%d },\n", modifier[i].value);
 }
 
+static int
+adjust_broadcast_modifier (char **opnd)
+{
+  char *str, *next, *last, *op;
+  int bcst_type = INT_MAX;
+
+  /* Skip the immediate operand.  */
+  op = opnd[0];
+  if (strcasecmp(op, "Imm8") == 0)
+    op = opnd[1];
+
+  op = xstrdup (op);
+  last = op + strlen (op);
+  for (next = op; next && next < last; )
+    {
+      str = next_field (next, '|', &next, last);
+      if (str)
+	{
+	  if (strcasecmp(str, "Byte") == 0)
+	    {
+	      /* The smalest broadcast type, no need to check
+		 further.  */
+	      bcst_type = BYTE_BROADCAST;
+	      break;
+	    }
+	  else if (strcasecmp(str, "Word") == 0)
+	    {
+	      if (bcst_type > WORD_BROADCAST)
+		bcst_type = WORD_BROADCAST;
+	    }
+	  else if (strcasecmp(str, "Dword") == 0)
+	    {
+	      if (bcst_type > DWORD_BROADCAST)
+		bcst_type = DWORD_BROADCAST;
+	    }
+	  else if (strcasecmp(str, "Qword") == 0)
+	    {
+	      if (bcst_type > QWORD_BROADCAST)
+		bcst_type = QWORD_BROADCAST;
+	    }
+	}
+    }
+  free (op);
+
+  if (bcst_type == INT_MAX)
+    fail (_("unknown broadcast operand: %s\n"), op);
+
+  return bcst_type;
+}
+
 static void
-process_i386_opcode_modifier (FILE *table, char *mod, int lineno)
+process_i386_opcode_modifier (FILE *table, char *mod, char **opnd, int lineno)
 {
   char *str, *next, *last;
   bitfield modifiers [ARRAY_SIZE (opcode_modifiers)];
@@ -1046,7 +1100,10 @@ process_i386_opcode_modifier (FILE *table, char *mod, int lineno)
 	  str = next_field (next, '|', &next, last);
 	  if (str)
 	    {
-	      set_bitfield (str, modifiers, 1, ARRAY_SIZE (modifiers),
+	      int val = 1;
+	      if (strcasecmp(str, "Broadcast") == 0)
+		  val = adjust_broadcast_modifier (opnd);
+	      set_bitfield (str, modifiers, val, ARRAY_SIZE (modifiers),
 			  lineno);
 	      if (strcasecmp(str, "IsString") == 0)
 		active_isstring = 1;
@@ -1205,7 +1262,7 @@ output_i386_opcode (FILE *table, const char *name, char *str,
 
   process_i386_cpu_flag (table, cpu_flags, 0, ",", "    ", lineno);
 
-  process_i386_opcode_modifier (table, opcode_modifier, lineno);
+  process_i386_opcode_modifier (table, opcode_modifier, operand_types, lineno);
 
   fprintf (table, "    { ");
 
@@ -1266,14 +1323,10 @@ process_i386_opcodes (FILE *table)
   htab_t opcode_hash_table;
   struct opcode_hash_entry **opcode_array;
   unsigned int opcode_array_size = 1024;
-  int lineno = 0;
+  int lineno = 0, marker = 0;
 
   filename = "i386-opc.tbl";
-  fp = fopen (filename, "r");
-
-  if (fp == NULL)
-    fail (_("can't find i386-opc.tbl for reading, errno = %s\n"),
-	  xstrerror (errno));
+  fp = stdin;
 
   i = 0;
   opcode_array = (struct opcode_hash_entry **)
@@ -1307,11 +1360,32 @@ process_i386_opcodes (FILE *table)
       switch (p[0])
 	{
 	case '#':
+	  if (!strcmp("### MARKER ###", buf))
+	    marker = 1;
+	  else
+	    {
+	      /* Since we ignore all included files (we only care about their
+		 #define-s here), we don't need to monitor filenames.  The final
+		 line number directive is going to refer to the main source file
+		 again.  */
+	      char *end;
+	      unsigned long ln;
+
+	      p = remove_leading_whitespaces (p + 1);
+	      if (!strncmp(p, "line", 4))
+		p += 4;
+	      ln = strtoul (p, &end, 10);
+	      if (ln > 1 && ln < INT_MAX
+		  && *remove_leading_whitespaces (end) == '"')
+		lineno = ln - 1;
+	    }
 	  /* Ignore comments.  */
 	case '\0':
 	  continue;
 	  break;
 	default:
+	  if (!marker)
+	    continue;
 	  break;
 	}
 
@@ -1381,7 +1455,7 @@ process_i386_opcodes (FILE *table)
 
   process_i386_cpu_flag (table, "0", 0, ",", "    ", -1);
 
-  process_i386_opcode_modifier (table, "0", -1);
+  process_i386_opcode_modifier (table, "0", NULL, -1);
 
   fprintf (table, "    { ");
   process_i386_operand_type (table, "0", stage_opcodes, "\t  ", -1);

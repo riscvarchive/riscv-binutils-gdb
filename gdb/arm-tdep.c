@@ -8955,7 +8955,6 @@ arm_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
 	  else if (ei_osabi == ELFOSABI_NONE || ei_osabi == ELFOSABI_GNU)
 	    {
 	      int eabi_ver = EF_ARM_EABI_VERSION (e_flags);
-	      int attr_arch, attr_profile;
 
 	      switch (eabi_ver)
 		{
@@ -9026,11 +9025,13 @@ arm_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
 		 executable file includes build attributes; GCC does
 		 copy them to the executable, but e.g. RealView does
 		 not.  */
-	      attr_arch = bfd_elf_get_obj_attr_int (info.abfd, OBJ_ATTR_PROC,
-						    Tag_CPU_arch);
-	      attr_profile = bfd_elf_get_obj_attr_int (info.abfd,
-						       OBJ_ATTR_PROC,
-						       Tag_CPU_arch_profile);
+	      int attr_arch
+		= bfd_elf_get_obj_attr_int (info.abfd, OBJ_ATTR_PROC,
+					    Tag_CPU_arch);
+	      int attr_profile
+		= bfd_elf_get_obj_attr_int (info.abfd, OBJ_ATTR_PROC,
+					    Tag_CPU_arch_profile);
+
 	      /* GCC specifies the profile for v6-M; RealView only
 		 specifies the profile for architectures starting with
 		 V7 (as opposed to architectures with a tag
@@ -9572,7 +9573,8 @@ _initialize_arm_tdep (void)
 
 
   arm_disassembler_options = xstrdup ("reg-names-std");
-  const disasm_options_t *disasm_options = disassembler_options_arm ();
+  const disasm_options_t *disasm_options
+    = &disassembler_options_arm ()->options;
   int num_disassembly_styles = 0;
   for (i = 0; disasm_options->name[i] != NULL; i++)
     if (CONST_STRNEQ (disasm_options->name[i], "reg-names-"))
@@ -10218,7 +10220,7 @@ arm_record_data_proc_misc_ld_str (insn_decode_record *arm_insn_r)
   uint32_t record_buf[8], record_buf_mem[8];
   ULONGEST u_regval[2] = {0};
 
-  uint32_t reg_src1 = 0, reg_dest = 0;
+  uint32_t reg_src1 = 0;
   uint32_t opcode1 = 0;
 
   arm_insn_r->opcode = bits (arm_insn_r->arm_insn, 21, 24);

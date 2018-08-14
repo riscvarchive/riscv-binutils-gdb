@@ -385,13 +385,11 @@ get_function_name (CORE_ADDR funaddr, char *buf, int buf_size)
   }
 
   {
-    char *tmp = xstrprintf (_(RAW_FUNCTION_ADDRESS_FORMAT),
-                            hex_string (funaddr));
+    std::string tmp = string_printf (_(RAW_FUNCTION_ADDRESS_FORMAT),
+				     hex_string (funaddr));
 
-    gdb_assert (strlen (tmp) + 1 <= buf_size);
-    strcpy (buf, tmp);
-    xfree (tmp);
-    return buf;
+    gdb_assert (tmp.length () + 1 <= buf_size);
+    return strcpy (buf, tmp.c_str ());
   }
 }
 
@@ -587,7 +585,6 @@ run_inferior_call (struct call_thread_fsm *sm,
   struct gdb_exception caught_error = exception_none;
   int saved_in_infcall = call_thread->control.in_infcall;
   ptid_t call_thread_ptid = call_thread->ptid;
-  inferior *call_thread_inf = call_thread->inf;
   enum prompt_state saved_prompt_state = current_ui->prompt_state;
   int was_running = call_thread->state == THREAD_RUNNING;
   int saved_ui_async = current_ui->async;
@@ -1271,7 +1268,7 @@ When the function is done executing, GDB will silently stop."),
 	     name);
     }
 
-  if (! ptid_equal (call_thread_ptid, inferior_ptid))
+  if (call_thread_ptid != inferior_ptid)
     {
       const char *name = get_function_name (funaddr,
 					    name_buf, sizeof (name_buf));

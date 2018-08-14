@@ -1,7 +1,76 @@
 		What has changed in GDB?
 	     (Organized release by release)
 
-*** Changes since GDB 8.1
+*** Changes since GDB 8.2
+
+* GDB and GDBserver now support IPv6 connections.  IPv6 addresses
+  can be passed using the '[ADDRESS]:PORT' notation, or the regular
+  'ADDRESS:PORT' method.
+
+* DWARF index cache: GDB can now automatically save indices of DWARF
+  symbols on disk to speed up further loading of the same binaries.
+
+* New commands
+
+frame apply [all | COUNT | -COUNT | level LEVEL...] [FLAG]... COMMAND
+  Apply a command to some frames.
+  FLAG arguments allow to control what output to produce and how to handle
+  errors raised when applying COMMAND to a frame.
+
+taas COMMAND
+  Apply a command to all threads (ignoring errors and empty output).
+  Shortcut for 'thread apply all -s COMMAND'.
+
+faas COMMAND
+  Apply a command to all frames (ignoring errors and empty output).
+  Shortcut for 'frame apply all -s COMMAND'.
+
+tfaas COMMAND
+  Apply a command to all frames of all threads (ignoring errors and empty
+  output).
+  Shortcut for 'thread apply all -s frame apply all -s COMMAND'.
+
+maint set dwarf unwinders (on|off)
+maint show dwarf unwinders
+  Control whether DWARF unwinders can be used.
+
+* Changed commands
+
+thread apply [all | COUNT | -COUNT] [FLAG]... COMMAND
+  The 'thread apply' command accepts new FLAG arguments.
+  FLAG arguments allow to control what output to produce and how to handle
+  errors raised when applying COMMAND to a thread.
+
+* MI changes
+
+  ** The '-data-disassemble' MI command now accepts an '-a' option to
+     disassemble the whole function surrounding the given program
+     counter value or function name.  Support for this feature can be
+     verified by using the "-list-features" command, which should
+     contain "data-disassemble-a-option".
+
+* New native configurations
+
+GNU/Linux/RISC-V		riscv*-*-linux*
+
+* New targets
+
+GNU/Linux/RISC-V		riscv*-*-linux*
+
+*** Changes in GDB 8.2
+
+* The 'set disassembler-options' command now supports specifying options
+  for the MIPS target.
+
+* The 'symbol-file' command now accepts an '-o' option to add a relative
+  offset to all sections.
+
+* Similarly, the 'add-symbol-file' command also accepts an '-o' option to add
+  a relative offset to all sections, but it allows to override the load
+  address of individual sections using '-s'.
+
+* The 'add-symbol-file' command no longer requires the second argument
+  (address of the text section).
 
 * The endianness used with the 'set endian auto' mode in the absence of
   an executable selected for debugging is now the last endianness chosen
@@ -83,6 +152,16 @@ SH-5/SH64 running OpenBSD 	SH-5/SH64 support in sh*-*-openbsd*
   watchpoints set on unaligned addresses are no longer missed, with
   the tradeoff that there is a possibility of false hits being
   reported.
+
+* Configure changes
+
+--enable-codesign=CERT
+  This can be used to invoke "codesign -s CERT" after building gdb.
+  This option is useful on macOS, where code signing is required for
+  gdb to work properly.
+
+--disable-gdbcli has been removed
+  This is now silently accepted, but does nothing.
 
 *** Changes in GDB 8.1
 

@@ -2936,7 +2936,7 @@ programs:
 @item automatic notification of new threads
 @item @samp{thread @var{thread-id}}, a command to switch among threads
 @item @samp{info threads}, a command to inquire about existing threads
-@item @samp{thread apply [@var{thread-id-list}] [@var{all}] @var{args}},
+@item @samp{thread apply [@var{thread-id-list} | all] @var{args}},
 a command to apply a command to a list of threads
 @item thread-specific breakpoints
 @item @samp{set print thread-events}, which controls printing of 
@@ -3173,7 +3173,7 @@ threads.
 
 @kindex thread apply
 @cindex apply command to several threads
-@item thread apply [@var{thread-id-list} | all [-ascending]] @var{command}
+@item thread apply [@var{thread-id-list} | all [-ascending]] [@var{flag}]@dots{} @var{command}
 The @code{thread apply} command allows you to apply the named
 @var{command} to one or more threads.  Specify the threads that you
 want affected using the thread ID list syntax (@pxref{thread ID
@@ -3181,6 +3181,59 @@ lists}), or specify @code{all} to apply to all threads.  To apply a
 command to all threads in descending order, type @kbd{thread apply all
 @var{command}}.  To apply a command to all threads in ascending order,
 type @kbd{thread apply all -ascending @var{command}}.
+
+The @var{flag} arguments control what output to produce and how to handle
+errors raised when applying @var{command} to a thread.  @var{flag}
+must start with a @code{-} directly followed by one letter in
+@code{qcs}.  If several flags are provided, they must be given
+individually, such as @code{-c -q}.
+
+By default, @value{GDBN} displays some thread information before the
+output produced by @var{command}, and an error raised during the
+execution of a @var{command} will abort @code{thread apply}.  The
+following flags can be used to fine-tune this behavior:
+
+@table @code
+@item -c
+The flag @code{-c}, which stands for @samp{continue}, causes any
+errors in @var{command} to be displayed, and the execution of
+@code{thread apply} then continues.
+@item -s
+The flag @code{-s}, which stands for @samp{silent}, causes any errors
+or empty output produced by a @var{command} to be silently ignored.
+That is, the execution continues, but the thread information and errors
+are not printed.
+@item -q
+The flag @code{-q} (@samp{quiet}) disables printing the thread
+information.
+@end table
+
+Flags @code{-c} and @code{-s} cannot be used together.
+
+@kindex taas
+@cindex apply command to all threads (ignoring errors and empty output)
+@item taas @var{command}
+Shortcut for @code{thread apply all -s @var{command}}.
+Applies @var{command} on all threads, ignoring errors and empty output.
+
+@kindex tfaas
+@cindex apply a command to all frames of all threads (ignoring errors and empty output)
+@item tfaas @var{command}
+Shortcut for @code{thread apply all -s frame apply all -s @var{command}}.
+Applies @var{command} on all frames of all threads, ignoring errors
+and empty output.  Note that the flag @code{-s} is specified twice:
+The first @code{-s} ensures that @code{thread apply} only shows the thread
+information of the threads for which @code{frame apply} produces
+some output.  The second @code{-s} is needed to ensure that @code{frame
+apply} shows the frame information of a frame only if the
+@var{command} successfully produced some output.
+
+It can for example be used to print a local variable or a function
+argument without knowing the thread or frame where this variable or argument
+is, using:
+@smallexample
+(@value{GDBP}) tfaas p some_local_var_i_do_not_remember_where_it_is
+@end smallexample
 
 
 @kindex thread name
@@ -7304,6 +7357,7 @@ currently executing frame and describes it briefly, similar to the
 * Backtrace::                   Backtraces
 * Selection::                   Selecting a frame
 * Frame Info::                  Information on a frame
+* Frame Apply::                 Applying a command to several frames
 * Frame Filter Management::     Managing frame filters
 
 @end menu
@@ -7715,6 +7769,136 @@ line.  These are all variables (declared either static or automatic)
 accessible at the point of execution of the selected frame.
 
 @end table
+
+@node Frame Apply
+@section Applying a Command to Several Frames.
+@kindex frame apply
+@cindex apply command to several frames
+@table @code
+@item frame apply [all | @var{count} | @var{-count} | level @var{level}@dots{}] [@var{flag}]@dots{} @var{command}
+The @code{frame apply} command allows you to apply the named
+@var{command} to one or more frames.
+
+@table @code
+@item @code{all}
+Specify @code{all} to apply @var{command} to all frames.
+
+@item @var{count}
+Use @var{count} to apply @var{command} to the innermost @var{count}
+frames, where @var{count} is a positive number.
+
+@item @var{-count}
+Use @var{-count} to apply @var{command} to the outermost @var{count}
+frames, where @var{count} is a positive number.
+
+@item @code{level}
+Use @code{level} to apply @var{command} to the set of frames identified
+by the @var{level} list.  @var{level} is a frame level or a range of frame
+levels as @var{level1}-@var{level2}.  The frame level is the number shown
+in the first field of the @samp{backtrace} command output.
+E.g., @samp{2-4 6-8 3} indicates to apply @var{command} for the frames
+at levels 2, 3, 4, 6, 7, 8, and then again on frame at level 3.
+
+@end table
+
+@end table
+
+Note that the frames on which @code{frame apply} applies a command are
+also influenced by the @code{set backtrace} settings such as @code{set
+backtrace past-main} and @code{set backtrace limit N}.  See
+@xref{Backtrace,,Backtraces}.
+
+The @var{flag} arguments control what output to produce and how to handle
+errors raised when applying @var{command} to a frame.  @var{flag}
+must start with a @code{-} directly followed by one letter in
+@code{qcs}.  If several flags are provided, they must be given
+individually, such as @code{-c -q}.
+
+By default, @value{GDBN} displays some frame information before the
+output produced by @var{command}, and an error raised during the
+execution of a @var{command} will abort @code{frame apply}.  The
+following flags can be used to fine-tune this behavior:
+
+@table @code
+@item -c
+The flag @code{-c}, which stands for @samp{continue}, causes any
+errors in @var{command} to be displayed, and the execution of
+@code{frame apply} then continues.
+@item -s
+The flag @code{-s}, which stands for @samp{silent}, causes any errors
+or empty output produced by a @var{command} to be silently ignored.
+That is, the execution continues, but the frame information and errors
+are not printed.
+@item -q
+The flag @code{-q} (@samp{quiet}) disables printing the frame
+information.
+@end table
+
+The following example shows how the flags @code{-c} and @code{-s} are
+working when applying the command @code{p j} to all frames, where
+variable @code{j} can only be successfully printed in the outermost
+@code{#1 main} frame.
+
+@smallexample
+@group
+(gdb) frame apply all p j
+#0  some_function (i=5) at fun.c:4
+No symbol "j" in current context.
+(gdb) frame apply all -c p j
+#0  some_function (i=5) at fun.c:4
+No symbol "j" in current context.
+#1  0x565555fb in main (argc=1, argv=0xffffd2c4) at fun.c:11
+$1 = 5
+(gdb) frame apply all -s p j
+#1  0x565555fb in main (argc=1, argv=0xffffd2c4) at fun.c:11
+$2 = 5
+(gdb)
+@end group
+@end smallexample
+
+By default, @samp{frame apply}, prints the frame location
+information before the command output:
+
+@smallexample
+@group
+(gdb) frame apply all p $sp
+#0  some_function (i=5) at fun.c:4
+$4 = (void *) 0xffffd1e0
+#1  0x565555fb in main (argc=1, argv=0xffffd2c4) at fun.c:11
+$5 = (void *) 0xffffd1f0
+(gdb)
+@end group
+@end smallexample
+
+If flag @code{-q} is given, no frame information is printed:
+@smallexample
+@group
+(gdb) frame apply all -q p $sp
+$12 = (void *) 0xffffd1e0
+$13 = (void *) 0xffffd1f0
+(gdb)
+@end group
+@end smallexample
+
+@table @code
+
+@kindex faas
+@cindex apply a command to all frames (ignoring errors and empty output)
+@item faas @var{command}
+Shortcut for @code{frame apply all -s @var{command}}.
+Applies @var{command} on all frames, ignoring errors and empty output.
+
+It can for example be used to print a local variable or a function
+argument without knowing the frame where this variable or argument
+is, using:
+@smallexample
+(@value{GDBP}) faas p some_local_var_i_do_not_remember_where_it_is
+@end smallexample
+
+Note that the command @code{tfaas @var{command}} applies @var{command}
+on all frames of all threads.  See @xref{Threads,,Threads}.
+@end table
+
 
 @node Frame Filter Management
 @section Management of Frame Filters.
@@ -8759,7 +8943,7 @@ The default value is the empty string.
 
 If it is necessary to specify more than one disassembler option, then
 multiple options can be placed together into a comma separated list.
-Currently this command is only supported on targets ARM, PowerPC
+Currently this command is only supported on targets ARM, MIPS, PowerPC
 and S/390.
 
 @kindex show disassembler-options
@@ -18823,10 +19007,15 @@ if necessary to locate your program.  Omitting @var{filename} means to
 discard information on the executable file.
 
 @kindex symbol-file
-@item symbol-file @r{[} @var{filename} @r{]}
+@item symbol-file @r{[} @var{filename} @r{[} -o @var{offset} @r{]]}
 Read symbol table information from file @var{filename}.  @code{PATH} is
 searched when necessary.  Use the @code{file} command to get both symbol
 table and program to run from the same file.
+
+If an optional @var{offset} is specified, it is added to the start
+address of each section in the symbol file.  This is useful if the
+program is relocated at runtime, such as the Linux kernel with kASLR
+enabled.
 
 @code{symbol-file} with no argument clears out @value{GDBN} information on your
 program's symbol table.
@@ -18913,18 +19102,21 @@ the program is running.  To do this, use the @code{kill} command
 
 @kindex add-symbol-file
 @cindex dynamic linking
-@item add-symbol-file @var{filename} @var{address}
-@itemx add-symbol-file @var{filename} @var{address} @r{[} -readnow @r{|} -readnever @r{]}
-@itemx add-symbol-file @var{filename} @var{address} -s @var{section} @var{address} @dots{}
+@item add-symbol-file @var{filename} @r{[} -readnow @r{|} -readnever @r{]} @r{[} -o @var{offset} @r{]} @r{[} @var{textaddress} @r{]} @r{[} -s @var{section} @var{address} @dots{} @r{]}
 The @code{add-symbol-file} command reads additional symbol table
 information from the file @var{filename}.  You would use this command
 when @var{filename} has been dynamically loaded (by some other means)
-into the program that is running.  The @var{address} should give the memory
-address at which the file has been loaded; @value{GDBN} cannot figure
-this out for itself.  You can additionally specify an arbitrary number
-of @samp{-s @var{section} @var{address}} pairs, to give an explicit
-section name and base address for that section.  You can specify any
-@var{address} as an expression.
+into the program that is running.  The @var{textaddress} parameter gives
+the memory address at which the file's text section has been loaded.
+You can additionally specify the base address of other sections using
+an arbitrary number of @samp{-s @var{section} @var{address}} pairs.
+If a section is omitted, @value{GDBN} will use its default addresses
+as found in @var{filename}.  Any @var{address} or @var{textaddress}
+can be given as an expression.
+
+If an optional @var{offset} is specified, it is added to the start
+address of each section, except those for which the address was
+specified explicitly.
 
 The symbol table of the file @var{filename} is added to the symbol table
 originally read with the @code{symbol-file} command.  You can use the
@@ -19903,6 +20095,34 @@ There are currently some limitation on indices.  They only work when
 for DWARF debugging information, not stabs.  And, they do not
 currently work for programs using Ada.
 
+@subsection Automatic symbol index cache
+
+It is possible for @value{GDBN} to automatically save a copy of this index in a
+cache on disk and retrieve it from there when loading the same binary in the
+future.  This feature can be turned on with @kbd{set index-cache on}.  The
+following commands can be used to tweak the behavior of the index cache.
+
+@table @code
+
+@item set index-cache on
+@itemx set index-cache off
+Enable or disable the use of the symbol index cache.
+
+@item set index-cache directory @var{directory}
+@itemx show index-cache directory
+Set/show the directory where index files will be saved.  By default, the index
+is cached in the @file{gdb} subdirectory of the directory pointed to by the
+@env{XDG_CACHE_HOME} environment variable, if it is defined, else in the
+@file{.cache/gdb} subdirectory of your home directory.
+
+There is no limit on the disk space used by index cache.  It is perfectly safe
+to delete the content of that directory to free up disk space.
+
+@item show index-cache stats
+Print the number of cache hits and misses since the launch of @value{GDBN}.
+
+@end table
+
 @node Symbol Errors
 @section Errors Reading Symbol Files
 
@@ -20509,16 +20729,27 @@ If you're using a serial line, you may want to give @value{GDBN} the
 @code{target} command.
 
 @item target remote @code{@var{host}:@var{port}}
+@itemx target remote @code{@var{[host]}:@var{port}}
 @itemx target remote @code{tcp:@var{host}:@var{port}}
+@itemx target remote @code{tcp:@var{[host]}:@var{port}}
+@itemx target remote @code{tcp4:@var{host}:@var{port}}
+@itemx target remote @code{tcp6:@var{host}:@var{port}}
+@itemx target remote @code{tcp6:@var{[host]}:@var{port}}
 @itemx target extended-remote @code{@var{host}:@var{port}}
+@itemx target extended-remote @code{@var{[host]}:@var{port}}
 @itemx target extended-remote @code{tcp:@var{host}:@var{port}}
+@itemx target extended-remote @code{tcp:@var{[host]}:@var{port}}
+@itemx target extended-remote @code{tcp4:@var{host}:@var{port}}
+@itemx target extended-remote @code{tcp6:@var{host}:@var{port}}
+@itemx target extended-remote @code{tcp6:@var{[host]}:@var{port}}
 @cindex @acronym{TCP} port, @code{target remote}
 Debug using a @acronym{TCP} connection to @var{port} on @var{host}.
-The @var{host} may be either a host name or a numeric @acronym{IP}
-address; @var{port} must be a decimal number.  The @var{host} could be
-the target machine itself, if it is directly connected to the net, or
-it might be a terminal server which in turn has a serial line to the
-target.
+The @var{host} may be either a host name, a numeric @acronym{IPv4}
+address, or a numeric @acronym{IPv6} address (with or without the
+square brackets to separate the address from the port); @var{port}
+must be a decimal number.  The @var{host} could be the target machine
+itself, if it is directly connected to the net, or it might be a
+terminal server which in turn has a serial line to the target.
 
 For example, to connect to port 2828 on a terminal server named
 @code{manyfarms}:
@@ -20526,6 +20757,28 @@ For example, to connect to port 2828 on a terminal server named
 @smallexample
 target remote manyfarms:2828
 @end smallexample
+
+To connect to port 2828 on a terminal server whose address is
+@code{2001:0db8:85a3:0000:0000:8a2e:0370:7334}, you can either use the
+square bracket syntax:
+
+@smallexample
+target remote [2001:0db8:85a3:0000:0000:8a2e:0370:7334]:2828
+@end smallexample
+
+@noindent
+or explicitly specify the @acronym{IPv6} protocol:
+
+@smallexample
+target remote tcp6:2001:0db8:85a3:0000:0000:8a2e:0370:7334:2828
+@end smallexample
+
+This last example may be confusing to the reader, because there is no
+visible separation between the hostname and the port number.
+Therefore, we recommend the user to provide @acronym{IPv6} addresses
+using square brackets for clarity.  However, it is important to
+mention that for @value{GDBN} there is no ambiguity: the number after
+the last colon is considered to be the port number.
 
 If your remote target is actually running on the same machine as your
 debugger session (e.g.@: a simulator for your target running on the
@@ -20540,7 +20793,15 @@ target remote :1234
 Note that the colon is still required here.
 
 @item target remote @code{udp:@var{host}:@var{port}}
+@itemx target remote @code{udp:@var{[host]}:@var{port}}
+@itemx target remote @code{udp4:@var{host}:@var{port}}
+@itemx target remote @code{udp6:@var{[host]}:@var{port}}
 @itemx target extended-remote @code{udp:@var{host}:@var{port}}
+@itemx target extended-remote @code{udp:@var{host}:@var{port}}
+@itemx target extended-remote @code{udp:@var{[host]}:@var{port}}
+@itemx target extended-remote @code{udp4:@var{host}:@var{port}}
+@itemx target extended-remote @code{udp6:@var{host}:@var{port}}
+@itemx target extended-remote @code{udp6:@var{[host]}:@var{port}}
 @cindex @acronym{UDP} port, @code{target remote}
 Debug using @acronym{UDP} packets to @var{port} on @var{host}.  For example, to
 connect to @acronym{UDP} port 2828 on a terminal server named @code{manyfarms}:
@@ -21153,16 +21414,24 @@ responses.
 @anchor{set remote hardware-breakpoint-limit}
 @item set remote hardware-watchpoint-limit @var{limit}
 @itemx set remote hardware-breakpoint-limit @var{limit}
-Restrict @value{GDBN} to using @var{limit} remote hardware breakpoint or
-watchpoints.  A limit of -1, the default, is treated as unlimited.
+Restrict @value{GDBN} to using @var{limit} remote hardware watchpoints
+or breakpoints.  The @var{limit} can be set to 0 to disable hardware
+watchpoints or breakpoints, and @code{unlimited} for unlimited
+watchpoints or breakpoints.
+
+@item show remote hardware-watchpoint-limit
+@itemx show remote hardware-breakpoint-limit
+Show the current limit for the number of hardware watchpoints or
+breakpoints that @value{GDBN} can use.
 
 @cindex limit hardware watchpoints length
 @cindex remote target, limit watchpoints length
 @anchor{set remote hardware-watchpoint-length-limit}
 @item set remote hardware-watchpoint-length-limit @var{limit}
-Restrict @value{GDBN} to using @var{limit} bytes for the maximum length of
-a remote hardware watchpoint.  A limit of -1, the default, is treated
-as unlimited.
+Restrict @value{GDBN} to using @var{limit} bytes for the maximum
+length of a remote hardware watchpoint.  A @var{limit} of 0 disables
+hardware watchpoints and @code{unlimited} allows watchpoints of any
+length.
 
 @item show remote hardware-watchpoint-length-limit
 Show the current limit (in bytes) of the maximum length of
@@ -30939,6 +31208,7 @@ For details about what an addressable memory unit is,
 @smallexample
  -data-disassemble
     [ -s @var{start-addr} -e @var{end-addr} ]
+  | [ -a @var{addr} ]
   | [ -f @var{filename} -l @var{linenum} [ -n @var{lines} ] ]
   -- @var{mode}
 @end smallexample
@@ -30951,6 +31221,11 @@ Where:
 is the beginning address (or @code{$pc})
 @item @var{end-addr}
 is the end address
+@item @var{addr}
+is an address anywhere within (or the name of) the function to
+disassemble.  If an address is specified, the whole function
+surrounding that address will be disassembled.  If a name is
+specified, the whole function with that name will be disassembled.
 @item @var{filename}
 is the name of the file to disassemble
 @item @var{linenum}
@@ -33087,6 +33362,9 @@ records, produced when trying to execute an undefined @sc{gdb/mi} command
 @item exec-run-start-option
 Indicates that the @code{-exec-run} command supports the @option{--start}
 option (@pxref{GDB/MI Program Execution}).
+@item data-disassemble-a-option
+Indicates that the @code{-data-disassemble} command supports the @option{-a}
+option (@pxref{GDB/MI Data Manipulation}).
 @end ftable
 
 @subheading The @code{-list-target-features} Command
@@ -35745,6 +36023,30 @@ compilation units will be stored in memory longer, and more total
 memory will be used.  Setting it to zero disables caching, which will
 slow down @value{GDBN} startup, but reduce memory consumption.
 
+@kindex maint set dwarf unwinders
+@kindex maint show dwarf unwinders
+@item maint set dwarf unwinders
+@itemx maint show dwarf unwinders
+Control use of the DWARF frame unwinders.
+
+@cindex DWARF frame unwinders
+Many targets that support DWARF debugging use @value{GDBN}'s DWARF
+frame unwinders to build the backtrace.  Many of these targets will
+also have a second mechanism for building the backtrace for use in
+cases where DWARF information is not available, this second mechanism
+is often an analysis of a function's prologue.
+
+In order to extend testing coverage of the second level stack
+unwinding mechanisms it is helpful to be able to disable the DWARF
+stack unwinders, this can be done with this switch.
+
+In normal use of @value{GDBN} disabling the DWARF unwinders is not
+advisable, there are cases that are better handled through DWARF than
+prologue analysis, and the debug experience is likely to be better
+with the DWARF frame unwinders enabled.
+
+If DWARF frame unwinders are not supported for a particular target
+architecture, then enabling this flag does not cause them to be used.
 @kindex maint set profile
 @kindex maint show profile
 @cindex profiling GDB
@@ -43500,16 +43802,17 @@ Richard M. Stallman and Roland H. Pesch, July 1991.
 
 @format
 @c man begin SYNOPSIS gcore
-gcore [-a] [-o @var{filename}] @var{pid}
+gcore [-a] [-o @var{prefix}] @var{pid1} [@var{pid2}...@var{pidN}]
 @c man end
 @end format
 
 @c man begin DESCRIPTION gcore
-Generate a core dump of a running program with process ID @var{pid}.
-Produced file is equivalent to a kernel produced core file as if the process
-crashed (and if @kbd{ulimit -c} were used to set up an appropriate core dump
-limit).  Unlike after a crash, after @command{gcore} the program remains
-running without any change.
+Generate core dumps of one or more running programs with process IDs
+@var{pid1}, @var{pid2}, etc.  A core file produced by @command{gcore}
+is equivalent to one produced by the kernel when the process crashes
+(and when @kbd{ulimit -c} was used to set up an appropriate core dump
+limit).  However, unlike after a crash, after @command{gcore} finishes
+its job the program remains running without any change.
 @c man end
 
 @c man begin OPTIONS gcore
@@ -43521,11 +43824,12 @@ the Operating System.  On @sc{gnu}/Linux, it will disable
 enable @code{dump-excluded-mappings} (@pxref{set
 dump-excluded-mappings}).
 
-@item -o @var{filename}
-The optional argument
-@var{filename} specifies the file name where to put the core dump.
-If not specified, the file name defaults to @file{core.@var{pid}},
-where @var{pid} is the running program process ID.
+@item -o @var{prefix}
+The optional argument @var{prefix} specifies the prefix to be used
+when composing the file names of the core dumps.  The file name is
+composed as @file{@var{prefix}.@var{pid}}, where @var{pid} is the
+process ID of the running program being analyzed by @command{gcore}.
+If not specified, @var{prefix} defaults to @var{gcore}.
 @end table
 @c man end
 

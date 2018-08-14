@@ -1,3 +1,98 @@
+2018-08-09  Richard Earnshaw  <rearnsha@arm.com>
+
+	* elf/arm.h: Updated comments for e_flags definitions.
+
+2018-08-06  Claudiu Zissulescu  <claziss@synopsys.com>
+
+	* elf/arc.h (Tag_ARC_ATR_version): New tag.
+
+2018-08-06  Claudiu Zissulescu  <claziss@synopsys.com>
+
+	* opcode/arc.h (ARC_OPCODE_ARCV1): Define.
+
+2018-08-01  Richard Earnshaw  <rearnsha@arm.com>
+
+	Copy over from GCC
+	2018-07-26  Martin Liska  <mliska@suse.cz>
+
+        PR lto/86548
+	* libiberty.h (make_temp_file_with_prefix): New function.
+
+2018-07-30  Jim Wilson  <jimw@sifive.com>
+
+	* opcode/riscv.h (INSN_TYPE, INSN_BRANCH, INSN_CONDBRANCH, INSN_JSR)
+	(INSN_DREF, INSN_DATA_SIZE, INSN_DATA_SIZE_SHIFT, INSN_1_BYTE)
+	(INSN_2_BYTE, INSN_4_BYTE, INSN_8_BYTE, INSN_16_BYTE): New.
+
+2018-07-30  Andrew Jenner  <andrew@codesourcery.com>
+
+	* elf/common.h (EM_CSKY, EM_CSKY_OLD): Define.
+	* elf/csky.h: New file.
+
+2018-07-27  Chenghua Xu  <paul.hua.gm@gmail.com>
+	    Maciej W. Rozycki  <macro@linux-mips.org>
+
+	* elf/mips.h (AFL_ASE_MASK): Correct typo.
+
+2018-07-26  Alex Chadwick  <Alex.Chadwick@cl.cam.ac.uk>
+
+	* opcode/ppc.h (PPC_OPCODE_750): Adjust comment.
+
+2018-07-26  Alan Modra  <amodra@gmail.com>
+
+	* elf/ppc64.h: Specify byte offset to local entry for values
+	of two to six in STO_PPC64_LOCAL_MASK.  Clarify r2 return
+	value for such functions when entering via global entry point.
+	Specify meaning of a value of one in STO_PPC64_LOCAL_MASK.
+
+2018-07-24  Alan Modra  <amodra@gmail.com>
+
+	PR 23430
+	* elf/common.h (SHT_SYMTAB_SHNDX): Fix comment typo.
+
+2018-07-20  Chenghua Xu  <paul.hua.gm@gmail.com>
+	    Maciej W. Rozycki  <macro@mips.com>
+
+	* elf/mips.h (AFL_ASE_MMI): New macro.
+	(AFL_ASE_MASK): Update to include AFL_ASE_LOONGSON_MMI.
+	* opcode/mips.h (ASE_LOONGSON_MMI): New macro.
+
+2018-07-17  Maciej W. Rozycki  <macro@mips.com>
+
+	* bfdlink.h (bfd_link_hash_entry): Add `rel_from_abs' member.
+
+2018-07-06  Alan Modra  <amodra@gmail.com>
+
+	* diagnostics.h: Comment on macro usage.
+
+2018-07-05  Simon Marchi  <simon.marchi@polymtl.ca>
+
+	* diagnostics.h (DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS):
+	Define for clang.
+
+2018-07-02  Maciej W. Rozycki  <macro@mips.com>
+
+	PR tdep/8282
+	* dis-asm.h (disasm_option_arg_t): New typedef.
+	(disasm_options_and_args_t): Likewise.
+	(disasm_options_t): Add `arg' member, document members.
+	(disassembler_options_mips): New prototype.
+	(disassembler_options_arm, disassembler_options_powerpc)
+	(disassembler_options_s390): Update prototypes.
+
+2018-06-29  Tamar Christina  <tamar.christina@arm.com>
+
+	PR binutils/23192
+	*opcode/aarch64.h (aarch64_opnd): Add AARCH64_OPND_Em16.
+
+2018-06-26  Alan Modra  <amodra@gmail.com>
+
+	* elf/internal.h (ELF_SECTION_IN_SEGMENT): Revert last change.
+
+2018-06-24  Nick Clifton  <nickc@redhat.com>
+
+	2.31 branch created.
+
 2018-06-21  Alan Hayward  <alan.hayward@arm.com>
 
 	* elf/internal.h (ELF_SECTION_IN_SEGMENT): Don’t check addresses

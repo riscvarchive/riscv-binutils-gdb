@@ -147,7 +147,7 @@ is_ravenscar_task (ptid_t ptid)
      2.0.48 for LEON3 sends 'm0' as a reply to the 'qfThreadInfo'
      query, which the remote protocol layer then treats as a thread
      whose TID is 0.  This is obviously not a ravenscar task.  */
-  return ptid_get_lwp (ptid) == 0 && ptid_get_tid (ptid) != 0;
+  return ptid.lwp () == 0 && ptid.tid () != 0;
 }
 
 /* Given PTID, which can be either a ravenscar task or a CPU thread,
@@ -171,7 +171,7 @@ ravenscar_get_thread_base_cpu (ptid_t ptid)
   else
     {
       /* We assume that the LWP of the PTID is equal to the CPU number.  */
-      base_cpu = ptid_get_lwp (ptid);
+      base_cpu = ptid.lwp ();
     }
 
   return base_cpu;
@@ -193,7 +193,7 @@ ravenscar_task_is_currently_active (ptid_t ptid)
   ptid_t active_task_ptid
     = ravenscar_active_task (ravenscar_get_thread_base_cpu (ptid));
 
-  return ptid_equal (ptid, active_task_ptid);
+  return ptid == active_task_ptid;
 }
 
 /* Return the CPU thread (as a ptid_t) on which the given ravenscar
@@ -211,7 +211,7 @@ get_base_thread_from_ravenscar_task (ptid_t ptid)
     return ptid;
 
   base_cpu = ravenscar_get_thread_base_cpu (ptid);
-  return ptid_build (ptid_get_pid (ptid), base_cpu, 0);
+  return ptid_t (ptid.pid (), base_cpu, 0);
 }
 
 /* Fetch the ravenscar running thread from target memory and
@@ -235,7 +235,7 @@ ravenscar_update_inferior_ptid (void)
   /* Make sure we set base_ptid before calling ravenscar_active_task
      as the latter relies on it.  */
   inferior_ptid = ravenscar_active_task (base_cpu);
-  gdb_assert (!ptid_equal (inferior_ptid, null_ptid));
+  gdb_assert (inferior_ptid != null_ptid);
 
   /* The running thread may not have been added to
      system.tasking.debug's list yet; so ravenscar_update_thread_list
@@ -291,7 +291,7 @@ has_ravenscar_runtime (void)
 static int
 ravenscar_runtime_initialized (void)
 {
-  return (!(ptid_equal (ravenscar_active_task (1), null_ptid)));
+  return (!(ravenscar_active_task (1) == null_ptid));
 }
 
 /* Return the ID of the thread that is currently running.
@@ -384,7 +384,7 @@ ravenscar_active_task (int cpu)
   if (tid == 0)
     return null_ptid;
   else
-    return ptid_build (ptid_get_pid (base_ptid), 0, tid);
+    return ptid_t (base_ptid.pid (), 0, tid);
 }
 
 const char *
@@ -405,7 +405,7 @@ ravenscar_thread_target::pid_to_str (ptid_t ptid)
 {
   static char buf[30];
 
-  snprintf (buf, sizeof (buf), "Thread %#x", (int) ptid_get_tid (ptid));
+  snprintf (buf, sizeof (buf), "Thread %#x", (int) ptid.tid ());
   return buf;
 }
 
@@ -442,7 +442,7 @@ ravenscar_thread_target::store_registers (struct regcache *regcache,
       struct ravenscar_arch_ops *arch_ops
 	= gdbarch_ravenscar_ops (gdbarch);
 
-      beneath ()->store_registers (regcache, regnum);
+      arch_ops->to_store_registers (regcache, regnum);
     }
   else
     beneath ()->store_registers (regcache, regnum);
@@ -461,7 +461,7 @@ ravenscar_thread_target::prepare_to_store (struct regcache *regcache)
       struct ravenscar_arch_ops *arch_ops
 	= gdbarch_ravenscar_ops (gdbarch);
 
-      beneath ()->prepare_to_store (regcache);
+      arch_ops->to_prepare_to_store (regcache);
     }
   else
     beneath ()->prepare_to_store (regcache);
@@ -571,7 +571,7 @@ ravenscar_inferior_created (struct target_ops *target, int from_tty)
 ptid_t
 ravenscar_thread_target::get_ada_task_ptid (long lwp, long thread)
 {
-  return ptid_build (ptid_get_pid (base_ptid), 0, thread);
+  return ptid_t (base_ptid.pid (), 0, thread);
 }
 
 /* Command-list for the "set/show ravenscar" prefix command.  */

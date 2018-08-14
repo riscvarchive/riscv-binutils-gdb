@@ -1,3 +1,400 @@
+2018-08-14  H.J. Lu  <hongjiu.lu@intel.com>
+
+	* i386-dis.c (OP_E_memory): In 64-bit mode, display eiz for
+	address with the addr32 prefix and without base nor index
+	registers.
+
+2018-08-11  H.J. Lu  <hongjiu.lu@intel.com>
+
+	* i386-gen.c (cpu_flag_init): Add CpuCMOV and CpuFXSR to
+	CPU_I686_FLAGS.  Add CPU_CMOV_FLAGS, CPU_FXSR_FLAGS,
+	CPU_ANY_CMOV_FLAGS and CPU_ANY_FXSR_FLAGS.
+	(cpu_flags): Add CpuCMOV and CpuFXSR.
+	* i386-opc.tbl: Replace Cpu686 with CpuFXSR on fxsave, fxsave64,
+	fxrstor and fxrstor64.  Replace Cpu686 with CpuCMOV on cmovCC.
+	* i386-init.h: Regenerated.
+	* i386-tbl.h: Likewise.
+
+2018-08-06  Claudiu Zissulescu  <claziss@synopsys.com>
+
+	* arc-regs.h: Update auxiliary registers.
+
+2018-08-06  Jan Beulich  <jbeulich@suse.com>
+
+	* i386-opc.h (RegRip, RegEip, RegEiz, RegRiz): Drop defines.
+	(RegIP, RegIZ): Define.
+	* i386-reg.tbl: Adjust comments.
+	(rip): Use Qword instead of BaseIndex. Use RegIP.
+	(eip): Use Dword instead of BaseIndex. Use RegIP.
+	(riz): Add Qword. Use RegIZ.
+	(eiz): Add Dword. Use RegIZ.
+	* i386-tbl.h: Re-generate.
+
+2018-08-03  Jan Beulich  <jbeulich@suse.com>
+
+	* i386-opc.tbl (pmovsxbw, pmovsxdq, pmovsxwd, pmovzxbw,
+	pmovzxdq, pmovzxwd, vpmovsxbw, vpmovsxdq, vpmovsxwd, vpmovzxbw,
+	vpmovzxdq, vpmovzxwd): Remove NoRex64.
+	* i386-tbl.h: Re-generate.
+
+2018-08-03  Jan Beulich  <jbeulich@suse.com>
+
+	* i386-gen.c (operand_types): Remove Mem field.
+	* i386-opc.h (union i386_operand_type): Remove mem field.
+	* i386-init.h, i386-tbl.h: Re-generate.
+
+2018-08-01  Alan Modra  <amodra@gmail.com>
+
+	* po/POTFILES.in: Regenerate.
+
+2018-07-31  Nick Clifton  <nickc@redhat.com>
+
+	* po/sv.po: Updated Swedish translation.
+
+2018-07-31  Jan Beulich  <jbeulich@suse.com>
+
+	* i386-opc.tbl (kandnd, kandnq, kxord, kxorq): Add Optimize.
+	* i386-init.h, i386-tbl.h: Re-generate.
+
+2018-07-31  Jan Beulich  <jbeulich@suse.com>
+
+	* i386-opc.h (ZEROING_MASKING) Rename to ...
+	(DYNAMIC_MASKING): ... this. Adjust comment.
+	* i386-opc.tbl (MaskingMorZ): Define.
+	(vcompresspd, vcompressps, vcvtps2ph, vextractf32x4,
+	vextractf32x8, vextractf64x2, vextractf64x4, vextracti32x4,
+	vextracti32x8, vextracti64x2, vextracti64x4, vmovapd, vmovaps,
+	vmovdqa32, vmovdqa64, vmovdqu8, vmovdqu16, vmovdqu32, vmovdqu64,
+	vmovupd, vmovups, vpcompressb, vpcompressw, vpcompressd,
+	vpcompressq, vpmovdb, vpmovdw, vpmovqb, vpmovqd, vpmovqw,
+	vpmovsdb, vpmovsdw, vpmovsqb, vpmovsqd, vpmovsqw, vpmovswb,
+	vpmovusdb, vpmovusdw, vpmovusqb, vpmovusqd, vpmovusqw,
+	vpmovuswb, vpmovwb): Fold AVX512 register and memory forms.
+
+2018-07-31  Jan Beulich  <jbeulich@suse.com>
+
+	* i386-opc.tbl: Use element rather than vector size for AVX512*
+	scatter/gather insns.
+	* i386-tbl.h: Re-generate.
+
+2018-07-31  Jan Beulich  <jbeulich@suse.com>
+
+	* i386-gen.c (cpu_flag_init): Drop CpuVREX uses.
+	(cpu_flags): Drop CpuVREX.
+	* i386-opc.h (CpuVREX): Delete.
+	(union i386_cpu_flags): Remove cpuvrex.
+	* i386-init.h, i386-tbl.h: Re-generate.
+
+2018-07-30  Jim Wilson  <jimw@sifive.com>
+
+	* riscv-dis.c (riscv_disassemble_insn): Set insn_type and data_size
+	fields.
+	* riscv-opc.c (riscv_opcodes): Use new INSN_* flags to annotate insns.
+
+2018-07-30  Andrew Jenner  <andrew@codesourcery.com>
+
+	* Makefile.am (TARGET_LIBOPCODES_CFILES): Add csky-dis.c.
+	* Makefile.in: Regenerated.
+	* configure.ac: Add C-SKY.
+	* configure: Regenerated.
+	* csky-dis.c: New file.
+	* csky-opc.h: New file.
+	* disassemble.c (ARCH_csky): Define.
+	(disassembler, disassemble_init_for_target): Add case for ARCH_csky.
+	* disassemble.h (print_insn_csky, csky_get_disassembler): Declare.
+
+2018-07-27  Alan Modra  <amodra@gmail.com>
+
+	* ppc-opc.c (insert_sprbat): Correct function parameter and
+	return type.
+	(extract_sprbat): Likewise, variable too.
+
+2018-07-26  Alex Chadwick  <Alex.Chadwick@cl.cam.ac.uk>
+	    Alan Modra  <amodra@gmail.com>
+
+	* ppc-dis.c (ppc_opts): Add -mgekko and -mbroadway.
+	(powerpc_init_dialect): Handle bfd_mach_ppc_750.
+	* ppc-opc.c (insert_sprbat, extract_sprbat): New functions to
+	support disjointed BAT.
+	(powerpc_operands): Allow extra bit in SPRBAT_MASK.  Add SPRGQR.
+	(XSPRGQR_MASK, GEKKO, BROADWAY): Define.
+	(powerpc_opcodes): Add 750cl extended mnemonics for spr access.
+
+2018-07-25  H.J. Lu  <hongjiu.lu@intel.com>
+	    Igor Tsimbalist  <igor.v.tsimbalist@intel.com>
+
+	* i386-gen.c (adjust_broadcast_modifier): New function.
+	(process_i386_opcode_modifier): Add an argument for operands.
+	Adjust the Broadcast value based on operands.
+	(output_i386_opcode): Pass operand_types to
+	process_i386_opcode_modifier.
+	(process_i386_opcodes): Pass NULL as operands to
+	process_i386_opcode_modifier.
+	* i386-opc.h (BYTE_BROADCAST): New.
+	(WORD_BROADCAST): Likewise.
+	(DWORD_BROADCAST): Likewise.
+	(QWORD_BROADCAST): Likewise.
+	(i386_opcode_modifier): Expand broadcast to 3 bits.
+	* i386-tbl.h: Regenerated.
+
+2018-07-24  Alan Modra  <amodra@gmail.com>
+
+	PR 23430
+	* or1k-desc.h: Regenerate.
+
+2018-07-24  Jan Beulich  <jbeulich@suse.com>
+
+	* i386-dis-evex.h (evex_table): Add %LQ to vcvtsi2ss, vcvtsi2sd,
+	vcvtusi2ss, and vcvtusi2sd.
+	* i386-opc.tbl (vcvtsi2sd, vcvtusi2sd, vcvtsi2ss, vcvtusi2ss):
+	Convert AVX512F variants to distinct CpuNo64 and Cpu64 forms.
+	* i386-tbl.h: Re-generate.
+
+2018-07-23  Claudiu Zissulescu <claziss@synopsys.com>
+
+	* arc-opc.c (extract_w6): Fix extending the sign.
+
+2018-07-23  Claudiu Zissulescu <claziss@synopsys.com>
+
+	* arc-tbl.h (vewt): Allow it for ARC EM family.
+
+2018-07-23  Alan Modra  <amodra@gmail.com>
+
+	PR 23419
+	* ppc-opc.c (powerpc_opcodes): Add mtupmc/mfupmc/mfpmc extended
+	opcode variants for mtspr/mfspr encodings.
+
+2018-07-20  Chenghua Xu  <paul.hua.gm@gmail.com>
+	    Maciej W. Rozycki  <macro@mips.com>
+
+	* mips-dis.c (mips_arch_choices): Add MMI to loongson2f and
+	loongson3a descriptors.
+	(parse_mips_ase_option): Handle -M loongson-mmi option.
+	(print_mips_disassembler_options): Document -M loongson-mmi.
+	* mips-opc.c (LMMI): New macro.
+	(mips_opcodes): Replace IL2F|IL3A marking with LMMI for MMI
+	instructions.
+
+2018-07-19  Jan Beulich  <jbeulich@suse.com>
+
+	* i386-opc.tbl (vcvtpd2dq, vcvtpd2ps, vcvttpd2dq, vcvtpd2udq,
+	vcvtqq2ps, vcvtuqq2ps): Fold 128- and 256-bit templates. Drop
+	IgnoreSize and [XYZ]MMword where applicable.
+	* i386-tbl.h: Re-generate.
+
+2018-07-19  Jan Beulich  <jbeulich@suse.com>
+
+	* i386-opc.tbl (vfpclasspd, vfpclassps): Fold.
+	(vfpclasspdz, vfpclasspsz): Drop IgnoreSize and ZmmWord.
+	(vfpclasspdx, vfpclasspsx): Drop IgnoreSize and XmmWord.
+	(vfpclasspdy, vfpclasspsy): Drop IgnoreSize and YmmWord.
+	* i386-tbl.h: Re-generate.
+
+2018-07-19  Jan Beulich  <jbeulich@suse.com>
+
+	* i386-opc.tbl: Fold AVX512IFMA, AVX512VBMI, AVX512_VPOPCNTDQ,
+	AVX512_VBMI2, AVX512_VNNI, AVX512_BITALG, GFNI, VAES, and
+	VPCLMULQDQ templates into their respective AVX512VL counterparts
+	where possible, using Disp8ShiftVL and CheckRegSize instead of
+	Evex= plus Disp8MemShift= (plus often IgnoreSize) as appropriate.
+	* i386-tbl.h: Re-generate.
+
+2018-07-19  Jan Beulich  <jbeulich@suse.com>
+
+	* i386-opc.tbl: Fold AVX512DQ templates into their respective
+	AVX512VL counterparts where possible, using Disp8ShiftVL and
+	CheckRegSize instead of Evex= plus Disp8MemShift= (plus often
+	IgnoreSize) as appropriate.
+	* i386-tbl.h: Re-generate.
+
+2018-07-19  Jan Beulich  <jbeulich@suse.com>
+
+	* i386-opc.tbl: Fold AVX512BW templates into their respective
+	AVX512VL counterparts where possible, using Disp8ShiftVL and
+	CheckRegSize instead of Evex= plus Disp8MemShift= (plus often
+	IgnoreSize) as appropriate.
+	* i386-tbl.h: Re-generate.
+
+2018-07-19  Jan Beulich  <jbeulich@suse.com>
+
+	* i386-opc.tbl: Fold AVX512CD templates into their respective
+	AVX512VL counterparts where possible, using Disp8ShiftVL and
+	CheckRegSize instead of Evex= plus Disp8MemShift= (plus often
+	IgnoreSize) as appropriate.
+	* i386-tbl.h: Re-generate.
+
+2018-07-19  Jan Beulich  <jbeulich@suse.com>
+
+	* i386-opc.h (DISP8_SHIFT_VL): New.
+	* i386-opc.tbl (Disp8ShiftVL):  Define.
+	(various): Fold AVX512VL templates into their respective
+	AVX512F counterparts where possible, using Disp8ShiftVL and
+	CheckRegSize instead of Evex= plus Disp8MemShift= (plus often
+	IgnoreSize) as appropriate.
+	* i386-tbl.h: Re-generate.
+
+2018-07-19  Jan Beulich  <jbeulich@suse.com>
+
+	* Makefile.am: Change dependencies and rule for
+	$(srcdir)/i386-init.h.
+	* Makefile.in: Re-generate.
+	* i386-gen.c (process_i386_opcodes): New local variable
+	"marker". Drop opening of input file. Recognize marker and line
+	number directives.
+	* i386-opc.tbl (OPCODE_I386_H): Define.
+	(i386-opc.h): Include it.
+	(None): Undefine.
+
+2018-07-18  H.J. Lu  <hongjiu.lu@intel.com>
+
+	PR gas/23418
+	* i386-opc.h (Byte): Update comments.
+	(Word): Likewise.
+	(Dword): Likewise.
+	(Fword): Likewise.
+	(Qword): Likewise.
+	(Tbyte): Likewise.
+	(Xmmword): Likewise.
+	(Ymmword): Likewise.
+	(Zmmword): Likewise.
+	* i386-opc.tbl: Split vcvtps2qq, vcvtps2uqq, vcvttps2qq and
+	vcvttps2uqq.
+	* i386-tbl.h: Regenerated.
+
+2018-07-12  Sudakshina Das  <sudi.das@arm.com>
+
+	* aarch64-tbl.h (aarch64_opcode_table): Add entry for
+	ssbb and pssbb and update dsb flags to F_HAS_ALIAS.
+	* aarch64-asm-2.c: Regenerate.
+	* aarch64-dis-2.c: Regenerate.
+	* aarch64-opc-2.c: Regenerate.
+
+2018-07-12  Tamar Christina  <tamar.christina@arm.com>
+
+	PR binutils/23192
+	* aarch64-tbl.h (sqdmlal, sqdmlal2, smlsl, smlsl2, sqdmlsl, sqdmlsl2,
+	mul, smull, smull2, sqdmull, sqdmull2, sqdmulh, sqrdmulh, mla, umlal,
+	umlal2, mls, umlsl, umlsl2, umull, umull2, sqdmlal, sqdmlsl, sqdmull,
+	sqdmulh, sqrdmulh): Use Em16.
+
+2018-07-11  Sudakshina Das  <sudi.das@arm.com>
+
+	* arm-dis.c (arm_opcodes): Add ssbb and pssbb and move
+	csdb together with them.
+	(thumb32_opcodes): Likewise.
+
+2018-07-11  Jan Beulich  <jbeulich@suse.com>
+
+	* i386-opc.tbl (monitor, monitorx): Add 64-bit template
+	requiring 32-bit registers as operands 2 and 3. Improve
+	comments.
+	(mwait, mwaitx): Fold templates. Improve comments.
+	OPERAND_TYPE_INOUTPORTREG.
+	* i386-tbl.h: Re-generate.
+
+2018-07-11  Jan Beulich  <jbeulich@suse.com>
+
+	* i386-gen.c (operand_type_init): Remove
+	OPERAND_TYPE_REG16_INOUTPORTREG entry and one instance of
+	OPERAND_TYPE_INOUTPORTREG.
+	* i386-init.h: Re-generate.
+
+2018-07-11  Jan Beulich  <jbeulich@suse.com>
+
+	* i386-opc.tbl (wrssd, wrussd): Add Dword.
+	(wrssq, wrussq): Add Qword.
+	* i386-tbl.h: Re-generate.
+
+2018-07-11  Jan Beulich  <jbeulich@suse.com>
+
+	* i386-opc.h: Rename OTMax to OTNum.
+	(OTNumOfUints): Adjust calculation.
+	(OTUnused): Directly alias to OTNum.
+
+2018-07-09  Maciej W. Rozycki  <macro@mips.com>
+
+	* s12z-dis.c (lea_reg_xys_opr): Rename `reg' local variable to
+	`reg_xys'.
+	(lea_reg_xys): Likewise.
+	(print_insn_loop_primitive): Rename `reg' local variable to
+	`reg_dxy'.
+
+2018-07-06  Tamar Christina  <tamar.christina@arm.com>
+
+	PR binutils/23242
+	* aarch64-tbl.h (ldarh): Fix disassembly mask.
+
+2018-07-06  Tamar Christina  <tamar.christina@arm.com>
+
+	PR binutils/23369
+	* aarch64-opc.c (aarch64_sys_regs): Make read/write csselr_el1,
+	vsesr_el2, osdtrrx_el1, osdtrtx_el1, pmsidr_el1.
+
+2018-07-02  Maciej W. Rozycki  <macro@mips.com>
+
+	PR tdep/8282
+	* mips-dis.c (mips_option_arg_t): New enumeration.
+	(mips_options): New variable.
+	(disassembler_options_mips): New function.
+	(print_mips_disassembler_options): Reimplement in terms of
+	`disassembler_options_mips'.
+	* arm-dis.c (disassembler_options_arm): Adapt to using the
+	`disasm_options_and_args_t' structure.
+	* ppc-dis.c (disassembler_options_powerpc): Likewise.
+	* s390-dis.c (disassembler_options_s390): Likewise.
+
+2018-07-02  Thomas Preud'homme  <thomas.preudhomme@arm.com>
+
+	* testsuite/ld-arm/tls-descrelax-be8.d: Add architecture version in
+	expected result.
+	* testsuite/ld-arm/tls-descrelax-v7.d: Likewise.
+	* testsuite/ld-arm/tls-longplt-lib.d: Likewise.
+	* testsuite/ld-arm/tls-longplt.d: Likewise.
+
+2018-06-29  Tamar Christina  <tamar.christina@arm.com>
+
+	PR binutils/23192
+	* aarch64-asm-2.c: Regenerate.
+	* aarch64-dis-2.c: Likewise.
+	* aarch64-opc-2.c: Likewise.
+	* aarch64-dis.c (aarch64_ext_reglane): Add AARCH64_OPND_Em16 constraint.
+	* aarch64-opc.c (operand_general_constraint_met_p,
+	aarch64_print_operand): Likewise.
+	* aarch64-tbl.h (aarch64_opcode_table): Change Em to Em16 for smlal,
+	smlal2, fmla, fmls, fmul, fmulx, sqrdmlah, sqrdlsh, fmlal, fmlsl,
+	fmlal2, fmlsl2.
+	(AARCH64_OPERANDS): Add Em2.
+
+2018-06-26  Nick Clifton  <nickc@redhat.com>
+
+	* po/uk.po: Updated Ukranian translation.
+	* po/de.po: Updated German translation.
+	* po/pt_BR.po: Updated Brazilian Portuguese translation.
+
+2018-06-26  Nick Clifton  <nickc@redhat.com>
+
+	* nfp-dis.c: Fix spelling mistake.
+
+2018-06-24  Nick Clifton  <nickc@redhat.com>
+
+	* configure: Regenerate.
+	* po/opcodes.pot: Regenerate.
+
+2018-06-24  Nick Clifton  <nickc@redhat.com>
+
+	2.31 branch created.
+
+2018-06-19  Tamar Christina  <tamar.christina@arm.com>
+
+	* aarch64-tbl.h (aarch64_opcode_table): Fix alias flag for negs
+	* aarch64-asm-2.c: Regenerate.
+	* aarch64-dis-2.c: Likewise.
+
+2018-06-21  Maciej W. Rozycki  <macro@mips.com>
+
+	* mips-dis.c (print_mips_disassembler_options): Fix a typo in
+	`-M ginv' option description.
+
 2018-06-20  Sebastian Huber  <sebastian.huber@embedded-brains.de>
 
 	PR gas/23305

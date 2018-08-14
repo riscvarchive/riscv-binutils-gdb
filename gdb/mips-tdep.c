@@ -214,6 +214,18 @@ static unsigned int mips_debug = 0;
 struct target_desc *mips_tdesc_gp32;
 struct target_desc *mips_tdesc_gp64;
 
+/* The current set of options to be passed to the disassembler.  */
+static char *mips_disassembler_options;
+
+/* Implicit disassembler options for individual ABIs.  These tell
+   libopcodes to use general-purpose register names corresponding
+   to the ABI we have selected, perhaps via a `set mips abi ...'
+   override, rather than ones inferred from the ABI set in the ELF
+   headers of the binary file selected for debugging.  */
+static const char mips_disassembler_options_o32[] = "gpr-names=32";
+static const char mips_disassembler_options_n32[] = "gpr-names=n32";
+static const char mips_disassembler_options_n64[] = "gpr-names=64";
+
 const struct mips_regnum *
 mips_regnum (struct gdbarch *gdbarch)
 {
@@ -1886,12 +1898,30 @@ micromips_next_pc (struct regcache *regcache, CORE_ADDR pc)
       switch (micromips_op (insn >> 16))
 	{
 	case 0x00: /* POOL32A: bits 000000 */
-	  if (b0s6_op (insn) == 0x3c
-				/* POOL32Axf: bits 000000 ... 111100 */
-	      && (b6s10_ext (insn) & 0x2bf) == 0x3c)
-				/* JALR, JALR.HB: 000000 000x111100 111100 */
-				/* JALRS, JALRS.HB: 000000 010x111100 111100 */
-	    pc = regcache_raw_get_signed (regcache, b0s5_reg (insn >> 16));
+	  switch (b0s6_op (insn))
+	    {
+	    case 0x3c: /* POOL32Axf: bits 000000 ... 111100 */
+	      switch (b6s10_ext (insn))
+		{
+		case 0x3c:  /* JALR:     000000 0000111100 111100 */
+		case 0x7c:  /* JALR.HB:  000000 0001111100 111100 */
+		case 0x13c: /* JALRS:    000000 0100111100 111100 */
+		case 0x17c: /* JALRS.HB: 000000 0101111100 111100 */
+		  pc = regcache_raw_get_signed (regcache,
+						b0s5_reg (insn >> 16));
+		  break;
+		case 0x22d: /* SYSCALL:  000000 1000101101 111100 */
+		  {
+		    struct gdbarch_tdep *tdep;
+
+		    tdep = gdbarch_tdep (gdbarch);
+		    if (tdep->syscall_next_pc != NULL)
+		      pc = tdep->syscall_next_pc (get_current_frame ());
+		  }
+		  break;
+		}
+	      break;
+	    }
 	  break;
 
 	case 0x10: /* POOL32I: bits 010000 */
@@ -6990,38 +7020,7 @@ gdb_print_insn_mips (bfd_vma memaddr, struct disassemble_info *info)
   memaddr &= (info->mach == bfd_mach_mips16
 	      || info->mach == bfd_mach_mips_micromips) ? ~1 : ~3;
 
-  /* Set the disassembler options.  */
-  if (!info->disassembler_options)
-    /* This string is not recognized explicitly by the disassembler,
-       but it tells the disassembler to not try to guess the ABI from
-       the bfd elf headers, such that, if the user overrides the ABI
-       of a program linked as NewABI, the disassembly will follow the
-       register naming conventions specified by the user.  */
-    info->disassembler_options = "gpr-names=32";
-
   return default_print_insn (memaddr, info);
-}
-
-static int
-gdb_print_insn_mips_n32 (bfd_vma memaddr, struct disassemble_info *info)
-{
-  /* Set up the disassembler info, so that we get the right
-     register names from libopcodes.  */
-  info->disassembler_options = "gpr-names=n32";
-  info->flavour = bfd_target_elf_flavour;
-
-  return gdb_print_insn_mips (memaddr, info);
-}
-
-static int
-gdb_print_insn_mips_n64 (bfd_vma memaddr, struct disassemble_info *info)
-{
-  /* Set up the disassembler info, so that we get the right
-     register names from libopcodes.  */
-  info->disassembler_options = "gpr-names=64";
-  info->flavour = bfd_target_elf_flavour;
-
-  return gdb_print_insn_mips (memaddr, info);
 }
 
 /* Implement the breakpoint_kind_from_pc gdbarch method.  */
@@ -8727,12 +8726,19 @@ mips_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
 
   set_gdbarch_print_registers_info (gdbarch, mips_print_registers_info);
 
-  if (mips_abi == MIPS_ABI_N32)
-    set_gdbarch_print_insn (gdbarch, gdb_print_insn_mips_n32);
-  else if (mips_abi == MIPS_ABI_N64)
-    set_gdbarch_print_insn (gdbarch, gdb_print_insn_mips_n64);
+  set_gdbarch_print_insn (gdbarch, gdb_print_insn_mips);
+  if (mips_abi == MIPS_ABI_N64)
+    set_gdbarch_disassembler_options_implicit
+      (gdbarch, (const char *) mips_disassembler_options_n64);
+  else if (mips_abi == MIPS_ABI_N32)
+    set_gdbarch_disassembler_options_implicit
+      (gdbarch, (const char *) mips_disassembler_options_n32);
   else
-    set_gdbarch_print_insn (gdbarch, gdb_print_insn_mips);
+    set_gdbarch_disassembler_options_implicit
+      (gdbarch, (const char *) mips_disassembler_options_o32);
+  set_gdbarch_disassembler_options (gdbarch, &mips_disassembler_options);
+  set_gdbarch_valid_disassembler_options (gdbarch,
+					  disassembler_options_mips ());
 
   /* FIXME: cagney/2003-08-29: The macros target_have_steppable_watchpoint,
      HAVE_NONSTEPPABLE_WATCHPOINT, and target_have_continuable_watchpoint

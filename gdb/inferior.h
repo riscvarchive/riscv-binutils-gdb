@@ -84,7 +84,7 @@ extern void set_inferior_io_terminal (const char *terminal_name);
 extern const char *get_inferior_io_terminal (void);
 
 /* Collected pid, tid, etc. of the debugged inferior.  When there's
-   no inferior, ptid_get_pid (inferior_ptid) will be 0.  */
+   no inferior, inferior_ptid.pid () will be 0.  */
 
 extern ptid_t inferior_ptid;
 
@@ -177,7 +177,7 @@ extern void delete_longjmp_breakpoint_cleanup (void *arg);
 
 extern void detach_command (const char *, int);
 
-extern void notice_new_inferior (thread_info *, int, int);
+extern void notice_new_inferior (struct thread_info *, int, int);
 
 extern struct value *get_return_value (struct value *function,
 				       struct type *value_type);
@@ -207,10 +207,6 @@ extern void prepare_execution_command (struct target_ops *target,
    The catch-exec traps expected during start-up will be one more if
    the target is started up with a shell.  */
 extern int startup_with_shell;
-
-/* Address at which inferior stopped.  */
-
-extern CORE_ADDR stop_pc;
 
 /* Nonzero if stopped due to completion of a stack dummy routine.  */
 

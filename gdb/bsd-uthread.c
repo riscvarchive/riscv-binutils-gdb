@@ -321,7 +321,7 @@ bsd_uthread_target::fetch_registers (struct regcache *regcache, int regnum)
   struct bsd_uthread_ops *uthread_ops
     = (struct bsd_uthread_ops *) gdbarch_data (gdbarch, bsd_uthread_data);
   ptid_t ptid = regcache->ptid ();
-  CORE_ADDR addr = ptid_get_tid (ptid);
+  CORE_ADDR addr = ptid.tid ();
   CORE_ADDR active_addr;
   scoped_restore save_inferior_ptid = make_scoped_restore (&inferior_ptid);
 
@@ -353,7 +353,7 @@ bsd_uthread_target::store_registers (struct regcache *regcache, int regnum)
   struct bsd_uthread_ops *uthread_ops
     = (struct bsd_uthread_ops *) gdbarch_data (gdbarch, bsd_uthread_data);
   ptid_t ptid = regcache->ptid ();
-  CORE_ADDR addr = ptid_get_tid (ptid);
+  CORE_ADDR addr = ptid.tid ();
   CORE_ADDR active_addr;
   scoped_restore save_inferior_ptid = make_scoped_restore (&inferior_ptid);
 
@@ -407,15 +407,15 @@ bsd_uthread_target::wait (ptid_t ptid, struct target_waitstatus *status,
 	{
 	  ULONGEST magic = extract_unsigned_integer (buf, 4, byte_order);
 	  if (magic == BSD_UTHREAD_PTHREAD_MAGIC)
-	    ptid = ptid_build (ptid_get_pid (ptid), 0, addr);
+	    ptid = ptid_t (ptid.pid (), 0, addr);
 	}
     }
 
   /* If INFERIOR_PTID doesn't have a tid member yet, and we now have a
      ptid with tid set, then ptid is still the initial thread of
      the process.  Notify GDB core about it.  */
-  if (ptid_get_tid (inferior_ptid) == 0
-      && ptid_get_tid (ptid) != 0 && !in_thread_list (ptid))
+  if (inferior_ptid.tid () == 0
+      && ptid.tid () != 0 && !in_thread_list (ptid))
     thread_change_ptid (inferior_ptid, ptid);
 
   /* Don't let the core see a ptid without a corresponding thread.  */
@@ -437,7 +437,7 @@ bool
 bsd_uthread_target::thread_alive (ptid_t ptid)
 {
   enum bfd_endian byte_order = gdbarch_byte_order (target_gdbarch ());
-  CORE_ADDR addr = ptid_get_tid (ptid);
+  CORE_ADDR addr = ptid.tid ();
 
   if (addr != 0)
     {
@@ -457,7 +457,7 @@ bsd_uthread_target::thread_alive (ptid_t ptid)
 void
 bsd_uthread_target::update_thread_list ()
 {
-  pid_t pid = ptid_get_pid (inferior_ptid);
+  pid_t pid = inferior_ptid.pid ();
   int offset = bsd_uthread_thread_next_offset;
   CORE_ADDR addr;
 
@@ -466,7 +466,7 @@ bsd_uthread_target::update_thread_list ()
   addr = bsd_uthread_read_memory_address (bsd_uthread_thread_list_addr);
   while (addr != 0)
     {
-      ptid_t ptid = ptid_build (pid, 0, addr);
+      ptid_t ptid = ptid_t (pid, 0, addr);
 
       thread_info *thread = find_thread_ptid (ptid);
       if (thread == nullptr || thread->state == THREAD_EXITED)
@@ -474,7 +474,7 @@ bsd_uthread_target::update_thread_list ()
 	  /* If INFERIOR_PTID doesn't have a tid member yet, then ptid
 	     is still the initial thread of the process.  Notify GDB
 	     core about it.  */
-	  if (ptid_get_tid (inferior_ptid) == 0)
+	  if (inferior_ptid.tid () == 0)
 	    thread_change_ptid (inferior_ptid, ptid);
 	  else
 	    add_thread (ptid);
@@ -516,7 +516,7 @@ const char *
 bsd_uthread_target::extra_thread_info (thread_info *info)
 {
   enum bfd_endian byte_order = gdbarch_byte_order (target_gdbarch ());
-  CORE_ADDR addr = ptid_get_tid (info->ptid);
+  CORE_ADDR addr = info->ptid.tid ();
 
   if (addr != 0)
     {
@@ -534,12 +534,12 @@ bsd_uthread_target::extra_thread_info (thread_info *info)
 const char *
 bsd_uthread_target::pid_to_str (ptid_t ptid)
 {
-  if (ptid_get_tid (ptid) != 0)
+  if (ptid.tid () != 0)
     {
       static char buf[64];
 
       xsnprintf (buf, sizeof buf, "process %d, thread 0x%lx",
-		 ptid_get_pid (ptid), ptid_get_tid (ptid));
+		 ptid.pid (), ptid.tid ());
       return buf;
     }
 

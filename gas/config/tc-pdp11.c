@@ -350,10 +350,7 @@ parse_reg (char *str, struct pdp11_code *operand)
       str += 2;
     }
   else
-    {
-      operand->error = _("Bad register name");
-      return str;
-    }
+    operand->error = _("Bad register name");
 
   return str;
 }
@@ -581,9 +578,34 @@ parse_op_noreg (char *str, struct pdp11_code *operand)
 
   if (*str == '@' || *str == '*')
     {
-      str = parse_op_no_deferred (str + 1, operand);
+      /* @(Rn) == @0(Rn): Mode 7, Indexed deferred.
+	 Check for auto-increment deferred.  */
+      if (str[1] == '('
+	  && str[2] != 0
+	  && str[3] != 0
+	  && str[4] != 0
+	  && str[5] != '+')
+        {
+	  /* Change implied to explicit index deferred.  */
+          *str = '0';
+          str = parse_op_no_deferred (str, operand);
+        }
+      else
+        {
+          /* @Rn == (Rn): Register deferred.  */
+          str = parse_reg (str + 1, operand);
+	  
+          /* Not @Rn */
+          if (operand->error)
+	    {
+	      operand->error = NULL;
+	      str = parse_op_no_deferred (str, operand);
+	    }
+        }
+
       if (operand->error)
 	return str;
+
       operand->code |= 010;
     }
   else

@@ -1187,6 +1187,41 @@ extract_spr (uint64_t insn,
   return ((insn >> 16) & 0x1f) | ((insn >> 6) & 0x3e0);
 }
 
+/* Some dialects have 8 [DI]BAT registers instead of the standard 4.  */
+#define ALLOW8_BAT (PPC_OPCODE_750)
+
+static uint64_t
+insert_sprbat (uint64_t insn,
+	       int64_t value,
+	       ppc_cpu_t dialect,
+	       const char **errmsg)
+{
+  if (value > 7
+      || (value > 3 && (dialect & ALLOW8_BAT) == 0))
+    *errmsg = _("invalid bat number");
+
+  /* If this is [di]bat4..7 then use spr 560..575, otherwise 528..543.  */
+  if (value > 3)
+    value = ((value & 3) << 6) | 1;
+  else
+    value = value << 6;
+
+  return insn | (value << 11);
+}
+
+static int64_t
+extract_sprbat (uint64_t insn,
+		ppc_cpu_t dialect,
+		int *invalid)
+{
+  uint64_t val = (insn >> 17) & 0x3;
+
+  val = val + ((insn >> 9) & 0x4);
+  if (val > 3 && (dialect & ALLOW8_BAT) == 0)
+    *invalid = 1;
+  return val;
+}
+
 /* Some dialects have 8 SPRG registers instead of the standard 4.  */
 #define ALLOW8_SPRG (PPC_OPCODE_BOOKE | PPC_OPCODE_405)
 
@@ -2305,11 +2340,16 @@ const struct powerpc_operand powerpc_operands[] =
 
   /* The BAT index number in an XFX form m[ft]ibat[lu] instruction.  */
 #define SPRBAT SPR + 1
-#define SPRBAT_MASK (0x3 << 17)
-  { 0x3, 17, NULL, NULL, 0 },
+#define SPRBAT_MASK (0xc1 << 11)
+  { 0x7, PPC_OPSHIFT_INV, insert_sprbat, extract_sprbat, PPC_OPERAND_SPR },
+
+  /* The GQR index number in an XFX form m[ft]gqr instruction.  */
+#define SPRGQR SPRBAT + 1
+#define SPRGQR_MASK (0x7 << 16)
+  { 0x7, 16, NULL, NULL, PPC_OPERAND_GQR },
 
   /* The SPRG register number in an XFX form m[ft]sprg instruction.  */
-#define SPRG SPRBAT + 1
+#define SPRG SPRGQR + 1
   { 0x1f, 16, insert_sprg, extract_sprg, PPC_OPERAND_SPR },
 
   /* The SR field in an X form instruction.  */
@@ -3366,6 +3406,10 @@ const unsigned int num_powerpc_operands = (sizeof (powerpc_operands)
 #define XSPRBAT_MASK (XSPR_MASK &~ SPRBAT_MASK)
 
 /* An XFX form instruction with the SPR field filled in except for the
+   SPRGQR field.  */
+#define XSPRGQR_MASK (XSPR_MASK &~ SPRGQR_MASK)
+
+/* An XFX form instruction with the SPR field filled in except for the
    SPRG field.  */
 #define XSPRG_MASK (XSPR_MASK & ~(0x1f << 16))
 
@@ -3480,6 +3524,8 @@ const unsigned int num_powerpc_operands = (sizeof (powerpc_operands)
 #define PPC464	PPC440
 #define PPC476	PPC_OPCODE_476
 #define PPC750	PPC_OPCODE_750
+#define GEKKO	PPC_OPCODE_750
+#define BROADWAY PPC_OPCODE_750
 #define PPC7450 PPC_OPCODE_7450
 #define PPC860	PPC_OPCODE_860
 #define PPCPS	PPC_OPCODE_PPCPS
@@ -3512,7 +3558,7 @@ const unsigned int num_powerpc_operands = (sizeof (powerpc_operands)
 #define PPCPMR	PPC_OPCODE_PMR
 #define PPCTMR  PPC_OPCODE_TMR
 #define PPCCHLK PPC_OPCODE_CACHELCK
-#define PPCRFMCI	PPC_OPCODE_RFMCI
+#define PPCRFMCI PPC_OPCODE_RFMCI
 #define E500MC  PPC_OPCODE_E500MC
 #define PPCA2	PPC_OPCODE_A2
 #define TITAN   PPC_OPCODE_TITAN
@@ -5900,6 +5946,18 @@ const struct powerpc_opcode powerpc_opcodes[] = {
 {"mfdpdr",	XSPR(31,339,630), XSPR_MASK, PPC860,	0,		{RT}},
 {"mfdpir",	XSPR(31,339,631), XSPR_MASK, PPC860,	0,		{RT}},
 {"mfimmr",	XSPR(31,339,638), XSPR_MASK, PPC860,	0,		{RT}},
+{"mfupmc1",	XSPR(31,339,771), XSPR_MASK, POWER9,	0, 		{RT}},
+{"mfpmc1",	XSPR(31,339,771), XSPR_MASK, POWER9,	0,		{RT}},
+{"mfupmc2",	XSPR(31,339,772), XSPR_MASK, POWER9,	0,		{RT}},
+{"mfpmc2",	XSPR(31,339,772), XSPR_MASK, POWER9,	0,		{RT}},
+{"mfupmc3",	XSPR(31,339,773), XSPR_MASK, POWER9,	0,		{RT}},
+{"mfpmc3",	XSPR(31,339,773), XSPR_MASK, POWER9,	0,		{RT}},
+{"mfupmc4",	XSPR(31,339,774), XSPR_MASK, POWER9,	0,		{RT}},
+{"mfpmc4",	XSPR(31,339,774), XSPR_MASK, POWER9,	0,		{RT}},
+{"mfupmc5",	XSPR(31,339,775), XSPR_MASK, POWER9,	0,		{RT}},
+{"mfpmc5",	XSPR(31,339,775), XSPR_MASK, POWER9,	0,		{RT}},
+{"mfupmc6",	XSPR(31,339,776), XSPR_MASK, POWER9,	0,		{RT}},
+{"mfpmc6",	XSPR(31,339,776), XSPR_MASK, POWER9,	0,		{RT}},
 {"mfmi_ctr",	XSPR(31,339,784), XSPR_MASK, PPC860,	0,		{RT}},
 {"mfmi_ap",	XSPR(31,339,786), XSPR_MASK, PPC860,	0,		{RT}},
 {"mfmi_epn",	XSPR(31,339,787), XSPR_MASK, PPC860,	0,		{RT}},
@@ -5927,6 +5985,11 @@ const struct powerpc_opcode powerpc_opcodes[] = {
 {"mfccr1",	XSPR(31,339,888), XSPR_MASK, TITAN,	0,		{RT}},
 {"mfppr",	XSPR(31,339,896), XSPR_MASK, POWER7,	0,		{RT}},
 {"mfppr32",	XSPR(31,339,898), XSPR_MASK, POWER7,	0,		{RT}},
+{"mfgqr",	XSPR(31,339,912), XSPRGQR_MASK, PPCPS,	0,		{RT, SPRGQR}},
+{"mfhid2",	XSPR(31,339,920), XSPR_MASK, GEKKO,	0,		{RT}},
+{"mfwpar",	XSPR(31,339,921), XSPR_MASK, GEKKO,	0,		{RT}},
+{"mfdmau",	XSPR(31,339,922), XSPR_MASK, GEKKO,	0,		{RT}},
+{"mfdmal",	XSPR(31,339,923), XSPR_MASK, GEKKO,	0,		{RT}},
 {"mfrstcfg",	XSPR(31,339,923), XSPR_MASK, TITAN,	0,		{RT}},
 {"mfdcdbtrl",	XSPR(31,339,924), XSPR_MASK, TITAN,	0,		{RT}},
 {"mfdcdbtrh",	XSPR(31,339,925), XSPR_MASK, TITAN,	0,		{RT}},
@@ -5971,10 +6034,15 @@ const struct powerpc_opcode powerpc_opcodes[] = {
 {"mfsrr2",	XSPR(31,339,990), XSPR_MASK, PPC403,	0,		{RT}},
 {"mfsrr3",	XSPR(31,339,991), XSPR_MASK, PPC403,	0,		{RT}},
 {"mfdbsr",	XSPR(31,339,1008), XSPR_MASK, PPC403,	0,		{RT}},
+{"mfhid0",	XSPR(31,339,1008), XSPR_MASK, GEKKO,	0,		{RT}},
+{"mfhid1",	XSPR(31,339,1009), XSPR_MASK, GEKKO,	0,		{RT}},
 {"mfdbcr0",	XSPR(31,339,1010), XSPR_MASK, PPC405,	0,		{RT}},
+{"mfiabr",	XSPR(31,339,1010), XSPR_MASK, GEKKO,	0,		{RT}},
+{"mfhid4",	XSPR(31,339,1011), XSPR_MASK, BROADWAY,	0,		{RT}},
 {"mfdbdr",	XSPR(31,339,1011), XSPR_MASK, TITAN,	0,		{RS}},
 {"mfiac1",	XSPR(31,339,1012), XSPR_MASK, PPC403,	0,		{RT}},
 {"mfiac2",	XSPR(31,339,1013), XSPR_MASK, PPC403,	0,		{RT}},
+{"mfdabr",	XSPR(31,339,1013), XSPR_MASK, PPC750,	0,		{RT}},
 {"mfdac1",	XSPR(31,339,1014), XSPR_MASK, PPC403,	0,		{RT}},
 {"mfdac2",	XSPR(31,339,1015), XSPR_MASK, PPC403,	0,		{RT}},
 {"mfl2cr",	XSPR(31,339,1017), XSPR_MASK, PPC750,	0,		{RT}},
@@ -6243,6 +6311,12 @@ const struct powerpc_opcode powerpc_opcodes[] = {
 {"mtmcsrr0",	XSPR(31,467,570), XSPR_MASK, PPCRFMCI,	0,		{RS}},
 {"mtmcsrr1",	XSPR(31,467,571), XSPR_MASK, PPCRFMCI,	0,		{RS}},
 {"mtmcsr",	XSPR(31,467,572), XSPR_MASK, PPCRFMCI,	0,		{RS}},
+{"mtupmc1",	XSPR(31,467,771), XSPR_MASK, POWER9,	0,		{RS}},
+{"mtupmc2",	XSPR(31,467,772), XSPR_MASK, POWER9,	0,		{RS}},
+{"mtupmc3",	XSPR(31,467,773), XSPR_MASK, POWER9,	0,		{RS}},
+{"mtupmc4",	XSPR(31,467,774), XSPR_MASK, POWER9,	0,		{RS}},
+{"mtupmc5",	XSPR(31,467,775), XSPR_MASK, POWER9,	0,		{RS}},
+{"mtupmc6",	XSPR(31,467,776), XSPR_MASK, POWER9,	0,		{RS}},
 {"mtivndx",	XSPR(31,467,880), XSPR_MASK, TITAN,	0,		{RS}},
 {"mtdvndx",	XSPR(31,467,881), XSPR_MASK, TITAN,	0,		{RS}},
 {"mtivlim",	XSPR(31,467,882), XSPR_MASK, TITAN,	0,		{RS}},
@@ -6251,6 +6325,11 @@ const struct powerpc_opcode powerpc_opcodes[] = {
 {"mtccr1",	XSPR(31,467,888), XSPR_MASK, TITAN,	0,		{RS}},
 {"mtppr",	XSPR(31,467,896), XSPR_MASK, POWER7,	0,		{RS}},
 {"mtppr32",	XSPR(31,467,898), XSPR_MASK, POWER7,	0,		{RS}},
+{"mtgqr",	XSPR(31,467,912), XSPRGQR_MASK, PPCPS,	0,		{SPRGQR, RS}},
+{"mthid2",	XSPR(31,467,920), XSPR_MASK, GEKKO,	0,		{RS}},
+{"mtwpar",	XSPR(31,467,921), XSPR_MASK, GEKKO,	0,		{RS}},
+{"mtdmau",	XSPR(31,467,922), XSPR_MASK, GEKKO,	0,		{RS}},
+{"mtdmal",	XSPR(31,467,923), XSPR_MASK, GEKKO,	0,		{RS}},
 {"mtummcr0",	XSPR(31,467,936), XSPR_MASK, PPC750,	0,		{RS}},
 {"mtupmc1",	XSPR(31,467,937), XSPR_MASK, PPC750,	0,		{RS}},
 {"mtupmc2",	XSPR(31,467,938), XSPR_MASK, PPC750,	0,		{RS}},
@@ -6291,10 +6370,15 @@ const struct powerpc_opcode powerpc_opcodes[] = {
 {"mtsrr2",	XSPR(31,467,990), XSPR_MASK, PPC403,	0,		{RS}},
 {"mtsrr3",	XSPR(31,467,991), XSPR_MASK, PPC403,	0,		{RS}},
 {"mtdbsr",	XSPR(31,467,1008), XSPR_MASK, PPC403,	0,		{RS}},
-{"mtdbdr",	XSPR(31,467,1011), XSPR_MASK, TITAN,	0,		{RS}},
+{"mthid0",	XSPR(31,467,1008), XSPR_MASK, GEKKO,	0,		{RS}},
+{"mthid1",	XSPR(31,467,1009), XSPR_MASK, GEKKO,	0,		{RS}},
 {"mtdbcr0",	XSPR(31,467,1010), XSPR_MASK, PPC405,	0,		{RS}},
+{"mtiabr",	XSPR(31,467,1010), XSPR_MASK, GEKKO,	0,		{RS}},
+{"mthid4",	XSPR(31,467,1011), XSPR_MASK, BROADWAY,	0,		{RS}},
+{"mtdbdr",	XSPR(31,467,1011), XSPR_MASK, TITAN,	0,		{RS}},
 {"mtiac1",	XSPR(31,467,1012), XSPR_MASK, PPC403,	0,		{RS}},
 {"mtiac2",	XSPR(31,467,1013), XSPR_MASK, PPC403,	0,		{RS}},
+{"mtdabr",	XSPR(31,467,1013), XSPR_MASK, PPC750,	0,		{RS}},
 {"mtdac1",	XSPR(31,467,1014), XSPR_MASK, PPC403,	0,		{RS}},
 {"mtdac2",	XSPR(31,467,1015), XSPR_MASK, PPC403,	0,		{RS}},
 {"mtl2cr",	XSPR(31,467,1017), XSPR_MASK, PPC750,	0,		{RS}},

@@ -684,7 +684,7 @@ mi_about_to_proceed (void)
 {
   /* Suppress output while calling an inferior function.  */
 
-  if (!ptid_equal (inferior_ptid, null_ptid))
+  if (inferior_ptid != null_ptid)
     {
       struct thread_info *tp = inferior_thread ();
 
@@ -968,9 +968,9 @@ mi_on_resume_1 (struct mi_interp *mi, ptid_t ptid)
 			  current_token ? current_token : "");
     }
 
-  if (ptid_get_pid (ptid) == -1)
+  if (ptid.pid () == -1)
     fprintf_unfiltered (mi->raw_stdout, "*running,thread-id=\"all\"\n");
-  else if (ptid_is_pid (ptid))
+  else if (ptid.is_pid ())
     {
       int count = 0;
       inferior *inf;
@@ -1023,7 +1023,7 @@ mi_on_resume (ptid_t ptid)
 {
   struct thread_info *tp = NULL;
 
-  if (ptid_equal (ptid, minus_one_ptid) || ptid_is_pid (ptid))
+  if (ptid == minus_one_ptid || ptid.is_pid ())
     tp = inferior_thread ();
   else
     tp = find_thread_ptid (ptid);

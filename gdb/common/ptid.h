@@ -152,48 +152,4 @@ extern ptid_t null_ptid;
 
 extern ptid_t minus_one_ptid;
 
-
-/* The following functions are kept for backwards compatibility.  The use of
-   the ptid_t methods is preferred.  */
-
-/* See ptid_t::ptid_t.  */
-
-extern ptid_t ptid_build (int pid, long lwp, long tid);
-
-/* See ptid_t::ptid_t.  */
-
-extern ptid_t pid_to_ptid (int pid);
-
-/* See ptid_t::pid.  */
-
-extern int ptid_get_pid (const ptid_t &ptid);
-
-/* See ptid_t::lwp.  */
-
-extern long ptid_get_lwp (const ptid_t &ptid);
-
-/* See ptid_t::tid.  */
-
-extern long ptid_get_tid (const ptid_t &ptid);
-
-/* See ptid_t::operator== and ptid_t::operator!=.  */
-
-extern int ptid_equal (const ptid_t &ptid1, const ptid_t &ptid2);
-
-/* See ptid_t::is_pid.  */
-
-extern int ptid_is_pid (const ptid_t &ptid);
-
-/* See ptid_t::lwp_p.  */
-
-extern int ptid_lwp_p (const ptid_t &ptid);
-
-/* See ptid_t::tid_p.  */
-
-extern int ptid_tid_p (const ptid_t &ptid);
-
-/* See ptid_t::matches.  */
-
-extern int ptid_match (const ptid_t &ptid, const ptid_t &filter);
-
 #endif

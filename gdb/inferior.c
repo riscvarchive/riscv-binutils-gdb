@@ -124,7 +124,7 @@ add_inferior (int pid)
   if (print_inferior_events)
     printf_unfiltered (_("[New inferior %d (%s)]\n"),
 		       inf->num,
-		       target_pid_to_str (pid_to_ptid (pid)));
+		       target_pid_to_str (ptid_t (pid)));
 
   return inf;
 }
@@ -141,7 +141,7 @@ delete_thread_of_inferior (struct thread_info *tp, void *data)
   struct delete_thread_of_inferior_arg *arg
     = (struct delete_thread_of_inferior_arg *) data;
 
-  if (ptid_get_pid (tp->ptid) == arg->pid)
+  if (tp->ptid.pid () == arg->pid)
     {
       if (arg->silent)
 	delete_thread_silent (tp);
@@ -232,7 +232,6 @@ exit_inferior_1 (struct inferior *inftoex, int silent)
 void
 exit_inferior (inferior *inf)
 {
-  int pid = inf->pid;
   exit_inferior_1 (inf, 0);
 }
 
@@ -250,14 +249,6 @@ exit_inferior_silent (inferior *inf)
   exit_inferior_1 (inf, 1);
 }
 
-void
-exit_inferior_num_silent (int num)
-{
-  struct inferior *inf = find_inferior_id (num);
-
-  exit_inferior_1 (inf, 1);
-}
-
 /* See inferior.h.  */
 
 void
@@ -271,7 +262,7 @@ detach_inferior (inferior *inf)
   if (print_inferior_events)
     printf_unfiltered (_("[Inferior %d (%s) detached]\n"),
 		       inf->num,
-		       target_pid_to_str (pid_to_ptid (pid)));
+		       target_pid_to_str (ptid_t (pid)));
 }
 
 void
@@ -330,7 +321,7 @@ find_inferior_pid (int pid)
 struct inferior *
 find_inferior_ptid (ptid_t ptid)
 {
-  return find_inferior_pid (ptid_get_pid (ptid));
+  return find_inferior_pid (ptid.pid ());
 }
 
 /* See inferior.h.  */
@@ -396,7 +387,7 @@ number_of_live_inferiors (void)
 	struct thread_info *tp;
 
 	ALL_NON_EXITED_THREADS (tp)
-	 if (tp && ptid_get_pid (tp->ptid) == inf->pid)
+	 if (tp && tp->ptid.pid () == inf->pid)
 	   if (target_has_execution_1 (tp->ptid))
 	     {
 	       /* Found a live thread in this inferior, go to the next
@@ -465,7 +456,7 @@ static const char *
 inferior_pid_to_str (int pid)
 {
   if (pid != 0)
-    return target_pid_to_str (pid_to_ptid (pid));
+    return target_pid_to_str (ptid_t (pid));
   else
     return _("<null>");
 }

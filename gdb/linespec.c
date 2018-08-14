@@ -1501,8 +1501,6 @@ decode_line_2 (struct linespec_state *self,
   for (i = 0; i < result->size (); ++i)
     {
       const struct linespec_canonical_name *canonical;
-      struct decode_line_2_item *item;
-
       std::string displayform;
 
       canonical = &self->canonical_names[i];
@@ -2196,6 +2194,7 @@ create_sals_line_offset (struct linespec_state *self,
 
 	    if (self->funfirstline)
 	      skip_prologue_sal (&intermediate_results[i]);
+	    intermediate_results[i].symbol = sym;
 	    add_sal_to_sals (self, &values, &intermediate_results[i],
 			     sym ? SYMBOL_NATURAL_NAME (sym) : NULL, 0);
 	  }
@@ -2224,6 +2223,7 @@ convert_address_location_to_sals (struct linespec_state *self,
   sal.pc = address;
   sal.section = find_pc_overlay (address);
   sal.explicit_pc = 1;
+  sal.symbol = find_pc_sect_containing_function (sal.pc, sal.section);
 
   std::vector<symtab_and_line> sals;
   add_sal_to_sals (self, &sals, &sal, core_addr_to_string (address), 1);

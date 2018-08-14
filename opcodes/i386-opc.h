@@ -43,6 +43,10 @@ enum
   Cpu586,
   /* i686 or better required */
   Cpu686,
+  /* CMOV Instruction support required */
+  CpuCMOV,
+  /* FXSR Instruction support required */
+  CpuFXSR,
   /* CLFLUSH Instruction support required */
   CpuClflush,
   /* NOP Instruction support required */
@@ -174,8 +178,6 @@ enum
   CpuSMAP,
   /* SHA instructions required.  */
   CpuSHA,
-  /* VREX support required  */
-  CpuVREX,
   /* CLFLUSHOPT instruction required */
   CpuClflushOpt,
   /* XSAVES/XRSTORS instruction required */
@@ -264,6 +266,8 @@ typedef union i386_cpu_flags
       unsigned int cpui486:1;
       unsigned int cpui586:1;
       unsigned int cpui686:1;
+      unsigned int cpucmov:1;
+      unsigned int cpufxsr:1;
       unsigned int cpuclflush:1;
       unsigned int cpunop:1;
       unsigned int cpusyscall:1;
@@ -329,7 +333,6 @@ typedef union i386_cpu_flags
       unsigned int cpuprfchw:1;
       unsigned int cpusmap:1;
       unsigned int cpusha:1;
-      unsigned int cpuvrex:1;
       unsigned int cpuclflushopt:1;
       unsigned int cpuxsaves:1;
       unsigned int cpuxsavec:1;
@@ -552,15 +555,26 @@ enum
   EVex,
 
   /* AVX512 masking support:
-	1: Zeroing-masking.
+	1: Zeroing or merging masking depending on operands.
 	2: Merging-masking.
 	3: Both zeroing and merging masking.
    */
-#define ZEROING_MASKING 1
+#define DYNAMIC_MASKING 1
 #define MERGING_MASKING 2
 #define BOTH_MASKING    3
   Masking,
 
+  /* AVX512 broadcast support.  The number of bytes to broadcast is
+     1 << (Broadcast - 1):
+	1: Byte broadcast.
+	2: Word broadcast.
+	3: Dword broadcast.
+	4: Qword broadcast.
+   */
+#define BYTE_BROADCAST	1
+#define WORD_BROADCAST	2
+#define DWORD_BROADCAST	3
+#define QWORD_BROADCAST	4
   Broadcast,
 
   /* Static rounding control is supported.  */
@@ -569,7 +583,8 @@ enum
   /* Supress All Exceptions is supported.  */
   SAE,
 
-  /* Copressed Disp8*N attribute.  */
+  /* Compressed Disp8*N attribute.  */
+#define DISP8_SHIFT_VL 7
   Disp8MemShift,
 
   /* Default mask isn't allowed.  */
@@ -649,7 +664,7 @@ typedef struct i386_opcode_modifier
   unsigned int noavx:1;
   unsigned int evex:3;
   unsigned int masking:2;
-  unsigned int broadcast:1;
+  unsigned int broadcast:3;
   unsigned int staticrounding:1;
   unsigned int sae:1;
   unsigned int disp8memshift:3;
@@ -736,23 +751,23 @@ enum
   RegMem,
   /* Memory.  */
   Mem,
-  /* BYTE memory. */
+  /* BYTE size. */
   Byte,
-  /* WORD memory. 2 byte */
+  /* WORD size. 2 byte */
   Word,
-  /* DWORD memory. 4 byte */
+  /* DWORD size. 4 byte */
   Dword,
-  /* FWORD memory. 6 byte */
+  /* FWORD size. 6 byte */
   Fword,
-  /* QWORD memory. 8 byte */
+  /* QWORD size. 8 byte */
   Qword,
-  /* TBYTE memory. 10 byte */
+  /* TBYTE size. 10 byte */
   Tbyte,
-  /* XMMWORD memory. */
+  /* XMMWORD size. */
   Xmmword,
-  /* YMMWORD memory. */
+  /* YMMWORD size. */
   Ymmword,
-  /* ZMMWORD memory.  */
+  /* ZMMWORD size.  */
   Zmmword,
   /* Unspecified memory size.  */
   Unspecified,
@@ -765,18 +780,18 @@ enum
   /* Bound register.  */
   RegBND,
 
-  /* The last bitfield in i386_operand_type.  */
-  OTMax
+  /* The number of bitfields in i386_operand_type.  */
+  OTNum
 };
 
 #define OTNumOfUints \
-  (OTMax / sizeof (unsigned int) / CHAR_BIT + 1)
+  ((OTNum - 1) / sizeof (unsigned int) / CHAR_BIT + 1)
 #define OTNumOfBits \
   (OTNumOfUints * sizeof (unsigned int) * CHAR_BIT)
 
 /* If you get a compiler error for zero width of the unused field,
    comment it out.  */
-#define OTUnused		(OTMax + 1)
+#define OTUnused		OTNum
 
 typedef union i386_operand_type
 {
@@ -810,7 +825,6 @@ typedef union i386_operand_type
       unsigned int jumpabsolute:1;
       unsigned int esseg:1;
       unsigned int regmem:1;
-      unsigned int mem:1;
       unsigned int byte:1;
       unsigned int word:1;
       unsigned int dword:1;
@@ -887,11 +901,9 @@ typedef struct
 #define RegRex64    0x2  /* Extended 8 bit register.  */
 #define RegVRex	    0x4  /* Extended vector register.  */
   unsigned char reg_num;
-#define RegRip	((unsigned char ) ~0)
-#define RegEip	(RegRip - 1)
+#define RegIP	((unsigned char ) ~0)
 /* EIZ and RIZ are fake index registers.  */
-#define RegEiz	(RegEip - 1)
-#define RegRiz	(RegEiz - 1)
+#define RegIZ	(RegIP - 1)
 /* FLAT is a fake segment register (Intel mode).  */
 #define RegFlat     ((unsigned char) ~0)
   signed char dw2_regnum[2];

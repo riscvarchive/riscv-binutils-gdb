@@ -71,7 +71,7 @@
 #define target_debug_print_enum_btrace_error(X) \
   target_debug_do_print (plongest (X))
 #define target_debug_print_ptid_t(X)		\
-  target_debug_do_print (plongest (ptid_get_pid (X)))
+  target_debug_do_print (plongest (X.pid ()))
 #define target_debug_print_struct_gdbarch_p(X)	\
   target_debug_do_print (gdbarch_bfd_arch_info (X)->printable_name)
 #define target_debug_print_const_gdb_byte_p(X)	\
@@ -203,10 +203,9 @@ target_debug_print_struct_target_waitstatus_p (struct target_waitstatus *status)
 static void
 target_debug_print_options (int options)
 {
-  char *str = target_options_to_string (options);
+  std::string str = target_options_to_string (options);
 
-  fputs_unfiltered (str, gdb_stdlog);
-  xfree (str);
+  fputs_unfiltered (str.c_str (), gdb_stdlog);
 }
 
 static void

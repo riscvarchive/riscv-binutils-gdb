@@ -1,3 +1,2564 @@
+2018-08-14  Jan Vrany  <jan.vrany@fit.cvut.cz>
+
+	* mi/mi-cmd-disas.c (mi_cmd_disassemble): Add -a option.
+	If used, use find_pc_partial_function to find address range
+	to disassemble.
+	* mi/mi-main.c (mi_cmd_list_features): Report
+	"data-disassemble-a-option" feature.
+	* NEWS: Mention new -data-disassemble option -a.
+
+2018-08-13  Tom Tromey  <tom@tromey.com>
+
+	* common/common-defs.h (_FORTIFY_SOURCE): Define.
+
+2018-08-13  Alan Hayward  <alan.hayward@arm.com>
+
+	* aarch64-linux-tdep.c (aarch64_linux_supply_sve_regset): New function.
+	(aarch64_linux_collect_sve_regset): Likewise.
+	(aarch64_linux_iterate_over_regset_sections): Check for SVE.
+	* regcache.h (regcache_map_entry_size): New function.
+
+2018-08-13  Alan Hayward  <alan.hayward@arm.com>
+
+	* aarch64-linux-tdep.c (SVE_HEADER_SIZE_LENGTH): Add define.
+	(SVE_HEADER_MAX_SIZE_LENGTH): Likewise.
+	(SVE_HEADER_VL_LENGTH): Likewise.
+	(SVE_HEADER_MAX_VL_LENGTH): Likewise.
+	(SVE_HEADER_FLAGS_LENGTH): Likewise.
+	(SVE_HEADER_RESERVED_LENGTH): Likewise.
+	(SVE_HEADER_SIZE_OFFSET): Likewise.
+	(SVE_HEADER_MAX_SIZE_OFFSET): Likewise.
+	(SVE_HEADER_VL_OFFSET): Likewise.
+	(SVE_HEADER_MAX_VL_OFFSET): Likewise.
+	(SVE_HEADER_FLAGS_OFFSET): Likewise.
+	(SVE_HEADER_RESERVED_OFFSET): Likewise.
+	(SVE_HEADER_SIZE): Likewise.
+	(aarch64_linux_core_read_vq): Add function.
+	(aarch64_linux_core_read_description): Check for SVE section.
+
+2018-08-13  Alan Hayward  <alan.hayward@arm.com>
+
+	* aarch64-fbsd-tdep.c
+	(aarch64_fbsd_iterate_over_regset_sections): Add supply_size and
+	collect_size.
+	* aarch64-linux-tdep.c
+	(aarch64_linux_iterate_over_regset_sections): Likewise.
+	* alpha-linux-tdep.c
+	(alpha_linux_iterate_over_regset_sections):
+	* alpha-nbsd-tdep.c
+	(alphanbsd_iterate_over_regset_sections): Likewise.
+	* amd64-fbsd-tdep.c
+	(amd64fbsd_iterate_over_regset_sections): Likewise.
+	* amd64-linux-tdep.c
+	(amd64_linux_iterate_over_regset_sections): Likewise.
+	* arm-bsd-tdep.c
+	(armbsd_iterate_over_regset_sections): Likewise.
+	* arm-fbsd-tdep.c
+	(arm_fbsd_iterate_over_regset_sections): Likewise.
+	* arm-linux-tdep.c
+	(arm_linux_iterate_over_regset_sections): Likewise.
+	* corelow.c (get_core_registers_cb): Likewise.
+	(core_target::fetch_registers): Likewise.
+	* fbsd-tdep.c (fbsd_collect_regset_section_cb): Likewise.
+	* frv-linux-tdep.c (frv_linux_iterate_over_regset_sections): Likewise.
+	* gdbarch.h (void): Regenerate.
+	* gdbarch.sh: Add supply_size and collect_size.
+	* hppa-linux-tdep.c (hppa_linux_iterate_over_regset_sections): Likewise.
+	* hppa-nbsd-tdep.c (hppanbsd_iterate_over_regset_sections): Likewise.
+	* hppa-obsd-tdep.c (hppaobsd_iterate_over_regset_sections): Likewise.
+	* i386-fbsd-tdep.c (i386fbsd_iterate_over_regset_sections): Likewise.
+	* i386-linux-tdep.c (i386_linux_iterate_over_regset_sections): Likewise.
+	* i386-tdep.c (i386_iterate_over_regset_sections): Likewise.
+	* ia64-linux-tdep.c (ia64_linux_iterate_over_regset_sections): Likewise.
+	* linux-tdep.c (linux_collect_regset_section_cb): Likewise.
+	* m32r-linux-tdep.c (m32r_linux_iterate_over_regset_sections): Likewise.
+	* m68k-bsd-tdep.c (m68kbsd_iterate_over_regset_sections): Likewise.
+	* m68k-linux-tdep.c (m68k_linux_iterate_over_regset_sections): Likewise.
+	* mips-fbsd-tdep.c (mips_fbsd_iterate_over_regset_sections): Likewise.
+	* mips-linux-tdep.c (mips_linux_iterate_over_regset_sections): Likewise.
+	* mips-nbsd-tdep.c (mipsnbsd_iterate_over_regset_sections): Likewise.
+	* mips64-obsd-tdep.c (mips64obsd_iterate_over_regset_sections): Likewise.
+	* mn10300-linux-tdep.c (am33_iterate_over_regset_sections): Likewise.
+	* nios2-linux-tdep.c (nios2_iterate_over_regset_sections): Likewise.
+	* ppc-fbsd-tdep.c (ppcfbsd_iterate_over_regset_sections): Likewise.
+	* ppc-linux-tdep.c (ppc_linux_iterate_over_regset_sections): Likewise.
+	* ppc-nbsd-tdep.c (ppcnbsd_iterate_over_regset_sections): Likewise.
+	* ppc-obsd-tdep.c (ppcobsd_iterate_over_regset_sections): Likewise.
+	* riscv-linux-tdep.c (riscv_linux_iterate_over_regset_sections): Likewise.
+	* rs6000-aix-tdep.c (rs6000_aix_iterate_over_regset_sections): Likewise.
+	* s390-linux-tdep.c (s390_iterate_over_regset_sections): Likewise.
+	* score-tdep.c (score7_linux_iterate_over_regset_sections): Likewise.
+	* sh-tdep.c (sh_iterate_over_regset_sections): Likewise.
+	* sparc-tdep.c (sparc_iterate_over_regset_sections): Likewise.
+	* tilegx-linux-tdep.c (tilegx_iterate_over_regset_sections): Likewise.
+	* vax-tdep.c (vax_iterate_over_regset_sections): Likewise.
+	* xtensa-tdep.c (xtensa_iterate_over_regset_sections): Likewise.
+
+2018-08-10  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* nat/linux-osdata.c (commandline_from_pid): Replace xstrprintf
+	with string_printf.
+
+2018-08-10  Keith Seitz  <keiths@redhat.com>
+
+	* compile/compile-c-support.c (add_code_header, add_code_footer):
+	Move into policy class.
+	(c_push_user_expression, pop_user_expression_nop)
+	(c_add_code_header, c_add_code_footer, c_add_input): New policy class.
+	(compile_program): New host class.
+	(c_compile_program): New typedef.
+	(c_compute_porgram): Use c_compile_program.
+
+2018-08-10  Keith Seitz  <keiths@redhat.com>
+
+	* compile/compile-internal.h (compile_instance::~compile_instance):
+	Remove calls to htab_delete.
+	<m_type_map, m_symbol_err_map>: Switch type to htab_up.
+	* compile.c (compile_instance::compile_instance): Initialize
+	htab unique pointers.
+	(compile_instance::get_cached_type, compile_instance::insert_type)
+	(compile_instance::error_symbol_once): Update for unique_ptr.
+
+2018-08-10  Keith Seitz  <keiths@redhat.com>
+
+	* compile/compile-c-symbols.c (struct symbol_error)
+	(hash_symbol_error, eq_symbol_error, del_symbol_error)
+	(compile_instance::insert_symbol_error)
+	(compile_instance::error_symbol_once): Move to ...
+	* compile/compile.c: ... here.
+
+2018-08-10  Keith Seitz  <keiths@redhat.com>
+
+	* compile/compile-c-support.c (c_get_compile_context): Use `new'
+	instead of `new_compile_instance'.
+	* compile/compile-c-symbols.c (compile_instance::insert_symbol_error):
+	Update description.
+	If the symbol error map is not initialized, create it.
+	(generate_c_for_for_one_symbol): Do not check/initialize
+	the symbol error map.
+	* compile/compile-c-types.c (compile_c_instance): Make a class.
+	Update all callers.
+	(compile_instance::compile_instance): Initialize the type cache.
+	(get_cached_type): New function.
+	(insert_type): Update description.
+	(compile_c_instance::m_default_cflags): Define.
+	(convert_type): Update description.  Use get_cached_type.
+	(delete_instance): Moved to destructor.
+	(new_compile_instance): Moved to constructor.
+	* compile/compile-c.h (compile_c_instance): Make class inheriting
+	from compile_instance.
+	<base>: Remove field.
+	<type_map, symbol_err_map>: Move to base class.
+	<c_plugin>: Rename to `m_plugin' and remove pointer type.
+	* compile/compile-internal.h (compile_instance): Make class.
+	<type_map_t, symbol_err_map_t>: Define.
+	<fe>: Rename to `m_gcc_fe'.
+	<scope, block, gcc_target_options>: Add `m_' prefix.
+	<m_type_map, m_symbol_err_map>: New fields, moved from
+	compile_c_instance.
+	<destroy>: Remove.
+	(convert_type, new_compile_instance): Remove.
+	* compile/compile.c (cleanup_compile_instance): Remove.
+	(compile_to_object): Use unique_ptr to eliminate cleanups.
+	(compile_instance::set_print_callback, compile_instance::version)
+	(compile_instance::set_verbose)
+	(compile_instance::set_driver_filename)
+	(compile_instance::set_triplet_regexp)
+	(compile_instance::set_arguments)
+	(compile_instance::set_source_file)
+	(compile_instance::compile): Define.
+
+2018-08-10  Keith Seitz  <keiths@redhat.com>
+
+	* Makefile.in (HFILES_NO_SRCDIR): Add compile/gcc-c-plugin.h.
+	* compile/compile-c-types.c: Define GCC_METHODN macros and include
+	gcc-c-fe.def to define C plugin.
+	(delete_instance): Delete `c_plugin'.
+	(new_compile_instance): Initialize `c_plugin'.
+	* compile/compile-c.h: Include gcc_c_plugin.h.
+	(struct compile_c_instance) <c_plugin>: New member.
+	* gcc-c-plugin.h: New file.
+	Update all callers with API change.
+
+2018-08-10  Keith Seitz  <keiths@redhat.com>
+
+	* Makefile.in (SUBDIR_GCC_COMPILE_SRCS): Move header files ...
+	(HFILES_NO_SRCDIR): ... to here.
+	Add compile-internal.h and compile-c.h.
+	* compile/compile-c-support.c: Include compile-c.h.
+	* compile/compile-c-symbols.c: Include compile-c.h.
+	(generate_c_for_variable_locations): Update comment.
+	* compile/compile-c-types.c: Include compile-c.h.
+	* compile/compile-c.h: New file -- moved C language declarations
+	from other files here.
+	* compile/compile-internal.h: Do not include hashtab.h or
+	common/enum-flags.h.
+	(gcc_qualifiers_flags, struct compile_c_instance, C_CTX)
+	(gcc_convert_symbol, gcc_symbol_address)
+	(generate_c_for_variable_locations, c_get_mode_for_size)
+	(c_get_range_decl_name): Definitions moved to compile-c.h.
+	* compile/compile-loc2c.c: Include compile-c.h.
+
+2018-08-10  Keith Seitz  <keiths@redhat.com>
+
+	* compile/compile-c-symbols.c (symbol_substitution_name): Rename to ...
+	(c_symbol_substitution_name): ... this.
+	Update all callers.
+
+2018-08-10  Keith Seitz  <keiths@redhat.com>
+
+	* compile/compile-c-support.c (c_compute_program): Use
+	unique_xmalloc_ptr to eliminate cleanup.
+	* compile/compile-c-symbols.c (generate_c_for_variable_locations):
+	Return a unique_xmalloc_ptr and eliminate cleanup.
+	* compile/compile-internal.h (generate_c_for_variable_locations):
+	Return unique_xmalloc_ptr and update description.
+
+2018-08-10  Alan Hayward  <alan.hayward@arm.com>
+
+	* corelow.c (core_target::get_core_register_section): Rename
+	min_size to section_min_size.
+
+2018-08-09  Jim Wilson  <jimw@sifive.com>
+
+	* Makefile.in (ALL_TARGET_OBS): Add riscv-linux-tdep.c.
+	(ALLDEPFILES): Add riscv-linux-nat.c, and riscv-linux-tdep.c.
+	* NEWS: Mention new GNU/Linux RISC-V target.
+	* configure.host: Add riscv*-*-linux*.
+	* configure.nat: Add riscv*.
+	* configure.tgt: Add riscv*-*-linux*.
+	* riscv-linux-nat.c: New file.
+	* riscv-linux-tdep.c: New file.
+
+2018-08-09  Andrew Burgess  <andrew.burgess@embecosm.com>
+
+	* infrun.c (resume): Make static, add forward declaration.
+	(proceed): Update header comment.
+	* infrun.h (resume): Delete declaration.
+
+2018-08-09  Tom Tromey  <tom@tromey.com>
+
+	* riscv-tdep.h: Minor formatting fixes.
+
+2018-08-09  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* common/scoped_mmap.c (mmap_file): Silence ARI warning.
+	* dwarf-index-cache.c (create_dir_and_check): Likewise.
+	(test_mkdir_recursive): Likewise.
+	* dwarf-index-write.c (write_psymtabs_to_index): Likewise.
+
+2018-08-09  Andrew Burgess  <andrew.burgess@embecosm.com>
+
+	* valarith.c (value_subscripted_rvalue): If an array is not in
+	memory, and we don't know the upper bound, then we can't know that
+	the requested element exists or not.
+
+2018-08-08  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* target.c (str_comma_list_concat_elem): Fix typo in comment.
+	(target_options_to_string): Add comment.
+
+2018-08-08  Tom Tromey  <tom@tromey.com>
+
+	* unittests/scoped_mmap-selftests.c: Check result of "write".
+
+2018-08-08  Jim Wilson  <jimw@sifive.com>
+
+	* riscv-tdep.c (enum opcode): Add jump, branch, lr, and sc opcodes.
+	(decode_register_index_short): New.
+	(decode_j_type_insn, decode_cj_type_insn): New.
+	(decode_b_type_insn, decode_cb_type_insn): New.
+	(riscv_insn::decode): Add support for jumps, branches, lr, and sc.  New
+	local xlen.  Check xlen when decoding ambiguous compressed insns.  In
+	compressed decode, use is_c_lui_insn instead of is_lui_insn, and
+	is_c_sw_insn instead of is_sw_insn.
+	(riscv_next_pc, riscv_next_pc_atomic_sequence): New.
+	(riscv_software_single_step): New.
+	* riscv-tdep.h (riscv_software_single_step): Declare.
+
+	* riscv-tdep.c (riscv_isa_xlen): Drop static.
+	* riscv-tdep.h (riscv_isa_xlen): Add extern declaration.
+
+2018-08-08  Andrew Burgess  <andrew.burgess@embecosm.com>
+
+	PR gdb/18050:
+	* target.c (dispose_inferior): Don't dispose of inferiors that are
+	already killed.
+
+2018-08-08  Szabolcs Nagy  <szabolcs.nagy@arm.com>
+
+	* remote.c (remote_target::download_tracepoint): Change char* to
+	const char*.
+
+2018-08-07  Simon Marchi  <simon.marchi@polymtl.ca>
+
+	* target.h (target_options_to_string): Return an std::string.
+	* target.c (str_comma_list_concat_elem): Return void, use
+	std::string.
+	(do_option): Likewise.
+	(target_options_to_string): Return an std::string.
+	* linux-nat.c (linux_nat_target::wait): Adjust.
+	* target-debug.h (target_debug_print_options): Adjust.
+
+2018-08-07  Tom Tromey  <tom@tromey.com>
+
+	* Makefile.in (CPPFLAGS): New variable.
+	(INTERNAL_CPPFLAGS): Use it.
+
+2018-08-07  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* NEWS: Mention the index cache.
+
+2018-08-07  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* common/pathstuff.h (get_standard_cache_dir): New.
+	* common/pathstuff.c (get_standard_cache_dir): New.
+	* build-id.h (build_id_to_string): New.
+	* dwarf-index-common.h (INDEX4_SUFFIX, INDEX5_SUFFIX,
+	DEBUG_STR_SUFFIX): Move to here.
+	* dwarf-index-write.c (INDEX4_SUFFIX, INDEX5_SUFFIX,
+	DEBUG_STR_SUFFIX): Move from there.
+	(write_psymtabs_to_index): Make non-static, add basename
+	parameter.  Write to temporary files, rename when done.
+	(save_gdb_index_command): Adjust call to
+	write_psymtabs_to_index.
+	* dwarf2read.h (dwarf2_per_objfile) <index_cache_res>: New
+	field.
+	* dwarf2read.c (dwz_file) <index_cache_res>: New field.
+	(get_gdb_index_contents_from_cache): New.
+	(get_gdb_index_contents_from_cache_dwz): New.
+	(dwarf2_initialize_objfile): Read index from cache.
+	(dwarf2_build_psymtabs): Save to index.
+	* dwarf-index-cache.h: New file.
+	* dwarf-index-cache.c: New file.
+	* dwarf-index-write.h: New file.
+
+2018-08-07  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* gnulib/aclocal.m4: Re-generate.
+	* gnulib/config.in: Re-generate.
+	* gnulib/configure: Re-generate.
+	* gnulib/import/Makefile.am: Re-generate.
+	* gnulib/import/Makefile.in: Re-generate.
+	* gnulib/import/m4/gnulib-cache.m4: Re-generate.
+	* gnulib/import/m4/gnulib-comp.m4: Re-generate.
+	* gnulib/import/m4/mkdir.m4: New file.
+	* gnulib/import/mkdir.c: New file.
+	* gnulib/update-gnulib.sh (IMPORTED_GNULIB_MODULES): Add mkdir
+	module.
+
+2018-08-07  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* Makefile.in (COMMON_SFILES): Add common/scoped_mmap.c.
+	* common/scoped_mmap.c: New file.
+	* common/scoped_mmap.h (destroy): New method.
+	(~scoped_mmap, reset): Use destroy.
+	(scoped_mmap): New move constructor.
+	(mmap_file): New declaration.
+	* unittests/scoped_mmap-selftests.c (test_normal,
+	test_invalid_filename, run_tests): New functions.
+	(_initialize_scoped_mmap_selftests): Register selftest.
+
+2018-08-07  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* dwarf2read.c (read_gdb_index_from_section): Rename to...
+	(read_gdb_index_from_buffer): ... this.  Remove section
+	parameter, add buffer parameter.
+	(get_gdb_index_contents_ftype,
+	get_gdb_index_contents_dwz_ftype): New typedefs.
+	(dwarf2_read_gdb_index): Add callback parameters to get the
+	index contents.
+	(get_gdb_index_contents_from_section): New.
+	(dwarf2_initialize_objfile): Update call to
+	dwarf2_read_gdb_index.
+
+2018-08-07  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* common/filestuff.h (gdb_fopen_cloexec): New overload.
+	(gdb_open_cloexec): Likewise.
+	* nat/linux-osdata.c (command_from_pid): Use string_printf.
+	(commandline_from_pid): Likewise.
+	(linux_xfer_osdata_threads): Likewise.
+	(linux_xfer_osdata_fds): Likewise.
+	* ada-lang.c (is_package_name): Likewise.
+	* auxv.c (procfs_xfer_auxv): Likewise.
+	* breakpoint.c (print_one_breakpoint_location): Use
+	uiout::field_fmt.
+	(print_one_catch_solib): Use string_printf.
+	* coff-pe-read.c (add_pe_exported_sym): Likewise.
+	(add_pe_forwarded_sym): Likewise.
+	* dwarf2read.c (create_type_unit_group): Likewise.
+	(build_error_marker_type): Likewise.
+	* infcall.c (get_function_name): Likewise.
+	* valprint.c (print_converted_chars_to_obstack): Likewise.
+	* xtensa-tdep.c (xtensa_register_type): Likewise.
+
+2018-08-06  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* remote.c (remote_target::download_tracepoint): Fix format
+	string errors.
+
+2018-08-06  Pedro Franco de Carvalho  <pedromfc@linux.ibm.com>
+
+	* tracefile.c: Include common/byte-vector.h.
+	(trace_save): Change type of buf to gdb::byte_vector.  Initialize
+	with trace_regblock_size if needed.  Update uses of buf.
+
+2018-08-06  Pedro Franco de Carvalho  <pedromfc@linux.ibm.com>
+
+	* tracepoint.h (collection_list) <m_regs_mask>: Change type to
+	std::vector<unsigned char>.
+	* tracepoint.c (collection_list::collection_list): Remove
+	m_regs_mask initializer from initializer list.  Resize
+	m_regs_mask using the largest remote register number.
+	(collection_list::add_remote_register): Remove size check on
+	m_regs_mask.  Use at to access element.
+	(collection_list::stringify): Change type of temp_buf to
+	gdb::char_vector.  Update uses of temp_buf.  Resize if needed to
+	stringify the register mask.  Use pack_hex_byte for the register
+	mask.
+
+2018-08-06  Pedro Franco de Carvalho  <pedromfc@linux.ibm.com>
+
+	* tracepoint.h (class collection_list) <add_register>: Remove.
+	<add_remote_register, add_ax_registers, add_local_register>:
+	Declare.
+	<add_memrange>: Add scope parameter.
+	* tracepoint.c (encode_actions_1): Likewise.
+	(collection_list::add_register): Rename to ...
+	(collection_list::add_remote_register): ... this.  Update
+	comment.
+	(collection_list::add_ax_registers, add_local_register): New
+	methods.
+	(collection_list::add_memrange): Add scope parameter.  Call
+	add_local_register instead of add_register.
+	(finalize_tracepoint_aexpr): New function.
+	(collection_list::collect_symbol): Update calls to add_memrange.
+	Call add_local_register instead of add_register.  Call
+	add_ax_registers.  Call finalize_tracepoint_aexpr.
+	(encode_actions_1): Get remote regnos for $reg action.  Call
+	add_remote_register, add_ax_registers, and add_local_register.
+	Update call to add_memrange.  Call finalize_tracepoint_aexpr.
+	(validate_actionline): Call finalize_tracepoint_aexpr.
+
+2018-08-06  Pedro Franco de Carvalho  <pedromfc@linux.ibm.com>
+
+	* remote.c (remote_target::download_tracepoint): Remove BUF_SIZE.
+	Replace array buf with gdb::char_vector buf, of size
+	get_remote_packet_size ().  Replace references to buf and
+	BUF_SIZE to buf.data () and buf.size ().  Replace strcpy, strcat
+	and xsnprintf with snprintf.  Raise errors if the buffer is too
+	small.
+
+2018-08-06  Pedro Franco de Carvalho  <pedromfc@linux.ibm.com>
+
+	* remote.c (remote_target::download_tracepoint): Fix the has_more
+	predicate in the QTDP action list iteration.
+
+2018-08-06  Pedro Franco de Carvalho  <pedromfc@linux.ibm.com>
+
+	* remote.c (remote_target::download_tracepoint): Fix indentation
+	in for block.
+
+2018-08-06  Rainer Orth  <ro@CeBiTec.Uni-Bielefeld.DE>
+
+	* proc-api.c (_initialize_proc_api): Remove c, unused.
+	* procfs.c (procfs_init_inferior): Remove signals, unused.
+	(procfs_target::make_corefile_notes): Remove old_chain, fpregs,
+	unused.
+
+2018-08-06  Sergey Korolev  <s.korolev@ndmsystems.com>
+	    Andrew Burgess  <andrew.burgess@embecosm.com>
+
+	* linux-nat.c (linux_nat_target::follow_fork): Avoid using
+	'W_STOPCODE (0)' as this could be ambiguous.
+
+2018-08-03  Sergio Durigan Junior  <sergiodj@redhat.com>
+
+	* ser-tcp.c (net_open): Fix thinko when deciding whether to
+	disable TCP's Nagle algorithm (use "ai_protocol" instead of
+	"ai_socktype").
+
+2018-08-02  Tom Tromey  <tom@tromey.com>
+
+	PR symtab/16842.
+	* dwarf2read.c (read_func_scope): Set symtab on template parameter
+	symbols.
+	(process_structure_scope): Likewise.
+
+2018-08-02  Xavier Roirand  <roirand@adacore.com>
+
+	PR gdb/22629:
+        * darwin-nat.c (darwin_kill_inferior): Fix handling of
+        kill inferior.
+
+2018-08-02  Tom Tromey  <tom@tromey.com>
+
+	* darwin-nat.c (find_inferior_task_it, darwin_find_thread)
+	(darwin_suspend_inferior, darwin_resume_inferior)
+	(darwin_decode_notify_message, darwin_resume_inferior_threads)
+	(darwin_check_new_threads): Check result of get_darwin_inferior.
+
+2018-07-31  Joel Brobecker  <brobecker@adacore.com>
+
+	GDB 8.1.1 released.
+
+2018-07-31  Jan Vrany  <jan.vrany@fit.cvut.cz>
+
+	* varobj.c (varobj_get_path_expr_parent): Report an error if
+	parent is a dynamic varobj.
+
+2018-07-31  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* gnulib/aclocal.m4: Re-generate.
+	* gnulib/config.in: Re-generate.
+	* gnulib/configure: Re-generate.
+	* gnulib/import/Makefile.in: Re-generate.
+	* gnulib/import/m4/gnulib-comp.m4: Re-generate.
+	* gnulib/import/m4/onceonly.m4: Re-generate.
+
+2018-07-31  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* target-descriptions.c (struct xml_test_tdesc): New.
+	(xml_tdesc): Change type to std::vector<xml_test_tdesc>.
+	(record_xml_tdesc): Update.
+	(maintenance_check_xml_descriptions): Update.
+	* target-descriptions.h (record_xml_tdesc): Update comment.
+
+2018-07-30  Andrew Burgess  <andrew.burgess@embecosm.com>
+
+	* eval.c (evaluate_subexp_for_sizeof): Check for array type before
+	checking array bounds are defined.
+
+2018-07-30  Tom Tromey  <tom@tromey.com>
+
+	* nat/linux-osdata.c (pid_pgid_entry::operator<): Fix
+	irreflexivity violation.
+
+2018-07-30  Tom Tromey  <tom@tromey.com>
+
+	* cli/cli-decode.c (lookup_cmd): Remove lint code.
+	* value.c (unpack_long): Remove lint code.
+	* valops.c (value_ind): Remove lint code.
+	* valarith.c (value_x_binop, value_x_unop, value_equal)
+	(value_pos): Remove lint code.
+
+2018-07-28  Tom de Vries  <tdevries@suse.de>
+
+	* eval.c (evaluate_subexp_for_sizeof): Interpret size of dynamic type
+	with undefined upper bound as <optimized out>.
+
+2018-07-27  Sergio Durigan Junior  <sergiodj@redhat.com>
+
+	* gcore.in: Rename variable "name" to "prefix".  Expand
+	"usage" text.
+
+2018-07-14  Jon Turney  <jon.turney@dronecode.org.uk>
+
+	* windows-nat.c (windows_nat_target::create_inferior): Update to
+	call close() in global namespace.
+
+2018-07-26  Tom Tromey  <tom@tromey.com>
+
+	* dwarf-index-write.c (add_address_entry): Don't add objfile
+	offsets.
+	* dbxread.c (find_stab_function): Rename from
+	find_stab_function_addr.  Return a bound_minimal_symbol.
+	(read_dbx_symtab): Use raw_text_low, raw_text_high.
+	Don't add objfile offsets.
+	(end_psymtab): Use raw_text_low, raw_text_high,
+	MSYMBOL_VALUE_RAW_ADDRESS.
+	(read_ofile_symtab): Update.
+	(process_one_symbol): Update.
+	* dwarf2read.c (create_addrmap_from_index): Don't add objfile
+	offsets.
+	(dw2_relocate): Remove.
+	(dw2_find_pc_sect_symtab): Bias PC by the text offset before
+	searching addrmap.
+	(dwarf2_gdb_index_functions, dwarf2_debug_names_functions):
+	Update.
+	(process_psymtab_comp_unit_reader, add_partial_symbol)
+	(add_partial_subprogram, dwarf2_ranges_read): Update.
+	(load_partial_dies): Update.
+	(add_address_entry): Don't add objfile offsets.
+	(dwarf2_build_include_psymtabs): Update.
+	(create_addrmap_from_aranges): Don't add objfile offsets.
+	(dw2_find_pc_sect_compunit_symtab): Update.
+	* mdebugread.c (parse_symbol): Don't add objfile offsets.
+	(parse_lines): Remove 'pst' parameter, replace with 'textlow'.
+	Update.
+	(parse_partial_symbols): Don't add objfile offsets.  Use
+	raw_text_low, raw_text_high.  Update.
+	(handle_psymbol_enumerators, psymtab_to_symtab_1): Update.
+	* objfiles.c (objfile_relocate1): Don't relocate psymtabs_addrmap
+	or call 'relocate' quick function.  Clear psymbol_map.
+	* psympriv.h (struct partial_symbol) <address>: Add section
+	offset.
+	<set_unrelocated_address>: Rename from set_address.
+	<raw_text_low, raw_text_high>: New methods.
+	<text_low, text_high>: Add objfile parameter.
+	(add_psymbol_to_bcache): Add 'section' parameter.  Call
+	set_unrelocated_address.
+	* psymtab.c (find_pc_sect_psymtab_closer, find_pc_sect_psymtab)
+	(find_pc_psymbol): Update.
+	(fixup_psymbol_section, relocate_psymtabs): Remove.
+	(dump_psymtab, psym_functions): Update.
+	(add_psymbol_to_bcache, add_psymbol_to_list): Add 'section'
+	parameter.
+	(maintenance_info_psymtabs, maintenance_check_psymtabs): Update.
+	(start_psymtab_common): Update.
+	* symfile-debug.c (debug_qf_relocate): Remove.
+	(debug_sym_quick_functions): Update.
+	* symfile.h (struct quick_symbol_functions) <relocate>: Remove.
+	* xcoffread.c (scan_xcoff_symtab): Don't add objfile offsets.
+	Update.
+
+2018-07-26  Tom Tromey  <tromey@redhat.com>
+
+	* dbxread.c (end_psymtab): Use text_high_valid and
+	text_low_valid.
+	* mdebugread.c (parse_partial_symbols): Use text_low_valid.
+	(psymtab_to_symtab_1): Use text_high_valid and text_low_valid.
+	* psympriv.h (struct partial_symtab) <m_text_low, m_text_high>:
+	Update comment.
+	<text_low_valid, text_high_valid>: New fields.
+	<set_text_low, set_text_high>: Update.
+	* xcoffread.c (scan_xcoff_symtab): Use text_low_valid.
+
+2018-07-26  Tom Tromey  <tom@tromey.com>
+
+	* dbxread.c (read_dbx_symtab, end_psymtab, read_ofile_symtab):
+	Update.
+	* dwarf2read.c (dwarf2_create_include_psymtab): Don't initialize
+	textlow and texthigh fields.
+	(process_psymtab_comp_unit_reader, dwarf2_build_include_psymtabs):
+	Update.
+	* mdebugread.c (parse_lines, parse_partial_symbols)
+	(psymtab_to_symtab_1): Update.
+	* psympriv.h (struct partial_symtab) <m_text_low, m_text_high>:
+	Rename fields.  Update comment.  Now private.
+	<text_low, text_high, set_text_low, set_text_high>: New methods.
+	* psymtab.c (find_pc_sect_psymtab_closer, find_pc_sect_psymtab)
+	(find_pc_sect_psymbol, relocate_psymtabs, dump_psymtab)
+	(start_psymtab_common, maintenance_info_psymtabs)
+	(maintenance_check_psymtabs): Update.
+	* xcoffread.c (xcoff_end_psymtab): Don't initialize textlow and
+	texthigh fields.
+	(scan_xcoff_symtab): Update.
+
+2018-07-26  Tom Tromey  <tromey@redhat.com>
+
+	* psympriv.h (struct partial_symbol) <unrelocated_address,
+	address, set_address>: New methods.
+	* psymtab.c (find_pc_sect_psymtab_closer, find_pc_sect_psymbol)
+	(fixup_psymbol_section, relocate_psymtabs): Update.
+	(print_partial_symbols): Add 'objfile' parameter.  Update.
+	(dump_psymtab, add_psymbol_to_bcache, psym_fill_psymbol_map):
+	Update.
+
+2018-07-26  Tom Tromey  <tom@tromey.com>
+
+	* dwarf-index-write.c (write_psymbols, debug_names::insert)
+	(debug_names::write_psymbols): Update.
+	* psympriv.h (struct partial_symbol): Derive from
+	general_symbol_info.
+	<obj_section>: New method.
+	(PSYMBOL_DOMAIN, PSYMBOL_CLASS): Remove.n
+	* psymtab.c (find_pc_sect_psymtab_closer, find_pc_sect_psymtab)
+	(find_pc_sect_psymbol, fixup_psymbol_section)
+	(match_partial_symbol, lookup_partial_symbol, relocate_psymtabs)
+	(print_partial_symbols, recursively_search_psymtabs)
+	(compare_psymbols, psymbol_hash, psymbol_compare)
+	(add_psymbol_to_bcache, maintenance_check_psymtabs)
+	(psymbol_name_matches, psym_fill_psymbol_map): Update.
+
+2018-07-26  Tom Tromey  <tromey@redhat.com>
+
+	* dbxread.c (end_psymtab): Remove dead code.
+
+2018-07-26  Andrew Burgess  <andrew.burgess@embecosm.com>
+
+	* dwarf2-frame-tailcall.c (tailcall_frame_sniffer): Exit early if
+	DWARF unwinders are disabled.
+	* dwarf2-frame.c: Add dwarf2read.h include.
+	(dwarf2_frame_sniffer): Exit early if DWARF unwinders are
+	disabled.
+	(dwarf2_frame_unwinders_enabled_p): Define.
+	(show_dwarf_unwinders_enabled_p): New function.
+	(_initialize_dwarf2_frame): Register switch to control DWARF
+	unwinder use.
+	* dwarf2-frame.h (dwarf2_frame_unwinders_enabled_p): Declare.
+	* dwarf2read.c (set_dwarf_cmdlist): Remove static keyword.
+	(show_dwarf_cmdlist): Remove static keyword.
+	* dwarf2read.h (set_dwarf_cmdlist): Declare.
+	(show_dwarf_cmdlist): Declare.
+	* NEWS: Document new feature.
+
+2018-07-26  Tom de Vries  <tdevries@suse.de>
+
+	PR breakpoints/23366
+	* infcmd.c (info_program_command): Handle ptid == minus_one_ptid.
+
+2018-07-26  Tom de Vries  <tdevries@suse.de>
+
+	* dwarf2read.c (read_subrange_type): Warn if DW_AT_upper_bound or
+	DW_AT_count can't be translated to a dynamic prop.
+
+2018-07-25  Tom de Vries  <tdevries@suse.de>
+
+	* dwarf2loc.c (dwarf2_locexpr_baton_eval): Wrap ctx.eval call in
+	try/catch.
+
+2018-07-25  Jan Vrany  <jan.vrany@fit.cvut.cz>
+
+	* breakpoint.c (enable_disable_bp_num_loc): Notify observers.
+
+2018-07-25  Joel Brobecker  <brobecker@adacore.com>
+
+	* MAINTAINERS (Global Maintainers): Add Tom Tromey.
+
+2018-07-24  Keith Seitz  <keiths@redhat.comt
+
+	PR symtab/23010
+	* dwarf2read.c (dw2_add_symbol_to_list): New function.
+	(fixup_go_packaging, new_symbol): Use dw2_add_symbol_to_list
+	instead of add_symbol_to_list.
+	(read_file_scope): Call prepare_one_comp_unit before reading
+	any other DIEs.
+
+2018-07-24  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* common/scoped_mmap.h (class scoped_mmap): Fix indentation.
+
+2018-07-24  Tom Tromey  <tom@tromey.com>
+
+	* utils.c (malloc, realloc, free): Don't declare.
+	* configure, config.in: Rebuild.
+	* configure.ac: Don't check for declarations of free, malloc, or
+	realloc.
+
+2018-07-22  Simon Marchi  <simon.marchi@polymtl.ca>
+
+	* aarch64-linux-nat.c
+	(aarch64_linux_nat_target::stopped_data_address): Remove unused
+	variable.
+	* arm-linux-nat.c (fetch_regs): Likewise.
+	(store_regs): Likewise.
+	(fetch_vfp_regs): Likewise.
+	(store_vfp_regs): Likewise.
+	(arm_linux_nat_target::insert_hw_breakpoint): Likewise.
+	(arm_linux_nat_target::remove_hw_breakpoint): Likewise.
+	(arm_linux_nat_target::insert_watchpoint): Likewise.
+	(arm_linux_nat_target::remove_watchpoint): Likewise.
+	* mips-linux-nat.c (mips_linux_nat_target::insert_watchpoint):
+	Likewise.
+	* nat/aarch64-sve-linux-ptrace.c (aarch64_sve_get_sveregs):
+	Likewise.
+	* ppc-linux-nat.c (fetch_register): Likewise.
+	(fetch_all_gp_regs): Likewise.
+	(fetch_ppc_registers): Likewise.
+	(store_all_gp_regs): Likewise.
+	(store_ppc_registers): Likewise.
+	(hwdebug_insert_point): Likewise.
+	(can_use_watchpoint_cond_accel): Likewise.
+	* remote-sim.c (gdb_os_write_stdout): Likewise.
+
+2018-07-22  Simon Marchi  <simon.marchi@polymtl.ca>
+	    Tom Tromey  <tom@tromey.com>
+
+	* warning.m4 (AM_GDB_WARNINGS): Add -Wunused-variable and special
+	test for it.
+	* configure: Rebuild.
+
+2018-07-22  Tom Tromey  <tom@tromey.com>
+
+	* regformats/regdat.sh: Define xmltarget_${name} inside
+	#ifndef IN_PROCESS_AGENT.
+
+2018-07-22  Tom Tromey  <tom@tromey.com>
+
+	* value.c (value_fetch_lazy_bitfield): Remove unused variable.
+
+2018-07-22  Tom Tromey  <tom@tromey.com>
+
+	* symfile.c (reread_symbols): Notify iter, not objfile.
+
+2018-07-22  Tom Tromey  <tom@tromey.com>
+
+	* ravenscar-thread.c (ravenscar_thread_target::store_registers):
+	Use arch_ops.
+	(ravenscar_thread_target::prepare_to_store): Likewise.
+
+2018-07-22  Tom Tromey  <tom@tromey.com>
+
+	* python/py-prettyprint.c (gdbpy_apply_val_pretty_printer): Remove
+	unused variable.  Call value_fetch_lazy when needed.
+	* guile/scm-pretty-print.c (gdbscm_apply_val_pretty_printer):
+	Remove unused variable.  Call value_fetch_lazy when needed.
+
+2018-07-22  Tom Tromey  <tom@tromey.com>
+
+	* m32c-tdep.c (mark_dma): Return void.
+	(make_regs): Remove unused declarations.
+
+2018-07-22  Tom Tromey  <tom@tromey.com>
+
+	* guile/scm-cmd.c (gdbscm_dont_repeat): Call
+	cmdscm_get_valid_command_smob_arg_unsafe for effect.
+	* guile/scm-block.c (gdbscm_make_block_syms_iter): Call
+	bkscm_get_valid_block_smob_arg_unsafe for effect.
+
+2018-07-22  Tom Tromey  <tom@tromey.com>
+
+	* bfin-tdep.c (bfin_push_dummy_call): Use arg_type, not
+	value_type.
+
+2018-07-22  Tom Tromey  <tom@tromey.com>
+
+	* windows-nat.c (saved_context): Conditionally define.
+	* remote.c (remote_target::remote_btrace_maybe_reopen):
+	Conditionally declare "warned".
+	* inflow.c (sigquit_ours): Conditionally define.
+	(new_tty): Move "tty" declaration inside #if.
+	* guile/guile.c (guile_datadir): Conditionally define.
+	* charset.c (set_be_le_names): Move some declarations inside #if.
+	* btrace.c (parse_xml_btrace): Move "errcode" declaration inside
+	#if.
+	(parse_xml_btrace_conf): Likewise.
+
+2018-07-22  Tom Tromey  <tom@tromey.com>
+
+	* spu-tdep.c (spu_get_overlay_table): Remove unused variable.
+
+2018-07-22  Tom Tromey  <tom@tromey.com>
+
+	* guile/scm-value.c (gdbscm_value_call): Remove unused variables.
+	* guile/scm-math.c (vlscm_unop_gdbthrow, vlscm_binop_gdbthrow)
+	(vlscm_convert_typed_value_from_scheme): Remove unused variable.
+	* buildsym-legacy.c (get_macro_table): Remove unused variable.
+	* stack.c (frame_apply_level_command): Remove unused variable.
+	* tic6x-tdep.c (tic6x_push_dummy_call): Remove unused variable.
+	* sparc64-tdep.c (adi_examine_command): Remove unused variable.
+	* rs6000-lynx178-tdep.c (rs6000_lynx178_push_dummy_call): Remove
+	unused variable.
+	* nios2-tdep.c (nios2_push_dummy_call): Remove unused variable.
+	* mep-tdep.c (mep_push_dummy_call): Remove unused variable.
+	* ada-lang.c (ada_lookup_symbol_list_worker): Remove unused
+	variable.
+	* amd64-tdep.c (amd64_supply_xsave): Remove unused variable.
+	* arm-tdep.c (arm_record_data_proc_misc_ld_str): Remove unused
+	variable.
+	* breakpoint.c (check_no_tracepoint_commands, update_watchpoint):
+	Remove unused variable.
+	* cli/cli-script.c (recurse_read_control_structure): Remove unused
+	variable.
+	* common/tdesc.c (print_xml_feature::visit): Remove unused
+	variable.
+	* compile/compile-object-load.c (store_regs): Remove unused
+	variables.
+	* complaints.c (clear_complaints): Remove unused variable.
+	* corelow.c (core_target_open): Remove unused variable.
+	* fbsd-tdep.c (fbsd_core_info_proc_status): Remove unused
+	variable.
+	* guile/scm-frame.c (gdbscm_frame_read_var): Remove unused
+	variable.
+	* guile/scm-symtab.c (stscm_print_sal_smob): Remove unused
+	variable.
+	* guile/scm-type.c (gdbscm_field_baseclass_p): Remove unused
+	variable.
+	* guile/scm-utils.c (gdbscm_parse_function_args): Remove unused
+	variable.
+	* hppa-tdep.c (hppa_stub_frame_unwind_cache): Remove unused
+	variable.
+	* ia64-tdep.c (examine_prologue): Remove unused variable.
+	* infcall.c (run_inferior_call): Remove unused variable.
+	* inferior.c (exit_inferior): Remove unused variable.
+	* infrun.c (infrun_thread_ptid_changed): Remove unused variable.
+	* linespec.c (decode_line_2): Remove unused variable.
+	* linux-nat.c (super_close): Remove.
+	* linux-tdep.c (linux_info_proc): Remove unused variable.
+	* mi/mi-main.c (mi_execute_command): Remove unused variable.
+	* microblaze-linux-tdep.c (microblaze_linux_sigtramp_cache):
+	Remove unused variable.
+	* parse.c (find_minsym_type_and_address): Remove unused variable.
+	* printcmd.c (info_symbol_command, printf_floating): Remove unused
+	variable.
+	* python/py-breakpoint.c (bppy_set_commands): Remove unused
+	variable.
+	* python/py-unwind.c (unwind_infopy_dealloc): Remove unused
+	variables.
+	* record-btrace.c (record_btrace_target::store_registers): Remove
+	unused variable.
+	(cmd_show_record_btrace_cpu): Remove unused variable.
+	* riscv-tdep.c (riscv_register_reggroup_p)
+	(riscv_push_dummy_call, riscv_return_value): Remove unused
+	variable.
+	* rust-exp.y (literal): Remove unused variable.
+	* rust-lang.c (rust_evaluate_subexp) <OP_RUST_ARARAY>: Remove
+	unused variable.
+	<STRUCTOP_ANONYMOUS>: Likewise.
+	* s390-linux-tdep.c (s390_linux_init_abi_31)
+	(s390_linux_init_abi_64): Remove unused variable.
+	* ser-ming2.c (ser_windows_read_prim, pipe_select_thread)
+	(file_select_thread, net_windows_open, _initialize_ser_windows):
+	Remove unused variables.
+	* symtab.c (find_pc_sect_line): Remove unused variable.
+	* target-memory.c (compute_garbled_blocks): Remove unused
+	variable.
+	(target_write_memory_blocks): Remove unused variable.
+	* target.c (target_stack::unpush): Remove unused variables.
+	* tracepoint.c (start_tracing, all_tracepoint_actions)
+	(merge_uploaded_trace_state_variables)
+	(print_one_static_tracepoint_marker): Remove unused variable.
+	* unittests/basic_string_view/element_access/char/1.cc (test01):
+	Remove unused variable.
+	* windows-nat.c (windows_continue, windows_add_all_dlls)
+	(do_initial_windows_stuff, windows_nat_target::create_inferior):
+	Remove unused variables.
+
+2018-07-21  Simon Marchi  <simon.marchi@polymtl.ca>
+
+	* arm-tdep.c (arm_gdbarch_init): Declare attr_arch and
+	attr_profile in HAVE_ELF.
+	* rs6000-tdep.c (bfd_uses_spe_extensions): Declare vector_abi in
+	HAVE_ELF.
+
+2018-07-20  Simon Marchi  <simon.marchi@polymtl.ca>
+
+	* frame.c (frame_register_unwind): Change parameter name.
+	(frame_unwind_register): Likewise.
+	(frame_unwind_register_value): Likewise.
+	(frame_unwind_register_signed): Likewise.
+	(frame_unwind_register_unsigned): Likewise.
+	* frame.h (frame_register_unwind): Likewise.
+	(frame_unwind_register): Likewise.
+	(frame_unwind_register_value): Likewise.
+	(frame_unwind_register_signed): Likewise.
+	(frame_unwind_register_unsigned): Likewise.
+	(frame_unwind_arch): Likewise.
+
+2018-07-20  Maciej W. Rozycki  <macro@mips.com>
+
+	* MAINTAINERS: Update my e-mail address, downgrade to MIPS I-IV
+	ISA maintenance.
+
+2018-07-20  Maciej W. Rozycki  <macro@mips.com>
+
+	* mips-linux-nat.c (mips_linux_nat_target::read_description):
+	Call `get_ptrace_pid' rather than extracting the ptrace PID by
+	hand.
+
+2018-07-20  Keith Seitz  <keiths@redhat.com>
+
+	* buildsym.h (struct buildsym_compunit) <m_objfile, m_subfiles,
+	m_main_subfile, m_comp_dir, m_producer, m_debugformat,
+	m_compunit_symtab, m_language>: Add "m_" prefix.
+	Update all uses.
+	* buildsym.c: Update all uses.
+
+2018-07-20  Tom Tromey  <tom@tromey.com>
+
+	* buildsym-legacy.h (record_line): Don't use record_line_ftype.
+	* buildsym.h (record_line_ftype): Remove typedef.
+
+2018-07-20  Tom Tromey  <tom@tromey.com>
+
+	* buildsym-legacy.h (augment_type_symtab): Don't declare.
+	(end_expandable_symtab): Likewise.
+	(end_symtab_get_static_block): Likewise.
+	(end_symtab_from_static_block): Likewise.
+	* buildsym-legacy.c (augment_type_symtab): Remove.
+	(end_expandable_symtab): Remove.
+	(end_symtab_get_static_block): Remove.
+	(end_symtab_from_static_block): Remove.
+
+2018-07-20  Tom Tromey  <tom@tromey.com>
+
+	* dwarf2read.c: Include buildsym.h.
+	(struct dwarf2_cu) <builder>: New method.
+	(fixup_go_packaging): Update.
+	(process_full_comp_unit, process_full_type_unit): Update.  Don't
+	use scoped_free_pendings.
+	(using_directives): Add "cu" parameter, remove "language".
+	(read_import_statement, setup_type_unit_groups, )
+	(read_func_scope, read_lexical_block_scope)
+	(dwarf2_record_block_ranges, read_namespace): Update.
+	(lnp_state_machine::lnp_state_machine): Add cu parameter.
+	(lnp_state_machine::handle_end_sequence): Update.
+	(class lnp_state_machine) <m_cu>: New member.
+	<m_record_line_callback>: Remove.
+	<m_currently_recording_lines>: New member.
+	(lnp_state_machine::handle_set_file): Update.
+	(noop_record_line): Remove.
+	(dwarf_record_line_p): Add cu parameter.
+	(dwarf_record_line_1, dwarf_finish_line): Likewise.
+	(lnp_state_machine::record_line)
+	(lnp_state_machine::lnp_state_machine)
+	(lnp_state_machine::check_line_address, dwarf_decode_lines_1)
+	(dwarf_decode_lines): Update.
+	(dwarf2_start_subfile): Add cu parameter.
+	(dwarf2_start_symtab, new_symbol): Update.
+	(macro_start_file, dwarf_decode_macro_bytes): Add cu parameter.
+	Remove dwarf2_per_objfile parameter.
+	(dwarf_decode_macros): Update.
+
+2018-07-20  Tom Tromey  <tom@tromey.com>
+
+	* stabsread.c (define_symbol): Update.
+	* buildsym-legacy.h (get_buildsym_compunit): Declare.
+	* dwarf2read.c (new_symbol): Update.
+	* cp-support.h (cp_scan_for_anonymous_namespaces): Update.
+	* cp-namespace.c: Include buildsym.h.
+	(cp_scan_for_anonymous_namespaces): Add "compunit" parameter.
+	* buildsym-legacy.c (get_buildsym_compunit): New function.
+
+2018-07-20  Tom Tromey  <tom@tromey.com>
+
+	* xcoffread.c: Include buildsym-legacy.h.
+	* windows-nat.c: Include buildsym-legacy.h.
+	* stabsread.c: Include buildsym-legacy.h.
+	* mdebugread.c: Include buildsym-legacy.h.
+	* buildsym-legacy.h: New file.
+	* buildsym-legacy.c: New file, from buildsym.c.
+	* go32-nat.c: Include buildsym-legacy.h.
+	* dwarf2read.c: Include buildsym-legacy.h.
+	* dbxread.c: Include buildsym-legacy.h.
+	* cp-namespace.c: Include buildsym-legacy.h.
+	* coffread.c: Include buildsym-legacy.h.
+	* buildsym.h: Move some contents to buildsym-legacy.h.
+	* buildsym.c: Include buildsym-legacy.h.  Move many functions to
+	buildsym-legacy.c.
+	* Makefile.in (HFILES_NO_SRCDIR): Add buildsym-legacy.h.
+
+2018-07-20  Tom Tromey  <tom@tromey.com>
+
+	* buildsym.h (struct buildsym_compunit): Move from buildsym.c.
+	* buildsym.c (struct buildsym_compunit): Move to buildsym.h.
+	(buildsym_compunit::buildsym_compunit)
+	(buildsym_compunit::~buildsym_compunit)
+	(buildsym_compunit::get_macro_table): Define.
+
+2018-07-20  Tom Tromey  <tom@tromey.com>
+
+	* buildsym.c (reset_symtab_globals): Remove.
+	(buildsym_compunit::end_symtab_from_static_block): Update.
+	(buildsym_compunit::augment_type_symtab): Update.
+	(end_symtab_from_static_block): Call free_buildsym_compunit.
+	(augment_type_symtab, end_symtab, end_expandable_symtab):
+	Likewise.
+
+2018-07-20  Tom Tromey  <tom@tromey.com>
+
+	* arch-utils.c: Do not include buildsym.h.
+	* mipsread.c: Do not include buildsym.h.
+	* machoread.c: Do not include buildsym.h.
+	* elfread.c: Do not include buildsym.h.
+
+2018-07-20  Tom Tromey  <tom@tromey.com>
+
+	* buildsym.c (buildsym_compunit::buildsym_compunit): Do more
+	initialization.
+	(buildsym_compunit): Add new constructor.
+	(struct buildsym_compunit) <get_last_source_file, finish_block,
+	record_block_range, start_subfile, patch_subfile_names,
+	push_subfile, pop_subfile, record_line, get_compunit_symtab,
+	set_last_source_start_addr, get_last_source_start_addr,
+	get_local_using_directives, set_local_using_directives,
+	get_global_using_directives, outermost_context_p,
+	get_current_context_stack, get_context_stack_depth,
+	get_current_subfile, get_local_symbols, get_file_symbols,
+	get_global_symbols, record_debugformat, record_producer,
+	push_context, pop_context, end_symtab_get_static_block,
+	end_symtab_from_static_block, end_symtab, end_expandable_symtab>:
+	New public methods.
+	<record_pending_block, finish_block_internal, make_blockvector,
+	watch_main_source_file_lossage, end_symtab_with_blockvector>: New
+	private methods.
+	Update all users.
+
+2018-05-22  Tom Tromey  <tom@tromey.com>
+
+	* buildsym.c (record_pending_block): Move earlier.  Remove objfile
+	parameter.
+	(finish_block_internal): Update.
+
+2018-07-20  Tom Tromey  <tom@tromey.com>
+
+	* buildsym.c (record_pending_block): Move earlier.  Remove objfile
+	parameter.
+	(finish_block_internal): Update.
+
+2018-07-20  Tom Tromey  <tom@tromey.com>
+
+	* buildsym.h (EXTERN): Don't define or undef.
+	* buildsym.c (EXTERN): Don't define.
+
+2018-07-20  Tom Tromey  <tom@tromey.com>
+
+	* buildsym.c: Remove TODO comment.
+
+2018-07-20  Tom Tromey  <tom@tromey.com>
+
+	* coffread.c (coff_symtab_read): Update.
+	* xcoffread.c (xcoff_psymtab_to_symtab_1): Update.
+	(xcoff_new_init): Update.
+	* mipsread.c (mipscoff_new_init): Update.
+	* mdebugread.c (mdebug_build_psymtabs): Update.
+	* elfread.c (elf_new_init): Update.
+	* dwarf2read.c (process_full_comp_unit, process_full_type_unit):
+	Update.
+	* dbxread.c (dbx_new_init, dbx_psymtab_to_symtab_1)
+	(coffstab_build_psymtabs, elfstab_build_psymtabs)
+	(stabsect_build_psymtabs): Update.
+	* buildsym.h (buildsym_init): Don't declare.
+	* buildsym.c: Update comment.
+	(prepare_for_building): Remove.
+	(start_symtab, restart_symtab): Update.
+	(reset_symtab_globals): Update comment.
+	(buildsym_init): Remove.
+
+2018-07-20  Tom Tromey  <tom@tromey.com>
+
+	* xcoffread.c (read_xcoff_symtab, process_xcoff_symbol): Update.
+	* stabsread.c (patch_block_stabs, define_symbol, read_type)
+	(read_enum_type, common_block_start, common_block_end)
+	(cleanup_undefined_types_1, finish_global_stabs): Update.
+	* mdebugread.c (psymtab_to_symtab_1): Update.
+	* dwarf2read.c (fixup_go_packaging, read_func_scope)
+	(read_lexical_block_scope, new_symbol): Update.
+	* dbxread.c (process_one_symbol): Update.
+	* coffread.c (coff_symtab_read, process_coff_symbol)
+	(coff_read_enum_type): Update.
+	* buildsym.h (file_symbols, global_symbols, local_symbols): Don't
+	declare.
+	(get_local_symbols, get_file_symbols, get_global_symbols): New
+	functions.
+	* buildsym.c (~buildsym_compunit): Clean up m_file_symbols and
+	m_global_symbols.
+	<m_file_symbols, m_local_symbols, m_global_symbols>: New members.
+	(~scoped_free_pendings): Update.
+	(finish_block, prepare_for_building, reset_symtab_globals)
+	(end_symtab_get_static_block, end_symtab_with_blockvector)
+	(augment_type_symtab, push_context): Update.
+	(get_local_symbols, get_file_symbols, get_global_symbols): New
+	functions.
+	(buildsym_init): Update.
+
+2018-07-20  Tom Tromey  <tom@tromey.com>
+
+	* dwarf2read.c (process_full_comp_unit): Do not set list_in_scope.
+	(process_full_type_unit): Likewise.
+	(dwarf2_start_symtab): Set list_in_scope.
+
+2018-07-20  Tom Tromey  <tom@tromey.com>
+
+	* dwarf2read.c (process_psymtab_comp_unit_reader)
+	(build_type_psymtabs_reader): Do not set list_in_scope.
+
+2018-07-20  Tom Tromey  <tom@tromey.com>
+
+	* buildsym.c (free_pendings): Remove.
+	(add_symbol_to_list, scoped_free_pendings)
+	(finish_block_internal, buildsym_init): Update.
+
+2018-07-20  Tom Tromey  <tom@tromey.com>
+
+	* xcoffread.c (read_xcoff_symtab): Update.
+	* dwarf2read.c (read_func_scope, read_lexical_block_scope):
+	Update.
+	* dbxread.c (process_one_symbol): Update.
+	* coffread.c (coff_symtab_read): Update.
+	* buildsym.h (finish_block): Update.
+	* buildsym.c (finish_block): Remove "listhead" argument.
+	(end_symtab_get_static_block): Update.
+
+2018-07-20  Tom Tromey  <tom@tromey.com>
+
+	* buildsym.h (class scoped_free_pendings): Remove constructor.
+	* buildsym.c (struct buildsym_compunit) <free_pending_blocks>: New
+	method.
+	<m_pending_block_obstack, m_pending_blocks>: New members.
+	(pending_block_obstack, pending_blocks): Remove.
+	(scoped_free_pendings::scoped_free_pendings): Default.
+	(~scoped_free_pendings): Update.
+	(free_pending_blocks): Remove.
+	(finish_block_internal, record_pending_block, make_blockvector)
+	(end_symtab_get_static_block, augment_type_symtab, push_context)
+	(buildsym_init): Update.
+
+2018-07-20  Tom Tromey  <tom@tromey.com>
+
+	* buildsym.c (struct buildsym_compunit) <m_pending_addrmap,
+	m_pending_addrmap_obstack, m_pending_addrmap_interesting>: New
+	members.
+	(pending_addrmap, pending_addrmap_obstack)
+	(pending_addrmap_interesting): Remove.
+	(scoped_free_pendings, record_block_range, make_blockvector)
+	(prepare_for_building, reset_symtab_globals, buildsym_init):
+	Update.
+
+2018-07-20  Tom Tromey  <tom@tromey.com>
+
+	* xcoffread.c (process_linenos): Update.
+	* stabsread.c (define_symbol, read_type, read_enum_type): Update.
+	* mdebugread.c (psymtab_to_symtab_1): Update.
+	* dwarf2read.c (setup_type_unit_groups)
+	(lnp_state_machine::handle_set_file, dwarf_record_line_p)
+	(lnp_state_machine::record_line, dwarf_decode_lines): Update.
+	* dbxread.c (process_one_symbol): Update.
+	* coffread.c (coff_symtab_read, enter_linenos)
+	(process_coff_symbol): Update.
+	* buildsym.h (current_subfile): Don't declare.
+	(get_current_subfile): Declare.
+	* buildsym.c (struct buildsym_compunit) <m_current_subfile>: New
+	member.
+	(start_subfile, free_buildsym_compunit, push_subfile)
+	(prepare_for_building, start_symtab): Update.
+	(get_current_subfile): New function.
+
+2018-07-20  Tom Tromey  <tom@tromey.com>
+
+	* coffread.c (coff_symtab_read): Update.
+	* xcoffread.c (read_xcoff_symtab): Update.
+	* dwarf2read.c (new_symbol): Update.
+	(read_func_scope, read_lexical_block_scope): Update.
+	* dbxread.c (process_one_symbol): Update.
+	* buildsym.h (context_stack, context_stack_depth): Don't declare.
+	(outermost_context_p): Remove macro.
+	(outermost_context_p, get_current_context_stack)
+	(get_context_stack_depth): Declare.
+	(pop_context): Return struct context_stack.
+	* buildsym.c (struct buildsym_compunit) <m_context_stack: New
+	member.
+	(context_stack_size): Remove.
+	(INITIAL_CONTEXT_STACK_SIZE): Remove.
+	(prepare_for_building, end_symtab_get_static_block)
+	(augment_type_symtab, push_context): Update.
+	(pop_context): Return struct context_stack.
+	(outermost_context_p, get_current_context_stack)
+	(get_context_stack_depth): New functions.
+	(buildsym_init): Update.
+
+2018-07-20  Tom Tromey  <tom@tromey.com>
+
+	* rust-exp.y: Now a pure parser.  Update all rules.
+	(%union): Move earlier.
+	(current_parser, work_obstack): Remove globals.
+	(rust_parser, ~rust_parser): Update.
+	(class rust_parser) <copy_name, concat3, crate_name, super_name,
+	lex_character, lex_number, lex_string, lex_identifier,
+	rust_lookup_type, convert_params_to_types, convert_ast_to_type,
+	convert_name, convert_params_to_expression,
+	convert_ast_to_expression, ast_basic_type, ast_operation,
+	ast_compound_assignment, rust_op, ast_literal, ast_dliteral,
+	ast_structop, ast_structop_anonymous, ast_unary, ast_cast,
+	ast_call_ish, ast_path, ast_string, ast_struct, ast_range,
+	ast_array_type, ast_slice_type, ast_reference_type,
+	ast_pointer_type, ast_function_type, ast_tuple_type>: New methods.
+	(rust_parse): Update.
+	(rustyyerror, rustyylex): Add parser parameter.
+	(rust_lex_test_one, rust_lex_int_test, rust_lex_exception_test)
+	(rust_lex_stringish_test, rust_lex_test_sequence)
+	(rust_lex_test_trailing_dot, rust_lex_test_completion)
+	(rust_lex_test_push_back, rust_lex_tests): Update.
+
+2018-07-19  Pedro Alves  <palves@redhat.com>
+
+	* guile/guile-internal.h (gdbscm_scm_to_c_string): Now returns a
+	gdb::unique_xmalloc_ptr.
+	* guile/scm-breakpoint.c (gdbscm_set_breakpoint_condition_x):
+	Adjust to use dbscm_wrap and gdb::unique_xmalloc_ptr.
+	* guile/scm-exception.c (gdbscm_exception_message_to_string): Use
+	copy-initialization.
+	* guile/scm-pretty-print.c (ppscm_print_children): Use
+	gdb::unique_xmalloc_ptr instead of cleanups.
+	(gdbscm_apply_val_pretty_printer): Remove cleanups.
+	* guile/scm-string.c (gdbscm_scm_to_c_string): Now returns a
+	gdb::unique_xmalloc_ptr.
+	* guile/scm-type.c (gdbscm_type_field, gdbscm_type_has_field_p):
+	Adjust to use gdb::unique_xmalloc_ptr.
+	* guile/scm-utils.c (extract_arg): Adjust.
+	* guile/scm-value.c (gdbscm_value_field): Adjust to use
+	gdb::unique_xmalloc_ptr instead of a cleanup.
+
+2018-07-19  Tom Tromey  <tom@tromey.com>
+
+	* utils.c (do_value_free_to_mark)
+	(make_cleanup_value_free_to_mark): Remove.
+	* utils.h (make_cleanup_value_free_to_mark): Remove.
+
+2018-07-19  Pedro Alves  <palves@redhat.com>
+
+	* guile/guile-internal.h (gdbscm_wrap): Really make 'args' a
+	forwarding reference.
+
+2018-07-18  Pedro Alves  <palves@redhat.com>
+
+	* guile/guile.c (gdbscm_execute_gdb_command): Adjust to use
+	gdbscm_wrap.  Use gdb::unique_xmalloc_ptr<char> instead of a
+	cleanup.
+
+2018-07-18  Pedro Alves  <palves@redhat.com>
+
+	* guile/guile-internal.h: Add comment about mixing GDB and Scheme
+	exceptions.
+	(GDBSCM_HANDLE_GDB_EXCEPTION_WITH_CLEANUPS): Delete.
+	(gdbscm_wrap): New.
+	* guile/scm-frame.c (gdbscm_frame_read_register): Use xfree
+	directly instead of a cleanup.
+	* guile/scm-math.c (vlscm_unop_gdbthrow): New, factored out from ...
+	(vlscm_unop): ... this.  Reimplement using gdbscm_wrap.
+	(vlscm_binop_gdbthrow): New, factored out from ...
+	(vlscm_binop): ... this.  Reimplement using gdbscm_wrap.
+	(vlscm_rich_compare): Use gdbscm_wrap.
+	* guile/scm-symbol.c (gdbscm_lookup_symbol): Use xfree directly
+	instead of a cleanup.
+	(gdbscm_lookup_global_symbol): Use xfree directly instead of a
+	cleanup.
+	* guile/scm-type.c (gdbscm_type_field, gdbscm_type_has_field_p):
+	Use xfree directly instead of a cleanup.
+	* guile/scm-value.c (gdbscm_make_value, gdbscm_make_lazy_value):
+	Adjust to use gdbscm_wrap and scoped_value_mark.
+	(gdbscm_value_optimized_out_p): Adjust to use gdbscm_wrap.
+	(gdbscm_value_address, gdbscm_value_dereference)
+	(gdbscm_value_referenced_value): Adjust to use gdbscm_wrap and
+	scoped_value_mark.
+	(gdbscm_value_dynamic_type): Use scoped_value_mark.
+	(vlscm_do_cast, gdbscm_value_field): Adjust to use gdbscm_wrap and
+	scoped_value_mark.
+	(gdbscm_value_subscript, gdbscm_value_call): Adjust to use
+	gdbscm_wrap and scoped_value_mark.
+	(gdbscm_value_to_string): Use xfree directly instead of a
+	cleanup.  Move 'buffer' unique_ptr to TRY scope.
+	(gdbscm_value_to_lazy_string): Use xfree directly instead of a
+	cleanup.  Move 'buffer' unique_ptr to TRY scope.  Use
+	scoped_value_mark.
+	(gdbscm_value_fetch_lazy_x): Use gdbscm_wrap.
+	(gdbscm_parse_and_eval): Adjust to use gdbscm_wrap and
+	scoped_value_mark.
+	(gdbscm_history_ref, gdbscm_history_append_x): Adjust to use
+	gdbscm_wrap.
+
+2018-07-18  Tom de Vries  <tdevries@suse.de>
+
+	* findvar.c (default_read_var_value): Also resolve dynamic type for
+	LOC_OPTIMIZED_OUT vars.
+
+2018-07-18  Maciej W. Rozycki  <macro@mips.com>
+
+	* mips-tdep.c (micromips_next_pc): Add SYSCALL instruction
+	decoding.
+
+2018-07-17  Tom Tromey  <tom@tromey.com>
+
+	* guile/scm-param.c (pascm_set_func, pascm_show_func)
+	(compute_enum_list, pascm_set_param_value_x)
+	(gdbscm_parameter_value): Update.
+	* guile/guile-internal.h (gdbscm_scm_to_string): Update.
+	(gdbscm_scm_to_host_string): Update.
+	* guile/scm-math.c (vlscm_convert_typed_value_from_scheme):
+	Update.
+	* guile/scm-cmd.c (cmdscm_add_completion): Update.
+	* guile/scm-pretty-print.c (ppscm_print_string_repr): Update.
+	* guile/scm-string.c (gdbscm_scm_to_string): Return
+	unique_xmalloc_ptr.
+	(gdbscm_scm_to_host_string): Likewise.
+
+2018-07-17  Tom Tromey  <tom@tromey.com>
+
+	* guile/guile.c (gdbscm_eval_from_control_command): Update.
+	* guile/guile-internal.h (gdbscm_safe_eval_string): Update.
+	* guile/scm-objfile.c (gdbscm_execute_objfile_script): Update.
+	* guile/scm-safe-call.c (gdbscm_safe_eval_string): Return
+	unique_xmalloc_ptr.
+
+2018-07-17  Tom Tromey  <tom@tromey.com>
+
+	* guile/scm-param.c (pascm_signal_setshow_error): Update.
+	* guile/guile-internal.h (gdbscm_exception_message_to_string):
+	Update.
+	* guile/scm-cmd.c (cmdscm_function): Update.
+	* guile/scm-pretty-print.c
+	(ppscm_print_exception_unless_memory_error): Update.
+	* guile/scm-exception.c (gdbscm_exception_message_to_string):
+	Return unique_xmalloc_ptr.
+
+2018-07-17  Tom Tromey  <tom@tromey.com>
+
+	* guile/scm-pretty-print.c (ppscm_make_pp_type_error_exception):
+	Use string_printf.
+
+2018-07-17  Jim Wilson  <jimw@sifive.com>
+
+	* riscv-tdep.c (riscv_has_feature): Delete comment that refers to
+	set_gdbarch_decr_pc_after_break.  Call riscv_read_misa_reg always.
+	(riscv_gdbarch_init): Delete local has_compressed_isa.  Delete now
+	unecessary braces after EF_RISCV_RVC test.  Delete call to
+	set_gdbarch_decr_pc_after_break.
+
+	* riscv-tdep.h (DECLARE_CSR): Use RISCV_FIRST_CSR_REGNUM instead of
+	RISCV_LAST_FP_REGNUM + 1.
+	(RSICV_CSR_LEGACY_MISA_REGNUM): Add RISCV_FIRST_CSR_REGNUM.
+
+2018-07-17  Tom Tromey  <tom@tromey.com>
+
+	* configure.ac: Remove --disable-gdbcli.
+	* configure: Rebuild.
+	* Makefile.in (SUBDIR_CLI_DEPS, SUBDIR_CLI_LDFLAGS)
+	(SUBDIR_CLI_CFLAGS): Remove.
+	(SFILES): Use SUBDIR_CLI_SRCS.
+	(COMMON_OBS): Use SUBDIR_CLI_OBS.
+
+2018-07-17  Tom Tromey  <tom@tromey.com>
+
+	PR gdb/18624:
+	* coffread.c (coff_symtab_read): Use scoped_free_pendings.
+
+2018-07-16  Jim Wilson  <jimw@sifive.com>
+
+	* riscv-tdep.c (riscv_gdbarch_init): Call gdbarch_init_osabi.
+
+2018-07-16  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* ia64-libunwind-tdep.c (libunwind_frame_cache): Remove unused
+	variable.
+	(libunwind_frame_sniffer): Likewise.
+	(libunwind_frame_prev_register): Likewise.
+	(libunwind_sigtramp_frame_sniffer): Likewise.
+	* ia64-tdep.c (ia64_access_reg): Likewise.
+	(ia64_access_rse_reg): Likewise.
+	(ia64_libunwind_sigtramp_frame_this_id): Likewise.
+	* ia64-vms-tdep.c (ia64_vms_find_proc_info_x): Likewise.
+
+2018-07-16  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* ia64-vms-tdep.c (ia64_vms_find_proc_info_x): Add cast.
+
+2018-07-16  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* remote-sim.c (gdbsim_target::close,
+	gdbsim_target::mourn_inferior): Remove unused variables.
+
+2018-07-16  Simon Marchi  <simon.marchi@polymtl.ca>
+
+	* ia64-tdep.c (ktab_buf): New global.
+	(getunwind_table): Return a gdb::optional<gdb::byte_vector>.
+	(get_kernel_table): Adjust.
+
+2018-07-16  Tom Tromey  <tom@tromey.com>
+
+	* xcoffread.c (read_xcoff_symtab): Use outermost_context_p.
+	* dwarf2read.c (using_directives, new_symbol): Use
+	outermost_context_p.
+	* dbxread.c (process_one_symbol): Use outermost_context_p.
+	* coffread.c (coff_symtab_read): Use outermost_context_p.
+
+2018-07-16  Tom Tromey  <tom@tromey.com>
+
+	* dwarf2read.c (using_directives, read_func_scope)
+	(read_lexical_block_scope): Update.
+	* cp-namespace.c (cp_scan_for_anonymous_namespaces): Update.
+	* buildsym.h (local_using_directives, global_using_directives):
+	Don't declare.
+	(get_local_using_directives, set_local_using_directives)
+	(get_global_using_directives): Declare.
+	* buildsym.c (struct buildsym_compunit) <m_local_using_directives,
+	m_global_using_directives>: New members.
+	(finish_block_internal, prepare_for_building)
+	(reset_symtab_globals, end_symtab_get_static_block)
+	(push_context): Update.
+	(get_local_using_directives, set_local_using_directives)
+	(get_global_using_directives): New functions.
+	(buildsym_init): Update.
+
+2018-07-16  Tom Tromey  <tom@tromey.com>
+
+	* xcoffread.c (xcoff_initial_scan): Don't call
+	free_pending_blocks.
+	* dbxread.c (dbx_symfile_read): Don't call free_pending_blocks.
+	* buildsym.h (class scoped_free_pendings): Add constructor.
+	(free_pending_blocks): Don't declare.
+	* buildsym.c (scoped_free_pendings::scoped_free_pendings): New.
+	(free_pending_blocks): Now static.
+
+2018-07-16  Tom Tromey  <tom@tromey.com>
+
+	* buildsym.h (push_subfile, pop_subfile): Update declarations.
+	* buildsym.c (struct buildsym_compunit) <m_subfile_stack>: New
+	member.
+	(struct subfile_stack): Remove.
+	(subfile_stack): Remove.
+	(push_subfile, pop_subfile, buildsym_init): Update.
+
+2018-07-16  Tom Tromey  <tom@tromey.com>
+
+	* buildsym.c (push_subfile): Use gdb_assert.
+	(pop_subfile): Use gdb_assert.
+
+2018-07-16  Tom Tromey  <tom@tromey.com>
+
+	* buildsym.h (merge_symbol_lists): Remove.
+	* buildsym.c (merge_symbol_lists): Remove.
+
+2018-07-16  Tom Tromey  <tom@tromey.com>
+
+	* stabsread.c (scan_file_globals): Update comment.
+	* stabsread.h (scan_file_globals): Move from buildsym.h.
+	* buildsym.h (scan_file_globals): Move to stabsread.h.
+
+2018-07-16  Tom Tromey  <tom@tromey.com>
+
+	* xcoffread.c (xcoff_new_init): Update.
+	* mipsread.c (mipscoff_new_init): Update.
+	* mdebugread.c (mdebug_build_psymtabs): Update.
+	* elfread.c (elf_new_init): Update.
+	* dbxread.c (dbx_new_init, coffstab_build_psymtabs)
+	(elfstab_build_psymtabs, stabsect_build_psymtabs): Update.
+	* buildsym.h (buildsym_new_init): Don't declare.
+	* buildsym.c (buildsym_new_init): Remove.
+
+2018-07-16  Tom Tromey  <tom@tromey.com>
+
+	* stabsread.h (within_function): Move from buildsym.h.
+	* stabsread.c (start_stabs): Clear within_function.
+	* coffread.c (coff_start_symtab): Clear within_function.
+	* buildsym.h (within_function): Move to stabsread.h.
+	* buildsym.c (prepare_for_building): Update.
+
+2018-07-16  Tom Tromey  <tom@tromey.com>
+
+	* stabsread.h (processing_gcc_compilation): Move from buildsym.h.
+	* dwarf2read.c (dwarf2_start_symtab): Don't set
+	processing_gcc_compilation.
+	* buildsym.h (processing_gcc_compilation): Move to stabsread.h.
+
+2018-07-16  Tom Tromey  <tom@tromey.com>
+
+	* stabsread.h (HASHSIZE, hashname, symnum, next_symbol_text)
+	(next_symbol_text_func): Move from buildsym.h.
+	* stabsread.c (hashname): Move from buildsym.c.
+	* buildsym.h (HASHSIZE, symnum, next_symbol_text)
+	(next_symbol_text_func, hashname): Move to stabsread.h.
+	* buildsym.c: Don't include bcache.h
+	(hashname): Move to stasbread.c.
+
+2018-07-16  Tom Tromey  <tom@tromey.com>
+
+	* buildsym.h (context_stack_size): Don't declare.
+	* buildsym.c (context_stack_size): New global.
+
+2018-07-16  Tom Tromey  <tom@tromey.com>
+
+	* dbxread.c (processing_acc_compilation): New global.
+	* buildsym.h (processing_acc_compilation): Don't declare.
+
+2018-07-16  Tom Tromey  <tom@tromey.com>
+
+	* xcoffread.c (aix_process_linenos, complete_symtab): Update.
+	* dbxread.c (read_ofile_symtab): Update.
+	* coffread.c (coff_start_symtab, coff_end_symtab): Update.
+	* buildsym.h (last_source_start_addr): Remove.
+	(set_last_source_start_addr, get_last_source_start_addr):
+	Declare.
+	* buildsym.c (buildsym_compunit::buildsym_compunit): Add last_addr
+	parameter.
+	(struct buildsym_compunit) <m_last_source_start_addr>: New
+	member.
+	(prepare_for_building): Remove start_addr parameter.
+	(start_symtab, restart_symtab, end_symtab_get_static_block)
+	(end_symtab_with_blockvector): Update.
+	(set_last_source_start_addr, get_last_source_start_addr): New
+	functions.
+
+2018-07-16  Tom Tromey  <tom@tromey.com>
+
+	* buildsym.c (struct buildsym_compunit) <m_have_line_numbers>: New
+	member.
+	(have_line_numbers): Remove.
+	(record_line, prepare_for_building, end_symtab_get_static_block)
+	(augment_type_symtab): Update.
+
+2018-07-16  Tom Tromey  <tom@tromey.com>
+
+	* buildsym.c (~buildsym_compunit): Free the macro table.
+	(struct buildsym_compunit) <get_macro_table, release_macros>: New
+	methods.
+	<m_pending_macros>: New member.
+	(pending_macros): Remove.
+	(~scoped_free_pendings, get_macro_table, prepare_for_building)
+	(reset_symtab_globals, end_symtab_get_static_block)
+	(end_symtab_with_blockvector, augment_type_symtab)
+	(buildsym_init): Update.
+
+2018-07-16  Tom Tromey  <tom@tromey.com>
+
+	* buildsym.c (buildsym_compunit::buildsym_compunit): Add name
+	parameter.
+	(buildsym_compunit::set_last_source_file): New method.
+	<m_last_source_file>: New member.
+	(prepare_for_building): Remove "name" parameter.
+	(start_symtab, restart_symtab, reset_symtab_globals): Update.
+	(last_source_file): Remove.
+	(set_last_source_file, get_last_source_file): Update.
+
+2018-07-16  Tom Tromey  <tom@tromey.com>
+
+	* buildsym.c (prepare_for_building): Add assert.
+
+2018-07-16  Tom Tromey  <tom@tromey.com>
+
+	* buildsym.c (~buildsym_compunit): Update.
+	(struct buildsym_compunit) <comp_unit>: Now a unique_xmalloc_ptr.
+	(start_subfile, patch_subfile_names)
+	(end_symtab_with_blockvector): Update.
+
+2018-07-16  Tom Tromey  <tom@tromey.com>
+
+	* buildsym.c (struct buildsym_compunit): Add constructor,
+	destructor, initializers.
+	(start_buildsym_compunit): Remove.
+	(free_buildsym_compunit): Use "delete".
+	(start_symtab, restart_symtab): Use "new".
+
+2018-07-13  Simon Marchi  <simon.marchi@polymtl.ca>
+
+	* symfile.c (set_objfile_default_section_offset): Remove struct
+	keyword.
+
+2018-07-14  Stafford Horne  <shorne@gmail.com>
+
+	* (Responsible Maintainers): Add myself as or1k maintainer.
+
+2018-07-13  Tom Tromey  <tom@tromey.com>
+
+	* symfile.c (set_objfile_default_section_offset): Use extra braces
+	around initializer.
+
+2018-07-13  Andreas Arnez  <arnez@linux.vnet.ibm.com>
+
+	* s390-tdep.c (s390_displaced_step_fixup): Adjust PC for a
+	non-branching basr.
+
+2018-07-12  Philippe Waroquiers  <philippe.waroquiers@skynet.be>
+
+	* Makefile.in (SUBDIR_UNITTESTS_SRCS): Add
+	unittests/cli-utils-selftests.c
+	* unittests/cli-utils-selftests.c: New file.
+
+2018-07-12  Philippe Waroquiers  <philippe.waroquiers@skynet.be>
+
+	* NEWS: Mention new commands. Mention change to 'thread apply'.
+
+2018-07-12  Philippe Waroquiers  <philippe.waroquiers@skynet.be>
+
+	* thread.c (thr_try_catch_cmd): New function.
+	(thread_apply_all_command): Handle qcs flags.
+	(thread_apply_command): Handle qcs flags.
+	(taas_command): New function.
+	(tfaas_command): New function.
+	(_initialize_thread): Update to setup the new commands 'taas
+	and 'tfaas'. Change doc string for 'thread apply'.
+
+2018-07-12  Philippe Waroquiers  <philippe.waroquiers@skynet.be>
+
+	* stack.c: (trailing_outermost_frame): New function, mostly
+	extracted from backtrace_command_1.
+	(leading_innermost_frame): New function.
+	(backtrace_command_1): Update to call trailing_outermost_frame.
+	(frame_apply_command_count): New function.
+	(frame_apply_level_command): New function.
+	(frame_apply_all_command): New function.
+	(frame_apply_command): New function.
+	(faas_command): New function.
+	(frame_cmd_list): New variable.
+	(_initialize_stack): Update to setup the new commands 'frame apply'
+	and 'faas'.
+
+2018-07-12  Philippe Waroquiers  <philippe.waroquiers@skynet.be>
+
+	* cli-utils.c (number_or_range_parser::get_number): Only handle
+	numbers or convenience var as numbers.
+	(parse_flags): New function.
+	(parse_flags_qcs): New function.
+	(number_or_range_parser::finished): Ensure parsing end is detected
+	before end of string.
+	* cli-utils.h (parse_flags): New function.
+	(parse_flags_qcs): New function.
+	(number_or_range_parser): Remove m_finished bool.
+	(number_or_range_parser::skip_range): Set m_in_range to false.
+
+2018-07-12  Sergio Durigan Junior  <sergiodj@redhat.com>
+
+	* ser-tcp.c (try_connect): Declare 'ioarg' as 'u_long' if building
+	on Windows.
+
+2018-07-11  Sergio Durigan Junior  <sergiodj@redhat.com>
+	    Jan Kratochvil  <jan.kratochvil@redhat.com>
+	    Paul Fertser  <fercerpav@gmail.com>
+	    Tsutomu Seki  <sekiriki@gmail.com>
+	    Pedro Alves  <palves@redhat.com>
+
+	* Makefile.in (SUBDIR_UNITTESTS_SRCS): Add
+	'unittests/parse-connection-spec-selftests.c'.
+	(COMMON_SFILES): Add 'common/netstuff.c'.
+	(HFILES_NO_SRCDIR): Add 'common/netstuff.h'.
+	* NEWS (Changes since GDB 8.2): Mention IPv6 support.
+	* common/netstuff.c: New file.
+	* common/netstuff.h: New file.
+	* ser-tcp.c: Include 'netstuff.h' and 'wspiapi.h'.
+	(wait_for_connect): Update comment.  New parameter
+	'gdb::optional<int> sock' instead of 'struct serial *scb'.
+	Use 'sock' directly instead of 'scb->fd'.
+	(try_connect): New function, with code from 'net_open'.
+	(net_open): Rewrite main loop to deal with multiple
+	sockets/addresses.  Handle IPv6-style hostnames; implement
+	support for IPv6 connections.
+	* unittests/parse-connection-spec-selftests.c: New file.
+
+2018-07-11  Pedro Alves  <palves@redhat.com>
+
+	PR gdb/23377
+	* remote.c (remote_target::remote_detach_pid): Call
+	set_current_process.
+
+2018-07-11  Pedro Alves  <palves@redhat.com>
+
+	* h8300-tdep.c (h8300_gdbarch_init): Remove
+	set_gdbarch_ecoff_reg_to_regnum calls.
+
+2018-07-11  Sergio Durigan Junior  <sergiodj@redhat.com>
+
+	PR c++/23373
+	* c-typeprint.c (c_type_print_base_struct_union): Don't print
+	offsets/sizes for static members of a class/struct.
+
+2018-07-11  Alan Hayward  <alan.hayward@arm.com>
+
+	* target-descriptions.c (tdesc_register_bitsize): Rename.
+	* target-descriptions.h (tdesc_register_bitsize): Likewise.
+	* rs6000-tdep.c (rs6000_gdbarch_init): Use new name.
+	* aarch64-tdep.c (aarch64_get_tdesc_vq): Convert size.
+
+2018-07-10  Tom Tromey  <tom@tromey.com>
+
+	* breakpoint.c (moribund_locations): Now static and a
+	std::vector.
+	(breakpoint_init_inferior, moribund_breakpoint_here_p)
+	(build_bpstat_chain, update_global_location_list)
+	(breakpoint_retire_moribund): Update.
+	* breakpoint.h (bp_location_p): Remove typedef.  Don't declare
+	VEC.
+
+2018-07-10  Andrew Burgess  <andrew.burgess@embecosm.com>
+
+	* riscv-tdep.c (riscv_is_fp_regno_p): New function.
+	(riscv_register_reggroup_p): Use new function, remove unneeded
+	parenthesis.
+	(riscv_push_dummy_call): Extend assert to compare against xlen or
+	flen based on register type.
+
+2018-07-10  Andrew Burgess  <andrew.burgess@embecosm.com>
+
+	* riscv-tdep.c (riscv_print_arg_location): Use TYPE_SAFE_NAME.
+
+2018-07-09  Andrew Burgess  <andrew.burgess@embecosm.com>
+
+	* remote.c (show_hardware_watchpoint_limit): New function.
+	(show_hardware_watchpoint_length_limit): New function.
+	(show_hardware_breakpoint_limit): New function.
+	(_initialize_remote): Use add_setshow_zuinteger_unlimited_cmd
+	where appropriate, update help text.
+
+2018-07-09  Tom Tromey  <tom@tromey.com>
+
+	* Makefile.in (CDEPS): Don't mention XM_CDEPS.
+	(CLIBS): Don't mention NAT_CLIBS.
+
+2018-07-09  Tom Tromey  <tom@tromey.com>
+
+	* Makefile.in (ADD_FILES, ADD_DEPS): Remove.
+	(LIBGDB_OBS, clean mostlyclean): Update.
+	(gdb$(EXEEXT), insight$(EXEEXT)): Update.
+
+2018-07-09  Tom Tromey  <tom@tromey.com>
+
+	* Makefile.in (%.c: %.y): Use ECHO_YACC.
+	(%.c: %.l): Use ECHO_LEX.  Just fail if flex not available.
+	* silent-rules.mk (ECHO_YACC, ECHO_LEX): New variables.
+
+2018-07-09  Tom Tromey  <tom@tromey.com>
+
+	* Makefile.in (ALLDEPFILES): Remove exec.c.
+	(COMMON_OBS): Remove exec.o.
+	(COMMON_SFILES): Add exec.c.
+
+2018-07-09  Tom Tromey  <tom@tromey.com>
+
+	* Makefile.in (LINT, LINTFLAGS, LINTFILES, lint): Remove.
+
+2018-07-09  Tom Tromey  <tom@tromey.com>
+
+	* Makefile.in (clean mostlyclean): Remove stamp-version.
+	(version.c): Depend on stamp-version.
+	(stamp-version): New rule, from version.c rule.
+
+2018-07-09  Tom Tromey  <tom@tromey.com>
+
+	* Makefile.in (init.c): Depend on stamp-init.
+	(stamp-init): New rule, from init.c rule.
+	(clean mostlyclean): Remove stamp-init.
+
+2018-07-09  Tom Tromey  <tom@tromey.com>
+
+	* Makefile.in (INIT_FILES): Remove CONFIG_SRCS,
+	SUBDIR_GCC_COMPILE_SRCS.
+
+2018-07-09  Tom Tromey  <tom@tromey.com>
+
+	* Makefile.in (init.c): Remove some unused sed rules.
+
+2018-07-09  Tom Tromey  <tom@tromey.com>
+
+	* Makefile.in (TSOBS): Remove.
+	(INIT_FILES): Update.
+	(LIBGDB_OBS): Update.
+	(COMMON_SFILES): Add inflow.c.
+	(SFILES): Remove inflow.c.
+
+2018-07-07  Jan Kratochvil  <jan.kratochvil@redhat.com>
+
+	* contrib/gdb-add-index.sh ($dwarf5): New, use it.
+
+2018-07-07  Simon Marchi  <simon.marchi@polymtl.ca>
+
+	* ia64-libunwind-tdep.c (get_reg_name, get_fpreg_name,
+	get_saveloc_name, is_signal_frame_name, step_name,
+	init_remote_name, create_addr_space_name,
+	destroy_addr_space_name, search_unwind_table_name,
+	find_dyn_list_name): Constify.
+
+2018-07-05  Simon Marchi  <simon.marchi@polymtl.ca>
+
+	* darwin-nat.c (darwin_pthread_kill): New function.
+	(darwin_resume_thread): Use darwin_pthread_kill.
+
+2018-07-05  Tom de Vries  <tdevries@suse.de>
+
+	* macroexp.c (macro_buffer) <operator=>: New member function.
+
+2018-07-04  Tom Tromey  <tom@tromey.com>
+
+	* darwin-nat.c (darwin_attach_pid): Use exit_inferior.
+
+2018-07-04  Simon Marchi  <simon.marchi@polymtl.ca>
+
+	* common/common-defs.h (HAVE_USEFUL_SBRK): Define.
+	* main.c: Use HAVE_USEFUL_SBRK instead of HAVE_SBRK.
+	* maint.c: Likewise.
+	* top.c: Likewise.
+
+2018-07-04  Joel Brobecker  <brobecker@adacore.com>
+
+	* NEWS: Create a new section for the next release branch.
+	Rename the section of the current branch, now that it has
+	been cut.
+
+2018-07-04  Joel Brobecker  <brobecker@adacore.com>
+
+	GDB 8.2 branch created (1b919490e8ba30bf1d6941df0ed112b0e557017e):
+	* version.in: Bump version to 8.2.50.DATE-git.
+
+2018-07-04  Vyacheslav Barinov  <v.barinov@samsung.com>
+	    Pedro Alves  <palves@redhat.com>
+
+	* linux-nat.c (linux_init_ptrace): Rename to ...
+	(linux_init_ptrace_procfs): ... this.  Call
+	linux_proc_init_warnings.
+	(linux_nat_target::post_attach)
+	(linux_nat_target::post_startup_inferior): Adjust.
+	* nat/linux-procfs.c (linux_proc_init_warnings): Define function.
+	* nat/linux-procfs.h (linux_proc_init_warnings): Declare function.
+
+2018-07-04  Tom de Vries  <tdevries@suse.de>
+
+	* dwarf2read.c (error_check_comp_unit_head): Move dwarf version
+	check ...
+	(read_comp_unit_head): ... here.
+
+2018-07-03  Tom Tromey  <tom@tromey.com>
+
+	* tracepoint.c (process_tracepoint_on_disconnect, start_tracing)
+	(stop_tracing, tstatus_command)
+	(find_matching_tracepoint_location, merge_uploaded_tracepoints)
+	(print_one_static_tracepoint_marker): Update.
+	* breakpoint.c (static_tracepoints_here, all_tracepoints): Return
+	std::vector.
+	* breakpoint.h (breakpoint_p): Remove typedef.  Don't declare
+	VEC.
+	(all_tracepoints, static_tracepoints_here): Return std::vector.
+
+2018-07-03  Tom Tromey  <tom@tromey.com>
+
+	* common/ptid.c (ptid_equal): Remove.
+	* common/ptid.h (ptid_equal): Don't declare.
+	* ada-tasks.c: Update.
+	* breakpoint.c: Update.
+	* common/agent.c: Update.
+	* corelow.c: Update.
+	* darwin-nat-info.c: Update.
+	* darwin-nat.c: Update.
+	* dcache.c: Update.
+	* dtrace-probe.c: Update.
+	* dummy-frame.c: Update.
+	* fbsd-nat.c: Update.
+	* frame.c: Update.
+	* gdbthread.h: Update.
+	* gnu-nat.c: Update.
+	* go32-nat.c: Update.
+	* inf-loop.c: Update.
+	* inf-ptrace.c: Update.
+	* infcall.c: Update.
+	* infcmd.c: Update.
+	* inflow.c: Update.
+	* infrun.c: Update.
+	* linux-fork.c: Update.
+	* linux-nat.c: Update.
+	* linux-thread-db.c: Update.
+	* mi/mi-cmd-var.c: Update.
+	* mi/mi-interp.c: Update.
+	* mi/mi-main.c: Update.
+	* nto-procfs.c: Update.
+	* ppc-linux-tdep.c: Update.
+	* procfs.c: Update.
+	* python/py-inferior.c: Update.
+	* python/py-record-btrace.c: Update.
+	* python/py-record.c: Update.
+	* ravenscar-thread.c: Update.
+	* regcache.c: Update.
+	* remote-sim.c: Update.
+	* remote.c: Update.
+	* sol-thread.c: Update.
+	* solib.c: Update.
+	* target.c: Update.
+	* tui/tui-stack.c: Update.
+	* varobj.c: Update.
+	* windows-nat.c: Update.
+	* windows-tdep.c: Update.
+
+2018-07-03  Tom Tromey  <tom@tromey.com>
+
+	* common/ptid.c (ptid_match): Remove.
+	* common/ptid.h (ptid_match): Don't declare.
+	* fbsd-nat.c: Update.
+	* infcmd.c: Update.
+	* infrun.c: Update.
+	* linux-nat.c: Update.
+	* record-btrace.c: Update.
+	* regcache.c: Update.
+	* remote.c: Update.
+
+2018-07-03  Tom Tromey  <tom@tromey.com>
+
+	* common/ptid.c (ptid_tid_p): Remove.
+	* common/ptid.h (ptid_tid_p): Don't declare.
+	* sol-thread.c: Update.
+
+2018-07-03  Tom Tromey  <tom@tromey.com>
+
+	* common/ptid.c (ptid_lwp_p): Remove.
+	* common/ptid.h (ptid_lwp_p): Don't declare.
+	* fbsd-nat.c: Update.
+	* linux-nat.c: Update.
+	* nat/linux-procfs.c: Update.
+	* nat/x86-linux-dregs.c: Update.
+	* sol-thread.c: Update.
+
+2018-07-03  Tom Tromey  <tom@tromey.com>
+
+	* common/ptid.c (ptid_is_pid): Remove.
+	* common/ptid.h (ptid_is_pid): Don't declare.
+	* infrun.c: Update.
+	* linux-nat.c: Update.
+	* mi/mi-interp.c: Update.
+	* remote.c: Update.
+	* thread.c: Update.
+
+2018-07-03  Tom Tromey  <tom@tromey.com>
+
+	* common/ptid.c (ptid_get_tid): Remove.
+	* common/ptid.h (ptid_get_tid): Don't declare.
+	* ada-tasks.c: Update.
+	* aix-thread.c: Update.
+	* bsd-uthread.c: Update.
+	* darwin-nat.c: Update.
+	* fbsd-nat.c: Update.
+	* i386-darwin-nat.c: Update.
+	* infrun.c: Update.
+	* linux-tdep.c: Update.
+	* nto-procfs.c: Update.
+	* ppc-ravenscar-thread.c: Update.
+	* python/py-infthread.c: Update.
+	* ravenscar-thread.c: Update.
+	* sol-thread.c: Update.
+	* sparc-ravenscar-thread.c: Update.
+	* windows-nat.c: Update.
+
+2018-07-03  Tom Tromey  <tom@tromey.com>
+
+	* common/ptid.c (ptid_get_lwp): Remove.
+	* common/ptid.h (ptid_get_lwp): Don't declare.
+	* aarch64-linux-nat.c: Update.
+	* ada-tasks.c: Update.
+	* aix-thread.c: Update.
+	* amd64-linux-nat.c: Update.
+	* arm-linux-nat.c: Update.
+	* corelow.c: Update.
+	* fbsd-nat.c: Update.
+	* fbsd-tdep.c: Update.
+	* gnu-nat.c: Update.
+	* i386-cygwin-tdep.c: Update.
+	* i386-gnu-nat.c: Update.
+	* i386-linux-nat.c: Update.
+	* ia64-linux-nat.c: Update.
+	* inf-ptrace.c: Update.
+	* infrun.c: Update.
+	* linux-fork.c: Update.
+	* linux-nat.c: Update.
+	* linux-tdep.c: Update.
+	* linux-thread-db.c: Update.
+	* mips-linux-nat.c: Update.
+	* nat/aarch64-linux-hw-point.c: Update.
+	* nat/aarch64-linux.c: Update.
+	* nat/linux-btrace.c: Update.
+	* nat/linux-osdata.c: Update.
+	* nat/linux-procfs.c: Update.
+	* nat/x86-linux-dregs.c: Update.
+	* obsd-nat.c: Update.
+	* ppc-fbsd-nat.c: Update.
+	* ppc-linux-nat.c: Update.
+	* procfs.c: Update.
+	* python/py-infthread.c: Update.
+	* ravenscar-thread.c: Update.
+	* remote.c: Update.
+	* s390-linux-nat.c: Update.
+	* sol-thread.c: Update.
+	* sol2-tdep.c: Update.
+	* spu-linux-nat.c: Update.
+	* x86-linux-nat.c: Update.
+	* xtensa-linux-nat.c: Update.
+
+2018-07-03  Tom Tromey  <tom@tromey.com>
+
+	* common/ptid.c (ptid_get_pid): Remove.
+	* common/ptid.h (ptid_get_pid): Don't declare.
+	* aarch64-linux-nat.c: Update.
+	* ada-lang.c: Update.
+	* aix-thread.c: Update.
+	* alpha-bsd-nat.c: Update.
+	* amd64-fbsd-nat.c: Update.
+	* amd64-linux-nat.c: Update.
+	* arm-linux-nat.c: Update.
+	* arm-nbsd-nat.c: Update.
+	* auxv.c: Update.
+	* break-catch-syscall.c: Update.
+	* breakpoint.c: Update.
+	* bsd-uthread.c: Update.
+	* corelow.c: Update.
+	* ctf.c: Update.
+	* darwin-nat.c: Update.
+	* fbsd-nat.c: Update.
+	* fbsd-tdep.c: Update.
+	* gcore.c: Update.
+	* gnu-nat.c: Update.
+	* hppa-nbsd-nat.c: Update.
+	* hppa-obsd-nat.c: Update.
+	* i386-fbsd-nat.c: Update.
+	* ia64-linux-nat.c: Update.
+	* inf-ptrace.c: Update.
+	* infcmd.c: Update.
+	* inferior.c: Update.
+	* inferior.h: Update.
+	* inflow.c: Update.
+	* infrun.c: Update.
+	* linux-fork.c: Update.
+	* linux-nat.c: Update.
+	* linux-tdep.c: Update.
+	* linux-thread-db.c: Update.
+	* m68k-bsd-nat.c: Update.
+	* mi/mi-interp.c: Update.
+	* mi/mi-main.c: Update.
+	* mips-linux-nat.c: Update.
+	* mips-nbsd-nat.c: Update.
+	* mips64-obsd-nat.c: Update.
+	* nat/aarch64-linux-hw-point.c: Update.
+	* nat/aarch64-linux.c: Update.
+	* nat/linux-btrace.c: Update.
+	* nat/linux-osdata.c: Update.
+	* nat/linux-procfs.c: Update.
+	* nat/x86-linux-dregs.c: Update.
+	* nto-procfs.c: Update.
+	* obsd-nat.c: Update.
+	* ppc-linux-nat.c: Update.
+	* ppc-nbsd-nat.c: Update.
+	* ppc-obsd-nat.c: Update.
+	* proc-service.c: Update.
+	* procfs.c: Update.
+	* python/py-inferior.c: Update.
+	* python/py-infthread.c: Update.
+	* ravenscar-thread.c: Update.
+	* record.c: Update.
+	* remote-sim.c: Update.
+	* remote.c: Update.
+	* rs6000-nat.c: Update.
+	* s390-linux-nat.c: Update.
+	* sh-nbsd-nat.c: Update.
+	* sol-thread.c: Update.
+	* sparc-nat.c: Update.
+	* sparc64-tdep.c: Update.
+	* spu-linux-nat.c: Update.
+	* spu-tdep.c: Update.
+	* target-debug.h: Update.
+	* target.c: Update.
+	* thread.c: Update.
+	* tid-parse.c: Update.
+	* tracefile-tfile.c: Update.
+	* vax-bsd-nat.c: Update.
+	* windows-nat.c: Update.
+	* x86-linux-nat.c: Update.
+	* x86-nat.c: Update.
+
+2018-07-03  Tom Tromey  <tom@tromey.com>
+
+	* common/ptid.c (pid_to_ptid): Remove.
+	* common/ptid.h (pid_to_ptid): Don't declare.
+	* aix-thread.c: Update.
+	* arm-linux-nat.c: Update.
+	* common/ptid.c: Update.
+	* common/ptid.h: Update.
+	* corelow.c: Update.
+	* ctf.c: Update.
+	* darwin-nat.c: Update.
+	* fbsd-nat.c: Update.
+	* fork-child.c: Update.
+	* gnu-nat.c: Update.
+	* go32-nat.c: Update.
+	* inf-ptrace.c: Update.
+	* infcmd.c: Update.
+	* inferior.c: Update.
+	* infrun.c: Update.
+	* linux-fork.c: Update.
+	* linux-nat.c: Update.
+	* nat/aarch64-linux-hw-point.c: Update.
+	* nat/fork-inferior.c: Update.
+	* nat/x86-linux-dregs.c: Update.
+	* nto-procfs.c: Update.
+	* obsd-nat.c: Update.
+	* procfs.c: Update.
+	* progspace.c: Update.
+	* remote.c: Update.
+	* rs6000-nat.c: Update.
+	* s390-linux-nat.c: Update.
+	* sol-thread.c: Update.
+	* spu-linux-nat.c: Update.
+	* target.c: Update.
+	* top.c: Update.
+	* tracefile-tfile.c: Update.
+	* windows-nat.c: Update.
+
+2018-07-03  Tom Tromey  <tom@tromey.com>
+
+	* common/ptid.h (ptid_build): Don't declare.
+	* common/ptid.c (ptid_build): Remove.
+	* aix-thread.c: Update.
+	* bsd-kvm.c: Update.
+	* bsd-uthread.c: Update.
+	* common/agent.c: Update.
+	* common/ptid.c: Update.
+	* common/ptid.h: Update.
+	* corelow.c: Update.
+	* darwin-nat.c: Update.
+	* fbsd-nat.c: Update.
+	* gnu-nat.c: Update.
+	* linux-fork.c: Update.
+	* linux-nat.c: Update.
+	* linux-thread-db.c: Update.
+	* nat/linux-osdata.c: Update.
+	* nat/linux-procfs.c: Update.
+	* nto-procfs.c: Update.
+	* obsd-nat.c: Update.
+	* proc-service.c: Update.
+	* procfs.c: Update.
+	* ravenscar-thread.c: Update.
+	* remote-sim.c: Update.
+	* remote.c: Update.
+	* sol-thread.c: Update.
+	* target.c: Update.
+	* windows-nat.c: Update.
+
+2018-07-03  Tom Tromey  <tom@tromey.com>
+
+	* infrun.c (follow_exec): Use exit_inferior_silent.
+	* inferior.c (exit_inferior_num_silent): Remove.
+	* inferior.h (exit_inferior_num_silent): Don't declare.
+
+2018-07-03  Tom Tromey  <tom@tromey.com>
+
+	PR cli/23340:
+	* darwin-nat.c (darwin_attach_pid): Reset inferior and
+	inferior_ptid on error.
+
+2018-07-02  Maciej W. Rozycki  <macro@mips.com>
+	    Simon Marchi  <simon.marchi@polymtl.ca>
+
+	PR tdep/8282
+	* disasm.h (gdb_disassembler): Add
+	`m_disassembler_options_holder'. member
+	* disasm.c (get_all_disassembler_options): New function.
+	(gdb_disassembler::gdb_disassembler): Use it.
+	(gdb_buffered_insn_length_init_dis): Likewise.
+	(gdb_buffered_insn_length): Adjust accordingly.
+	(set_disassembler_options): Handle options with arguments.
+	(show_disassembler_options_sfunc): Likewise.  Add a leading new
+	line if showing options with descriptions.
+	(disassembler_options_completer): Adapt to using the
+	`disasm_options_and_args_t' structure.
+	* mips-tdep.c (mips_disassembler_options): New variable.
+	(mips_disassembler_options_o32): Likewise.
+	(mips_disassembler_options_n32): Likewise.
+	(mips_disassembler_options_n64): Likewise.
+	(gdb_print_insn_mips): Don't set `disassembler_options'.
+	(gdb_print_insn_mips_n32, gdb_print_insn_mips_n64): Remove
+	functions.
+	(mips_gdbarch_init): Always set `gdbarch_print_insn' to
+	`gdb_print_insn_mips'.  Set `gdbarch_disassembler_options',
+	`gdbarch_disassembler_options_implicit' and
+	`gdbarch_valid_disassembler_options'.
+	* arm-tdep.c (_initialize_arm_tdep): Adapt to using the
+	`disasm_options_and_args_t' structure.
+	* gdbarch.sh (disassembler_options_implicit): New `gdbarch'
+	method.
+	(valid_disassembler_options): Switch from `disasm_options_t' to
+	the `disasm_options_and_args_t' structure.
+	* NEWS: Document `set disassembler-options' support for the MIPS
+	target.
+	* gdbarch.h: Regenerate.
+	* gdbarch.c: Regenerate.
+
+2018-07-02  Sebastian Huber  <sebastian.huber@embedded-brains.de>
+
+	* riscv-tdep.c (riscv_register_aliases): Swap "fp" and "s0" entries.
+
+2018-06-29  Joel Brobecker  <brobecker@adacore.com>
+
+	* amd64-darwin-tdep.c (x86_darwin_init_abi_64): Add missing
+	parameter in call to amd64_target_description.
+	* amd64-dicos-tdep.c (amd64_dicos_init_abi): Likewise.
+	* amd64-fbsd-tdep.c (amd64fbsd_core_read_description)
+	(amd64fbsd_init_abi): Likewise.
+	* amd64-nbsd-tdep.c (amd64nbsd_init_abi): Likewise.
+	* amd64-obsd-tdep.c (amd64obsd_init_abi): Likewise.
+	* amd64-sol2-tdep.c (amd64_sol2_init_abi): Likewise.
+	* amd64-fbsd-nat.c (amd64_fbsd_nat_target): Likewise.
+
+2018-06-29  Pedro Alves  <palves@redhat.com>
+
+	* gdb/amd64-tdep.h (amd64_create_target_description): Add
+	"segments" parameter.
+	* gdb/amd64-tdep.c (amd64_none_init_abi, amd64_x32_none_init_abi)
+	(_initialize_amd64_tdep): Update call to
+	amd64_create_target_description.
+	(amd64_target_description): Add "segments" parameter.  Adjust
+	the implementation to use it.
+	* gdb/amd64-linux-tdep.c (amd64_linux_read_description): Update
+	call to amd64_create_target_description.
+	* gdb/amd64-windows-tdep.c (amd64_windows_init_abi): Likewise.
+	* gdb/arch/amd64.h (amd64_create_target_description): Add
+	"segments" register.
+	* gdb/arch/amd64.c (amd64_create_target_description): Add
+	"segments" parameter.  Call create_feature_i386_64bit_segments
+	only if SEGMENTS is true.
+	* gdb/gdbserver/win32-i386-low.c (i386_arch_setup): Update
+	call to amd64_create_target_description.
+
+2018-06-29  Pedro Alves  <palves@redhat.com>
+
+	* thread.c (thread_target_id_str): New, factored out from ...
+	(print_thread_info_1): ... here.  Use it to compute the max
+	"Target Id" column width.
+
+2018-06-29  Pedro Alves  <palves@redhat.com>
+
+	* remote.c (remote_target::extra_thread_info): Delete
+	'display_buf' and 'n' locals.  from the cache, regardless of
+	packet mechanims is in use.  Use cache for qThreadExtra and qP
+	methods too.
+
+2018-06-29  Pedro Alves  <palves@redhat.com>
+
+	* blockframe.c (find_pc_sect_containing_function): New function.
+	* breakpoint.c (print_breakpoint_location): Don't call
+	find_pc_sect_function.
+	* linespec.c (create_sals_line_offset): Record the location's
+	symbol in the sal.
+	* linespec.c (convert_address_location_to_sals): Fill in sal's
+	symbol with find_pc_sect_containing_function.
+	* symtab.c (find_function_start_sal): Rename to ...
+	(find_function_start_sal_1): ... this.
+	(find_function_start_sal): Reimplement as wrapper around
+	find_function_start_sal_1, and use
+	find_pc_sect_containing_function to fill in the sal's symbol.
+	(find_function_start_sal(symbol*, bool)): Adjust.
+	* symtab.h (find_pc_function, find_pc_sect_function): Adjust
+	comments.
+	(find_pc_sect_containing_function): Declare.
+
+2018-06-29  Pedro Alves  <palves@redhat.com>
+
+	* inline-frame.c (stopped_by_user_bp_inline_frame): Return
+	true if the the location has no symbol.
+
+2018-06-28  Tom Tromey  <tom@tromey.com>
+
+	* NEWS: Mention --enable-codesign.
+	* silent-rules.mk (ECHO_SIGN): New variable.
+	* configure.ac: Add --enable-codesign.
+	* configure: Rebuild.
+	* Makefile.in (CODESIGN, CODESIGN_CERT): New variables.
+	(gdb$(EXEEXT)): Optionally invoke codesign.
+
+2018-06-28  Pedro Alves  <palves@redhat.com>
+
+	* gdbthread.h (struct thread_suspend_state) <stop_pc>: Extend
+	comments.
+	(switch_to_thread_no_regs): Adjust comment.
+	* infcmd.c (stop_pc): Delete.
+	(post_create_inferior, info_program_command): Replace references
+	to stop_pc with references to thread_info->suspend.stop_pc.
+	* inferior.h (stop_pc): Delete declaration.
+	* infrun.c (proceed, handle_syscall_event, fill_in_stop_func)
+	(handle_inferior_event_1, handle_signal_stop)
+	(process_event_stop_test, keep_going_stepped_thread)
+	(handle_step_into_function, handle_step_into_function_backward)
+	(print_stop_location): Replace references to stop_pc with
+	references to thread_info->suspend.stop_pc.
+	(struct infcall_suspend_state) <stop_pc>: Delete field.
+	(save_infcall_suspend_state, restore_infcall_suspend_state):
+	Remove references to inf_stat->stop_pc.
+	* linux-fork.c (fork_load_infrun_state): Likewise.
+	* record-btrace.c (record_btrace_set_replay): Likewise.
+	* record-full.c (record_full_goto_entry): Likewise.
+	* remote.c (print_one_stopped_thread): Likewise.
+	* target.c (target_resume): Extend comment.
+	* thread.c (set_executing_thread): New.
+	(set_executing): Use it.
+	(switch_to_thread_no_regs, switch_to_no_thread, switch_to_thread):
+	Remove references to stop_pc.
+
+2018-06-28  Pedro Alves  <palves@redhat.com>
+
+	* infrun.c (handle_inferior_event_1) <TARGET_WAITKIND_EXECD>:
+	Moving fetching stop_pc until after ecs->event_thread is refreshed.
+
+2018-06-28  Tom Tromey  <tom@tromey.com>
+
+	* coffread.c (coff_symfile_finish): Update.
+	* xcoffread.c (xcoff_symfile_finish): Update.
+	* elfread.c (elf_symfile_finish): Update.
+	* symfile.h (dwarf2_free_objfile): Don't declare.
+	* dwarf2read.c (_initialize_dwarf2_read): Use
+	register_objfile_data_with_cleanup.
+	(dwarf2_free_objfile): Now static.  Change signature.
+
+2018-06-28  Petr Tesarik  <ptesarik@suse.cz>
+
+	* symfile.c (add_symbol_file_command, _initialize_symfile): Add
+	option "-o" to add-symbol-file-load to add an offset to each
+	section's load address.
+	* symfile.c (set_objfile_default_section_offset): New function.
+
+2018-06-28  Petr Tesarik  <ptesarik@suse.cz>
+
+	* symfile.c (add_symbol_file_command): Make sure that sections
+	with the same name are sorted in the same order.
+
+2018-06-28  Petr Tesarik  <ptesarik@suse.cz>
+
+	* symfile.c (add_symbol_file_command, _initialize_symfile): Do not
+	require the second argument.  If omitted, load sections at the
+	addresses specified in the file.
+
+2018-06-28  Petr Tesarik  <ptesarik@suse.cz>
+
+	* symfile.c (symbol_file_command, symbol_file_add_main_1)
+	(_initialize_symfile): Add option "-o" to symbol-file to add an
+	offset to each section of the symbol file.
+
+2018-06-28  Petr Tesarik  <ptesarik@suse.cz>
+
+	* MAINTAINERS (Write After Approval): Add Petr Tesarik.
+
+2018-06-27  Tom Tromey  <tom@tromey.com>
+
+	* stack.c (_initialize_stack): Update "func" help text.
+
+2018-06-27  Tom Tromey  <tom@tromey.com>
+
+	* python/py-unwind.c (unwind_info_object) <saved_regs>: Now a
+	std::vector.
+	(unwind_infopy_str, pyuw_create_unwind_info)
+	(unwind_infopy_add_saved_register, pyuw_sniffer)
+	(unwind_infopy_dealloc, unwind_infopy_add_saved_register):
+	Update.
+	(struct saved_reg): Add constructor.
+	<value>: Now a gdbpy_ref<>.
+
+2018-06-27  Tom Tromey  <tom@tromey.com>
+
+	* machoread.c (macho_symfile_read): Define "symbol_table" earlier.
+
+2018-06-27  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* gdb-gdb.py.in: Format using autopep8.
+
+2018-06-27  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* gdb-gdb.py.in (CoreAddrPrettyPrinter): New class.
+	(type_lookup_function): Recognize CORE_ADDR values.
+
+2018-06-27  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* gdb-gdb.py.in (StructMainTypePrettyPrinter) <to_string>: Don't
+	print tag_name.
+
+2018-06-27  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* gdb-gdb.py.in (TypeFlag) <__cmp__>: Remove.
+	<__lt__>: Add.
+
+2018-06-27  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* gdb-gdb.py: Move to...
+	* gdb-gdb.py.in: ... here.
+	* configure.ac (AC_CONFIG_FILES): Add gdb-gdb.py.
+	* Makefile.in (all): Add gdb-gdb.gdb and gdb-gdb.py as
+	dependencies.
+	(distclean): Remove gdb-gdb.py when cleaning.
+	(gdb-gdb.py, gdb-gdb.gdb): New rules.
+	* configure: Re-generate.
+
+2018-06-27  Pedro Alves  <palves@redhat.com>
+
+	* proc-service.c (get_ps_regcache): New.
+	(ps_lgetregs, ps_lsetregs, ps_lgetfpregs)
+	(ps_lsetfpregs): Use it.
+
+2018-06-27  Omair Javaid  <omair.javaid@linaro.org>
+
+	PR gdb/21695
+	* dwarf2read.c (lnp_state_machine::check_line_address): Update declaration.
+	(dwarf_decode_lines_1): Adjust.
+
+2018-06-27  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* fbsd-nat.h (class fbsd_nat_target) <find_memory_regions>: Add
+	override.
+	<info_proc>: Likewise.
+
+2018-06-26  Joel Brobecker  <brobecker@adacore.com>
+
+	* windows-nat.c (do_windows_fetch_inferior_registers): Rename
+	to windows_fetch_one_register, and only handle the case of
+	fetching one register.  Move the code that reloads the context
+	and iterates over all registers if R is negative to...
+	(windows_nat_target::fetch_registers): ... here.
+	(do_windows_store_inferior_registers): Rename to
+	windows_store_one_register, and only handle the case of storing
+	one register.  Move the code that handles the case where r is
+	negative to...
+	(windows_nat_target::store_registers) ... here.
+
+2018-06-26  Tom Tromey  <tom@tromey.com>
+
+	PR rust/22574:
+	* typeprint.c (whatis_exp): Allow ptype/o for Rust.
+	* rust-lang.c (rust_print_struct_def): Add podata parameter.
+	Update.
+	(rust_internal_print_type): Add podata parameter.
+	(rust_print_type): Update.
+
+2018-06-26  Tom Tromey  <tom@tromey.com>
+
+	* typeprint.h (struct print_offset_data) <update, finish,
+	maybe_print_hole>: New methods.
+	<indentation>: New constant.
+	* typeprint.c (print_offset_data::indentation): Define.
+	(print_offset_data::maybe_print_hole, print_offset_data::update)
+	(print_offset_data::finish): Move from c-typeprint.c and rename.
+	* c-typeprint.c (OFFSET_SPC_LEN): Remove.
+	(print_spaces_filtered_with_print_options): Update.
+	(c_print_type_union_field_offset, maybe_print_hole)
+	(c_print_type_struct_field_offset): Move to typeprint.c and
+	rename.
+	(c_type_print_base_struct_union): Update.
+
+2018-06-25  Pedro Alves  <palves@redhat.com>
+
+	* gdbthread.h (thread_info_ref, delete_thread)
+	(delete_thread_silent, first_thread_of_inferior)
+	(any_thread_of_inferior, switch_to_thread)
+	(enable_thread_stack_temporaries)
+	(thread_stack_temporaries_enabled_p, push_thread_stack_temporary)
+	(get_last_thread_stack_temporary)
+	(value_in_thread_stack_temporaries, can_access_registers_thread):
+	Spell out "struct thread_info" instead of just "thread_info".
+	* inferior.h (notice_new_inferior): Likewise.
+
+2018-06-25  Pedro Alves  <palves@redhat.com>
+
+	* windows-nat.c (windows_delete_thread): Use find_thread_ptid and
+	pass thread_info pointer to delete_thread.
+	(windows_nat_target::detach): Pass inferior pointer to
+	detach_inferior.
+	* aix-thread.c (sync_threadlists): Pass thread_info pointer to
+	delete_thread.
+	* bsd-kvm.c (bsd_kvm_target::close): Use discard_all_inferiors.
+	* darwin-nat.c (darwin_check_new_threads): Use find_thread_ptid
+	and pass a thread_info pointer to delete_thread.
+	* fbsd-nat.c (fbsd_nat_target::wait): Use find_thread_ptid and
+	pass thread_info pointer to delete_thread.
+	* go32-nat.c (go32_nat_target::mourn_inferior): Remove
+	delete_thread_silent call.
+	* procfs.c (procfs_target::detach): Pass inferior pointer to
+	detach_inferior.
+	(procfs_target::wait): Pass thread_info pointer to delete_thread.
+	* remote-sim.c (gdbsim_target::mourn_inferior): Remove
+	delete_thread_silent call.
+	* windows-nat.c (windows_delete_thread): Use find_thread_ptid and
+	pass thread_info pointer to delete_thread.
+	(windows_nat_target::detach): Pass inferior pointer to
+	delete_inferior.
+
+2018-06-22  Alan Hayward  <alan.hayward@arm.com>
+
+	* regcache.c (readable_regcache::read_part): Fix asserts.
+	(reg_buffer::raw_collect_part): New function.
+	(regcache::write_part): Fix asserts.
+	(reg_buffer::raw_supply_part): New function.
+	(regcache::transfer_regset_register): New helper function.
+	(regcache::transfer_regset): Call new functions.
+	(regcache_supply_regset): Use gdb_byte*.
+	(regcache::supply_regset): Likewise.
+	(regcache_collect_regset): Likewise.
+	(regcache::collect_regset): Likewise.
+	* regcache.h (reg_buffer::raw_collect_part): New declaration.
+	(reg_buffer::raw_supply_part): Likewise.
+	(regcache::transfer_regset_register): Likewise.
+	(regcache::transfer_regset): Use gdb_byte*.
+
+2018-06-22  Alan Hayward  <alan.hayward@arm.com>
+
+	* nat/aarch64-sve-linux-ptrace.h (HAS_SVE_STATE): Use &.
+
 2018-06-21  Pedro Alves  <palves@redhat.com>
 
 	* ada-lang.h (ada_get_task_number): Take a thread_info pointer

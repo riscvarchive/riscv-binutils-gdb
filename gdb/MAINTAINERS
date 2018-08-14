@@ -154,6 +154,7 @@ Kevin Buettner			kevinb@redhat.com
 Doug Evans			dje@google.com
 Simon Marchi			simon.marchi@ericsson.com
 Yao Qi				qiyao@sourceware.org
+Tom Tromey			tom@tromey.com
 Ulrich Weigand			Ulrich.Weigand@de.ibm.com
 Eli Zaretskii			eliz@gnu.org
 
@@ -270,8 +271,8 @@ the native maintainer when resolving ABI issues.
 			--target=microblaze-linux-gnu ,-Werror
 			Michael Eager		eager@eagercon.com
 
-	mips		--target=mips-elf ,-Werror
-			Maciej W. Rozycki	macro@mips.com
+	mips I-IV	--target=mips-elf ,-Werror
+			Maciej W. Rozycki	macro@linux-mips.org
 
 	mn10300		--target=mn10300-elf broken
 			(sim/ dies with make -j)
@@ -287,6 +288,9 @@ the native maintainer when resolving ABI issues.
 			Yao Qi			qiyao@sourceware.org
 
 	ns32k		Deleted
+
+	or1k		--target=or1k-elf ,-Werror
+			Stafford Horne		shorne@gmail.com
 
 	pa		--target=hppa-elf ,-Werror
 
@@ -639,6 +643,7 @@ Alfred M. Szmidt				ams@gnu.org
 David Taylor					david.taylor@emc.com
 Ian Lance Taylor				ian@airs.com
 Walfred Tedeschi				walfred.tedeschi@intel.com
+Petr Tesarik					ptesarik@suse.cz
 Gary Thomas					gthomas@redhat.com
 Jason Thorpe					thorpej@netbsd.org
 Caroline Tice					ctice@apple.com

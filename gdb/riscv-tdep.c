@@ -337,18 +337,7 @@ riscv_has_feature (struct gdbarch *gdbarch, char feature)
 
   gdb_assert (feature >= 'A' && feature <= 'Z');
 
-  /* It would be nice to always check with the real target where possible,
-     however, for compressed instructions this is a bad idea.
-
-     If the BFD was not compiled with compressed instruction support, but we
-     are running on a target with compressed instructions then we might
-     place a 4-byte breakpoint, then decrement the $pc by 2 bytes leading to
-     confusion.
-
-     It's safer if we just make decisions about compressed instruction
-     support based on the BFD.  */
-  if (feature != 'C')
-    misa = riscv_read_misa_reg (&have_read_misa);
+  misa = riscv_read_misa_reg (&have_read_misa);
   if (!have_read_misa || misa == 0)
     misa = gdbarch_tdep (gdbarch)->core_features;
 
@@ -359,7 +348,7 @@ riscv_has_feature (struct gdbarch *gdbarch, char feature)
    Possible return values are 4, 8, or 16 for RiscV variants RV32, RV64, or
    RV128.  */
 
-static int
+int
 riscv_isa_xlen (struct gdbarch *gdbarch)
 {
   switch (gdbarch_tdep (gdbarch)->abi.fields.base_len)
@@ -408,6 +397,15 @@ static bool
 riscv_has_fp_abi (struct gdbarch *gdbarch)
 {
   return (gdbarch_tdep (gdbarch)->abi.fields.float_abi != 0);
+}
+
+/* Return true if REGNO is a floating pointer register.  */
+
+static bool
+riscv_is_fp_regno_p (int regno)
+{
+  return (regno >= RISCV_FIRST_FP_REGNUM
+	  && regno <= RISCV_LAST_FP_REGNUM);
 }
 
 /* Implement the breakpoint_kind_from_pc gdbarch method.  */
@@ -463,9 +461,6 @@ static const char *
 riscv_register_name (struct gdbarch *gdbarch,
 		     int regnum)
 {
-  int i;
-  static char buf[20];
-
   auto match = riscv_reg_map.find(regnum);
   if (match == riscv_reg_map.end())
     return NULL;
@@ -842,6 +837,18 @@ public:
       LUI,
       SD,
       SW,
+      /* These are needed for software breakopint support.  */
+      JAL,
+      JALR,
+      BEQ,
+      BNE,
+      BLT,
+      BGE,
+      BLTU,
+      BGEU,
+      /* These are needed for stepping over atomic sequences.  */
+      LR,
+      SC,
 
       /* Other instructions are not interesting during the prologue scan, and
 	 are ignored.  */
@@ -898,6 +905,12 @@ private:
     return (opcode >> offset) & 0x1F;
   }
 
+  /* Extract 5 bit register field at OFFSET from instruction OPCODE.  */
+  int decode_register_index_short (unsigned long opcode, int offset)
+  {
+    return ((opcode >> offset) & 0x7) + 8;
+  }
+
   /* Helper for DECODE, decode 32-bit R-type instruction.  */
   void decode_r_type_insn (enum opcode opcode, ULONGEST ival)
   {
@@ -947,6 +960,36 @@ private:
     m_opcode = opcode;
     m_rd = decode_register_index (ival, OP_SH_RD);
     m_imm.s = EXTRACT_UTYPE_IMM (ival);
+  }
+
+  /* Helper for DECODE, decode 32-bit J-type instruction.  */
+  void decode_j_type_insn (enum opcode opcode, ULONGEST ival)
+  {
+    m_opcode = opcode;
+    m_rd = decode_register_index (ival, OP_SH_RD);
+    m_imm.s = EXTRACT_UJTYPE_IMM (ival);
+  }
+
+  /* Helper for DECODE, decode 32-bit J-type instruction.  */
+  void decode_cj_type_insn (enum opcode opcode, ULONGEST ival)
+  {
+    m_opcode = opcode;
+    m_imm.s = EXTRACT_RVC_J_IMM (ival);
+  }
+
+  void decode_b_type_insn (enum opcode opcode, ULONGEST ival)
+  {
+    m_opcode = opcode;
+    m_rs1 = decode_register_index (ival, OP_SH_RS1);
+    m_rs2 = decode_register_index (ival, OP_SH_RS2);
+    m_imm.s = EXTRACT_SBTYPE_IMM (ival);
+  }
+
+  void decode_cb_type_insn (enum opcode opcode, ULONGEST ival)
+  {
+    m_opcode = opcode;
+    m_rs1 = decode_register_index_short (ival, OP_SH_CRS1S);
+    m_imm.s = EXTRACT_RVC_B_IMM (ival);
   }
 
   /* Fetch instruction from target memory at ADDR, return the content of
@@ -1045,32 +1088,83 @@ riscv_insn::decode (struct gdbarch *gdbarch, CORE_ADDR pc)
 	decode_s_type_insn (SD, ival);
       else if (is_sw_insn (ival))
 	decode_s_type_insn (SW, ival);
+      else if (is_jal_insn (ival))
+	decode_j_type_insn (JAL, ival);
+      else if (is_jalr_insn (ival))
+	decode_i_type_insn (JALR, ival);
+      else if (is_beq_insn (ival))
+	decode_b_type_insn (BEQ, ival);
+      else if (is_bne_insn (ival))
+	decode_b_type_insn (BNE, ival);
+      else if (is_blt_insn (ival))
+	decode_b_type_insn (BLT, ival);
+      else if (is_bge_insn (ival))
+	decode_b_type_insn (BGE, ival);
+      else if (is_bltu_insn (ival))
+	decode_b_type_insn (BLTU, ival);
+      else if (is_bgeu_insn (ival))
+	decode_b_type_insn (BGEU, ival);
+      else if (is_lr_w_insn (ival))
+	decode_r_type_insn (LR, ival);
+      else if (is_lr_d_insn (ival))
+	decode_r_type_insn (LR, ival);
+      else if (is_sc_w_insn (ival))
+	decode_r_type_insn (SC, ival);
+      else if (is_sc_d_insn (ival))
+	decode_r_type_insn (SC, ival);
       else
 	/* None of the other fields are valid in this case.  */
 	m_opcode = OTHER;
     }
   else if (m_length == 2)
     {
-      if (is_c_add_insn (ival))
+      int xlen = riscv_isa_xlen (gdbarch);
+
+      /* C_ADD and C_JALR have the same opcode.  If RS2 is 0, then this is a
+	 C_JALR.  So must try to match C_JALR first as it has more bits in
+	 mask.  */
+      if (is_c_jalr_insn (ival))
+	decode_cr_type_insn (JALR, ival);
+      else if (is_c_add_insn (ival))
 	decode_cr_type_insn (ADD, ival);
-      else if (is_c_addw_insn (ival))
+      /* C_ADDW is RV64 and RV128 only.  */
+      else if (xlen != 4 && is_c_addw_insn (ival))
 	decode_cr_type_insn (ADDW, ival);
       else if (is_c_addi_insn (ival))
 	decode_ci_type_insn (ADDI, ival);
-      else if (is_c_addiw_insn (ival))
+      /* C_ADDIW and C_JAL have the same opcode.  C_ADDIW is RV64 and RV128
+	 only and C_JAL is RV32 only.  */
+      else if (xlen != 4 && is_c_addiw_insn (ival))
 	decode_ci_type_insn (ADDIW, ival);
+      else if (xlen == 4 && is_c_jal_insn (ival))
+	decode_cj_type_insn (JAL, ival);
+      /* C_ADDI16SP and C_LUI have the same opcode.  If RD is 2, then this is a
+	 C_ADDI16SP.  So must try to match C_ADDI16SP first as it has more bits
+	 in mask.  */
       else if (is_c_addi16sp_insn (ival))
 	{
 	  m_opcode = ADDI;
 	  m_rd = m_rs1 = decode_register_index (ival, OP_SH_RD);
 	  m_imm.s = EXTRACT_RVC_ADDI16SP_IMM (ival);
 	}
-      else if (is_lui_insn (ival))
+      else if (is_c_lui_insn (ival))
 	m_opcode = OTHER;
-      else if (is_c_sd_insn (ival))
+      /* C_SD and C_FSW have the same opcode.  C_SD is RV64 and RV128 only,
+	 and C_FSW is RV32 only.  */
+      else if (xlen != 4 && is_c_sd_insn (ival))
 	m_opcode = OTHER;
-      else if (is_sw_insn (ival))
+      else if (is_c_sw_insn (ival))
 	m_opcode = OTHER;
+      /* C_JR and C_MV have the same opcode.  If RS2 is 0, then this is a C_JR.
+	 So must try to match C_JR first as it ahs more bits in mask.  */
+      else if (is_c_jr_insn (ival))
+	decode_cr_type_insn (JALR, ival);
+      else if (is_c_j_insn (ival))
+	decode_cj_type_insn (JAL, ival);
+      else if (is_c_beqz_insn (ival))
+	decode_cb_type_insn (BEQ, ival);
+      else if (is_c_bnez_insn (ival))
+	decode_cb_type_insn (BNE, ival);
       else
 	/* None of the other fields of INSN are valid in this case.  */
 	m_opcode = OTHER;
@@ -1892,12 +1986,8 @@ riscv_print_arg_location (ui_file *stream, struct gdbarch *gdbarch,
 			  struct riscv_arg_info *info,
 			  CORE_ADDR sp_refs, CORE_ADDR sp_args)
 {
-  const char* type_name = TYPE_NAME (info->type);
-  if (type_name == nullptr)
-    type_name = "???";
-
   fprintf_unfiltered (stream, "type: '%s', length: 0x%x, alignment: 0x%x",
-		      type_name, info->length, info->align);
+		      TYPE_SAFE_NAME (info->type), info->length, info->align);
   switch (info->argloc[0].loc_type)
     {
     case riscv_arg_info::location::in_reg:
@@ -1982,7 +2072,6 @@ riscv_push_dummy_call (struct gdbarch *gdbarch,
   int i;
   CORE_ADDR sp_args, sp_refs;
   enum bfd_endian byte_order = gdbarch_byte_order (gdbarch);
-  struct gdbarch_tdep *tdep = gdbarch_tdep (gdbarch);
 
   struct riscv_arg_info *arg_info =
     (struct riscv_arg_info *) alloca (nargs * sizeof (struct riscv_arg_info));
@@ -2111,7 +2200,9 @@ riscv_push_dummy_call (struct gdbarch *gdbarch,
 	      {
 		gdb_byte tmp [sizeof (ULONGEST)];
 
-		gdb_assert (second_arg_length <= call_info.xlen);
+		gdb_assert ((riscv_is_fp_regno_p (info->argloc[1].loc_data.regno)
+			     && second_arg_length <= call_info.flen)
+			    || second_arg_length <= call_info.xlen);
 		memset (tmp, 0, sizeof (tmp));
 		memcpy (tmp, second_arg_data, second_arg_length);
 		regcache->cooked_write (info->argloc[1].loc_data.regno, tmp);
@@ -2166,10 +2257,6 @@ riscv_return_value (struct gdbarch  *gdbarch,
 		    gdb_byte *readbuf,
 		    const gdb_byte *writebuf)
 {
-  enum type_code rv_type = TYPE_CODE (type);
-  unsigned int rv_size = TYPE_LENGTH (type);
-  int fp, regnum, flen;
-  ULONGEST tmp;
   struct riscv_call_info call_info (gdbarch);
   struct riscv_arg_info info;
   struct type *arg_type;
@@ -2541,7 +2628,6 @@ riscv_gdbarch_init (struct gdbarch_info info,
   struct gdbarch *gdbarch;
   struct gdbarch_tdep *tdep;
   struct gdbarch_tdep tmp_tdep;
-  int i;
 
   /* Ideally, we'd like to get as much information from the target for
      things like register size, and whether the target has floating point
@@ -2572,9 +2658,7 @@ riscv_gdbarch_init (struct gdbarch_info info,
 			_("unknown ELF header class %d"), eclass);
 
       if (e_flags & EF_RISCV_RVC)
-	{
-	  tmp_tdep.core_features |= (1 << ('C' - 'A'));
-	}
+	tmp_tdep.core_features |= (1 << ('C' - 'A'));
 
       if (e_flags & EF_RISCV_FLOAT_ABI_DOUBLE)
 	{
@@ -2658,6 +2742,9 @@ riscv_gdbarch_init (struct gdbarch_info info,
 
   registers_init (gdbarch, info);
 
+  /* Hook in OS ABI-specific overrides, if they have been registered.  */
+  gdbarch_init_osabi (info, gdbarch);
+
   return gdbarch;
 }
 
@@ -2720,6 +2807,145 @@ riscv_invalidate_inferior_data (struct inferior *inf)
       delete (inf_data);
       set_inferior_data (inf, riscv_inferior_data_reg, NULL);
     }
+}
+
+/* This decodes the current instruction and determines the address of the
+   next instruction.  */
+
+static CORE_ADDR
+riscv_next_pc (struct regcache *regcache, CORE_ADDR pc)
+{
+  struct gdbarch *gdbarch = regcache->arch ();
+  struct riscv_insn insn;
+  CORE_ADDR next_pc;
+
+  insn.decode (gdbarch, pc);
+  next_pc = pc + insn.length ();
+
+  if (insn.opcode () == riscv_insn::JAL)
+    next_pc = pc + insn.imm_signed ();
+  else if (insn.opcode () == riscv_insn::JALR)
+    {
+      LONGEST source;
+      regcache->cooked_read (insn.rs1 (), &source);
+      next_pc = (source + insn.imm_signed ()) & ~(CORE_ADDR) 0x1;
+    }
+  else if (insn.opcode () == riscv_insn::BEQ)
+    {
+      LONGEST src1, src2;
+      regcache->cooked_read (insn.rs1 (), &src1);
+      regcache->cooked_read (insn.rs2 (), &src2);
+      if (src1 == src2)
+	next_pc = pc + insn.imm_signed ();
+    }
+  else if (insn.opcode () == riscv_insn::BNE)
+    {
+      LONGEST src1, src2;
+      regcache->cooked_read (insn.rs1 (), &src1);
+      regcache->cooked_read (insn.rs2 (), &src2);
+      if (src1 != src2)
+	next_pc = pc + insn.imm_signed ();
+    }
+  else if (insn.opcode () == riscv_insn::BLT)
+    {
+      LONGEST src1, src2;
+      regcache->cooked_read (insn.rs1 (), &src1);
+      regcache->cooked_read (insn.rs2 (), &src2);
+      if (src1 < src2)
+	next_pc = pc + insn.imm_signed ();
+    }
+  else if (insn.opcode () == riscv_insn::BGE)
+    {
+      LONGEST src1, src2;
+      regcache->cooked_read (insn.rs1 (), &src1);
+      regcache->cooked_read (insn.rs2 (), &src2);
+      if (src1 >= src2)
+	next_pc = pc + insn.imm_signed ();
+    }
+  else if (insn.opcode () == riscv_insn::BLTU)
+    {
+      ULONGEST src1, src2;
+      regcache->cooked_read (insn.rs1 (), &src1);
+      regcache->cooked_read (insn.rs2 (), &src2);
+      if (src1 < src2)
+	next_pc = pc + insn.imm_signed ();
+    }
+  else if (insn.opcode () == riscv_insn::BGEU)
+    {
+      ULONGEST src1, src2;
+      regcache->cooked_read (insn.rs1 (), &src1);
+      regcache->cooked_read (insn.rs2 (), &src2);
+      if (src1 >= src2)
+	next_pc = pc + insn.imm_signed ();
+    }
+
+  return next_pc;
+}
+
+/* We can't put a breakpoint in the middle of a lr/sc atomic sequence, so look
+   for the end of the sequence and put the breakpoint there.  */
+
+static bool
+riscv_next_pc_atomic_sequence (struct regcache *regcache, CORE_ADDR pc,
+			       CORE_ADDR *next_pc)
+{
+  struct gdbarch *gdbarch = regcache->arch ();
+  struct riscv_insn insn;
+  CORE_ADDR cur_step_pc = pc;
+  CORE_ADDR last_addr = 0;
+
+  /* First instruction has to be a load reserved.  */
+  insn.decode (gdbarch, cur_step_pc);
+  if (insn.opcode () != riscv_insn::LR)
+    return false;
+  cur_step_pc = cur_step_pc + insn.length ();
+
+  /* Next instruction should be branch to exit.  */
+  insn.decode (gdbarch, cur_step_pc);
+  if (insn.opcode () != riscv_insn::BNE)
+    return false;
+  last_addr = cur_step_pc + insn.imm_signed ();
+  cur_step_pc = cur_step_pc + insn.length ();
+
+  /* Next instruction should be store conditional.  */
+  insn.decode (gdbarch, cur_step_pc);
+  if (insn.opcode () != riscv_insn::SC)
+    return false;
+  cur_step_pc = cur_step_pc + insn.length ();
+
+  /* Next instruction should be branch to start.  */
+  insn.decode (gdbarch, cur_step_pc);
+  if (insn.opcode () != riscv_insn::BNE)
+    return false;
+  if (pc != (cur_step_pc + insn.imm_signed ()))
+    return false;
+  cur_step_pc = cur_step_pc + insn.length ();
+
+  /* We should now be at the end of the sequence.  */
+  if (cur_step_pc != last_addr)
+    return false;
+
+  *next_pc = cur_step_pc;
+  return true;
+}
+
+/* This is called just before we want to resume the inferior, if we want to
+   single-step it but there is no hardware or kernel single-step support.  We
+   find the target of the coming instruction and breakpoint it.  */
+
+std::vector<CORE_ADDR>
+riscv_software_single_step (struct regcache *regcache)
+{
+  CORE_ADDR pc, next_pc;
+
+  pc = regcache_read_pc (regcache);
+
+  if (riscv_next_pc_atomic_sequence (regcache, pc, &next_pc))
+    return {next_pc};
+
+  next_pc = riscv_next_pc (regcache, pc);
+
+  return {next_pc};
 }
 
 void

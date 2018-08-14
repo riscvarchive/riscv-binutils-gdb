@@ -48,13 +48,12 @@ gdbscm_scm_from_c_string (const char *string)
 
 /* Convert an SCM string to a C (latin1) string.
    "latin1" is chosen because Guile won't throw an exception.
-   Space for the result is allocated with malloc, caller must free.
    It is an error to call this if STRING is not a string.  */
 
-char *
+gdb::unique_xmalloc_ptr<char>
 gdbscm_scm_to_c_string (SCM string)
 {
-  return scm_to_latin1_string (string);
+  return gdb::unique_xmalloc_ptr<char> (scm_to_latin1_string (string));
 }
 
 /* Use printf to construct a Scheme string.  */
@@ -113,10 +112,9 @@ gdbscm_call_scm_to_stringn (void *datap)
    If STRICT is zero, then escape sequences are used for characters that
    can't be converted, and EXCEPT_SCMP may be passed as NULL.
 
-   Space for the result is allocated with malloc, caller must free.
    It is an error to call this if STRING is not a string.  */
 
-char *
+gdb::unique_xmalloc_ptr<char>
 gdbscm_scm_to_string (SCM string, size_t *lenp,
 		      const char *charset, int strict, SCM *except_scmp)
 {
@@ -136,7 +134,7 @@ gdbscm_scm_to_string (SCM string, size_t *lenp,
   if (gdbscm_is_false (scm_result))
     {
       gdb_assert (data.result != NULL);
-      return data.result;
+      return gdb::unique_xmalloc_ptr<char> (data.result);
     }
   gdb_assert (gdbscm_is_exception (scm_result));
   *except_scmp = scm_result;
@@ -214,10 +212,9 @@ gdbscm_scm_from_string (const char *string, size_t len,
 
    Returns NULL if there is a conversion error, with the exception object
    stored in *EXCEPT_SCMP.
-   Space for the result is allocated with malloc, caller must free.
    It is an error to call this if STRING is not a string.  */
 
-char *
+gdb::unique_xmalloc_ptr<char>
 gdbscm_scm_to_host_string (SCM string, size_t *lenp, SCM *except_scmp)
 {
   return gdbscm_scm_to_string (string, lenp, host_charset (), 1, except_scmp);

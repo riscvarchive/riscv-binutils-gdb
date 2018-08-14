@@ -41,7 +41,7 @@
 /* FIXME: ezannoni/2004-02-13 Verify if the include below is really needed.  */
 #include "symfile.h"
 #include "objfiles.h"
-#include "buildsym.h"
+#include "buildsym-legacy.h"
 #include "stabsread.h"
 #include "expression.h"
 #include "complaints.h"
@@ -713,6 +713,7 @@ process_linenos (CORE_ADDR start, CORE_ADDR end)
       /* Line numbers are not necessarily ordered.  xlc compilation will
          put static function to the end.  */
 
+      struct subfile *current_subfile = get_current_subfile ();
       lineTb = arrange_linetable (lv);
       if (lv == lineTb)
 	{
@@ -775,8 +776,9 @@ process_linenos (CORE_ADDR start, CORE_ADDR end)
 	    if (fakename == NULL)
 	      fakename = " ?";
 	    start_subfile (fakename);
-	    xfree (current_subfile->name);
+	    xfree (get_current_subfile ()->name);
 	  }
+	  struct subfile *current_subfile = get_current_subfile ();
 	  current_subfile->name = xstrdup (inclTable[ii].name);
 #endif
 
@@ -814,7 +816,7 @@ aix_process_linenos (struct objfile *objfile)
     return;
 
   /* Process line numbers and enter them into line vector.  */
-  process_linenos (last_source_start_addr, cur_src_end_addr);
+  process_linenos (get_last_source_start_addr (), cur_src_end_addr);
 }
 
 
@@ -900,7 +902,7 @@ enter_line_range (struct subfile *subfile, unsigned beginoffset,
 
 #define complete_symtab(name, start_addr) {	\
   set_last_source_file (name);			\
-  last_source_start_addr = start_addr;		\
+  set_last_source_start_addr (start_addr);	\
 }
 
 
@@ -1391,23 +1393,23 @@ read_xcoff_symtab (struct objfile *objfile, struct partial_symtab *pst)
 	      /* { main_aux.x_sym.x_misc.x_lnsz.x_lnno
 	         contains number of lines to '}' */
 
-	      if (context_stack_depth <= 0)
+	      if (outermost_context_p ())
 		{	/* We attempted to pop an empty context stack.  */
 		  ef_complaint (cs->c_symnum);
 		  within_function = 0;
 		  break;
 		}
-	      newobj = pop_context ();
+	      struct context_stack cstk = pop_context ();
 	      /* Stack must be empty now.  */
-	      if (context_stack_depth > 0 || newobj == NULL)
+	      if (!outermost_context_p ())
 		{
 		  ef_complaint (cs->c_symnum);
 		  within_function = 0;
 		  break;
 		}
 
-	      finish_block (newobj->name, &local_symbols, newobj->old_blocks,
-			    NULL, newobj->start_addr,
+	      finish_block (cstk.name, cstk.old_blocks,
+			    NULL, cstk.start_addr,
 			    (fcn_cs_saved.c_value
 			     + fcn_aux_saved.x_sym.x_misc.x_fsize
 			     + ANOFFSET (objfile->section_offsets,
@@ -1483,28 +1485,28 @@ read_xcoff_symtab (struct objfile *objfile, struct partial_symtab *pst)
 	    }
 	  else if (strcmp (cs->c_name, ".eb") == 0)
 	    {
-	      if (context_stack_depth <= 0)
+	      if (outermost_context_p ())
 		{	/* We attempted to pop an empty context stack.  */
 		  eb_complaint (cs->c_symnum);
 		  break;
 		}
-	      newobj = pop_context ();
-	      if (depth-- != newobj->depth)
+	      struct context_stack cstk = pop_context ();
+	      if (depth-- != cstk.depth)
 		{
 		  eb_complaint (cs->c_symnum);
 		  break;
 		}
-	      if (local_symbols && context_stack_depth > 0)
+	      if (*get_local_symbols () && !outermost_context_p ())
 		{
 		  /* Make a block for the local symbols within.  */
-		  finish_block (newobj->name, &local_symbols,
-				newobj->old_blocks, NULL,
-				newobj->start_addr,
+		  finish_block (cstk.name,
+				cstk.old_blocks, NULL,
+				cstk.start_addr,
 				(cs->c_value
 				 + ANOFFSET (objfile->section_offsets,
 					     SECT_OFF_TEXT (objfile))));
 		}
-	      local_symbols = newobj->locals;
+	      *get_local_symbols () = cstk.locals;
 	    }
 	  break;
 
@@ -1592,9 +1594,9 @@ process_xcoff_symbol (struct coff_symbol *cs, struct objfile *objfile)
       SYMBOL_DUP (sym, sym2);
 
       if (cs->c_sclass == C_EXT || C_WEAKEXT)
-	add_symbol_to_list (sym2, &global_symbols);
+	add_symbol_to_list (sym2, get_global_symbols ());
       else if (cs->c_sclass == C_HIDEXT || cs->c_sclass == C_STAT)
-	add_symbol_to_list (sym2, &file_symbols);
+	add_symbol_to_list (sym2, get_file_symbols ());
     }
   else
     {
@@ -1868,7 +1870,6 @@ xcoff_psymtab_to_symtab_1 (struct objfile *objfile, struct partial_symtab *pst)
     {
       /* Init stuff necessary for reading in symbols.  */
       stabsread_init ();
-      buildsym_init ();
 
       scoped_free_pendings free_pending;
       read_xcoff_symtab (objfile, pst);
@@ -1920,7 +1921,6 @@ static void
 xcoff_new_init (struct objfile *objfile)
 {
   stabsread_new_init ();
-  buildsym_new_init ();
 }
 
 /* Do initialization in preparation for reading symbols from OBJFILE.
@@ -1959,8 +1959,6 @@ xcoff_symfile_finish (struct objfile *objfile)
       inclTable = NULL;
     }
   inclIndx = inclLength = inclDepth = 0;
-
-  dwarf2_free_objfile (objfile);
 }
 
 
@@ -2095,8 +2093,6 @@ xcoff_end_psymtab (struct objfile *objfile, struct partial_symtab *pst,
       subpst->read_symtab_private = XOBNEW (&objfile->objfile_obstack, symloc);
       ((struct symloc *) subpst->read_symtab_private)->first_symnum = 0;
       ((struct symloc *) subpst->read_symtab_private)->numsyms = 0;
-      subpst->textlow = 0;
-      subpst->texthigh = 0;
 
       /* We could save slight bits of space by only making one of these,
          shared by the entire set of include files.  FIXME-someday.  */
@@ -2346,10 +2342,11 @@ scan_xcoff_symtab (minimal_symbol_reader &reader,
 			CORE_ADDR highval =
 			  symbol.n_value + csect_aux.x_csect.x_scnlen.l;
 
-			if (highval > pst->texthigh)
-			  pst->texthigh = highval;
-			if (pst->textlow == 0 || symbol.n_value < pst->textlow)
-			  pst->textlow = symbol.n_value;
+			if (highval > pst->raw_text_high ())
+			  pst->set_text_high (highval);
+			if (!pst->text_low_valid
+			    || symbol.n_value < pst->raw_text_low ())
+			  pst->set_text_low (symbol.n_value);
 		      }
 		    misc_func_recorded = 0;
 		    break;
@@ -2662,27 +2659,24 @@ scan_xcoff_symtab (minimal_symbol_reader &reader,
 	    switch (p[1])
 	      {
 	      case 'S':
-		symbol.n_value += ANOFFSET (objfile->section_offsets,
-					    SECT_OFF_DATA (objfile));
-
 		if (gdbarch_static_transform_name_p (gdbarch))
 		  namestring = gdbarch_static_transform_name
 				 (gdbarch, namestring);
 
 		add_psymbol_to_list (namestring, p - namestring, 1,
 				     VAR_DOMAIN, LOC_STATIC,
+				     SECT_OFF_DATA (objfile),
 				     &objfile->static_psymbols,
 				     symbol.n_value,
 				     psymtab_language, objfile);
 		continue;
 
 	      case 'G':
-		symbol.n_value += ANOFFSET (objfile->section_offsets,
-					    SECT_OFF_DATA (objfile));
 		/* The addresses in these entries are reported to be
 		   wrong.  See the code that reads 'G's for symtabs.  */
 		add_psymbol_to_list (namestring, p - namestring, 1,
 				     VAR_DOMAIN, LOC_STATIC,
+				     SECT_OFF_DATA (objfile),
 				     &objfile->global_psymbols,
 				     symbol.n_value,
 				     psymtab_language, objfile);
@@ -2700,14 +2694,14 @@ scan_xcoff_symtab (minimal_symbol_reader &reader,
 			&& namestring[0] != ' '))
 		  {
 		    add_psymbol_to_list (namestring, p - namestring, 1,
-					 STRUCT_DOMAIN, LOC_TYPEDEF,
+					 STRUCT_DOMAIN, LOC_TYPEDEF, -1,
 					 &objfile->static_psymbols,
 					 0, psymtab_language, objfile);
 		    if (p[2] == 't')
 		      {
 			/* Also a typedef with the same name.  */
 			add_psymbol_to_list (namestring, p - namestring, 1,
-					     VAR_DOMAIN, LOC_TYPEDEF,
+					     VAR_DOMAIN, LOC_TYPEDEF, -1,
 					     &objfile->static_psymbols,
 					     0, psymtab_language, objfile);
 			p += 1;
@@ -2719,7 +2713,7 @@ scan_xcoff_symtab (minimal_symbol_reader &reader,
 		if (p != namestring)	/* a name is there, not just :T...  */
 		  {
 		    add_psymbol_to_list (namestring, p - namestring, 1,
-					 VAR_DOMAIN, LOC_TYPEDEF,
+					 VAR_DOMAIN, LOC_TYPEDEF, -1,
 					 &objfile->static_psymbols,
 					 0, psymtab_language, objfile);
 		  }
@@ -2781,7 +2775,7 @@ scan_xcoff_symtab (minimal_symbol_reader &reader,
 			/* Note that the value doesn't matter for
 			   enum constants in psymtabs, just in symtabs.  */
 			add_psymbol_to_list (p, q - p, 1,
-					     VAR_DOMAIN, LOC_CONST,
+					     VAR_DOMAIN, LOC_CONST, -1,
 					     &objfile->static_psymbols,
 					     0, psymtab_language, objfile);
 			/* Point past the name.  */
@@ -2799,7 +2793,7 @@ scan_xcoff_symtab (minimal_symbol_reader &reader,
 	      case 'c':
 		/* Constant, e.g. from "const" in Pascal.  */
 		add_psymbol_to_list (namestring, p - namestring, 1,
-				     VAR_DOMAIN, LOC_CONST,
+				     VAR_DOMAIN, LOC_CONST, -1,
 				     &objfile->static_psymbols,
 				     0, psymtab_language, objfile);
 		continue;
@@ -2815,10 +2809,9 @@ scan_xcoff_symtab (minimal_symbol_reader &reader,
 		    function_outside_compilation_unit_complaint (name);
 		    xfree (name);
 		  }
-		symbol.n_value += ANOFFSET (objfile->section_offsets,
-					    SECT_OFF_TEXT (objfile));
 		add_psymbol_to_list (namestring, p - namestring, 1,
 				     VAR_DOMAIN, LOC_BLOCK,
+				     SECT_OFF_TEXT (objfile),
 				     &objfile->static_psymbols,
 				     symbol.n_value,
 				     psymtab_language, objfile);
@@ -2846,10 +2839,9 @@ scan_xcoff_symtab (minimal_symbol_reader &reader,
 		if (startswith (namestring, "@FIX"))
 		  continue;
 
-		symbol.n_value += ANOFFSET (objfile->section_offsets,
-					    SECT_OFF_TEXT (objfile));
 		add_psymbol_to_list (namestring, p - namestring, 1,
 				     VAR_DOMAIN, LOC_BLOCK,
+				     SECT_OFF_TEXT (objfile),
 				     &objfile->global_psymbols,
 				     symbol.n_value,
 				     psymtab_language, objfile);
@@ -3019,8 +3011,6 @@ xcoff_initial_scan (struct objfile *objfile, symfile_add_flags symfile_flags)
        num_symbols includes auxents.  On the other hand, it doesn't
        include N_SLINE.  */
     init_psymbol_list (objfile, num_symbols);
-
-  free_pending_blocks ();
 
   scoped_free_pendings free_pending;
   minimal_symbol_reader reader (objfile);

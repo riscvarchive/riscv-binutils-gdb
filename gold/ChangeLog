@@ -1,3 +1,200 @@
+2018-07-10  Tulio Magno Quites Machado Filho  <tuliom@linux.ibm.com>
+
+	* object.cc (Sized_relobj_file::map_to_kept_section): Initialize
+	kept_file.
+
+2018-08-07  Cary Coutant  <ccoutant@gmail.com>
+
+	PR ld/23486
+	* x86_64.cc (Target_x86_64::Target_x86_64): Initialize
+	object_isa_1_used_.
+	(Target_x86_64::object_isa_1_used_): New data member.
+	(Target_x86_64::record_gnu_property): Save ISA_1_USED bits for object.
+	(Target_x86_64::merge_gnu_properties): Merge ISA_1_USED bits.
+
+2018-08-06  Cary Coutant  <ccoutant@gmail.com>
+
+	PR gold/23455
+	* options.h (General_options): Add --warn-drop-version option.
+	* symtab.cc (Symbol_table::set_dynsym_indexes): Check it.
+
+2018-08-06  Cary Coutant  <ccoutant@gmail.com>
+
+	* target.h (Sized_target::record_gnu_property): Change first two
+	parameters to unsigned int.
+	* x86_64.cc (Target_x86_64::record_gnu_property): Likewise.
+
+2018-07-30  Nick Clifton  <nickc@redhat.com>
+
+	* layout.cc (section_name_mapping): Add an entry for
+	.gnu.build.attributes.
+
+2018-07-18  Nick Clifton  <nickc@redhat.com>
+
+	* po/fr.po: Updated French translation.
+
+2018-07-14  Cary Coutant  <ccoutant@gmail.com>
+
+	PR gold/23397
+	* object.cc (Sized_relobj_file::do_layout): Mark section as deferred.
+	* testsuite/Makefile.am (plugin_test_1): Add --emit-relocs option to
+	existing test case.
+	* testsuite/Makefile.in: Regenerate.
+
+2018-07-14  Cary Coutant  <ccoutant@gmail.com>
+
+	PR gold/23409
+	* symtab.cc (Symbol_table::define_special_symbol): Add check for
+	version name on existing symbol.
+	* testsuite/Makefile.am (ver_test_pr23409): New test case.
+	* testsuite/Makefile.in: Regenerate.
+	* testsuite/ver_test_pr23409.sh: New test script.
+	* testsuite/ver_test_pr23409_1.script: New version script.
+	* testsuite/ver_test_pr23409_2.script: New version script.
+
+2018-07-11  Franz Sirl  <franz.sirl-kernel@lauterbach.com>
+
+	* main.cc (main): Print m.arena as long long.
+
+2018-07-09  Cary Coutant  <ccoutant@gmail.com>
+
+	* incremental.cc (Sized_incremental_binary::setup_readers): Use
+	emplace_back for C++ 11 or later.
+
+2018-07-06  Alan Modra  <amodra@gmail.com>
+
+	* powerpc.cc: Include attributes.h.
+	(Powerpc_relobj::attributes_section_data_): New variable, with
+	accessor and associated constructor and destructor support.
+	(Powerpc_dynobj::attributes_section_data_): Likewise.
+	(Powerpc_relobj::do_read_symbols): Stash SHT_GNU_ATTRIBUTES section
+	contents in attributes_section_data_.
+	(Powerpc_dynobj::do_read_symbols): Likewise.
+	(Target_powerpc): Add attributes_section_data_, last_fp_, last_ld_,
+	last_vec_, and last_struct_ vars.
+	(Target_powerpc::merge_object_attributes): New function.
+	(Target_powerpc::do_finalize_sections): Iterate over input objects
+	merging attributes.  Create output attributes section.
+
+2018-06-26  Nick Clifton  <nickc@redhat.com>
+
+	* po/uk.po: Updated Ukranian translation.
+
+2018-06-24  Nick Clifton  <nickc@redhat.com>
+
+	* po/gold.pot: Regenerate.
+
+2018-06-24  Nick Clifton  <nickc@redhat.com>
+
+	2.31 branch created.
+
+2018-06-23  Cary Coutant  <ccoutant@gmail.com>
+
+	* version.cc (version_string): Bump to 1.16.
+	* NEWS: Add new features in 1.16.
+
+2018-06-23  Cary Coutant  <ccoutant@gmail.com>
+
+	PR gold/22914
+	* x86_64.cc (Target_x86_64::record_gnu_property): Initialize val.
+
+2018-06-23  Cary Coutant  <ccoutant@gmail.com>
+
+	PR gold/22915
+	* x86_64.cc (Output_data_plt_x86_64_ibt): New class.
+	(Target_x86_64::do_make_data_plt): (All instantiations) Check for
+	IBT feature bit and create IBT PLTs.
+
+2018-06-22  Cary Coutant  <ccoutant@gmail.com>
+
+	PR gold/22914
+	* layout.cc (read_sized_value): Fix spelling of section name.
+	(Layout::layout_gnu_property): Call Sized_target::record_gnu_property
+	for target-specific properties;
+	don't store them with target-independent properties yet.
+	(Layout::merge_gnu_properties): New method.
+	(Layout::add_gnu_property): New method.
+	(Layout::create_gnu_properties_note): Call target to finalize
+	target-specific properties. Fix spelling of output section name.
+	* layout.h (Layout::merge_gnu_properties): New method.
+	(Layout::add_gnu_property): New method.
+	* object.cc (Sized_relobj_file::do_layout): Call
+	Layout::merge_gnu_properties.
+	* target.h (Target::merge_gnu_property): Remove.
+	(Target::finalize_gnu_properties): New method.
+	(Target::do_merge_gnu_property): Move to Sized_target and rename.
+	(Target::do_finalize_gnu_properties): New virtual method.
+	(Sized_target::record_gnu_property): Moved and renamed from
+	Target::do_merge_gnu_property.
+	(Sized_target::merge_gnu_properties): New virtual method.
+	* x86_64.cc (Target_x86_64::isa_1_used_, isa_1_needed_)
+	(feature_1_, object_feature_1_, seen_first_object_): New data members.
+	(Target_x86_64::do_merge_gnu_property): Rename to ...
+	(Target_x86_64::record_gnu_property): ... this.  Save target-specific
+	properties in Target class object.
+	(Target_x86_64::merge_gnu_properties): New method.
+	(add_property): New static inline function.
+	(Target_x86_64::do_finalize_gnu_properties): New method.
+	* testsuite/Makefile.am (gnu_property_test): Remove C source file;
+	link directly without compiler driver.
+	* testsuite/Makefile.in: Regenerate.
+	* testsuite/gnu_property_a.S: Add _start.
+
+2018-06-22  Cary Coutant  <ccoutant@gmail.com>
+
+	* incremental.cc (Sized_incremental_binary::setup_readers): Use
+	emplace_back for GCC 5 and later.
+	* incremental.h (Incremental_binary::Input_reader): Provide copy
+	constructor.
+	(Sized_incremental_binary::Sized_input_reader): Likewise.
+
+2018-06-22  Cary Coutant  <ccoutant@gmail.com>
+
+	PR gold/22914
+	* layout.cc (Layout::Layout): Initialize gnu_properties_.
+	(read_sized_value, write_sized_value): New functions.
+	(Layout::layout_gnu_property): New method.
+	(Layout::create_notes): Call create_gnu_properties_note.
+	(Layout::create_gnu_properties_note): New method.
+	* layout.h (Layout::layout_gnu_property): New method.
+	(Layout::create_gnu_properties_note): New method.
+	(Layout::Gnu_property, Layout::Gnu_properties): New types.
+	(Layout::gnu_properties_): New data member.
+	* object.cc (Sized_relobj_file::layout_gnu_property_section): New
+	method.
+	(Sized_relobj_file::do_layout): Handle .note.gnu.property sections.
+	* object.h (Sized_relobj_file::layout_gnu_property_section): New
+	method.
+	* target.h (Target::merge_gnu_property): New method.
+	(Target::do_merge_gnu_property): New virtual method.
+	* x86_64.cc (Target_x86_64::do_merge_gnu_property): New method.
+	* testsuite/Makefile.am (gnu_property_test): New test case.
+	* testsuite/Makefile.in: Regenerate.
+	* testsuite/gnu_property_a.S: New source file.
+	* testsuite/gnu_property_b.S: New source file.
+	* testsuite/gnu_property_c.S: New source file.
+	* testsuite/gnu_property_main.c: New source file.
+	* testsuite/gnu_property_test.sh: New test script.
+
+2018-06-21  Cary Coutant  <ccoutant@gmail.com>
+
+	* resolve.cc (Symbol_table::resolve): Rename tobinding to
+	orig_tobinding.  Call set_is_needed() for objects that resolve
+	non-weak references.
+	(Symbol_table::should_override): Allow a dynamic definition to
+	override an earlier one in a not-needed library.
+	* symtab.cc (Symbol_table::set_dynsym_indexes): Remove separate
+	processing for as-needed symbols.  Add warning when discarding
+	version informatin.
+	* testsuite/Makefile.am (weak_as_needed): New test case.
+	* testsuite/Makefile.in: Regenerate.
+	* testsuite/weak_as_needed.sh: New test script.
+	* testsuite/weak_as_needed_a.c: New source file.
+	* testsuite/weak_as_needed_b.c: New source file.
+	* testsuite/weak_as_needed_b.script: New version script.
+	* testsuite/weak_as_needed_c.c: New source file.
+	* testsuite/weak_as_needed_c.script: New version script.
+
 2018-06-20  Cary Coutant  <ccoutant@gmail.com>
 
 	PR gold/23268

@@ -242,6 +242,10 @@ set lto_compile_elf_tests [list \
   [list "Compile 8b" \
    "" "-flto -O2" \
    {lto-8b.c} {} ""] \
+  [list "PR ld/23309" \
+   "-O2 -flto -fuse-linker-plugin -fvisibility=hidden -ffunction-sections -Wl,--gc-sections,-u,KeepMe" \
+   "-O2 -flto -fuse-linker-plugin -fvisibility=hidden -ffunction-sections" \
+   {pr23309.c} {{"nm" {} "pr23309.d"}} "pr23309.exe" "c"] \
 ]
 
 # Generate input files for complex LTO tests for ELF.
@@ -258,9 +262,6 @@ set lto_link_elf_tests [list \
   [list "Build liblto-17b.so 2" \
    "-shared -O2 -fpic -flto -fuse-linker-plugin tmpdir/lto-17a.o" "-O2 -fpic -flto" \
    {lto-17b.c} {{"nm" {} "lto-17b-2.d"}} "liblto-17b.so"] \
-  [list "PR ld/12982" \
-   "-O2 -flto -fuse-linker-plugin" "-O2 -flto" \
-   {pr12982.c} {{"readelf" {-l --wide} "pr12982.d"}} "pr12982.exe"] \
   [list "PR ld/12975" \
    "-shared -O2 -fPIC -flto -fuse-linker-plugin -nostdlib -Wl,-version-script,pr12975.t" "-O2 -flto" \
    {pr12975.c} {{"readelf" {-s --wide} "pr12975.d"}} "pr12975.so" "c"] \
@@ -321,6 +322,18 @@ if { ! [istarget "arm*-*-*"] } {
   [list "PR ld/14918" \
    "-flto" "-flto" \
    {pr14918.c} {{"readelf" {-d --wide} "pr14918.d"}} "pr14918.exe" "c"] \
+  ]]
+}
+
+# PR 12982 checks that an executable stack is not created by default
+# when using the LTO plugin.  The HPPA target however requires an
+# executable stack for syscall restarts and signal returns, so we
+# skip this test for that target.
+if { ! [istarget "hppa*-*-*"] } {
+    set lto_link_elf_tests [concat $lto_link_elf_tests [list \
+  [list "PR ld/12982" \
+   "-O2 -flto -fuse-linker-plugin" "-O2 -flto" \
+   {pr12982.c} {{"readelf" {-l --wide} "pr12982.d"}} "pr12982.exe"] \
   ]]
 }
 
@@ -551,6 +564,32 @@ if { [at_least_gcc_version 4 7] } {
         pass $testname
     } {
         fail $testname
+    }
+
+    run_cc_link_tests [list \
+	[list \
+	    "Build pr23460*.o" \
+	    "$plug_opt" \
+	    "-O2 -fPIC -flto $lto_no_fat" \
+	    {pr23460a.c pr23460b.c pr23460c.c \
+	     pr23460d.c pr23460e.c pr23460f.c} \
+	] \
+    ]
+    set exec_output [run_host_cmd "sh" \
+				  "-c \"ulimit -n 16; \
+				   $ar -rc $plug_opt \
+				   tmpdir/libpr23460.a \
+				   tmpdir/pr23460a.o \
+				   tmpdir/pr23460b.o \
+				   tmpdir/pr23460c.o \
+				   tmpdir/pr23460d.o \
+				   tmpdir/pr23460e.o \
+				   tmpdir/pr23460f.o\""]
+    set exec_output [prune_warnings $exec_output]
+    if [string match "" $exec_output] then {
+	pass "PR binutils/23460"
+    } else {
+	fail "PR binutils/23460"
     }
 }
 

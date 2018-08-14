@@ -69,6 +69,7 @@ struct ia64_table_entry
   };
 
 static struct ia64_table_entry *ktab = NULL;
+static gdb::optional<gdb::byte_vector> ktab_buf;
 
 #endif
 
@@ -1525,11 +1526,8 @@ examine_prologue (CORE_ADDR pc, CORE_ADDR lim_pc,
 	         where the pc is.  If it's still early in the prologue
 		 this'll be wrong.  FIXME */
 	      if (this_frame)
-		{
-		  struct gdbarch *gdbarch = get_frame_arch (this_frame);
-		  saved_sp = get_frame_register_unsigned (this_frame,
-							  sp_regnum);
-		}
+		saved_sp = get_frame_register_unsigned (this_frame,
+							sp_regnum);
 	      spill_addr  = saved_sp
 	                  + (rM == 12 ? 0 : mem_stack_frame_size) 
 			  + imm;
@@ -2483,8 +2481,6 @@ ia64_access_reg (unw_addr_space_t as, unw_regnum_t uw_regnum, unw_word_t *val,
   unw_word_t bsp, sof, cfm, psr, ip;
   struct frame_info *this_frame = (struct frame_info *) arg;
   struct gdbarch *gdbarch = get_frame_arch (this_frame);
-  enum bfd_endian byte_order = gdbarch_byte_order (gdbarch);
-  long new_sof, old_sof;
   
   /* We never call any libunwind routines that need to write registers.  */
   gdb_assert (!write);
@@ -2556,8 +2552,6 @@ ia64_access_rse_reg (unw_addr_space_t as, unw_regnum_t uw_regnum,
   unw_word_t bsp, sof, cfm, psr, ip;
   struct regcache *regcache = (struct regcache *) arg;
   struct gdbarch *gdbarch = regcache->arch ();
-  enum bfd_endian byte_order = gdbarch_byte_order (gdbarch);
-  long new_sof, old_sof;
   
   /* We never call any libunwind routines that need to write registers.  */
   gdb_assert (!write);
@@ -2647,11 +2641,9 @@ ia64_access_mem (unw_addr_space_t as,
 }
 
 /* Call low-level function to access the kernel unwind table.  */
-static LONGEST
-getunwind_table (gdb_byte **buf_p)
+static gdb::optional<gdb::byte_vector>
+getunwind_table ()
 {
-  LONGEST x;
-
   /* FIXME drow/2005-09-10: This code used to call
      ia64_linux_xfer_unwind_table directly to fetch the unwind table
      for the currently running ia64-linux kernel.  That data should
@@ -2660,10 +2652,8 @@ getunwind_table (gdb_byte **buf_p)
      we should find a way to override the corefile layer's
      xfer_partial method.  */
 
-  x = target_read_alloc (current_top_target (), TARGET_OBJECT_UNWIND_TABLE,
-			 NULL, buf_p);
-
-  return x;
+  return target_read_alloc (current_top_target (), TARGET_OBJECT_UNWIND_TABLE,
+			    NULL);
 }
 
 /* Get the kernel unwind table.  */				 
@@ -2674,15 +2664,12 @@ get_kernel_table (unw_word_t ip, unw_dyn_info_t *di)
 
   if (!ktab) 
     {
-      gdb_byte *ktab_buf;
-      LONGEST size;
-
-      size = getunwind_table (&ktab_buf);
-      if (size <= 0)
+      ktab_buf = getunwind_table ();
+      if (!ktab_buf)
 	return -UNW_ENOINFO;
 
-      ktab = (struct ia64_table_entry *) ktab_buf;
-      ktab_size = size;
+      ktab = (struct ia64_table_entry *) ktab_buf->data ();
+      ktab_size = ktab_buf->size ();
 
       for (etab = ktab; etab->start_offset; ++etab)
         etab->info_offset += KERNEL_START;
@@ -3038,7 +3025,6 @@ ia64_libunwind_sigtramp_frame_this_id (struct frame_info *this_frame,
   gdb_byte buf[8];
   CORE_ADDR bsp;
   struct frame_id id = outer_frame_id;
-  CORE_ADDR prev_ip;
 
   libunwind_frame_this_id (this_frame, this_cache, &id);
   if (frame_id_eq (id, outer_frame_id))

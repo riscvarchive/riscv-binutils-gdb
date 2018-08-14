@@ -190,7 +190,7 @@ agent_run_command (int pid, const char *cmd, int len)
 {
   int fd;
   int tid = agent_get_helper_thread_id ();
-  ptid_t ptid = ptid_build (pid, tid, 0);
+  ptid_t ptid = ptid_t (pid, tid, 0);
 
   int ret = target_write_memory (ipa_sym_addrs.addr_cmd_buf,
 				 (gdb_byte *) cmd, len);
@@ -234,7 +234,7 @@ agent_run_command (int pid, const char *cmd, int len)
     return -1;
 
   /* Need to read response with the inferior stopped.  */
-  if (!ptid_equal (ptid, null_ptid))
+  if (ptid != null_ptid)
     {
       /* Stop thread PTID.  */
       DEBUG_AGENT ("agent: stop helper thread\n");

@@ -246,7 +246,7 @@ proceed_thread (struct thread_info *thread, int pid)
   if (thread->state != THREAD_STOPPED)
     return;
 
-  if (pid != 0 && ptid_get_pid (thread->ptid) != pid)
+  if (pid != 0 && thread->ptid.pid () != pid)
     return;
 
   switch_to_thread (thread);
@@ -348,7 +348,7 @@ interrupt_thread_callback (struct thread_info *thread, void *arg)
   if (thread->state != THREAD_RUNNING)
     return 0;
 
-  if (ptid_get_pid (thread->ptid) != pid)
+  if (thread->ptid.pid () != pid)
     return 0;
 
   target_stop (thread->ptid);
@@ -487,7 +487,7 @@ find_thread_of_process (struct thread_info *ti, void *p)
 {
   int pid = *(int *)p;
 
-  if (ptid_get_pid (ti->ptid) == pid && ti->state != THREAD_EXITED)
+  if (ti->ptid.pid () == pid && ti->state != THREAD_EXITED)
     return 1;
 
   return 0;
@@ -566,7 +566,7 @@ mi_cmd_thread_select (const char *command, char **argv, int argc)
 			       USER_SELECTED_THREAD | USER_SELECTED_FRAME);
 
   /* Notify if the thread has effectively changed.  */
-  if (!ptid_equal (inferior_ptid, previous_ptid))
+  if (inferior_ptid != previous_ptid)
     {
       gdb::observers::user_selected_context_changed.notify
 	(USER_SELECTED_THREAD | USER_SELECTED_FRAME);
@@ -623,7 +623,7 @@ collect_cores (struct thread_info *ti, void *xdata)
 {
   struct collect_cores_data *data = (struct collect_cores_data *) xdata;
 
-  if (ptid_get_pid (ti->ptid) == data->pid)
+  if (ti->ptid.pid () == data->pid)
     {
       int core = target_core_of_thread (ti->ptid);
 
@@ -1683,6 +1683,7 @@ mi_cmd_list_features (const char *command, char **argv, int argc)
       uiout->field_string (NULL, "info-gdb-mi-command");
       uiout->field_string (NULL, "undefined-command-error-code");
       uiout->field_string (NULL, "exec-run-start-option");
+      uiout->field_string (NULL, "data-disassemble-a-option");
 
       if (ext_lang_initialized_p (get_ext_lang_defn (EXT_LANG_PYTHON)))
 	uiout->field_string (NULL, "python");
@@ -1999,16 +2000,15 @@ mi_execute_command (const char *cmd, int from_tty)
 	     again.  */
 	  && !command_notifies_uscc_observer (command.get ()))
 	{
-	  struct mi_interp *mi = (struct mi_interp *) top_level_interpreter ();
 	  int report_change = 0;
 
 	  if (command->thread == -1)
 	    {
-	      report_change = (!ptid_equal (previous_ptid, null_ptid)
-			       && !ptid_equal (inferior_ptid, previous_ptid)
-			       && !ptid_equal (inferior_ptid, null_ptid));
+	      report_change = (previous_ptid != null_ptid
+			       && inferior_ptid != previous_ptid
+			       && inferior_ptid != null_ptid);
 	    }
-	  else if (!ptid_equal (inferior_ptid, null_ptid))
+	  else if (inferior_ptid != null_ptid)
 	    {
 	      struct thread_info *ti = inferior_thread ();
 

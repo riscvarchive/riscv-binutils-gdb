@@ -167,7 +167,7 @@ find_one_thread (ptid_t ptid)
   td_err_e err;
   struct lwp_info *lwp;
   struct thread_db *thread_db = current_process ()->priv->thread_db;
-  int lwpid = ptid_get_lwp (ptid);
+  int lwpid = ptid.lwp ();
 
   thread_info *thread = find_thread_ptid (ptid);
   lwp = get_thread_lwp (thread);
@@ -215,7 +215,7 @@ attach_thread (const td_thrhandle_t *th_p, td_thrinfo_t *ti_p)
 {
   struct process_info *proc = current_process ();
   int pid = pid_of (proc);
-  ptid_t ptid = ptid_build (pid, ti_p->ti_lid, 0);
+  ptid_t ptid = ptid_t (pid, ti_p->ti_lid, 0);
   struct lwp_info *lwp;
   int err;
 
@@ -252,7 +252,7 @@ maybe_attach_thread (const td_thrhandle_t *th_p, td_thrinfo_t *ti_p,
 {
   struct lwp_info *lwp;
 
-  lwp = find_lwp_pid (pid_to_ptid (ti_p->ti_lid));
+  lwp = find_lwp_pid (ptid_t (ti_p->ti_lid));
   if (lwp != NULL)
     return 1;
 

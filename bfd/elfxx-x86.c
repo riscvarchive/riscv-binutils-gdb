@@ -2407,18 +2407,54 @@ _bfd_x86_elf_merge_gnu_properties (struct bfd_link_info *info,
   switch (pr_type)
     {
     case GNU_PROPERTY_X86_ISA_1_USED:
+      if (aprop == NULL || bprop == NULL)
+	{
+	  /* Only one of APROP and BPROP can be NULL.  */
+	  if (aprop != NULL)
+	    {
+	      /* Remove this property since the other input file doesn't
+		 have it.  */
+	      aprop->pr_kind = property_remove;
+	      updated = TRUE;
+	    }
+	  break;
+	}
+      goto or_property;
+
     case GNU_PROPERTY_X86_ISA_1_NEEDED:
       if (aprop != NULL && bprop != NULL)
 	{
+or_property:
 	  number = aprop->u.number;
 	  aprop->u.number = number | bprop->u.number;
-	  updated = number != (unsigned int) aprop->u.number;
+	  /* Remove the property if all bits are empty.  */
+	  if (aprop->u.number == 0)
+	    {
+	      aprop->pr_kind = property_remove;
+	      updated = TRUE;
+	    }
+	  else
+	    updated = number != (unsigned int) aprop->u.number;
 	}
       else
 	{
-	  /* Return TRUE if APROP is NULL to indicate that BPROP should
-	     be added to ABFD.  */
-	  updated = aprop == NULL;
+	  /* Only one of APROP and BPROP can be NULL.  */
+	  if (aprop != NULL)
+	    {
+	      if (aprop->u.number == 0)
+		{
+		  /* Remove APROP if all bits are empty.  */
+		  aprop->pr_kind = property_remove;
+		  updated = TRUE;
+		}
+	    }
+	  else
+	    {
+	      /* Return TRUE if APROP is NULL and all bits of BPROP
+		 aren't empty to indicate that BPROP should be added
+		 to ABFD.  */
+	      updated = bprop->u.number != 0;
+	    }
 	}
       break;
 
@@ -2503,6 +2539,7 @@ _bfd_x86_elf_link_setup_gnu_properties
   const struct elf_backend_data *bed;
   unsigned int class_align = ABI_64_P (info->output_bfd) ? 3 : 2;
   unsigned int got_align;
+  bfd_boolean has_text = FALSE;
 
   features = 0;
   if (info->ibt)
@@ -2517,24 +2554,75 @@ _bfd_x86_elf_link_setup_gnu_properties
     if (bfd_get_flavour (pbfd) == bfd_target_elf_flavour
 	&& bfd_count_sections (pbfd) != 0)
       {
+	if (!has_text)
+	  {
+	    /* Check if there is no non-empty text section.  */
+	    sec = bfd_get_section_by_name (pbfd, ".text");
+	    if (sec != NULL && sec->size != 0)
+	      has_text = TRUE;
+	  }
+
 	ebfd = pbfd;
 
 	if (elf_properties (pbfd) != NULL)
 	  break;
       }
 
-  if (ebfd != NULL && features)
+  bed = get_elf_backend_data (info->output_bfd);
+
+  htab = elf_x86_hash_table (info, bed->target_id);
+  if (htab == NULL)
+    return pbfd;
+
+  if (ebfd != NULL)
     {
-      /* If features is set, add GNU_PROPERTY_X86_FEATURE_1_IBT and
-	 GNU_PROPERTY_X86_FEATURE_1_SHSTK.  */
-      prop = _bfd_elf_get_property (ebfd,
-				    GNU_PROPERTY_X86_FEATURE_1_AND,
-				    4);
-      prop->u.number |= features;
-      prop->pr_kind = property_number;
+      prop = NULL;
+      if (features)
+	{
+	  /* If features is set, add GNU_PROPERTY_X86_FEATURE_1_IBT and
+	     GNU_PROPERTY_X86_FEATURE_1_SHSTK.  */
+	  prop = _bfd_elf_get_property (ebfd,
+					GNU_PROPERTY_X86_FEATURE_1_AND,
+					4);
+	  prop->u.number |= features;
+	  prop->pr_kind = property_number;
+	}
+      else if (has_text
+	       && elf_tdata (info->output_bfd)->o->build_id.sec == NULL
+	       && !htab->elf.dynamic_sections_created
+	       && !info->traditional_format
+	       && (info->output_bfd->flags & D_PAGED) != 0
+	       && info->separate_code)
+	{
+	  /* If the separate code program header is needed, make sure
+	     that the first read-only PT_LOAD segment has no code by
+	     adding a GNU_PROPERTY_X86_ISA_1_NEEDED note.  */
+	  elf_property_list *list;
+	  bfd_boolean need_property = TRUE;
+
+	  for (list = elf_properties (ebfd); list; list = list->next)
+	    switch (list->property.pr_type)
+	      {
+	      case GNU_PROPERTY_STACK_SIZE:
+	      case GNU_PROPERTY_NO_COPY_ON_PROTECTED:
+	      case GNU_PROPERTY_X86_ISA_1_NEEDED:
+		/* These properties won't be removed during merging.  */
+		need_property = FALSE;
+		break;
+	      }
+
+	  if (need_property)
+	    {
+	      prop = _bfd_elf_get_property (ebfd,
+					    GNU_PROPERTY_X86_ISA_1_NEEDED,
+					    4);
+	      prop->u.number = GNU_PROPERTY_X86_ISA_1_486;
+	      prop->pr_kind = property_number;
+	    }
+	}
 
       /* Create the GNU property note section if needed.  */
-      if (pbfd == NULL)
+      if (prop != NULL && pbfd == NULL)
 	{
 	  sec = bfd_make_section_with_flags (ebfd,
 					     NOTE_GNU_PROPERTY_SECTION_NAME,
@@ -2559,12 +2647,6 @@ error_alignment:
     }
 
   pbfd = _bfd_elf_link_setup_gnu_properties (info);
-
-  bed = get_elf_backend_data (info->output_bfd);
-
-  htab = elf_x86_hash_table (info, bed->target_id);
-  if (htab == NULL)
-    return pbfd;
 
   htab->r_info = init_table->r_info;
   htab->r_sym = init_table->r_sym;

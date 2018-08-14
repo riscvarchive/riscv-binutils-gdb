@@ -3745,7 +3745,8 @@ _bfd_aarch64_erratum_835769_stub_name (unsigned num_fixes)
 {
   char *stub_name = (char *) bfd_malloc
     (strlen ("__erratum_835769_veneer_") + 16);
-  sprintf (stub_name,"__erratum_835769_veneer_%d", num_fixes);
+  if (stub_name != NULL)
+    sprintf (stub_name,"__erratum_835769_veneer_%d", num_fixes);
   return stub_name;
 }
 
@@ -3992,6 +3993,8 @@ _bfd_aarch64_erratum_843419_fixup (uint32_t insn,
   struct elf_aarch64_stub_hash_entry *stub_entry;
 
   stub_name = _bfd_aarch64_erratum_843419_stub_name (section, ldst_offset);
+  if (stub_name == NULL)
+    return FALSE;
   stub_entry = aarch64_stub_hash_lookup (&htab->stub_hash_table, stub_name,
 					 FALSE, FALSE);
   if (stub_entry)
@@ -4009,8 +4012,7 @@ _bfd_aarch64_erratum_843419_fixup (uint32_t insn,
      If we placed workaround veneers in any other stub section then we
      could not assume that all relocations have been processed on the
      corresponding input section at the point we output the stub
-     section.
-   */
+     section.  */
 
   stub_entry = _bfd_aarch64_add_stub_entry_after (stub_name, section, htab);
   if (stub_entry == NULL)
@@ -5222,8 +5224,7 @@ elfNN_aarch64_final_link_relocate (reloc_howto_type *howto,
 
   weak_undef_p = (h ? h->root.type == bfd_link_hash_undefweak
 		  : bfd_is_und_section (sym_sec));
-  abs_symbol_p = (h !=NULL && h->root.type == bfd_link_hash_defined
-		  && bfd_is_abs_section (h->root.u.def.section));
+  abs_symbol_p = h != NULL && bfd_is_abs_symbol (&h->root);
 
 
   /* Since STT_GNU_IFUNC symbol must go through PLT, we handle
@@ -7361,8 +7362,7 @@ elfNN_aarch64_check_relocs (bfd *abfd, struct bfd_link_info *info,
 	      if (h != NULL
 		  /* This is an absolute symbol.  It represents a value instead
 		     of an address.  */
-		  && ((h->root.type == bfd_link_hash_defined
-		       && bfd_is_abs_section (h->root.u.def.section))
+		  && (bfd_is_abs_symbol (&h->root)
 		      /* This is an undefined symbol.  */
 		      || h->root.type == bfd_link_hash_undefined))
 		break;

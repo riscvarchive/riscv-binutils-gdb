@@ -302,8 +302,7 @@ ada_get_task_number (thread_info *thread)
   data = get_ada_tasks_inferior_data (inf);
 
   for (i = 0; i < VEC_length (ada_task_info_s, data->task_list); i++)
-    if (ptid_equal (VEC_index (ada_task_info_s, data->task_list, i)->ptid,
-		    thread->ptid))
+    if (VEC_index (ada_task_info_s, data->task_list, i)->ptid == thread->ptid)
       return i + 1;
 
   return 0;  /* No matching task found.  */
@@ -370,7 +369,7 @@ ada_get_task_info_from_ptid (ptid_t ptid)
   for (i = 0; i < nb_tasks; i++)
     {
       task = VEC_index (ada_task_info_s, data->task_list, i);
-      if (ptid_equal (task->ptid, ptid))
+      if (task->ptid == ptid)
 	return task;
     }
 
@@ -1111,7 +1110,7 @@ print_ada_task_info (struct ui_out *uiout,
 
       /* Print a star if this task is the current task (or the task
          currently selected).  */
-      if (ptid_equal (task_info->ptid, inferior_ptid))
+      if (task_info->ptid == inferior_ptid)
 	uiout->field_string ("current", "*");
       else
 	uiout->field_skip ("current");
@@ -1203,8 +1202,8 @@ info_task (struct ui_out *uiout, const char *taskno_str, struct inferior *inf)
     printf_filtered (_("<no name>\n"));
 
   /* Print the TID and LWP.  */
-  printf_filtered (_("Thread: %#lx\n"), ptid_get_tid (task_info->ptid));
-  printf_filtered (_("LWP: %#lx\n"), ptid_get_lwp (task_info->ptid));
+  printf_filtered (_("Thread: %#lx\n"), task_info->ptid.tid ());
+  printf_filtered (_("LWP: %#lx\n"), task_info->ptid.lwp ());
 
   /* If set, print the base CPU.  */
   if (task_info->base_cpu != 0)

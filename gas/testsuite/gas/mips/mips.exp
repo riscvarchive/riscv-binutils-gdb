@@ -1221,7 +1221,13 @@ if { [istarget mips*-*-vxworks*] } {
 
     if $has_newabi {
 	run_dump_test "elf-rel28-n32"
+	run_dump_test "elf-rel28-micromips-n32"
 	run_dump_test "elf-rel28-n64"
+	run_dump_test "elf-rel28-micromips-n64"
+	run_dump_test "elf-rel28-lldscd-n32"
+	run_dump_test "elf-rel28-lldscd-micromips-n32"
+	run_dump_test "elf-rel28-lldscd-n64"
+	run_dump_test "elf-rel28-lldscd-micromips-n64"
 	run_dump_test_arches "elf-rel29" [mips_arch_list_matching mips3]
     }
     run_list_test_arches "elf-rel30" "-32" [mips_arch_list_all]
@@ -1384,6 +1390,9 @@ if { [istarget mips*-*-vxworks*] } {
     run_dump_test "loongson-3a"
     run_dump_test "loongson-3a-2"
     run_dump_test "loongson-3a-3"
+
+    run_dump_test "loongson-2f-mmi"
+    run_dump_test "loongson-3a-mmi"
 
     if { $has_newabi } {
 	run_dump_test_arches "octeon"	[mips_arch_list_matching octeon]

@@ -190,7 +190,7 @@ remove_all_on_match_ptid (QUEUE (notif_event_p) *q,
   ptid_t filter_ptid = *(ptid_t *) data;
   struct vstop_notif *vstop_event = (struct vstop_notif *) event;
 
-  if (ptid_match (vstop_event->ptid, filter_ptid))
+  if (vstop_event->ptid.matches (filter_ptid))
     {
       if (q->free_func != NULL)
 	q->free_func (event);
@@ -229,13 +229,13 @@ in_queued_stop_replies_ptid (QUEUE (notif_event_p) *q,
   ptid_t filter_ptid = *(ptid_t *) data;
   struct vstop_notif *vstop_event = (struct vstop_notif *) event;
 
-  if (ptid_match (vstop_event->ptid, filter_ptid))
+  if (vstop_event->ptid.matches (filter_ptid))
     return 0;
 
   /* Don't resume fork children that GDB does not know about yet.  */
   if ((vstop_event->status.kind == TARGET_WAITKIND_FORKED
        || vstop_event->status.kind == TARGET_WAITKIND_VFORKED)
-      && ptid_match (vstop_event->status.value.related_pid, filter_ptid))
+      && vstop_event->status.value.related_pid.matches (filter_ptid))
     return 0;
 
   return 1;
@@ -308,7 +308,7 @@ attach_inferior (int pid)
 
   if (!non_stop)
     {
-      cs.last_ptid = mywait (pid_to_ptid (pid), &cs.last_status, 0, 0);
+      cs.last_ptid = mywait (ptid_t (pid), &cs.last_status, 0, 0);
 
       /* GDB knows to ignore the first SIGSTOP after attaching to a running
 	 process using the "attach" command, but this is different; it's
@@ -441,8 +441,8 @@ handle_btrace_general_set (char *own_buf)
 
   op = own_buf + strlen ("Qbtrace:");
 
-  if (ptid_equal (cs.general_thread, null_ptid)
-      || ptid_equal (cs.general_thread, minus_one_ptid))
+  if (cs.general_thread == null_ptid
+      || cs.general_thread == minus_one_ptid)
     {
       strcpy (own_buf, "E.Must select a single thread.");
       return -1;
@@ -491,8 +491,8 @@ handle_btrace_conf_general_set (char *own_buf)
 
   op = own_buf + strlen ("Qbtrace-conf:");
 
-  if (ptid_equal (cs.general_thread, null_ptid)
-      || ptid_equal (cs.general_thread, minus_one_ptid))
+  if (cs.general_thread == null_ptid
+      || cs.general_thread == minus_one_ptid)
     {
       strcpy (own_buf, "E.Must select a single thread.");
       return -1;
@@ -1195,34 +1195,37 @@ static void
 handle_detach (char *own_buf)
 {
   client_state &cs = get_client_state ();
-  require_running_or_return (own_buf);
 
-  int pid;
+  process_info *process;
 
   if (cs.multi_process)
     {
       /* skip 'D;' */
-      pid = strtol (&own_buf[2], NULL, 16);
+      int pid = strtol (&own_buf[2], NULL, 16);
+
+      process = find_process_pid (pid);
     }
   else
-    pid = ptid_get_pid (current_ptid);
-
-  if ((tracing && disconnected_tracing) || any_persistent_commands ())
     {
-      struct process_info *process = find_process_pid (pid);
+      process = (current_thread != nullptr
+		 ? get_thread_process (current_thread)
+		 : nullptr);
+    }
 
-      if (process == NULL)
-	{
-	  write_enn (own_buf);
-	  return;
-	}
+  if (process == NULL)
+    {
+      write_enn (own_buf);
+      return;
+    }
 
+  if ((tracing && disconnected_tracing) || any_persistent_commands (process))
+    {
       if (tracing && disconnected_tracing)
 	fprintf (stderr,
 		 "Disconnected tracing in effect, "
 		 "leaving gdbserver attached to the process\n");
 
-      if (any_persistent_commands ())
+      if (any_persistent_commands (process))
 	fprintf (stderr,
 		 "Persistent commands are present, "
 		 "leaving gdbserver attached to the process\n");
@@ -1250,13 +1253,13 @@ handle_detach (char *own_buf)
       return;
     }
 
-  fprintf (stderr, "Detaching from process %d\n", pid);
+  fprintf (stderr, "Detaching from process %d\n", process->pid);
   stop_tracing ();
-  if (detach_inferior (pid) != 0)
+  if (detach_inferior (process) != 0)
     write_enn (own_buf);
   else
     {
-      discard_queued_stop_replies (pid_to_ptid (pid));
+      discard_queued_stop_replies (ptid_t (process->pid));
       write_ok (own_buf);
 
       if (extended_protocol || target_running ())
@@ -1266,7 +1269,7 @@ handle_detach (char *own_buf)
 	     and instead treat this like a normal program exit.  */
 	  cs.last_status.kind = TARGET_WAITKIND_EXITED;
 	  cs.last_status.value.integer = 0;
-	  cs.last_ptid = pid_to_ptid (pid);
+	  cs.last_ptid = ptid_t (process->pid);
 
 	  current_thread = NULL;
 	}
@@ -1278,7 +1281,7 @@ handle_detach (char *own_buf)
 	  /* If we are attached, then we can exit.  Otherwise, we
 	     need to hang around doing nothing, until the child is
 	     gone.  */
-	  join_inferior (pid);
+	  join_inferior (process);
 	  exit (0);
 	}
     }
@@ -1829,8 +1832,8 @@ handle_qxfer_btrace (const char *annex,
   if (writebuf != NULL)
     return -2;
 
-  if (ptid_equal (cs.general_thread, null_ptid)
-      || ptid_equal (cs.general_thread, minus_one_ptid))
+  if (cs.general_thread == null_ptid
+      || cs.general_thread == minus_one_ptid)
     {
       strcpy (cs.own_buf, "E.Must select a single thread.");
       return -3;
@@ -1913,8 +1916,8 @@ handle_qxfer_btrace_conf (const char *annex,
   if (annex[0] != '\0')
     return -1;
 
-  if (ptid_equal (cs.general_thread, null_ptid)
-      || ptid_equal (cs.general_thread, minus_one_ptid))
+  if (cs.general_thread == null_ptid
+      || cs.general_thread == minus_one_ptid)
     {
       strcpy (cs.own_buf, "E.Must select a single thread.");
       return -3;
@@ -2180,7 +2183,7 @@ handle_query (char *own_buf, int packet_len, int *new_packet_len_p)
       if (current_thread == NULL)
 	{
 	  current_thread
-	    = find_any_thread_of_pid (ptid_get_pid (cs.general_thread));
+	    = find_any_thread_of_pid (cs.general_thread.pid ());
 
 	  /* Just in case, if we didn't find a thread, then bail out
 	     instead of crashing.  */
@@ -2696,11 +2699,11 @@ visit_actioned_threads (thread_info *thread,
     {
       const struct thread_resume *action = &actions[i];
 
-      if (ptid_equal (action->thread, minus_one_ptid)
-	  || ptid_equal (action->thread, thread->id)
-	  || ((ptid_get_pid (action->thread)
+      if (action->thread == minus_one_ptid
+	  || action->thread == thread->id
+	  || ((action->thread.pid ()
 	       == thread->id.pid ())
-	      && ptid_get_lwp (action->thread) == -1))
+	      && action->thread.lwp () == -1))
 	{
 	  if ((*callback) (action, thread))
 	    return true;
@@ -3077,11 +3080,14 @@ handle_v_kill (char *own_buf)
     pid = strtol (p, NULL, 16);
   else
     pid = signal_pid;
-  if (pid != 0 && kill_inferior (pid) == 0)
+
+  process_info *proc = find_process_pid (pid);
+
+  if (proc != nullptr && kill_inferior (proc) == 0)
     {
       cs.last_status.kind = TARGET_WAITKIND_SIGNALLED;
       cs.last_status.value.sig = GDB_SIGNAL_KILL;
-      cs.last_ptid = pid_to_ptid (pid);
+      cs.last_ptid = ptid_t (pid);
       discard_queued_stop_replies (cs.last_ptid);
       write_ok (own_buf);
       return 1;
@@ -3199,8 +3205,8 @@ myresume (char *own_buf, int step, int sig)
   int n = 0;
   int valid_cont_thread;
 
-  valid_cont_thread = (!ptid_equal (cs.cont_thread, null_ptid)
-			 && !ptid_equal (cs.cont_thread, minus_one_ptid));
+  valid_cont_thread = (cs.cont_thread != null_ptid
+			 && cs.cont_thread != minus_one_ptid);
 
   if (step || sig || valid_cont_thread)
     {
@@ -3478,10 +3484,8 @@ gdbserver_show_disableable (FILE *stream)
 static void
 kill_inferior_callback (process_info *process)
 {
-  int pid = process->pid;
-
-  kill_inferior (pid);
-  discard_queued_stop_replies (pid_to_ptid (pid));
+  kill_inferior (process);
+  discard_queued_stop_replies (ptid_t (process->pid));
 }
 
 /* Call this when exiting gdbserver with possible inferiors that need
@@ -3523,11 +3527,11 @@ detach_or_kill_for_exit (void)
     int pid = process->pid;
 
     if (process->attached)
-      detach_inferior (pid);
+      detach_inferior (process);
     else
-      kill_inferior (pid);
+      kill_inferior (process);
 
-    discard_queued_stop_replies (pid_to_ptid (pid));
+    discard_queued_stop_replies (ptid_t (pid));
   });
 }
 
@@ -4095,7 +4099,7 @@ process_serial_event (void)
 
 	  if (cs.own_buf[1] == 'g')
 	    {
-	      if (ptid_equal (thread_id, null_ptid))
+	      if (thread_id == null_ptid)
 		{
 		  /* GDB is telling us to choose any thread.  Check if
 		     the currently selected thread is still valid. If
@@ -4427,7 +4431,7 @@ handle_target_event (int err, gdb_client_data client_data)
     }
   else if (cs.last_status.kind != TARGET_WAITKIND_IGNORE)
     {
-      int pid = ptid_get_pid (cs.last_ptid);
+      int pid = cs.last_ptid.pid ();
       struct process_info *process = find_process_pid (pid);
       int forward_event = !gdb_connected () || process->gdb_detached;
 

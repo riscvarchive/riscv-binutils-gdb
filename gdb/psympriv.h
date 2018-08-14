@@ -33,11 +33,36 @@
 /* This structure is space critical.  See space comments at the top of
    symtab.h.  */
 
-struct partial_symbol
+struct partial_symbol : public general_symbol_info
 {
-  /* The general symbol info required for all types of symbols.  */
+  /* Return the section for this partial symbol, or nullptr if no
+     section has been set.  */
+  struct obj_section *obj_section (struct objfile *objfile) const
+  {
+    if (section >= 0)
+      return &objfile->sections[section];
+    return nullptr;
+  }
 
-  struct general_symbol_info ginfo;
+  /* Return the unrelocated address of this partial symbol.  */
+  CORE_ADDR unrelocated_address () const
+  {
+    return value.address;
+  }
+
+  /* Return the address of this partial symbol, relocated according to
+     the offsets provided in OBJFILE.  */
+  CORE_ADDR address (const struct objfile *objfile) const
+  {
+    return value.address + ANOFFSET (objfile->section_offsets, section);
+  }
+
+  /* Set the address of this partial symbol.  The address must be
+     unrelocated.  */
+  void set_unrelocated_address (CORE_ADDR addr)
+  {
+    value.address = addr;
+  }
 
   /* Name space code.  */
 
@@ -49,9 +74,6 @@ struct partial_symbol
 
   ENUM_BITFIELD(address_class) aclass : SYMBOL_ACLASS_BITS;
 };
-
-#define PSYMBOL_DOMAIN(psymbol)	(psymbol)->domain
-#define PSYMBOL_CLASS(psymbol)		(psymbol)->aclass
 
 /* A convenience enum to give names to some constants used when
    searching psymtabs.  This is internal to psymtab and should not be
@@ -76,6 +98,47 @@ enum psymtab_search_status
 
 struct partial_symtab
 {
+  /* Return the raw low text address of this partial_symtab.  */
+  CORE_ADDR raw_text_low () const
+  {
+    return m_text_low;
+  }
+
+  /* Return the raw high text address of this partial_symtab.  */
+  CORE_ADDR raw_text_high () const
+  {
+    return m_text_high;
+  }
+
+  /* Return the relocated low text address of this partial_symtab.  */
+  CORE_ADDR text_low (struct objfile *objfile) const
+  {
+    return m_text_low + ANOFFSET (objfile->section_offsets,
+				  SECT_OFF_TEXT (objfile));
+  }
+
+  /* Return the relocated high text address of this partial_symtab.  */
+  CORE_ADDR text_high (struct objfile *objfile) const
+  {
+    return m_text_high + ANOFFSET (objfile->section_offsets,
+				   SECT_OFF_TEXT (objfile));
+  }
+
+  /* Set the low text address of this partial_symtab.  */
+  void set_text_low (CORE_ADDR addr)
+  {
+    m_text_low = addr;
+    text_low_valid = 1;
+  }
+
+  /* Set the hight text address of this partial_symtab.  */
+  void set_text_high (CORE_ADDR addr)
+  {
+    m_text_high = addr;
+    text_high_valid = 1;
+  }
+
+
   /* Chain of all existing partial symtabs.  */
 
   struct partial_symtab *next;
@@ -96,10 +159,13 @@ struct partial_symtab
 
   /* Range of text addresses covered by this file; texthigh is the
      beginning of the next section.  Do not use if PSYMTABS_ADDRMAP_SUPPORTED
-     is set.  */
+     is set.  Do not refer directly to these fields.  Instead, use the
+     accessors.  The validity of these fields is determined by the
+     text_low_valid and text_high_valid fields; these are located later
+     in this structure for better packing.  */
 
-  CORE_ADDR textlow;
-  CORE_ADDR texthigh;
+  CORE_ADDR m_text_low;
+  CORE_ADDR m_text_high;
 
   /* If NULL, this is an ordinary partial symbol table.
 
@@ -182,6 +248,11 @@ struct partial_symtab
 
   ENUM_BITFIELD (psymtab_search_status) searched_flag : 2;
 
+  /* Validity of the m_text_low and m_text_high fields.  */
+
+  unsigned int text_low_valid : 1;
+  unsigned int text_high_valid : 1;
+
   /* Pointer to compunit eventually allocated for this source file, 0 if
      !readin or if we haven't looked for the symtab after it was readin.  */
 
@@ -205,6 +276,7 @@ struct partial_symtab
 extern void add_psymbol_to_list (const char *, int,
 				 int, domain_enum,
 				 enum address_class,
+				 short /* section */,
 				 std::vector<partial_symbol *> *,
 				 CORE_ADDR,
 				 enum language, struct objfile *);

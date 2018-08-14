@@ -70,7 +70,7 @@ static int debug_aix_thread;
 
 /* Return whether to treat PID as a debuggable thread id.  */
 
-#define PD_TID(ptid)	(pd_active && ptid_get_tid (ptid) != 0)
+#define PD_TID(ptid)	(pd_active && ptid.tid () != 0)
 
 /* pthdb_user_t value that we pass to pthdb functions.  0 causes
    PTHDB_BAD_USER errors, so use 1.  */
@@ -325,7 +325,7 @@ pid_to_prc (ptid_t *ptidp)
 
   ptid = *ptidp;
   if (PD_TID (ptid))
-    *ptidp = pid_to_ptid (ptid_get_pid (ptid));
+    *ptidp = ptid_t (ptid.pid ());
 }
 
 /* pthdb callback: for <i> from 0 to COUNT, set SYMBOLS[<i>].addr to
@@ -673,17 +673,17 @@ ptid_cmp (ptid_t ptid1, ptid_t ptid2)
 {
   int pid1, pid2;
 
-  if (ptid_get_pid (ptid1) < ptid_get_pid (ptid2))
+  if (ptid1.pid () < ptid2.pid ())
     return -1;
-  else if (ptid_get_pid (ptid1) > ptid_get_pid (ptid2))
+  else if (ptid1.pid () > ptid2.pid ())
     return 1;
-  else if (ptid_get_tid (ptid1) < ptid_get_tid (ptid2))
+  else if (ptid1.tid () < ptid2.tid ())
     return -1;
-  else if (ptid_get_tid (ptid1) > ptid_get_tid (ptid2))
+  else if (ptid1.tid () > ptid2.tid ())
     return 1;
-  else if (ptid_get_lwp (ptid1) < ptid_get_lwp (ptid2))
+  else if (ptid1.lwp () < ptid2.lwp ())
     return -1;
-  else if (ptid_get_lwp (ptid1) > ptid_get_lwp (ptid2))
+  else if (ptid1.lwp () > ptid2.lwp ())
     return 1;
   else
     return 0;
@@ -712,7 +712,7 @@ get_signaled_thread (void)
 
   while (1)
   {
-    if (getthrds (ptid_get_pid (inferior_ptid), &thrinf, 
+    if (getthrds (inferior_ptid.pid (), &thrinf, 
           	  sizeof (thrinf), &ktid, 1) != 1)
       break;
 
@@ -795,12 +795,12 @@ sync_threadlists (void)
 
   /* Apply differences between the two arrays to GDB's thread list.  */
 
-  infpid = ptid_get_pid (inferior_ptid);
+  infpid = inferior_ptid.pid ();
   for (pi = gi = 0; pi < pcount || gi < gcount;)
     {
       if (pi == pcount)
 	{
-	  delete_thread (gbuf[gi]->ptid);
+	  delete_thread (gbuf[gi]);
 	  gi++;
 	}
       else if (gi == gcount)
@@ -818,7 +818,7 @@ sync_threadlists (void)
 	  ptid_t pptid, gptid;
 	  int cmp_result;
 
-	  pptid = ptid_build (infpid, 0, pbuf[pi].pthid);
+	  pptid = ptid_t (infpid, 0, pbuf[pi].pthid);
 	  gptid = gbuf[gi]->ptid;
 	  pdtid = pbuf[pi].pdtid;
 	  tid = pbuf[pi].tid;
@@ -836,7 +836,7 @@ sync_threadlists (void)
 	    }
 	  else if (cmp_result > 0)
 	    {
-	      delete_thread (gptid);
+	      delete_thread (gbuf[gi]);
 	      gi++;
 	    }
 	  else
@@ -1042,7 +1042,7 @@ aix_thread_target::resume (ptid_t ptid, int step, enum gdb_signal sig)
     {
       scoped_restore save_inferior_ptid = make_scoped_restore (&inferior_ptid);
       
-      inferior_ptid = pid_to_ptid (ptid_get_pid (inferior_ptid));
+      inferior_ptid = ptid_t (inferior_ptid.pid ());
       beneath ()->resume (ptid, step, sig);
     }
   else
@@ -1050,14 +1050,14 @@ aix_thread_target::resume (ptid_t ptid, int step, enum gdb_signal sig)
       thread = find_thread_ptid (ptid);
       if (!thread)
 	error (_("aix-thread resume: unknown pthread %ld"),
-	       ptid_get_lwp (ptid));
+	       ptid.lwp ());
 
       aix_thread_info *priv = get_aix_thread_info (thread);
 
       tid[0] = priv->tid;
       if (tid[0] == PTHDB_INVALID_TID)
 	error (_("aix-thread resume: no tid for pthread %ld"),
-	       ptid_get_lwp (ptid));
+	       ptid.lwp ());
       tid[1] = 0;
 
       if (arch64)
@@ -1082,12 +1082,12 @@ aix_thread_target::wait (ptid_t ptid, struct target_waitstatus *status,
 
     pid_to_prc (&ptid);
 
-    inferior_ptid = pid_to_ptid (ptid_get_pid (inferior_ptid));
+    inferior_ptid = ptid_t (inferior_ptid.pid ());
     ptid = beneath ()->wait (ptid, status, options);
   }
 
-  if (ptid_get_pid (ptid) == -1)
-    return pid_to_ptid (-1);
+  if (ptid.pid () == -1)
+    return ptid_t (-1);
 
   /* Check whether libpthdebug might be ready to be initialized.  */
   if (!pd_active && status->kind == TARGET_WAITKIND_STOPPED
@@ -1722,7 +1722,7 @@ aix_thread_target::xfer_partial (enum target_object object,
 {
   scoped_restore save_inferior_ptid = make_scoped_restore (&inferior_ptid);
 
-  inferior_ptid = pid_to_ptid (ptid_get_pid (inferior_ptid));
+  inferior_ptid = ptid_t (inferior_ptid.pid ());
   return beneath ()->xfer_partial (object, annex, readbuf,
 				   writebuf, offset, len, xfered_len);
 }
@@ -1766,7 +1766,7 @@ aix_thread_target::pid_to_str (ptid_t ptid)
      xstrprintf().  */
   xfree (ret);
 
-  ret = xstrprintf (_("Thread %ld"), ptid_get_tid (ptid));
+  ret = xstrprintf (_("Thread %ld"), ptid.tid ());
   return ret;
 }
 
@@ -1832,7 +1832,7 @@ aix_thread_target::extra_thread_info (struct thread_info *thread)
 ptid_t
 aix_thread_target::get_ada_task_ptid (long lwp, long thread)
 {
-  return ptid_build (ptid_get_pid (inferior_ptid), 0, thread);
+  return ptid_t (inferior_ptid.pid (), 0, thread);
 }
 
 

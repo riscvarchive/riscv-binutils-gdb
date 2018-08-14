@@ -615,6 +615,19 @@ report_agent_reqs_errors (struct agent_expr *aexpr)
     error (_("Expression is too complicated."));
 }
 
+/* Call ax_reqs on AEXPR and raise an error if something is wrong.  */
+
+static void
+finalize_tracepoint_aexpr (struct agent_expr *aexpr)
+{
+  ax_reqs (aexpr);
+
+  if (aexpr->len > MAX_AGENT_EXPR_LEN)
+    error (_("Expression is too complicated."));
+
+  report_agent_reqs_errors (aexpr);
+}
+
 /* worker function */
 void
 validate_actionline (const char *line, struct breakpoint *b)
@@ -699,12 +712,7 @@ validate_actionline (const char *line, struct breakpoint *b)
 							exp.get (),
 							trace_string);
 
-	      if (aexpr->len > MAX_AGENT_EXPR_LEN)
-		error (_("Expression is too complicated."));
-
-	      ax_reqs (aexpr.get ());
-
-	      report_agent_reqs_errors (aexpr.get ());
+	      finalize_tracepoint_aexpr (aexpr.get ());
 	    }
 	}
       while (p && *p++ == ',');
@@ -731,11 +739,7 @@ validate_actionline (const char *line, struct breakpoint *b)
 		 long.  */
 	      agent_expr_up aexpr = gen_eval_for_expr (loc->address, exp.get ());
 
-	      if (aexpr->len > MAX_AGENT_EXPR_LEN)
-		error (_("Expression is too complicated."));
-
-	      ax_reqs (aexpr.get ());
-	      report_agent_reqs_errors (aexpr.get ());
+	      finalize_tracepoint_aexpr (aexpr.get ());
 	    }
 	}
       while (p && *p++ == ',');
@@ -811,17 +815,77 @@ memrange_sortmerge (std::vector<memrange> &memranges)
     }
 }
 
-/* Add a register to a collection list.  */
+/* Add remote register number REGNO to the collection list mask.  */
 
 void
-collection_list::add_register (unsigned int regno)
+collection_list::add_remote_register (unsigned int regno)
 {
   if (info_verbose)
     printf_filtered ("collect register %d\n", regno);
-  if (regno >= (8 * sizeof (m_regs_mask)))
-    error (_("Internal: register number %d too large for tracepoint"),
-	   regno);
-  m_regs_mask[regno / 8] |= 1 << (regno % 8);
+
+  m_regs_mask.at (regno / 8) |= 1 << (regno % 8);
+}
+
+/* Add all the registers from the mask in AEXPR to the mask in the
+   collection list.  Registers in the AEXPR mask are already remote
+   register numbers.  */
+
+void
+collection_list::add_ax_registers (struct agent_expr *aexpr)
+{
+  if (aexpr->reg_mask_len > 0)
+    {
+      for (int ndx1 = 0; ndx1 < aexpr->reg_mask_len; ndx1++)
+	{
+	  QUIT;	/* Allow user to bail out with ^C.  */
+	  if (aexpr->reg_mask[ndx1] != 0)
+	    {
+	      /* Assume chars have 8 bits.  */
+	      for (int ndx2 = 0; ndx2 < 8; ndx2++)
+		if (aexpr->reg_mask[ndx1] & (1 << ndx2))
+		  /* It's used -- record it.  */
+		  add_remote_register (ndx1 * 8 + ndx2);
+	    }
+	}
+    }
+}
+
+/* If REGNO is raw, add its corresponding remote register number to
+   the mask.  If REGNO is a pseudo-register, figure out the necessary
+   registers using a temporary agent expression, and add it to the
+   list if it needs more than just a mask.  */
+
+void
+collection_list::add_local_register (struct gdbarch *gdbarch,
+				     unsigned int regno,
+				     CORE_ADDR scope)
+{
+  if (regno < gdbarch_num_regs (gdbarch))
+    {
+      int remote_regno = gdbarch_remote_register_number (gdbarch, regno);
+
+      if (remote_regno < 0)
+	error (_("Can't collect register %d"), regno);
+
+      add_remote_register (remote_regno);
+    }
+  else
+    {
+      agent_expr_up aexpr (new agent_expr (gdbarch, scope));
+
+      ax_reg_mask (aexpr.get (), regno);
+
+      finalize_tracepoint_aexpr (aexpr.get ());
+
+      add_ax_registers (aexpr.get ());
+
+      /* Usually ax_reg_mask for a pseudo-regiser only sets the
+	 corresponding raw registers in the ax mask, but if this isn't
+	 the case add the expression that is generated to the
+	 collection list.  */
+      if (aexpr->len > 0)
+	add_aexpr (std::move (aexpr));
+    }
 }
 
 /* Add a memrange to a collection list.  */
@@ -829,7 +893,7 @@ collection_list::add_register (unsigned int regno)
 void
 collection_list::add_memrange (struct gdbarch *gdbarch,
 			       int type, bfd_signed_vma base,
-			       unsigned long len)
+			       unsigned long len, CORE_ADDR scope)
 {
   if (info_verbose)
     printf_filtered ("(%d,%s,%ld)\n", type, paddress (gdbarch, base), len);
@@ -840,7 +904,7 @@ collection_list::add_memrange (struct gdbarch *gdbarch,
   m_memranges.emplace_back (type, base, base + len);
 
   if (type != memrange_absolute)    /* Better collect the base register!  */
-    add_register (type);
+    add_local_register (gdbarch, type, scope);
 }
 
 /* Add a symbol to a collection list.  */
@@ -882,19 +946,19 @@ collection_list::collect_symbol (struct symbol *sym,
       if (TYPE_CODE (SYMBOL_TYPE (sym)) == TYPE_CODE_STRUCT)
 	treat_as_expr = 1;
       else
-	add_memrange (gdbarch, memrange_absolute, offset, len);
+	add_memrange (gdbarch, memrange_absolute, offset, len, scope);
       break;
     case LOC_REGISTER:
       reg = SYMBOL_REGISTER_OPS (sym)->register_number (sym, gdbarch);
       if (info_verbose)
 	printf_filtered ("LOC_REG[parm] %s: ", 
 			 SYMBOL_PRINT_NAME (sym));
-      add_register (reg);
+      add_local_register (gdbarch, reg, scope);
       /* Check for doubles stored in two registers.  */
       /* FIXME: how about larger types stored in 3 or more regs?  */
       if (TYPE_CODE (SYMBOL_TYPE (sym)) == TYPE_CODE_FLT &&
 	  len > register_size (gdbarch, reg))
-	add_register (reg + 1);
+	add_local_register (gdbarch, reg + 1, scope);
       break;
     case LOC_REF_ARG:
       printf_filtered ("Sorry, don't know how to do LOC_REF_ARG yet.\n");
@@ -911,7 +975,7 @@ collection_list::collect_symbol (struct symbol *sym,
 			   SYMBOL_PRINT_NAME (sym), len,
 			   paddress (gdbarch, offset), reg);
 	}
-      add_memrange (gdbarch, reg, offset, len);
+      add_memrange (gdbarch, reg, offset, len, scope);
       break;
     case LOC_REGPARM_ADDR:
       reg = SYMBOL_VALUE (sym);
@@ -923,7 +987,7 @@ collection_list::collect_symbol (struct symbol *sym,
 			   SYMBOL_PRINT_NAME (sym), len,
 			   paddress (gdbarch, offset), reg);
 	}
-      add_memrange (gdbarch, reg, offset, len);
+      add_memrange (gdbarch, reg, offset, len, scope);
       break;
     case LOC_LOCAL:
       reg = frame_regno;
@@ -935,7 +999,7 @@ collection_list::collect_symbol (struct symbol *sym,
 			   SYMBOL_PRINT_NAME (sym), len,
 			   paddress (gdbarch, offset), reg);
 	}
-      add_memrange (gdbarch, reg, offset, len);
+      add_memrange (gdbarch, reg, offset, len, scope);
       break;
 
     case LOC_UNRESOLVED:
@@ -968,26 +1032,10 @@ collection_list::collect_symbol (struct symbol *sym,
 	  return;
 	}
 
-      ax_reqs (aexpr.get ());
-
-      report_agent_reqs_errors (aexpr.get ());
+      finalize_tracepoint_aexpr (aexpr.get ());
 
       /* Take care of the registers.  */
-      if (aexpr->reg_mask_len > 0)
-	{
-	  for (int ndx1 = 0; ndx1 < aexpr->reg_mask_len; ndx1++)
-	    {
-	      QUIT;	/* Allow user to bail out with ^C.  */
-	      if (aexpr->reg_mask[ndx1] != 0)
-		{
-		  /* Assume chars have 8 bits.  */
-		  for (int ndx2 = 0; ndx2 < 8; ndx2++)
-		    if (aexpr->reg_mask[ndx1] & (1 << ndx2))
-		      /* It's used -- record it.  */
-		      add_register (ndx1 * 8 + ndx2);
-		}
-	    }
-	}
+      add_ax_registers (aexpr.get ());
 
       add_aexpr (std::move (aexpr));
     }
@@ -1086,9 +1134,20 @@ collection_list::add_static_trace_data ()
 }
 
 collection_list::collection_list ()
-  : m_regs_mask (),
-    m_strace_data (false)
+  : m_strace_data (false)
 {
+  int max_remote_regno = 0;
+  for (int i = 0; i < gdbarch_num_regs (target_gdbarch ()); i++)
+    {
+      int remote_regno = (gdbarch_remote_register_number
+			  (target_gdbarch (), i));
+
+      if (remote_regno >= 0 && remote_regno > max_remote_regno)
+	max_remote_regno = remote_regno;
+    }
+
+  m_regs_mask.resize ((max_remote_regno / 8) + 1);
+
   m_memranges.reserve (128);
   m_aexprs.reserve (128);
 }
@@ -1098,7 +1157,8 @@ collection_list::collection_list ()
 std::vector<std::string>
 collection_list::stringify ()
 {
-  char temp_buf[2048];
+  gdb::char_vector temp_buf (2048);
+
   int count;
   char *end;
   long i;
@@ -1108,35 +1168,45 @@ collection_list::stringify ()
     {
       if (info_verbose)
 	printf_filtered ("\nCollecting static trace data\n");
-      end = temp_buf;
+      end = temp_buf.data ();
       *end++ = 'L';
-      str_list.emplace_back (temp_buf, end - temp_buf);
+      str_list.emplace_back (temp_buf.data (), end - temp_buf.data ());
     }
 
-  for (i = sizeof (m_regs_mask) - 1; i > 0; i--)
+  for (i = m_regs_mask.size () - 1; i > 0; i--)
     if (m_regs_mask[i] != 0)    /* Skip leading zeroes in regs_mask.  */
       break;
   if (m_regs_mask[i] != 0)	/* Prepare to send regs_mask to the stub.  */
     {
       if (info_verbose)
 	printf_filtered ("\nCollecting registers (mask): 0x");
-      end = temp_buf;
+
+      /* One char for 'R', one for the null terminator and two per
+	 mask byte.  */
+      std::size_t new_size = (i + 1) * 2 + 2;
+      if (new_size > temp_buf.size ())
+	temp_buf.resize (new_size);
+
+      end = temp_buf.data ();
       *end++ = 'R';
       for (; i >= 0; i--)
 	{
 	  QUIT;			/* Allow user to bail out with ^C.  */
 	  if (info_verbose)
 	    printf_filtered ("%02X", m_regs_mask[i]);
-	  sprintf (end, "%02X", m_regs_mask[i]);
-	  end += 2;
+
+	  end = pack_hex_byte (end, m_regs_mask[i]);
 	}
-      str_list.emplace_back (temp_buf);
+      *end = '\0';
+
+      str_list.emplace_back (temp_buf.data ());
     }
   if (info_verbose)
     printf_filtered ("\n");
   if (!m_memranges.empty () && info_verbose)
     printf_filtered ("Collecting memranges: \n");
-  for (i = 0, count = 0, end = temp_buf; i < m_memranges.size (); i++)
+  for (i = 0, count = 0, end = temp_buf.data ();
+       i < m_memranges.size (); i++)
     {
       QUIT;			/* Allow user to bail out with ^C.  */
       if (info_verbose)
@@ -1150,9 +1220,9 @@ collection_list::stringify ()
 	}
       if (count + 27 > MAX_AGENT_EXPR_LEN)
 	{
-	  str_list.emplace_back (temp_buf, count);
+	  str_list.emplace_back (temp_buf.data (), count);
 	  count = 0;
-	  end = temp_buf;
+	  end = temp_buf.data ();
 	}
 
       {
@@ -1172,7 +1242,7 @@ collection_list::stringify ()
       }
 
       count += strlen (end);
-      end = temp_buf + count;
+      end = temp_buf.data () + count;
     }
 
   for (i = 0; i < m_aexprs.size (); i++)
@@ -1180,9 +1250,9 @@ collection_list::stringify ()
       QUIT;			/* Allow user to bail out with ^C.  */
       if ((count + 10 + 2 * m_aexprs[i]->len) > MAX_AGENT_EXPR_LEN)
 	{
-	  str_list.emplace_back (temp_buf, count);
+	  str_list.emplace_back (temp_buf.data (), count);
 	  count = 0;
-	  end = temp_buf;
+	  end = temp_buf.data ();
 	}
       sprintf (end, "X%08X,", m_aexprs[i]->len);
       end += 10;		/* 'X' + 8 hex digits + ',' */
@@ -1194,9 +1264,9 @@ collection_list::stringify ()
 
   if (count != 0)
     {
-      str_list.emplace_back (temp_buf, count);
+      str_list.emplace_back (temp_buf.data (), count);
       count = 0;
-      end = temp_buf;
+      end = temp_buf.data ();
     }
 
   return str_list;
@@ -1257,8 +1327,18 @@ encode_actions_1 (struct command_line *action,
 
 	      if (0 == strncasecmp ("$reg", action_exp, 4))
 		{
-		  for (i = 0; i < gdbarch_num_regs (target_gdbarch ()); i++)
-		    collect->add_register (i);
+		  for (i = 0; i < gdbarch_num_regs (target_gdbarch ());
+		       i++)
+		    {
+		      int remote_regno = (gdbarch_remote_register_number
+					  (target_gdbarch (), i));
+
+		      /* Ignore arch regnos without a corresponding
+			 remote regno.  This can happen for regnos not
+			 in the tdesc.  */
+		      if (remote_regno >= 0)
+			collect->add_remote_register (remote_regno);
+		    }
 		  action_exp = strchr (action_exp, ',');	/* more? */
 		}
 	      else if (0 == strncasecmp ("$arg", action_exp, 4))
@@ -1288,27 +1368,10 @@ encode_actions_1 (struct command_line *action,
 						    target_gdbarch (),
 						    trace_string);
 
-		  ax_reqs (aexpr.get ());
-		  report_agent_reqs_errors (aexpr.get ());
+		  finalize_tracepoint_aexpr (aexpr.get ());
 
 		  /* take care of the registers */
-		  if (aexpr->reg_mask_len > 0)
-		    {
-		      for (int ndx1 = 0; ndx1 < aexpr->reg_mask_len; ndx1++)
-			{
-			  QUIT;	/* allow user to bail out with ^C */
-			  if (aexpr->reg_mask[ndx1] != 0)
-			    {
-			      /* assume chars have 8 bits */
-			      for (int ndx2 = 0; ndx2 < 8; ndx2++)
-				if (aexpr->reg_mask[ndx1] & (1 << ndx2))
-				  {
-				    /* It's used -- record it.  */
-				    collect->add_register (ndx1 * 8 + ndx2);
-				  }
-			    }
-			}
-		    }
+		  collect->add_ax_registers (aexpr.get ());
 
 		  collect->add_aexpr (std::move (aexpr));
 		  action_exp = strchr (action_exp, ',');	/* more? */
@@ -1340,7 +1403,8 @@ encode_actions_1 (struct command_line *action,
 					  name);
 			if (info_verbose)
 			  printf_filtered ("OP_REGISTER: ");
-			collect->add_register (i);
+			collect->add_local_register (target_gdbarch (),
+						     i, tloc->address);
 			break;
 		      }
 
@@ -1352,7 +1416,8 @@ encode_actions_1 (struct command_line *action,
 		      check_typedef (exp->elts[1].type);
 		      collect->add_memrange (target_gdbarch (),
 					     memrange_absolute, addr,
-					     TYPE_LENGTH (exp->elts[1].type));
+					     TYPE_LENGTH (exp->elts[1].type),
+					     tloc->address);
 		      collect->append_exp (exp.get ());
 		      break;
 
@@ -1376,28 +1441,10 @@ encode_actions_1 (struct command_line *action,
 								exp.get (),
 								trace_string);
 
-		      ax_reqs (aexpr.get ());
-
-		      report_agent_reqs_errors (aexpr.get ());
+		      finalize_tracepoint_aexpr (aexpr.get ());
 
 		      /* Take care of the registers.  */
-		      if (aexpr->reg_mask_len > 0)
-			{
-			  for (int ndx1 = 0; ndx1 < aexpr->reg_mask_len; ndx1++)
-			    {
-			      QUIT;	/* Allow user to bail out with ^C.  */
-			      if (aexpr->reg_mask[ndx1] != 0)
-				{
-				  /* Assume chars have 8 bits.  */
-				  for (int ndx2 = 0; ndx2 < 8; ndx2++)
-				    if (aexpr->reg_mask[ndx1] & (1 << ndx2))
-				      {
-					/* It's used -- record it.  */
-					collect->add_register (ndx1 * 8 + ndx2);
-				      }
-				}
-			    }
-			}
+		      collect->add_ax_registers (aexpr.get ());
 
 		      collect->add_aexpr (std::move (aexpr));
 		      collect->append_exp (exp.get ());
@@ -1422,8 +1469,7 @@ encode_actions_1 (struct command_line *action,
 		  agent_expr_up aexpr = gen_eval_for_expr (tloc->address,
 							   exp.get ());
 
-		  ax_reqs (aexpr.get ());
-		  report_agent_reqs_errors (aexpr.get ());
+		  finalize_tracepoint_aexpr (aexpr.get ());
 
 		  /* Even though we're not officially collecting, add
 		     to the collect list anyway.  */
@@ -1495,15 +1541,11 @@ collection_list::add_aexpr (agent_expr_up aexpr)
 static void
 process_tracepoint_on_disconnect (void)
 {
-  VEC(breakpoint_p) *tp_vec = NULL;
-  int ix;
-  struct breakpoint *b;
   int has_pending_p = 0;
 
   /* Check whether we still have pending tracepoint.  If we have, warn the
      user that pending tracepoint will no longer work.  */
-  tp_vec = all_tracepoints ();
-  for (ix = 0; VEC_iterate (breakpoint_p, tp_vec, ix, b); ix++)
+  for (breakpoint *b : all_tracepoints ())
     {
       if (b->loc == NULL)
 	{
@@ -1527,7 +1569,6 @@ process_tracepoint_on_disconnect (void)
 	    break;
 	}
     }
-  VEC_free (breakpoint_p, tp_vec);
 
   if (has_pending_p)
     warning (_("Pending tracepoints will not be resolved while"
@@ -1548,23 +1589,16 @@ trace_reset_local_state (void)
 void
 start_tracing (const char *notes)
 {
-  VEC(breakpoint_p) *tp_vec = NULL;
-  int ix;
-  struct breakpoint *b;
-  struct trace_state_variable *tsv;
   int any_enabled = 0, num_to_download = 0;
   int ret;
 
-  tp_vec = all_tracepoints ();
+  std::vector<breakpoint *> tp_vec = all_tracepoints ();
 
   /* No point in tracing without any tracepoints...  */
-  if (VEC_length (breakpoint_p, tp_vec) == 0)
-    {
-      VEC_free (breakpoint_p, tp_vec);
-      error (_("No tracepoints defined, not starting trace"));
-    }
+  if (tp_vec.empty ())
+    error (_("No tracepoints defined, not starting trace"));
 
-  for (ix = 0; VEC_iterate (breakpoint_p, tp_vec, ix, b); ix++)
+  for (breakpoint *b : tp_vec)
     {
       if (b->enable_state == bp_enabled)
 	any_enabled = 1;
@@ -1586,20 +1620,16 @@ start_tracing (const char *notes)
 	{
 	  /* No point in tracing with only disabled tracepoints that
 	     cannot be re-enabled.  */
-	  VEC_free (breakpoint_p, tp_vec);
 	  error (_("No tracepoints enabled, not starting trace"));
 	}
     }
 
   if (num_to_download <= 0)
-    {
-      VEC_free (breakpoint_p, tp_vec);
-      error (_("No tracepoints that may be downloaded, not starting trace"));
-    }
+    error (_("No tracepoints that may be downloaded, not starting trace"));
 
   target_trace_init ();
 
-  for (ix = 0; VEC_iterate (breakpoint_p, tp_vec, ix, b); ix++)
+  for (breakpoint *b : tp_vec)
     {
       struct tracepoint *t = (struct tracepoint *) b;
       struct bp_location *loc;
@@ -1638,7 +1668,6 @@ start_tracing (const char *notes)
       if (bp_location_downloaded)
 	gdb::observers::breakpoint_modified.notify (b);
     }
-  VEC_free (breakpoint_p, tp_vec);
 
   /* Send down all the trace state variables too.  */
   for (const trace_state_variable &tsv : tvariables)
@@ -1705,14 +1734,10 @@ void
 stop_tracing (const char *note)
 {
   int ret;
-  VEC(breakpoint_p) *tp_vec = NULL;
-  int ix;
-  struct breakpoint *t;
 
   target_trace_stop ();
 
-  tp_vec = all_tracepoints ();
-  for (ix = 0; VEC_iterate (breakpoint_p, tp_vec, ix, t); ix++)
+  for (breakpoint *t : all_tracepoints ())
     {
       struct bp_location *loc;
 
@@ -1733,8 +1758,6 @@ stop_tracing (const char *note)
 	}
     }
 
-  VEC_free (breakpoint_p, tp_vec);
-
   if (!note)
     note = trace_stop_notes;
   ret = target_set_trace_notes (NULL, NULL, note);
@@ -1751,9 +1774,7 @@ static void
 tstatus_command (const char *args, int from_tty)
 {
   struct trace_status *ts = current_trace_status ();
-  int status, ix;
-  VEC(breakpoint_p) *tp_vec = NULL;
-  struct breakpoint *t;
+  int status;
   
   status = target_get_trace_status (ts);
 
@@ -1896,12 +1917,8 @@ tstatus_command (const char *args, int from_tty)
 		     (long int) (ts->stop_time % 1000000));
 
   /* Now report any per-tracepoint status available.  */
-  tp_vec = all_tracepoints ();
-
-  for (ix = 0; VEC_iterate (breakpoint_p, tp_vec, ix, t); ix++)
+  for (breakpoint *t : all_tracepoints ())
     target_get_tracepoint_status (t, NULL);
-
-  VEC_free (breakpoint_p, tp_vec);
 }
 
 /* Report the trace status to uiout, in a way suitable for MI, and not
@@ -2780,7 +2797,6 @@ all_tracepoint_actions (struct breakpoint *t)
      the fly, and don't cache it.  */
   if (*default_collect)
     {
-      struct command_line *default_collect_action;
       gdb::unique_xmalloc_ptr<char> default_collect_line
 	(xstrprintf ("collect %s", default_collect));
 
@@ -3058,12 +3074,9 @@ cond_string_is_same (char *str1, char *str2)
 static struct bp_location *
 find_matching_tracepoint_location (struct uploaded_tp *utp)
 {
-  VEC(breakpoint_p) *tp_vec = all_tracepoints ();
-  int ix;
-  struct breakpoint *b;
   struct bp_location *loc;
 
-  for (ix = 0; VEC_iterate (breakpoint_p, tp_vec, ix, b); ix++)
+  for (breakpoint *b : all_tracepoints ())
     {
       struct tracepoint *t = (struct tracepoint *) b;
 
@@ -3094,9 +3107,7 @@ merge_uploaded_tracepoints (struct uploaded_tp **uploaded_tps)
 {
   struct uploaded_tp *utp;
   /* A set of tracepoints which are modified.  */
-  VEC(breakpoint_p) *modified_tp = NULL;
-  int ix;
-  struct breakpoint *b;
+  std::vector<breakpoint *> modified_tp;
 
   /* Look for GDB tracepoints that match up with our uploaded versions.  */
   for (utp = *uploaded_tps; utp; utp = utp->next)
@@ -3122,16 +3133,14 @@ merge_uploaded_tracepoints (struct uploaded_tp **uploaded_tps)
 	     MODIFIED_TP if not there yet.  The 'breakpoint-modified'
 	     observers will be notified later once for each tracepoint
 	     saved in MODIFIED_TP.  */
-	  for (ix = 0;
-	       VEC_iterate (breakpoint_p, modified_tp, ix, b);
-	       ix++)
+	  for (breakpoint *b : modified_tp)
 	    if (b == loc->owner)
 	      {
 		found = 1;
 		break;
 	      }
 	  if (!found)
-	    VEC_safe_push (breakpoint_p, modified_tp, loc->owner);
+	    modified_tp.push_back (loc->owner);
 	}
       else
 	{
@@ -3156,10 +3165,9 @@ merge_uploaded_tracepoints (struct uploaded_tp **uploaded_tps)
 
   /* Notify 'breakpoint-modified' observer that at least one of B's
      locations was changed.  */
-  for (ix = 0; VEC_iterate (breakpoint_p, modified_tp, ix, b); ix++)
+  for (breakpoint *b : modified_tp)
     gdb::observers::breakpoint_modified.notify (b);
 
-  VEC_free (breakpoint_p, modified_tp);
   free_uploaded_tps (uploaded_tps);
 }
 
@@ -3215,7 +3223,6 @@ create_tsv_from_upload (struct uploaded_tsv *utsv)
 void
 merge_uploaded_trace_state_variables (struct uploaded_tsv **uploaded_tsvs)
 {
-  int ix;
   struct uploaded_tsv *utsv;
   struct trace_state_variable *tsv;
   int highest;
@@ -3643,12 +3650,12 @@ print_one_static_tracepoint_marker (int count,
   char wrap_indent[80];
   char extra_field_indent[80];
   struct ui_out *uiout = current_uiout;
-  VEC(breakpoint_p) *tracepoints;
 
   symtab_and_line sal;
   sal.pc = marker.address;
 
-  tracepoints = static_tracepoints_here (marker.address);
+  std::vector<breakpoint *> tracepoints
+    = static_tracepoints_here (marker.address);
 
   ui_out_emit_tuple tuple_emitter (uiout, "marker");
 
@@ -3659,7 +3666,7 @@ print_one_static_tracepoint_marker (int count,
   uiout->field_string ("marker-id", marker.str_id.c_str ());
 
   uiout->field_fmt ("enabled", "%c",
-		    !VEC_empty (breakpoint_p, tracepoints) ? 'y' : 'n');
+		    !tracepoints.empty () ? 'y' : 'n');
   uiout->spaces (2);
 
   strcpy (wrap_indent, "                                   ");
@@ -3715,32 +3722,29 @@ print_one_static_tracepoint_marker (int count,
   uiout->field_string ("extra-data", marker.extra.c_str ());
   uiout->text ("\"\n");
 
-  if (!VEC_empty (breakpoint_p, tracepoints))
+  if (!tracepoints.empty ())
     {
       int ix;
-      struct breakpoint *b;
 
       {
 	ui_out_emit_tuple tuple_emitter (uiout, "tracepoints-at");
 
 	uiout->text (extra_field_indent);
 	uiout->text (_("Probed by static tracepoints: "));
-	for (ix = 0; VEC_iterate(breakpoint_p, tracepoints, ix, b); ix++)
+	for (ix = 0; ix < tracepoints.size (); ix++)
 	  {
 	    if (ix > 0)
 	      uiout->text (", ");
 	    uiout->text ("#");
-	    uiout->field_int ("tracepoint-id", b->number);
+	    uiout->field_int ("tracepoint-id", tracepoints[ix]->number);
 	  }
       }
 
       if (uiout->is_mi_like_p ())
-	uiout->field_int ("number-of-tracepoints",
-			  VEC_length(breakpoint_p, tracepoints));
+	uiout->field_int ("number-of-tracepoints", tracepoints.size ());
       else
 	uiout->text ("\n");
     }
-  VEC_free (breakpoint_p, tracepoints);
 }
 
 static void

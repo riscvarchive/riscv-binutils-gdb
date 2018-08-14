@@ -1,4 +1,5 @@
-/* Target-dependent header for the RISC-V architecture, for GDB, the GNU Debugger.
+/* Target-dependent header for the RISC-V architecture, for GDB, the
+   GNU Debugger.
 
    Copyright (C) 2018 Free Software Foundation, Inc.
 
@@ -93,11 +94,12 @@ enum
   RISCV_LAST_FP_REGNUM = 64,	/* Last Floating Point Register */
 
   RISCV_FIRST_CSR_REGNUM = 65,  /* First CSR */
-#define DECLARE_CSR(name, num) RISCV_ ## num ## _REGNUM = RISCV_LAST_FP_REGNUM + 1 + num,
+#define DECLARE_CSR(name, num) \
+  RISCV_ ## num ## _REGNUM = RISCV_FIRST_CSR_REGNUM + num,
 #include "opcode/riscv-opc.h"
 #undef DECLARE_CSR
   RISCV_LAST_CSR_REGNUM = 4160,
-  RISCV_CSR_LEGACY_MISA_REGNUM = 0xf10,
+  RISCV_CSR_LEGACY_MISA_REGNUM = 0xf10 + RISCV_FIRST_CSR_REGNUM,
 
   RISCV_PRIV_REGNUM = 4161,
 
@@ -130,5 +132,12 @@ struct gdbarch_tdep
      the target, or read from the executable when available.  */
   unsigned core_features;
 };
+
+/* Return the width in bytes of the general purpose registers for GDBARCH.  */
+extern int riscv_isa_xlen (struct gdbarch *gdbarch);
+
+/* Single step based on where the current instruction will take us.  */
+extern std::vector<CORE_ADDR> riscv_software_single_step
+  (struct regcache *regcache);
 
 #endif /* RISCV_TDEP_H */

@@ -27,7 +27,6 @@
 #include "bfd.h"
 #include "symtab.h"
 #include "objfiles.h"
-#include "buildsym.h"
 #include "stabsread.h"
 
 #include "coff/sym.h"
@@ -54,7 +53,6 @@ static void
 mipscoff_new_init (struct objfile *ignore)
 {
   stabsread_new_init ();
-  buildsym_new_init ();
 }
 
 /* Initialize to read a symbol file (nothing to do).  */

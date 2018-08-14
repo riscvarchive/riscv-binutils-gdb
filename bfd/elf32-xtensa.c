@@ -1437,6 +1437,10 @@ elf_xtensa_allocate_dynrelocs (struct elf_link_hash_entry *h, void *arg)
   if (! elf_xtensa_dynamic_symbol_p (h, info))
     elf_xtensa_make_sym_local (info, h);
 
+  if (! elf_xtensa_dynamic_symbol_p (h, info)
+      && h->root.type == bfd_link_hash_undefweak)
+    return TRUE;
+
   if (h->plt.refcount > 0)
     htab->elf.srelplt->size += (h->plt.refcount * sizeof (Elf32_External_Rela));
 
@@ -2777,11 +2781,15 @@ elf_xtensa_relocate_section (bfd *output_bfd,
 			}
 		      unresolved_reloc = FALSE;
 		    }
-		  else
+		  else if (!is_weak_undef)
 		    {
 		      /* Generate a RELATIVE relocation.  */
 		      outrel.r_info = ELF32_R_INFO (0, R_XTENSA_RELATIVE);
 		      outrel.r_addend = 0;
+		    }
+		  else
+		    {
+		      continue;
 		    }
 		}
 
@@ -3148,7 +3156,7 @@ elf_xtensa_finish_dynamic_sections (bfd *output_bfd,
 {
   struct elf_xtensa_link_hash_table *htab;
   bfd *dynobj;
-  asection *sdyn, *srelplt, *sgot, *sxtlit, *sgotloc;
+  asection *sdyn, *srelplt, *srelgot, *sgot, *sxtlit, *sgotloc;
   Elf32_External_Dyn *dyncon, *dynconend;
   int num_xtlit_entries = 0;
 
@@ -3178,15 +3186,15 @@ elf_xtensa_finish_dynamic_sections (bfd *output_bfd,
     }
 
   srelplt = htab->elf.srelplt;
+  srelgot = htab->elf.srelgot;
   if (srelplt && srelplt->size != 0)
     {
-      asection *sgotplt, *srelgot, *spltlittbl;
+      asection *sgotplt, *spltlittbl;
       int chunk, plt_chunks, plt_entries;
       Elf_Internal_Rela irela;
       bfd_byte *loc;
       unsigned rtld_reloc;
 
-      srelgot = htab->elf.srelgot;
       spltlittbl = htab->spltlittbl;
       BFD_ASSERT (srelgot != NULL && spltlittbl != NULL);
 
@@ -3252,14 +3260,6 @@ elf_xtensa_finish_dynamic_sections (bfd *output_bfd,
 		      spltlittbl->contents + (chunk * 8) + 4);
 	}
 
-      /* All the dynamic relocations have been emitted at this point.
-	 Make sure the relocation sections are the correct size.  */
-      if (srelgot->size != (sizeof (Elf32_External_Rela)
-			    * srelgot->reloc_count)
-	  || srelplt->size != (sizeof (Elf32_External_Rela)
-			       * srelplt->reloc_count))
-	abort ();
-
      /* The .xt.lit.plt section has just been modified.  This must
 	happen before the code below which combines adjacent literal
 	table entries, and the .xt.lit.plt contents have to be forced to
@@ -3273,6 +3273,14 @@ elf_xtensa_finish_dynamic_sections (bfd *output_bfd,
       /* Clear SEC_HAS_CONTENTS so the contents won't be output again.  */
       spltlittbl->flags &= ~SEC_HAS_CONTENTS;
     }
+
+  /* All the dynamic relocations have been emitted at this point.
+     Make sure the relocation sections are the correct size.  */
+  if ((srelgot && srelgot->size != (sizeof (Elf32_External_Rela)
+				    * srelgot->reloc_count))
+      || (srelplt && srelplt->size != (sizeof (Elf32_External_Rela)
+				       * srelplt->reloc_count)))
+    abort ();
 
   /* Combine adjacent literal table entries.  */
   BFD_ASSERT (! bfd_link_relocatable (info));
@@ -10013,7 +10021,9 @@ shrink_dynamic_reloc_sections (struct bfd_link_info *info,
 
   if ((r_type == R_XTENSA_32 || r_type == R_XTENSA_PLT)
       && (input_section->flags & SEC_ALLOC) != 0
-      && (dynamic_symbol || bfd_link_pic (info)))
+      && (dynamic_symbol || bfd_link_pic (info))
+      && (!h || h->root.type != bfd_link_hash_undefweak
+	  || (dynamic_symbol && bfd_link_dll (info))))
     {
       asection *srel;
       bfd_boolean is_plt = FALSE;

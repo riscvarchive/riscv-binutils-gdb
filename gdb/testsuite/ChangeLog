@@ -1,3 +1,265 @@
+2018-08-14  Jan Vrany  <jan.vrany@fit.cvut.cz>
+
+	* gdb.mi/mi-disassemble.exp (test_disassembly_only): Add tests for
+	-data-disassemble -a.
+	(test_disassembly_bogus_args): Likewise.
+
+2018-08-14  Andrew Burgess  <andrew.burgess@embecosm.com>
+
+	* gdb.mi/list-thread-groups-available.exp: Update test regexp.
+
+2018-08-09  Andrew Burgess  <andrew.burgess@embecosm.com>
+
+	* gdb.base/vla-optimized-out.exp: Add new test.
+
+2018-08-09  Andrew Burgess  <andrew.burgess@embecosm.com>
+
+	* gdb.base/vla-optimized-out-o3.exp: Delete.
+	* gdb.base/vla-optimized-out-o3-strict.exp: Delete.
+	* gdb.base/vla-optimized-out.exp: Extend to cover all of the
+	deleted tests.
+
+2018-08-08  Andrew Burgess  <andrew.burgess@embecosm.com>
+
+	PR gdb/18050:
+	* gdb.server/extended-remote-restart.c: New file.
+	* gdb.server/extended-remote-restart.exp: New file.
+
+2018-08-07  Simon Marchi  <simon.marchi@polymtl.ca>
+
+	* gdb.fortran/nested-funcs.exp: Replace "set index = 42" with
+	"set variable index = 42".
+
+2018-08-07  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* boards/index-cache-gdb.exp: New file.
+	* gdb.dwarf2/index-cache.exp: New file.
+	* gdb.dwarf2/index-cache.c: New file.
+	* gdb.base/maint.exp: Check if we are using the index cache.
+
+2018-08-07  Rainer Orth  <ro@CeBiTec.Uni-Bielefeld.DE>
+
+	* Makefile.in (saw_dash_j): Allow for GNU make 4.2+ passing -jN in
+	MAKEFLAGS.
+
+2018-08-06  Rainer Orth  <ro@CeBiTec.Uni-Bielefeld.DE>
+
+	* dg-extract-results.sh: Move to toplevel contrib.
+	* Makefile.in (check-parallel): Reflect dg-extract-results.sh move.
+	* Makefile.in (check-parallel-racy): Likewise.
+
+2018-08-06  Andrew Burgess  <andrew.burgess@embecosm.com>
+
+	* lib/gdb.exp (target_supports_scheduler_locking): New proc.
+	* gdb.mi/mi-cmd-param-changed.exp: Only run scheduler locking
+	tests if the target supports scheduler locking.
+
+2018-08-04  Tom de Vries  <tdevries@suse.de>
+
+	* gdb.python/py-rbreak.exp: Fix rbreak regexp.
+
+2018-08-02  Tom Tromey  <tom@tromey.com>
+
+	PR symtab/16842.
+	* gdb.cp/temargs.exp: Test "info address" of a template
+	parameter.
+
+2018-07-31  Jan Vrany  <jan.vrany@fit.cvut.cz>
+
+	* gdb.python/py-mi-var-info-path-expression.c: New file.
+	* gdb.python/py-mi-var-info-path-expression.py: New file.
+	* gdb.python/py-mi-var-info-path-expression.exp: New file.
+
+2018-07-30  Sergio Durigan Junior  <sergiodj@redhat.com>
+
+	* lib/gdbserver-support.exp (gdbserver_start): Match any kind of
+	error after "cannot resolve name" string.
+
+2018-07-28  Andrew Burgess  <andrew.burgess@embecosm.com>
+
+	* gdb.trace/tspeed.exp: Only call gdb_load_shlib after gdb has
+	started.
+	* lib/gdb.exp (gdb_load_shlib): Call perror if GDB is not running.
+
+2018-07-28  Tom de Vries  <tdevries@suse.de>
+
+	* gdb.base/vla-optimized-out-o3-strict.exp: New file.
+
+2018-07-26  Tom de Vries  <tdevries@suse.de>
+
+	* gdb.base/vla-optimized-out.c: Add comment about origin of test-case.
+
+2018-07-26  Andrew Burgess  <andrew.burgess@embecosm.com>
+
+	* gdb.base/maint.exp: Add check that dwarf unwinders control flag
+	is visible.
+
+2018-07-26  Tom de Vries  <tdevries@suse.de>
+
+	PR breakpoints/23366
+	* gdb.base/catch-follow-exec.c: New test.
+	* gdb.base/catch-follow-exec.exp: New file.
+
+2018-07-25  Tom de Vries  <tdevries@suse.de>
+
+	* gdb.base/vla-optimized-out-o3.exp: New file.  Reuse
+	vla-optimized-out.c.
+
+2018-07-25  Jan Vrany  <jan.vrany@fit.cvut.cz>
+
+	* gdb.mi/mi-breakpoint-location-ena-dis.cc: New file.
+	* gdb.mi/mi-breakpoint-location-ena-dis.exp: New file.
+
+2018-07-20  Tom de Vries  <tdevries@suse.de>
+
+	* gdb.base/vla-optimized-out.c: Make noclone attribute conditional on
+	NOCLONE macro.
+	* gdb.base/vla-optimized-out.exp: Use additional_flags -DNOCLONE.
+
+2018-07-19  Tom de Vries  <tdevries@suse.de>
+
+	* gdb.mi/list-thread-groups-available.exp (cores_re): Fix quoting in
+	regular	expression.
+
+2018-07-18  Tom de Vries  <tdevries@suse.de>
+
+	* gdb.base/vla-optimized-out.c: New test.
+	* gdb.base/vla-optimized-out.exp: New file.
+
+2018-07-13  Sergio Durigan Junior  <sergiodj@redhat.com>
+
+	* lib/gdbserver-support.exp (gdbserver_start): Expect for the
+	message "No address associated with hostname" when gdbserver
+	cannot resolve the hostname.
+
+2018-07-12  Philippe Waroquiers  <philippe.waroquiers@skynet.be>
+
+	* gdb.threads/pthreads.exp: Test qcs FLAG arguments.
+	Add some test prefixes to make tests unique.
+
+2018-07-12  Philippe Waroquiers  <philippe.waroquiers@skynet.be>
+
+	* gdb.base/frameapply.c: New file.
+	* gdb.base/frameapply.exp: New file.
+
+2018-07-12  Philippe Waroquiers  <philippe.waroquiers@skynet.be>
+
+	* gdb.base/skip.exp: Update expected error message.
+
+2018-07-11  Sergio Durigan Junior  <sergiodj@redhat.com>
+	    Jan Kratochvil  <jan.kratochvil@redhat.com>
+	    Paul Fertser  <fercerpav@gmail.com>
+	    Tsutomu Seki  <sekiriki@gmail.com>
+
+	* README (Testsuite Parameters): Mention new 'GDB_TEST_SOCKETHOST'
+	parameter.
+	* boards/native-extended-gdbserver.exp: Do not set 'sockethost'
+	by default.
+	* boards/native-gdbserver.exp: Likewise.
+	* gdb.server/run-without-local-binary.exp: Improve regexp used
+	for detecting when a remote debugging connection succeeds.
+	* gdb.server/server-connect.exp: New file.
+	* lib/gdbserver-support.exp (gdbserver_default_get_comm_port):
+	Do not prefix the port number with ":".
+	(gdbserver_start): New global GDB_TEST_SOCKETHOST.  Implement
+	support for detecting and using it.  Add '$debughost_gdbserver'
+	to the list of arguments used to start gdbserver.  Handle case
+	when gdbserver cannot resolve a network name.
+
+2018-07-11  Sergio Durigan Junior  <sergiodj@redhat.com>
+
+	PR c++/23373
+	* gdb.base/ptype-offsets.cc (struct static_member): New
+	struct.
+	(main) <stmember>: New variable.
+	* gdb.base/ptype-offsets.exp: Add test for printing a struct
+	with a static member in it.
+
+2018-07-10  Andrew Burgess  <andrew.burgess@embecosm.com>
+
+	* gdb.base/watchpoint-reuse-slot.exp: Test with hardware
+	watchpoints enabled and disabled.
+
+2018-07-09  Andrew Burgess  <andrew.burgess@embecosm.com>
+
+	* gdb.base/examine-backward.exp: Still run tests around address
+	0x0, even if address 0x0 is not readable.  Update the pattern for
+	matching address 0x0 in expected output.
+
+2018-07-06  Andrew Burgess  <andrew.burgess@embecosm.com>
+
+	* gdb.base/share-env-with-gdbserver.c (main): Add call to
+	malloc/free.
+
+2018-07-04  Tom de Vries  <tdevries@suse.de>
+
+	* gdb.dwarf2/dw2-error.exp: Update expected error message.
+
+2018-07-02  Maciej W. Rozycki  <macro@mips.com>
+
+	PR tdep/8282
+	* gdb.arch/mips-disassembler-options.exp: New test.
+	* gdb.arch/mips-disassembler-options.s: New test source.
+
+2018-06-29  Pedro Alves  <palves@redhat.com>
+
+	* gdb.threads/names.exp: Adjust expected "info threads" output.
+
+2018-06-29  Pedro Alves  <palves@redhat.com>
+
+	* gdb.opt/inline-break.exp (line number, address): Add "info
+	break" tests.
+
+2018-06-29  Pedro Alves  <palves@redhat.com>
+
+	* gdb.opt/inline-break.c (func1): Add "break here" marker.
+	* gdb.opt/inline-break.exp: Test setting breakpoints by line
+	number and address and running to them.
+
+2018-06-29  Richard Bunt  <richard.bunt@arm.com>
+
+	* gdb.base/watchpoint-hw-attach.exp: Remove unstable output.
+
+2018-06-28  Jan Kratochvil  <jan.kratochvil@redhat.com>
+
+	* lib/compiler.c: Remove executable permission flag.
+
+2018-06-28  Richard Bunt  <richard.bunt@arm.com>
+
+	* gdb.base/watchpoint-hw-attach.c (main): Remove unneeded
+	code.
+	* gdb.base/watchpoint-hw-attach.exp: Break in outermost frame.
+
+2018-06-28  Petr Tesarik  <ptesarik@suse.cz>
+
+	* gdb.base/relocate.exp: Add test for "add-symbol-file -o ".
+
+2018-06-28  Petr Tesarik  <ptesarik@suse.cz>
+
+	* gdb.base/relocate.exp: Test add-symbol-file behavior when the
+	address argument is omitted.
+
+2018-06-28  Petr Tesarik  <ptesarik@suse.cz>
+
+	* gdb.base/relocate.exp: Add test for "symbol-file -o ".
+
+2018-06-27  Omair Javaid  <omair.javaid@linaro.org>
+
+	PR gdb/21695
+	* gdb.base/infoline-reloc-main-from-zero.exp: New test.
+	* gdb.base/infoline-reloc-main-from-zero.c: New file.
+
+2018-06-26  Tom Tromey  <tom@tromey.com>
+
+	PR rust/22574:
+	* gdb.rust/simple.exp (test_one_slice): Add ptype/o tests.
+	* gdb.rust/simple.rs (struct SimpleLayout): New.
+
+2018-06-22  Simon Marchi  <simon.marchi@ericsson.com>
+
+	* gdb.base/jit-reader.exp (jit_reader_test): Expect spaces in
+	"info registers" output.
+
 2018-06-21  Richard Bunt  <richard.bunt@arm.com>
 
 	* gdb.base/watchpoint-hw-attach.c: New test.

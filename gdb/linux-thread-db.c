@@ -230,7 +230,7 @@ add_thread_db_info (void *handle)
 {
   struct thread_db_info *info = XCNEW (struct thread_db_info);
 
-  info->pid = ptid_get_pid (inferior_ptid);
+  info->pid = inferior_ptid.pid ();
   info->handle = handle;
 
   /* The workaround works by reading from /proc/pid/status, so it is
@@ -394,17 +394,17 @@ thread_from_lwp (thread_info *stopped, ptid_t ptid)
 
   /* This ptid comes from linux-nat.c, which should always fill in the
      LWP.  */
-  gdb_assert (ptid_get_lwp (ptid) != 0);
+  gdb_assert (ptid.lwp () != 0);
 
-  info = get_thread_db_info (ptid_get_pid (ptid));
+  info = get_thread_db_info (ptid.pid ());
 
   /* Access an lwp we know is stopped.  */
   info->proc_handle.thread = stopped;
-  err = info->td_ta_map_lwp2thr_p (info->thread_agent, ptid_get_lwp (ptid),
+  err = info->td_ta_map_lwp2thr_p (info->thread_agent, ptid.lwp (),
 				   &th);
   if (err != TD_OK)
     error (_("Cannot find user-level thread for LWP %ld: %s"),
-	   ptid_get_lwp (ptid), thread_db_err_str (err));
+	   ptid.lwp (), thread_db_err_str (err));
 
   err = info->td_thr_get_info_p (&th, &ti);
   if (err != TD_OK)
@@ -424,7 +424,7 @@ thread_db_notice_clone (ptid_t parent, ptid_t child)
 {
   struct thread_db_info *info;
 
-  info = get_thread_db_info (ptid_get_pid (child));
+  info = get_thread_db_info (child.pid ());
 
   if (info == NULL)
     return 0;
@@ -674,7 +674,7 @@ check_thread_db_callback (const td_thrhandle_t *th, void *arg)
      calls are made, we just assume they were; future changes
      to how GDB accesses TLS could result in this passing
      without exercising the calls it's supposed to.  */
-  ptid_t ptid = ptid_build (tdb_testinfo->info->pid, ti.ti_lid, 0);
+  ptid_t ptid = ptid_t (tdb_testinfo->info->pid, ti.ti_lid, 0);
   struct thread_info *thread_info = find_thread_ptid (ptid);
   if (thread_info != NULL && thread_info->priv != NULL)
     {
@@ -871,7 +871,7 @@ try_thread_db_load_1 (struct thread_db_info *info)
      td_ta_map_lwp2thr uses ps_get_thread_area, but we can't use that
      currently on core targets, as it uses ptrace directly.  */
   if (target_has_execution
-      && linux_proc_task_list_dir_exists (ptid_get_pid (inferior_ptid)))
+      && linux_proc_task_list_dir_exists (inferior_ptid.pid ()))
     info->td_ta_thr_iter_p = NULL;
   else
     CHK (TDB_VERBOSE_DLSYM (info, td_ta_thr_iter));
@@ -890,13 +890,13 @@ try_thread_db_load_1 (struct thread_db_info *info)
   if (info->td_ta_thr_iter_p == NULL)
     {
       struct lwp_info *lp;
-      int pid = ptid_get_pid (inferior_ptid);
+      int pid = inferior_ptid.pid ();
       thread_info *curr_thread = inferior_thread ();
 
       linux_stop_and_wait_all_lwps ();
 
       ALL_LWPS (lp)
-	if (ptid_get_pid (lp->ptid) == pid)
+	if (lp->ptid.pid () == pid)
 	  thread_from_lwp (curr_thread, lp->ptid);
 
       linux_unstop_all_lwps ();
@@ -1003,7 +1003,7 @@ try_thread_db_load (const char *library, int check_auto_load_safe)
     return 1;
 
   /* This library "refused" to work on current inferior.  */
-  delete_thread_db_info (ptid_get_pid (inferior_ptid));
+  delete_thread_db_info (inferior_ptid.pid ());
   return 0;
 }
 
@@ -1175,7 +1175,7 @@ thread_db_load (void)
 {
   struct thread_db_info *info;
 
-  info = get_thread_db_info (ptid_get_pid (inferior_ptid));
+  info = get_thread_db_info (inferior_ptid.pid ());
 
   if (info != NULL)
     return 1;
@@ -1284,7 +1284,7 @@ check_pid_namespace_match (void)
 	 child's thread list, we'll mistakenly think it has no threads
 	 since the thread PID fields won't match the PID we give to
 	 libthread_db.  */
-      if (!linux_ns_same (ptid_get_pid (inferior_ptid), LINUX_NS_PID))
+      if (!linux_ns_same (inferior_ptid.pid (), LINUX_NS_PID))
 	{
 	  warning (_ ("Target and debugger are in different PID "
 		      "namespaces; thread lists and other data are "
@@ -1384,7 +1384,7 @@ thread_db_target::wait (ptid_t ptid, struct target_waitstatus *ourstatus,
       return ptid;
     }
 
-  info = get_thread_db_info (ptid_get_pid (ptid));
+  info = get_thread_db_info (ptid.pid ());
 
   /* If this process isn't using thread_db, we're done.  */
   if (info == NULL)
@@ -1394,7 +1394,7 @@ thread_db_target::wait (ptid_t ptid, struct target_waitstatus *ourstatus,
     {
       /* New image, it may or may not end up using thread_db.  Assume
 	 not unless we find otherwise.  */
-      delete_thread_db_info (ptid_get_pid (ptid));
+      delete_thread_db_info (ptid.pid ());
       if (!thread_db_list)
 	unpush_target (&the_thread_db_target);
 
@@ -1410,7 +1410,7 @@ thread_db_target::wait (ptid_t ptid, struct target_waitstatus *ourstatus,
 void
 thread_db_target::mourn_inferior ()
 {
-  delete_thread_db_info (ptid_get_pid (inferior_ptid));
+  delete_thread_db_info (inferior_ptid.pid ());
 
   beneath ()->mourn_inferior ();
 
@@ -1638,7 +1638,7 @@ thread_db_target::pid_to_str (ptid_t ptid)
       thread_db_thread_info *priv = get_thread_db_thread_info (thread_info);
 
       snprintf (buf, sizeof (buf), "Thread 0x%lx (LWP %ld)",
-		(unsigned long) priv->tid, ptid_get_lwp (ptid));
+		(unsigned long) priv->tid, ptid.lwp ());
 
       return buf;
     }
@@ -1716,7 +1716,7 @@ thread_db_target::get_thread_local_address (ptid_t ptid,
     {
       td_err_e err;
       psaddr_t address;
-      thread_db_info *info = get_thread_db_info (ptid_get_pid (ptid));
+      thread_db_info *info = get_thread_db_info (ptid.pid ());
       thread_db_thread_info *priv = get_thread_db_thread_info (thread_info);
 
       /* Finally, get the address of the variable.  */
@@ -1784,7 +1784,7 @@ ptid_t
 thread_db_target::get_ada_task_ptid (long lwp, long thread)
 {
   /* NPTL uses a 1:1 model, so the LWP id suffices.  */
-  return ptid_build (ptid_get_pid (inferior_ptid), lwp, 0);
+  return ptid_t (inferior_ptid.pid (), lwp, 0);
 }
 
 void
@@ -1792,10 +1792,10 @@ thread_db_target::resume (ptid_t ptid, int step, enum gdb_signal signo)
 {
   struct thread_db_info *info;
 
-  if (ptid_equal (ptid, minus_one_ptid))
-    info = get_thread_db_info (ptid_get_pid (inferior_ptid));
+  if (ptid == minus_one_ptid)
+    info = get_thread_db_info (inferior_ptid.pid ());
   else
-    info = get_thread_db_info (ptid_get_pid (ptid));
+    info = get_thread_db_info (ptid.pid ());
 
   /* This workaround is only needed for child fork lwps stopped in a
      PTRACE_O_TRACEFORK event.  When the inferior is resumed, the
@@ -1923,7 +1923,7 @@ info_auto_load_libthread_db (const char *args, int from_tty)
 static void
 maintenance_check_libthread_db (const char *args, int from_tty)
 {
-  int inferior_pid = ptid_get_pid (inferior_ptid);
+  int inferior_pid = inferior_ptid.pid ();
   struct thread_db_info *info;
 
   if (inferior_pid == 0)

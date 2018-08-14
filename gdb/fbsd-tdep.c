@@ -301,9 +301,9 @@ fbsd_core_pid_to_str (struct gdbarch *gdbarch, ptid_t ptid)
 {
   static char buf[80];
 
-  if (ptid_get_lwp (ptid) != 0)
+  if (ptid.lwp () != 0)
     {
-      xsnprintf (buf, sizeof buf, "LWP %ld", ptid_get_lwp (ptid));
+      xsnprintf (buf, sizeof buf, "LWP %ld", ptid.lwp ());
       return buf;
     }
 
@@ -320,7 +320,7 @@ fbsd_core_thread_name (struct gdbarch *gdbarch, struct thread_info *thr)
   struct bfd_section *section;
   bfd_size_type size;
 
-  if (ptid_get_lwp (thr->ptid) != 0)
+  if (thr->ptid.lwp () != 0)
     {
       /* FreeBSD includes a NT_FREEBSD_THRMISC note for each thread
 	 whose contents are defined by a "struct thrmisc" declared in
@@ -406,7 +406,7 @@ static int
 find_signalled_thread (struct thread_info *info, void *data)
 {
   if (info->suspend.stop_signal != GDB_SIGNAL_0
-      && ptid_get_pid (info->ptid) == ptid_get_pid (inferior_ptid))
+      && info->ptid.pid () == inferior_ptid.pid ())
     return 1;
 
   return 0;
@@ -428,8 +428,8 @@ struct fbsd_collect_regset_section_cb_data
 };
 
 static void
-fbsd_collect_regset_section_cb (const char *sect_name, int size,
-				const struct regset *regset,
+fbsd_collect_regset_section_cb (const char *sect_name, int supply_size,
+				int collect_size, const struct regset *regset,
 				const char *human_name, void *cb_data)
 {
   char *buf;
@@ -441,8 +441,8 @@ fbsd_collect_regset_section_cb (const char *sect_name, int size,
 
   gdb_assert (regset->collect_regset);
 
-  buf = (char *) xmalloc (size);
-  regset->collect_regset (regset, data->regcache, -1, buf, size);
+  buf = (char *) xmalloc (collect_size);
+  regset->collect_regset (regset, data->regcache, -1, buf, collect_size);
 
   /* PRSTATUS still needs to be treated specially.  */
   if (strcmp (sect_name, ".reg") == 0)
@@ -452,7 +452,7 @@ fbsd_collect_regset_section_cb (const char *sect_name, int size,
   else
     data->note_data = (char *) elfcore_write_register_note
       (data->obfd, data->note_data, data->note_size,
-       sect_name, buf, size);
+       sect_name, buf, collect_size);
   xfree (buf);
 
   if (data->note_data == NULL)
@@ -477,7 +477,7 @@ fbsd_collect_thread_registers (const struct regcache *regcache,
   data.note_size = note_size;
   data.stop_signal = stop_signal;
   data.abort_iteration = 0;
-  data.lwp = ptid_get_lwp (ptid);
+  data.lwp = ptid.lwp ();
 
   gdbarch_iterate_over_regset_sections (gdbarch,
 					fbsd_collect_regset_section_cb,
@@ -578,7 +578,7 @@ fbsd_make_corefile_notes (struct gdbarch *gdbarch, bfd *obfd, int *note_size)
     {
       if (thr == signalled_thr)
 	continue;
-      if (ptid_get_pid (thr->ptid) != ptid_get_pid (inferior_ptid))
+      if (thr->ptid.pid () != inferior_ptid.pid ())
 	continue;
 
       fbsd_corefile_thread (thr, &thread_args);
@@ -787,7 +787,6 @@ fbsd_core_info_proc_status (struct gdbarch *gdbarch)
 {
   const struct kinfo_proc_layout *kp;
   asection *section;
-  const char *state;
   unsigned char *descdata;
   int addr_bit, long_bit;
   size_t note_size;

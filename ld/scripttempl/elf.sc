@@ -692,6 +692,8 @@ cat <<EOF
 
   .comment       0 : { *(.comment) }
 
+  .gnu.build.attributes : { *(.gnu.build.attributes .gnu.build.attributes.*) }
+
 EOF
 
 . $srcdir/scripttempl/DWARF.sc

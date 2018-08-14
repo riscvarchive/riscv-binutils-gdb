@@ -1898,10 +1898,13 @@ Symbol_table::define_special_symbol(const char** pname, const char** pversion,
 	  add_to_table = true;
 	  add_loc = ins.first;
 
-	  if (is_default_version && !insdefault.second)
+	  if (is_default_version
+	      && !insdefault.second
+	      && insdefault.first->second->version() == NULL)
 	    {
 	      // We are adding NAME/VERSION, and it is the default
-	      // version.  We already have an entry for NAME/NULL.
+	      // version.  We already have an entry for NAME/NULL
+	      // that does not already have a version.
 	      oldsym = insdefault.first->second;
 	      *resolve_oldsym = true;
 	    }
@@ -2543,8 +2546,6 @@ Symbol_table::set_dynsym_indexes(unsigned int index,
 				 Stringpool* dynpool,
 				 Versions* versions)
 {
-  std::vector<Symbol*> as_needed_sym;
-
   // First process all the symbols which have been forced to be local,
   // as they must appear before all global symbols.
   unsigned int forced_local_count = 0;
@@ -2611,15 +2612,6 @@ Symbol_table::set_dynsym_indexes(unsigned int index,
 	  syms->push_back(sym);
 	  dynpool->add(sym->name(), false, NULL);
 
-	  // If the symbol is defined in a dynamic object and is
-	  // referenced strongly in a regular object, then mark the
-	  // dynamic object as needed.  This is used to implement
-	  // --as-needed.
-	  if (sym->is_from_dynobj()
-	      && sym->in_reg()
-	      && !sym->is_undef_binding_weak())
-	    sym->object()->set_is_needed();
-
 	  // Record any version information, except those from
 	  // as-needed libraries not seen to be needed.  Note that the
 	  // is_needed state for such libraries can change in this loop.
@@ -2630,22 +2622,17 @@ Symbol_table::set_dynsym_indexes(unsigned int index,
 		  || sym->object()->is_needed())
 		versions->record_version(this, dynpool, sym);
 	      else
-		as_needed_sym.push_back(sym);
+		{
+		  if (parameters->options().warn_drop_version())
+		    gold_warning(_("discarding version information for "
+				   "%s@%s, defined in unused shared library %s "
+				   "(linked with --as-needed)"),
+				 sym->name(), sym->version(),
+				 sym->object()->name().c_str());
+		  sym->clear_version();
+		}
 	    }
 	}
-    }
-
-  // Process version information for symbols from as-needed libraries.
-  for (std::vector<Symbol*>::iterator p = as_needed_sym.begin();
-       p != as_needed_sym.end();
-       ++p)
-    {
-      Symbol* sym = *p;
-
-      if (sym->object()->is_needed())
-	versions->record_version(this, dynpool, sym);
-      else
-	sym->clear_version();
     }
 
   // Finish up the versions.  In some cases this may add new dynamic

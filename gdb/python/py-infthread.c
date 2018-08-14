@@ -266,9 +266,9 @@ gdbpy_create_ptid_object (ptid_t ptid)
   if (!ret)
     return NULL;
 
-  pid = ptid_get_pid (ptid);
-  lwp = ptid_get_lwp (ptid);
-  tid = ptid_get_tid (ptid);
+  pid = ptid.pid ();
+  lwp = ptid.lwp ();
+  tid = ptid.tid ();
 
   PyTuple_SET_ITEM (ret, 0, PyInt_FromLong (pid));
   PyTuple_SET_ITEM (ret, 1, PyInt_FromLong (lwp));

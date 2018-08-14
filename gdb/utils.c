@@ -72,16 +72,6 @@
 #include <algorithm>
 #include "common/pathstuff.h"
 
-#if !HAVE_DECL_MALLOC
-extern PTR malloc ();		/* ARI: PTR */
-#endif
-#if !HAVE_DECL_REALLOC
-extern PTR realloc ();		/* ARI: PTR */
-#endif
-#if !HAVE_DECL_FREE
-extern void free ();
-#endif
-
 void (*deprecated_error_begin_hook) (void);
 
 /* Prototypes for local functions */
@@ -140,23 +130,6 @@ show_pagination_enabled (struct ui_file *file, int from_tty,
    These are not defined in cleanups.c (nor declared in cleanups.h)
    because while they use the "cleanup API" they are not part of the
    "cleanup API".  */
-
-/* Helper for make_cleanup_value_free_to_mark.  */
-
-static void
-do_value_free_to_mark (void *value)
-{
-  value_free_to_mark ((struct value *) value);
-}
-
-/* Free all values allocated since MARK was obtained by value_mark
-   (except for those released) when the cleanup is run.  */
-
-struct cleanup *
-make_cleanup_value_free_to_mark (struct value *mark)
-{
-  return make_cleanup (do_value_free_to_mark, mark);
-}
 
 /* This function is useful for cleanups.
    Do

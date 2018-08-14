@@ -61,7 +61,9 @@ struct other_sections
   CORE_ADDR addr;
   std::string name;
 
-  /* SECTINDEX must be valid for associated BFD or set to -1.  */
+  /* SECTINDEX must be valid for associated BFD or set to -1.
+     See syms_from_objfile_1 for an exception to this rule.
+   */
   int sectindex;
 };
 
@@ -188,12 +190,6 @@ struct quick_symbol_functions
   /* Dump any indices loaded for OBJFILE.  The dump should go to
      gdb_stdout.  This is used for "maint print objfiles".  */
   void (*dump) (struct objfile *objfile);
-
-  /* This is called by objfile_relocate to relocate any indices loaded
-     for OBJFILE.  */
-  void (*relocate) (struct objfile *objfile,
-		    const struct section_offsets *new_offsets,
-		    const struct section_offsets *delta);
 
   /* Find all the symbols in OBJFILE named FUNC_NAME, and ensure that
      the corresponding symbol tables are loaded.  */
@@ -613,8 +609,6 @@ extern bool dwarf2_initialize_objfile (struct objfile *objfile,
 
 extern void dwarf2_build_psymtabs (struct objfile *);
 extern void dwarf2_build_frame_info (struct objfile *);
-
-void dwarf2_free_objfile (struct objfile *);
 
 /* From mdebugread.c */
 

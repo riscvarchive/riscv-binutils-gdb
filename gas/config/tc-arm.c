@@ -16692,13 +16692,24 @@ do_neon_mov (void)
     case NS_HI:
     case NS_FI:  /* case 10 (fconsts).  */
       ldconst = "fconsts";
-      encode_fconstd:
+    encode_fconstd:
       if (!inst.operands[1].immisfloat)
 	{
+	  unsigned new_imm;
 	  /* Immediate has to fit in 8 bits so float is enough.  */
-	  float imm = (float)inst.operands[1].imm;
-	  memcpy (&inst.operands[1].imm, &imm, sizeof (float));
-	  inst.operands[1].immisfloat = 1;
+	  float imm = (float) inst.operands[1].imm;
+	  memcpy (&new_imm, &imm, sizeof (float));
+	  /* But the assembly may have been written to provide an integer
+	     bit pattern that equates to a float, so check that the
+	     conversion has worked.  */
+	  if (is_quarter_float (new_imm))
+	    {
+	      if (is_quarter_float (inst.operands[1].imm))
+		as_warn (_("immediate constant is valid both as a bit-pattern and a floating point value (using the fp value)"));
+
+	      inst.operands[1].imm = new_imm;
+	      inst.operands[1].immisfloat = 1;
+	    }
 	}
 
       if (is_quarter_float (inst.operands[1].imm))
@@ -20051,6 +20062,8 @@ static const struct asm_opcode insns[] =
 #define THUMB_VARIANT  & arm_ext_v6t2
 
  TUE("csdb",	320f014, f3af8014, 0, (), noargs, t_csdb),
+ TUF("ssbb",	57ff040, f3bf8f40, 0, (), noargs, t_csdb),
+ TUF("pssbb",	57ff044, f3bf8f44, 0, (), noargs, t_csdb),
 
 #undef  ARM_VARIANT
 #define ARM_VARIANT    & arm_ext_v6t2
@@ -26984,30 +26997,30 @@ typedef struct
    stable when new architectures are added.  */
 static const cpu_arch_ver_table cpu_arch_ver[] =
 {
-    {0, ARM_ARCH_V1},
-    {0, ARM_ARCH_V2},
-    {0, ARM_ARCH_V2S},
-    {0, ARM_ARCH_V3},
-    {0, ARM_ARCH_V3M},
-    {1, ARM_ARCH_V4xM},
-    {1, ARM_ARCH_V4},
-    {2, ARM_ARCH_V4TxM},
-    {2, ARM_ARCH_V4T},
-    {3, ARM_ARCH_V5xM},
-    {3, ARM_ARCH_V5},
-    {3, ARM_ARCH_V5TxM},
-    {3, ARM_ARCH_V5T},
-    {4, ARM_ARCH_V5TExP},
-    {4, ARM_ARCH_V5TE},
-    {5, ARM_ARCH_V5TEJ},
-    {6, ARM_ARCH_V6},
-    {7, ARM_ARCH_V6Z},
-    {7, ARM_ARCH_V6KZ},
-    {9, ARM_ARCH_V6K},
-    {8, ARM_ARCH_V6T2},
-    {8, ARM_ARCH_V6KT2},
-    {8, ARM_ARCH_V6ZT2},
-    {8, ARM_ARCH_V6KZT2},
+    {TAG_CPU_ARCH_PRE_V4,   ARM_ARCH_V1},
+    {TAG_CPU_ARCH_PRE_V4,   ARM_ARCH_V2},
+    {TAG_CPU_ARCH_PRE_V4,   ARM_ARCH_V2S},
+    {TAG_CPU_ARCH_PRE_V4,   ARM_ARCH_V3},
+    {TAG_CPU_ARCH_PRE_V4,   ARM_ARCH_V3M},
+    {TAG_CPU_ARCH_V4,	    ARM_ARCH_V4xM},
+    {TAG_CPU_ARCH_V4,	    ARM_ARCH_V4},
+    {TAG_CPU_ARCH_V4T,	    ARM_ARCH_V4TxM},
+    {TAG_CPU_ARCH_V4T,	    ARM_ARCH_V4T},
+    {TAG_CPU_ARCH_V5T,	    ARM_ARCH_V5xM},
+    {TAG_CPU_ARCH_V5T,	    ARM_ARCH_V5},
+    {TAG_CPU_ARCH_V5T,	    ARM_ARCH_V5TxM},
+    {TAG_CPU_ARCH_V5T,	    ARM_ARCH_V5T},
+    {TAG_CPU_ARCH_V5TE,	    ARM_ARCH_V5TExP},
+    {TAG_CPU_ARCH_V5TE,	    ARM_ARCH_V5TE},
+    {TAG_CPU_ARCH_V5TEJ,    ARM_ARCH_V5TEJ},
+    {TAG_CPU_ARCH_V6,	    ARM_ARCH_V6},
+    {TAG_CPU_ARCH_V6KZ,	    ARM_ARCH_V6Z},
+    {TAG_CPU_ARCH_V6KZ,	    ARM_ARCH_V6KZ},
+    {TAG_CPU_ARCH_V6K,	    ARM_ARCH_V6K},
+    {TAG_CPU_ARCH_V6T2,	    ARM_ARCH_V6T2},
+    {TAG_CPU_ARCH_V6T2,	    ARM_ARCH_V6KT2},
+    {TAG_CPU_ARCH_V6T2,	    ARM_ARCH_V6ZT2},
+    {TAG_CPU_ARCH_V6T2,	    ARM_ARCH_V6KZT2},
 
     /* When assembling a file with only ARMv6-M or ARMv6S-M instruction, GNU as
        always selected build attributes to match those of ARMv6-M
@@ -27016,24 +27029,24 @@ static const cpu_arch_ver_table cpu_arch_ver[] =
        would be selected when fully respecting chronology of architectures.
        It is thus necessary to make a special case of ARMv6-M and ARMv6S-M and
        move them before ARMv7 architectures.  */
-    {11, ARM_ARCH_V6M},
-    {12, ARM_ARCH_V6SM},
+    {TAG_CPU_ARCH_V6_M,	    ARM_ARCH_V6M},
+    {TAG_CPU_ARCH_V6S_M,    ARM_ARCH_V6SM},
 
-    {10, ARM_ARCH_V7},
-    {10, ARM_ARCH_V7A},
-    {10, ARM_ARCH_V7R},
-    {10, ARM_ARCH_V7M},
-    {10, ARM_ARCH_V7VE},
-    {13, ARM_ARCH_V7EM},
-    {14, ARM_ARCH_V8A},
-    {14, ARM_ARCH_V8_1A},
-    {14, ARM_ARCH_V8_2A},
-    {14, ARM_ARCH_V8_3A},
-    {16, ARM_ARCH_V8M_BASE},
-    {17, ARM_ARCH_V8M_MAIN},
-    {15, ARM_ARCH_V8R},
-    {14, ARM_ARCH_V8_4A},
-    {-1, ARM_ARCH_NONE}
+    {TAG_CPU_ARCH_V7,	    ARM_ARCH_V7},
+    {TAG_CPU_ARCH_V7,	    ARM_ARCH_V7A},
+    {TAG_CPU_ARCH_V7,	    ARM_ARCH_V7R},
+    {TAG_CPU_ARCH_V7,	    ARM_ARCH_V7M},
+    {TAG_CPU_ARCH_V7,	    ARM_ARCH_V7VE},
+    {TAG_CPU_ARCH_V7E_M,    ARM_ARCH_V7EM},
+    {TAG_CPU_ARCH_V8,	    ARM_ARCH_V8A},
+    {TAG_CPU_ARCH_V8,	    ARM_ARCH_V8_1A},
+    {TAG_CPU_ARCH_V8,	    ARM_ARCH_V8_2A},
+    {TAG_CPU_ARCH_V8,	    ARM_ARCH_V8_3A},
+    {TAG_CPU_ARCH_V8M_BASE, ARM_ARCH_V8M_BASE},
+    {TAG_CPU_ARCH_V8M_MAIN, ARM_ARCH_V8M_MAIN},
+    {TAG_CPU_ARCH_V8R,	    ARM_ARCH_V8R},
+    {TAG_CPU_ARCH_V8,	    ARM_ARCH_V8_4A},
+    {-1,		    ARM_ARCH_NONE}
 };
 
 /* Set an attribute if it has not already been set by the user.  */

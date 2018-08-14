@@ -30,7 +30,7 @@
 #include "coff/internal.h"	/* Internal format of COFF symbols in BFD */
 #include "libcoff.h"		/* FIXME secret internal data from BFD */
 #include "objfiles.h"
-#include "buildsym.h"
+#include "buildsym-legacy.h"
 #include "gdb-stabs.h"
 #include "stabsread.h"
 #include "complaints.h"
@@ -383,6 +383,7 @@ coff_alloc_type (int index)
 static void
 coff_start_symtab (struct objfile *objfile, const char *name)
 {
+  within_function = 0;
   start_symtab (objfile,
   /* We fill in the filename later.  start_symtab puts this pointer
      into last_source_file and we put it in subfiles->name, which
@@ -390,8 +391,8 @@ coff_start_symtab (struct objfile *objfile, const char *name)
 		 xstrdup (name),
   /* We never know the directory name for COFF.  */
 		 NULL,
-  /* The start address is irrelevant, since we set
-     last_source_start_addr in coff_end_symtab.  */
+  /* The start address is irrelevant, since we call
+     set_last_source_start_addr in coff_end_symtab.  */
 		 0,
   /* Let buildsym.c deduce the language for this symtab.  */
 		 language_unknown);
@@ -420,7 +421,7 @@ complete_symtab (const char *name, CORE_ADDR start_addr, unsigned int size)
 static void
 coff_end_symtab (struct objfile *objfile)
 {
-  last_source_start_addr = current_source_start_addr;
+  set_last_source_start_addr (current_source_start_addr);
 
   end_symtab (current_source_end_addr, SECT_OFF_TEXT (objfile));
 
@@ -766,8 +767,6 @@ coff_symfile_finish (struct objfile *objfile)
 {
   /* Let stabs reader clean up.  */
   stabsread_clear_cache ();
-
-  dwarf2_free_objfile (objfile);
 }
 
 
@@ -804,6 +803,8 @@ coff_symtab_read (minimal_symbol_reader &reader,
   int val;
   CORE_ADDR tmpaddr;
   struct minimal_symbol *msym;
+
+  scoped_free_pendings free_pending;
 
   /* Work around a stdio bug in SunOS4.1.1 (this makes me nervous....
      it's hard to know I've really worked around it.  The fix should
@@ -856,7 +857,7 @@ coff_symtab_read (minimal_symbol_reader &reader,
 	     language_unknown, since such a ``file name'' is not
 	     recognized.  Override that with the minimal language to
 	     allow printing values in this symtab.  */
-	  current_subfile->language = language_minimal;
+	  get_current_subfile ()->language = language_minimal;
 	  complete_symtab ("_globals_", 0, 0);
 	  /* Done with all files, everything from here on out is
 	     globals.  */
@@ -1089,7 +1090,7 @@ coff_symtab_read (minimal_symbol_reader &reader,
 	      /* { main_aux.x_sym.x_misc.x_lnsz.x_lnno
 	         contains number of lines to '}' */
 
-	      if (context_stack_depth <= 0)
+	      if (outermost_context_p ())
 		{	/* We attempted to pop an empty context stack.  */
 		  complaint (_("`.ef' symbol without matching `.bf' "
 			       "symbol ignored starting at symnum %d"),
@@ -1098,9 +1099,9 @@ coff_symtab_read (minimal_symbol_reader &reader,
 		  break;
 		}
 
-	      newobj = pop_context ();
+	      struct context_stack cstk = pop_context ();
 	      /* Stack must be empty now.  */
-	      if (context_stack_depth > 0 || newobj == NULL)
+	      if (!outermost_context_p () || newobj == NULL)
 		{
 		  complaint (_("Unmatched .ef symbol(s) ignored "
 			       "starting at symnum %d"),
@@ -1126,15 +1127,15 @@ coff_symtab_read (minimal_symbol_reader &reader,
 	         of the closing '}', and for which we do not have any
 	         other statement-line-number.  */
 	      if (fcn_last_line == 1)
-		record_line (current_subfile, fcn_first_line,
+		record_line (get_current_subfile (), fcn_first_line,
 			     gdbarch_addr_bits_remove (gdbarch,
 						       fcn_first_line_addr));
 	      else
 		enter_linenos (fcn_line_ptr, fcn_first_line,
 			       fcn_last_line, objfile);
 
-	      finish_block (newobj->name, &local_symbols, newobj->old_blocks,
-			    NULL, newobj->start_addr,
+	      finish_block (cstk.name, cstk.old_blocks,
+			    NULL, cstk.start_addr,
 			    fcn_cs_saved.c_value
 			    + fcn_aux_saved.x_sym.x_misc.x_fsize
 			    + ANOFFSET (objfile->section_offsets,
@@ -1153,7 +1154,7 @@ coff_symtab_read (minimal_symbol_reader &reader,
 	    }
 	  else if (strcmp (cs->c_name, ".eb") == 0)
 	    {
-	      if (context_stack_depth <= 0)
+	      if (outermost_context_p ())
 		{	/* We attempted to pop an empty context stack.  */
 		  complaint (_("`.eb' symbol without matching `.bb' "
 			       "symbol ignored starting at symnum %d"),
@@ -1161,25 +1162,25 @@ coff_symtab_read (minimal_symbol_reader &reader,
 		  break;
 		}
 
-	      newobj = pop_context ();
-	      if (depth-- != newobj->depth)
+	      struct context_stack cstk = pop_context ();
+	      if (depth-- != cstk.depth)
 		{
 		  complaint (_("Mismatched .eb symbol ignored "
 			       "starting at symnum %d"),
 			     symnum);
 		  break;
 		}
-	      if (local_symbols && context_stack_depth > 0)
+	      if (*get_local_symbols () && !outermost_context_p ())
 		{
 		  tmpaddr =
 		    cs->c_value + ANOFFSET (objfile->section_offsets,
 					    SECT_OFF_TEXT (objfile));
 		  /* Make a block for the local symbols within.  */
-		  finish_block (0, &local_symbols, newobj->old_blocks, NULL,
-				newobj->start_addr, tmpaddr);
+		  finish_block (0, cstk.old_blocks, NULL,
+				cstk.start_addr, tmpaddr);
 		}
 	      /* Now pop locals of block just finished.  */
-	      local_symbols = newobj->locals;
+	      *get_local_symbols () = cstk.locals;
 	    }
 	  break;
 
@@ -1502,7 +1503,7 @@ enter_linenos (long file_offset, int first_line,
 	  CORE_ADDR addr = lptr.l_addr.l_paddr;
 	  addr += ANOFFSET (objfile->section_offsets,
 			    SECT_OFF_TEXT (objfile));
-	  record_line (current_subfile,
+	  record_line (get_current_subfile (),
 		       first_line + L_LNNO32 (&lptr),
 		       gdbarch_addr_bits_remove (gdbarch, addr));
 	}
@@ -1625,7 +1626,7 @@ process_coff_symbol (struct coff_symbol *cs,
 
   name = cs->c_name;
   name = EXTERNAL_NAME (name, objfile->obfd);
-  SYMBOL_SET_LANGUAGE (sym, current_subfile->language,
+  SYMBOL_SET_LANGUAGE (sym, get_current_subfile ()->language,
 		       &objfile->objfile_obstack);
   SYMBOL_SET_NAMES (sym, name, strlen (name), 1, objfile);
 
@@ -1645,10 +1646,10 @@ process_coff_symbol (struct coff_symbol *cs,
       SYMBOL_ACLASS_INDEX (sym) = LOC_BLOCK;
       if (cs->c_sclass == C_STAT || cs->c_sclass == C_THUMBSTAT
 	  || cs->c_sclass == C_THUMBSTATFUNC)
-	add_symbol_to_list (sym, &file_symbols);
+	add_symbol_to_list (sym, get_file_symbols ());
       else if (cs->c_sclass == C_EXT || cs->c_sclass == C_THUMBEXT
 	       || cs->c_sclass == C_THUMBEXTFUNC)
-	add_symbol_to_list (sym, &global_symbols);
+	add_symbol_to_list (sym, get_global_symbols ());
     }
   else
     {
@@ -1660,7 +1661,7 @@ process_coff_symbol (struct coff_symbol *cs,
 
 	case C_AUTO:
 	  SYMBOL_ACLASS_INDEX (sym) = LOC_LOCAL;
-	  add_symbol_to_list (sym, &local_symbols);
+	  add_symbol_to_list (sym, get_local_symbols ());
 	  break;
 
 	case C_THUMBEXT:
@@ -1670,7 +1671,7 @@ process_coff_symbol (struct coff_symbol *cs,
 	  SYMBOL_VALUE_ADDRESS (sym) = (CORE_ADDR) cs->c_value;
 	  SYMBOL_VALUE_ADDRESS (sym) += ANOFFSET (objfile->section_offsets,
 						  SECT_OFF_TEXT (objfile));
-	  add_symbol_to_list (sym, &global_symbols);
+	  add_symbol_to_list (sym, get_global_symbols ());
 	  break;
 
 	case C_THUMBSTAT:
@@ -1683,12 +1684,12 @@ process_coff_symbol (struct coff_symbol *cs,
 	  if (within_function)
 	    {
 	      /* Static symbol of local scope.  */
-	      add_symbol_to_list (sym, &local_symbols);
+	      add_symbol_to_list (sym, get_local_symbols ());
 	    }
 	  else
 	    {
 	      /* Static symbol at top level of file.  */
-	      add_symbol_to_list (sym, &file_symbols);
+	      add_symbol_to_list (sym, get_file_symbols ());
 	    }
 	  break;
 
@@ -1698,7 +1699,7 @@ process_coff_symbol (struct coff_symbol *cs,
 	case C_REG:
 	  SYMBOL_ACLASS_INDEX (sym) = coff_register_index;
 	  SYMBOL_VALUE (sym) = cs->c_value;
-	  add_symbol_to_list (sym, &local_symbols);
+	  add_symbol_to_list (sym, get_local_symbols ());
 	  break;
 
 	case C_THUMBLABEL:
@@ -1708,14 +1709,14 @@ process_coff_symbol (struct coff_symbol *cs,
 	case C_ARG:
 	  SYMBOL_ACLASS_INDEX (sym) = LOC_ARG;
 	  SYMBOL_IS_ARGUMENT (sym) = 1;
-	  add_symbol_to_list (sym, &local_symbols);
+	  add_symbol_to_list (sym, get_local_symbols ());
 	  break;
 
 	case C_REGPARM:
 	  SYMBOL_ACLASS_INDEX (sym) = coff_register_index;
 	  SYMBOL_IS_ARGUMENT (sym) = 1;
 	  SYMBOL_VALUE (sym) = cs->c_value;
-	  add_symbol_to_list (sym, &local_symbols);
+	  add_symbol_to_list (sym, get_local_symbols ());
 	  break;
 
 	case C_TPDEF:
@@ -1769,7 +1770,7 @@ process_coff_symbol (struct coff_symbol *cs,
 	      SYMBOL_VALUE_CHAIN (sym) = opaque_type_chain[i];
 	      opaque_type_chain[i] = sym;
 	    }
-	  add_symbol_to_list (sym, &file_symbols);
+	  add_symbol_to_list (sym, get_file_symbols ());
 	  break;
 
 	case C_STRTAG:
@@ -1788,7 +1789,7 @@ process_coff_symbol (struct coff_symbol *cs,
 	      TYPE_NAME (SYMBOL_TYPE (sym)) =
 		concat (SYMBOL_LINKAGE_NAME (sym), (char *)NULL);
 
-	  add_symbol_to_list (sym, &file_symbols);
+	  add_symbol_to_list (sym, get_file_symbols ());
 	  break;
 
 	default:
@@ -2152,9 +2153,9 @@ coff_read_enum_type (int index, int length, int lastsym,
 
   type = coff_alloc_type (index);
   if (within_function)
-    symlist = &local_symbols;
+    symlist = get_local_symbols ();
   else
-    symlist = &file_symbols;
+    symlist = get_file_symbols ();
   osyms = *symlist;
   o_nsyms = osyms ? osyms->nsyms : 0;
 

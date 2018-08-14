@@ -1096,11 +1096,11 @@ inf_validate_procs (struct inf *inf)
 	    last = thread;
 	    proc_debug (thread, "new thread: %lu", threads[i]);
 
-	    ptid = ptid_build (inf->pid, thread->tid, 0);
+	    ptid = ptid_t (inf->pid, thread->tid, 0);
 
 	    /* Tell GDB's generic thread code.  */
 
-	    if (ptid_equal (inferior_ptid, pid_to_ptid (inf->pid)))
+	    if (inferior_ptid == ptid_t (inf->pid))
 	      /* This is the first time we're hearing about thread
 		 ids, after a fork-child.  */
 	      thread_change_ptid (inferior_ptid, ptid);
@@ -1616,17 +1616,17 @@ rewait:
 
   thread = inf->wait.thread;
   if (thread)
-    ptid = ptid_build (inf->pid, thread->tid, 0);
-  else if (ptid_equal (ptid, minus_one_ptid))
+    ptid = ptid_t (inf->pid, thread->tid, 0);
+  else if (ptid == minus_one_ptid)
     thread = inf_tid_to_thread (inf, -1);
   else
-    thread = inf_tid_to_thread (inf, ptid_get_lwp (ptid));
+    thread = inf_tid_to_thread (inf, ptid.lwp ());
 
   if (!thread || thread->port == MACH_PORT_NULL)
     {
       /* TID is dead; try and find a new thread.  */
       if (inf_update_procs (inf) && inf->threads)
-	ptid = ptid_build (inf->pid, inf->threads->tid, 0); /* The first
+	ptid = ptid_t (inf->pid, inf->threads->tid, 0); /* The first
 							       available
 							       thread.  */
       else
@@ -1634,7 +1634,7 @@ rewait:
     }
 
   if (thread
-      && !ptid_equal (ptid, minus_one_ptid)
+      && ptid != minus_one_ptid
       && status->kind != TARGET_WAITKIND_SPURIOUS
       && inf->pause_sc == 0 && thread->pause_sc == 0)
     /* If something actually happened to THREAD, make sure we
@@ -2036,20 +2036,20 @@ gnu_nat_target::resume (ptid_t ptid, int step, enum gdb_signal sig)
   inf_update_procs (inf);
 
   /* A specific PTID means `step only this process id'.  */
-  resume_all = ptid_equal (ptid, minus_one_ptid);
+  resume_all = ptid == minus_one_ptid;
 
   if (resume_all)
     /* Allow all threads to run, except perhaps single-stepping one.  */
     {
       inf_debug (inf, "running all threads; tid = %d",
-		 ptid_get_pid (inferior_ptid));
+		 inferior_ptid.pid ());
       ptid = inferior_ptid;	/* What to step.  */
       inf_set_threads_resume_sc (inf, 0, 1);
     }
   else
     /* Just allow a single thread to run.  */
     {
-      struct proc *thread = inf_tid_to_thread (inf, ptid_get_lwp (ptid));
+      struct proc *thread = inf_tid_to_thread (inf, ptid.lwp ());
 
       if (!thread)
 	error (_("Can't run single thread id %s: no such thread!"),
@@ -2060,7 +2060,7 @@ gnu_nat_target::resume (ptid_t ptid, int step, enum gdb_signal sig)
 
   if (step)
     {
-      step_thread = inf_tid_to_thread (inf, ptid_get_lwp (ptid));
+      step_thread = inf_tid_to_thread (inf, ptid.lwp ());
       if (!step_thread)
 	warning (_("Can't step thread id %s: no such thread."),
 		 target_pid_to_str (ptid));
@@ -2148,7 +2148,7 @@ gnu_nat_target::create_inferior (const char *exec_file,
   /* We have something that executes now.  We'll be running through
      the shell at this point (if startup-with-shell is true), but the
      pid shouldn't change.  */
-  add_thread_silent (pid_to_ptid (pid));
+  add_thread_silent (ptid_t (pid));
 
   /* Attach to the now stopped child, which is actually a shell...  */
   inf_debug (inf, "attaching to child: %d", pid);
@@ -2167,7 +2167,7 @@ gnu_nat_target::create_inferior (const char *exec_file,
 
   /* We now have thread info.  */
   thread_change_ptid (inferior_ptid,
-		      ptid_build (inf->pid, inf_pick_first_thread (), 0));
+		      ptid_t (inf->pid, inf_pick_first_thread (), 0));
 
   gdb_startup_inferior (pid, START_INFERIOR_TRAPS_EXPECTED);
 
@@ -2228,7 +2228,7 @@ gnu_nat_target::attach (const char *args, int from_tty)
 
   inf_update_procs (inf);
 
-  inferior_ptid = ptid_build (pid, inf_pick_first_thread (), 0);
+  inferior_ptid = ptid_t (pid, inf_pick_first_thread (), 0);
 
   /* We have to initialize the terminal settings now, since the code
      below might try to restore them.  */
@@ -2293,7 +2293,7 @@ gnu_nat_target::thread_alive (ptid_t ptid)
 {
   inf_update_procs (gnu_current_inf);
   return !!inf_tid_to_thread (gnu_current_inf,
-			      ptid_get_lwp (ptid));
+			      ptid.lwp ());
 }
 
 
@@ -2716,7 +2716,7 @@ const char *
 gnu_nat_target::pid_to_str (ptid_t ptid)
 {
   struct inf *inf = gnu_current_inf;
-  int tid = ptid_get_lwp (ptid);
+  int tid = ptid.lwp ();
   struct proc *thread = inf_tid_to_thread (inf, tid);
 
   if (thread)
@@ -2818,7 +2818,7 @@ cur_thread (void)
 {
   struct inf *inf = cur_inf ();
   struct proc *thread = inf_tid_to_thread (inf,
-					   ptid_get_lwp (inferior_ptid));
+					   inferior_ptid.lwp ());
   if (!thread)
     error (_("No current thread."));
   return thread;
@@ -3018,7 +3018,7 @@ set_sig_thread_cmd (const char *args, int from_tty)
   else
     {
       struct thread_info *tp = parse_thread_id (args, NULL);
-      inf->signal_thread = inf_tid_to_thread (inf, ptid_get_lwp (tp->ptid));
+      inf->signal_thread = inf_tid_to_thread (inf, tp->ptid.lwp ());
     }
 }
 
