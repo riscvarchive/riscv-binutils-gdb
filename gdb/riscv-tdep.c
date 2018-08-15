@@ -547,9 +547,9 @@ riscv_register_type (struct gdbarch *gdbarch, int regnum)
    REGNUM.  */
 static void
 riscv_print_one_register_info (struct gdbarch *gdbarch,
-                               struct ui_file *file,
-                               struct frame_info *frame,
-                               int regnum)
+			       struct ui_file *file,
+			       struct frame_info *frame,
+			       int regnum)
 {
   enum tab_stops { value_column_1 = 15 };
 
@@ -574,7 +574,7 @@ riscv_print_one_register_info (struct gdbarch *gdbarch,
   int print_raw_format;
 
   print_raw_format = (value_entirely_available (val)
-                      && !value_optimized_out (val));
+		      && !value_optimized_out (val));
 
   if (TYPE_CODE (regtype) == TYPE_CODE_FLT)
     {
@@ -586,16 +586,16 @@ riscv_print_one_register_info (struct gdbarch *gdbarch,
       opts.deref_ref = 1;
 
       val_print (regtype,
-                 value_embedded_offset (val), 0,
-                 file, 0, val, &opts, current_language);
+		 value_embedded_offset (val), 0,
+		 file, 0, val, &opts, current_language);
 
       if (print_raw_format)
-        {
-          fprintf_filtered (file, "\t(raw ");
-          print_hex_chars (file, valaddr, TYPE_LENGTH (regtype), byte_order,
-                           true);
-          fprintf_filtered (file, ")");
-        }
+	{
+	  fprintf_filtered (file, "\t(raw ");
+	  print_hex_chars (file, valaddr, TYPE_LENGTH (regtype), byte_order,
+			   true);
+	  fprintf_filtered (file, ")");
+	}
     }
   else
     {
@@ -605,137 +605,137 @@ riscv_print_one_register_info (struct gdbarch *gdbarch,
       get_formatted_print_options (&opts, 'x');
       opts.deref_ref = 1;
       val_print (regtype,
-                 value_embedded_offset (val), 0,
-                 file, 0, val, &opts, current_language);
+		 value_embedded_offset (val), 0,
+		 file, 0, val, &opts, current_language);
 
       if (print_raw_format)
-        {
-          int size_bytes = register_size (gdbarch, regnum);
-          LONGEST d = value_as_long (val);
-          if (regnum == RISCV_CSR_MSTATUS_REGNUM)
-            {
-              unsigned xlen = size_bytes * 4;
-              fprintf_filtered (file, "\tSD:%X", (int)((d >> (xlen-1)) & 0x1));
-              if (size_bytes > 4)
-                fprintf_filtered (file, " SXL:%X UXL:%X",
-                                  (int)((d >> 34) & 3), (int)((d >> 32) & 3));
+	{
+	  int size_bytes = register_size (gdbarch, regnum);
+	  LONGEST d = value_as_long (val);
+	  if (regnum == RISCV_CSR_MSTATUS_REGNUM)
+	    {
+	      unsigned xlen = size_bytes * 4;
+	      fprintf_filtered (file, "\tSD:%X", (int)((d >> (xlen-1)) & 0x1));
+	      if (size_bytes > 4)
+		fprintf_filtered (file, " SXL:%X UXL:%X",
+				  (int)((d >> 34) & 3), (int)((d >> 32) & 3));
 
-              fprintf_filtered (file,
-                                " TSR:%X TW:%X TVM:%X MXR:%X SUM:%X MPRV:%X XS:%X "
-                                "FS:%X MPP:%X SPP:%X MPIE:%X SPIE:%X UPIE:%X MIE:%X "
-                                "SIE:%X UIE:%X",
-                                (int)((d >> 22) & 0x1f),
-                                (int)((d >> 21) & 0x1),
-                                (int)((d >> 20) & 0x1),
-                                (int)((d >> 19) & 0x1),
-                                (int)((d >> 18) & 0x1),
-                                (int)((d >> 17) & 0x1),
-                                (int)((d >> 15) & 0x3),
-                                (int)((d >> 13) & 0x3),
-                                (int)((d >> 11) & 0x3),
-                                (int)((d >> 8) & 0x1),
-                                (int)((d >> 7) & 0x1),
-                                (int)((d >> 5) & 0x1),
-                                (int)((d >> 4) & 0x1),
-                                (int)((d >> 3) & 0x1),
-                                (int)((d >> 1) & 0x1),
-                                (int)((d >> 0) & 0x1));
+	      fprintf_filtered (file,
+				" TSR:%X TW:%X TVM:%X MXR:%X SUM:%X MPRV:%X XS:%X "
+				"FS:%X MPP:%X SPP:%X MPIE:%X SPIE:%X UPIE:%X MIE:%X "
+				"SIE:%X UIE:%X",
+				(int)((d >> 22) & 0x1f),
+				(int)((d >> 21) & 0x1),
+				(int)((d >> 20) & 0x1),
+				(int)((d >> 19) & 0x1),
+				(int)((d >> 18) & 0x1),
+				(int)((d >> 17) & 0x1),
+				(int)((d >> 15) & 0x3),
+				(int)((d >> 13) & 0x3),
+				(int)((d >> 11) & 0x3),
+				(int)((d >> 8) & 0x1),
+				(int)((d >> 7) & 0x1),
+				(int)((d >> 5) & 0x1),
+				(int)((d >> 4) & 0x1),
+				(int)((d >> 3) & 0x1),
+				(int)((d >> 1) & 0x1),
+				(int)((d >> 0) & 0x1));
 
-            }
-          else if (regnum == RISCV_CSR_MISA_REGNUM)
-            {
-              unsigned xlen = 0;
-              if (size_bytes >= 16 && sizeof(d) >= 16 && ((d >> 126) & 3) == 3)
-                xlen = 128;
-              if (size_bytes >= 8 && sizeof(d) >= 8 && ((d >> 62) & 3) == 2)
-                xlen = 64;
-              if (size_bytes >= 4 && ((d >> 30) & 3) == 1)
-                xlen = 32;
+	    }
+	  else if (regnum == RISCV_CSR_MISA_REGNUM)
+	    {
+	      unsigned xlen = 0;
+	      if (size_bytes >= 16 && sizeof(d) >= 16 && ((d >> 126) & 3) == 3)
+		xlen = 128;
+	      if (size_bytes >= 8 && sizeof(d) >= 8 && ((d >> 62) & 3) == 2)
+		xlen = 64;
+	      if (size_bytes >= 4 && ((d >> 30) & 3) == 1)
+		xlen = 32;
 
-              if (xlen)
-                fprintf_filtered (file, "\tRV%d", xlen);
-              else
-                fprintf_filtered (file, "\tRV??");
+	      if (xlen)
+		fprintf_filtered (file, "\tRV%d", xlen);
+	      else
+		fprintf_filtered (file, "\tRV??");
 
-              for (unsigned i = 0; i < 26; i++)
-                {
-                  if (d & (1 << i))
-                    fprintf_filtered (file, "%c", 'A' + i);
-                }
-            }
-          else if (regnum == RISCV_CSR_FCSR_REGNUM
-                   || regnum == RISCV_CSR_FFLAGS_REGNUM
-                   || regnum == RISCV_CSR_FRM_REGNUM)
-            {
-              fprintf_filtered (file, "\t");
-              if (regnum != RISCV_CSR_FRM_REGNUM)
-                fprintf_filtered (file,
-                                  "RD:%01X NV:%d DZ:%d OF:%d UF:%d NX:%d",
-                                  (int) ((d >> 5) & 0x7),
-                                  (int) ((d >> 4) & 0x1),
-                                  (int) ((d >> 3) & 0x1),
-                                  (int) ((d >> 2) & 0x1),
-                                  (int) ((d >> 1) & 0x1),
-                                  (int) ((d >> 0) & 0x1));
+	      for (unsigned i = 0; i < 26; i++)
+		{
+		  if (d & (1 << i))
+		    fprintf_filtered (file, "%c", 'A' + i);
+		}
+	    }
+	  else if (regnum == RISCV_CSR_FCSR_REGNUM
+		   || regnum == RISCV_CSR_FFLAGS_REGNUM
+		   || regnum == RISCV_CSR_FRM_REGNUM)
+	    {
+	      fprintf_filtered (file, "\t");
+	      if (regnum != RISCV_CSR_FRM_REGNUM)
+		fprintf_filtered (file,
+				  "RD:%01X NV:%d DZ:%d OF:%d UF:%d NX:%d",
+				  (int) ((d >> 5) & 0x7),
+				  (int) ((d >> 4) & 0x1),
+				  (int) ((d >> 3) & 0x1),
+				  (int) ((d >> 2) & 0x1),
+				  (int) ((d >> 1) & 0x1),
+				  (int) ((d >> 0) & 0x1));
 
-              if (regnum != RISCV_CSR_FFLAGS_REGNUM)
-                {
-                  static const char * const sfrm[] =
-                    {
-                      "RNE (round to nearest; ties to even)",
-                      "RTZ (Round towards zero)",
-                      "RDN (Round down towards -INF)",
-                      "RUP (Round up towards +INF)",
-                      "RMM (Round to nearest; ties to max magnitude)",
-                      "INVALID[5]",
-                      "INVALID[6]",
-                      "dynamic rounding mode",
-                    };
-                  int frm = ((regnum == RISCV_CSR_FCSR_REGNUM)
-                             ? (d >> 5) : d) & 0x3;
+	      if (regnum != RISCV_CSR_FFLAGS_REGNUM)
+		{
+		  static const char * const sfrm[] =
+		    {
+		      "RNE (round to nearest; ties to even)",
+		      "RTZ (Round towards zero)",
+		      "RDN (Round down towards -INF)",
+		      "RUP (Round up towards +INF)",
+		      "RMM (Round to nearest; ties to max magnitude)",
+		      "INVALID[5]",
+		      "INVALID[6]",
+		      "dynamic rounding mode",
+		    };
+		  int frm = ((regnum == RISCV_CSR_FCSR_REGNUM)
+			     ? (d >> 5) : d) & 0x3;
 
-                  fprintf_filtered (file, "%sFRM:%i [%s]",
-                                    (regnum == RISCV_CSR_FCSR_REGNUM
-                                     ? " " : ""),
-                                    frm, sfrm[frm]);
-                }
-            }
-          else if (regnum == RISCV_PRIV_REGNUM)
-            {
-              uint8_t priv;
+		  fprintf_filtered (file, "%sFRM:%i [%s]",
+				    (regnum == RISCV_CSR_FCSR_REGNUM
+				     ? " " : ""),
+				    frm, sfrm[frm]);
+		}
+	    }
+	  else if (regnum == RISCV_PRIV_REGNUM)
+	    {
+	      uint8_t priv;
 
-              priv = d & 0xff;
+	      priv = d & 0xff;
 
-              if (priv < 4)
-                {
-                  static const char * const sprv[] =
-                    {
-                      "User/Application",
-                      "Supervisor",
-                      "Hypervisor",
-                      "Machine"
-                    };
-                  fprintf_filtered (file, "\tprv:%d [%s]",
-                                    priv, sprv[priv]);
-                }
-              else
-                fprintf_filtered (file, "\tprv:%d [INVALID]", priv);
-            }
-          else
-            {
-              /* If not a vector register, print it also according to its
-                 natural format.  */
-              if (TYPE_VECTOR (regtype) == 0)
-                {
-                  get_user_print_options (&opts);
-                  opts.deref_ref = 1;
-                  fprintf_filtered (file, "\t");
-                  val_print (regtype,
-                             value_embedded_offset (val), 0,
-                             file, 0, val, &opts, current_language);
-                }
-            }
-        }
+	      if (priv < 4)
+		{
+		  static const char * const sprv[] =
+		    {
+		      "User/Application",
+		      "Supervisor",
+		      "Hypervisor",
+		      "Machine"
+		    };
+		  fprintf_filtered (file, "\tprv:%d [%s]",
+				    priv, sprv[priv]);
+		}
+	      else
+		fprintf_filtered (file, "\tprv:%d [INVALID]", priv);
+	    }
+	  else
+	    {
+	      /* If not a vector register, print it also according to its
+		 natural format.  */
+	      if (TYPE_VECTOR (regtype) == 0)
+		{
+		  get_user_print_options (&opts);
+		  opts.deref_ref = 1;
+		  fprintf_filtered (file, "\t");
+		  val_print (regtype,
+			     value_embedded_offset (val), 0,
+			     file, 0, val, &opts, current_language);
+		}
+	    }
+	}
     }
   fprintf_filtered (file, "\n");
 }
@@ -758,8 +758,8 @@ riscv_register_reggroup_p (struct gdbarch  *gdbarch, int regnum,
   if (reggroup == restore_reggroup || reggroup == save_reggroup)
     {
       if (reg->number >= RISCV_FIRST_FP_REGNUM &&
-          reg->number <= RISCV_LAST_FP_REGNUM)
-        return riscv_has_fp_regs (gdbarch);
+	  reg->number <= RISCV_LAST_FP_REGNUM)
+	return riscv_has_fp_regs (gdbarch);
 
       return reg->save_restore;
     }
@@ -783,7 +783,7 @@ riscv_print_registers_info (struct gdbarch *gdbarch,
        * it's in the target description. That still works, because we can ask
        * gdb to give us register name and contents by number. */
       if (NULL == gdbarch_register_name (gdbarch, regnum))
-        error (_("Not a valid register for the current processor type"));
+	error (_("Not a valid register for the current processor type"));
       riscv_print_one_register_info (gdbarch, file, frame, regnum);
     }
   else
@@ -2486,24 +2486,24 @@ registers_init (struct gdbarch *gdbarch, struct gdbarch_info info)
   if (!reg_info_built)
     {
       for (unsigned i = 0; i < sizeof(named_csr) / sizeof(*named_csr); i++)
-        {
-          char *generic_name = (char*) malloc(8);
-          gdb_assert(named_csr[i].num < 10000);
-          sprintf(generic_name, "csr%d", named_csr[i].num - RISCV_FIRST_CSR_REGNUM);
-          struct riscv_reg_info reg = {
-              named_csr[i].num,
-              {named_csr[i].name, generic_name},
-              false,
-              false,
-              "org.gnu.gdb.riscv.csr",
-              all_reggroup
-          };
+	{
+	  char *generic_name = (char*) malloc(8);
+	  gdb_assert(named_csr[i].num < 10000);
+	  sprintf(generic_name, "csr%d", named_csr[i].num - RISCV_FIRST_CSR_REGNUM);
+	  struct riscv_reg_info reg = {
+	      named_csr[i].num,
+	      {named_csr[i].name, generic_name},
+	      false,
+	      false,
+	      "org.gnu.gdb.riscv.csr",
+	      all_reggroup
+	  };
 
-          riscv_reg_info.push_back(reg);
-        }
+	  riscv_reg_info.push_back(reg);
+	}
       for (auto reg_info = riscv_reg_info.begin();
-           reg_info != riscv_reg_info.end(); ++reg_info)
-        riscv_reg_map[reg_info->number] = &(*reg_info);
+	   reg_info != riscv_reg_info.end(); ++reg_info)
+	riscv_reg_map[reg_info->number] = &(*reg_info);
       reg_info_built = true;
     }
 
@@ -2519,85 +2519,85 @@ registers_init (struct gdbarch *gdbarch, struct gdbarch_info info)
       std::map<int, const char*> found;
 
       for (auto reg_info = riscv_reg_info.begin();
-           reg_info != riscv_reg_info.end(); ++reg_info)
-        {
-          const struct tdesc_feature *feature =
-            tdesc_find_feature (info.target_desc, reg_info->feature_name);
-          int success = 0;
-          if (feature)
-            // Look for this register by any of its names.
-            for (auto name = reg_info->names.begin();
-                 name != reg_info->names.end(); ++name)
-              {
-                success = tdesc_numbered_register (feature, tdesc_data,
-                                                   reg_info->number, *name);
-                if (success)
-                  {
-                    found[reg_info->number] = *name;
-                    break;
-                  }
-              }
+	   reg_info != riscv_reg_info.end(); ++reg_info)
+	{
+	  const struct tdesc_feature *feature =
+	    tdesc_find_feature (info.target_desc, reg_info->feature_name);
+	  int success = 0;
+	  if (feature)
+	    // Look for this register by any of its names.
+	    for (auto name = reg_info->names.begin();
+		 name != reg_info->names.end(); ++name)
+	      {
+		success = tdesc_numbered_register (feature, tdesc_data,
+						   reg_info->number, *name);
+		if (success)
+		  {
+		    found[reg_info->number] = *name;
+		    break;
+		  }
+	      }
 
-          if (!success && reg_info->required)
-            {
-              use_tdesc_registers = false;
-              fprintf_filtered (gdb_stdout, ">>> don't use tdesc because %s is missing\n",
-                                reg_info->names[0]);
-              break;
-            }
-        }
+	  if (!success && reg_info->required)
+	    {
+	      use_tdesc_registers = false;
+	      fprintf_filtered (gdb_stdout, ">>> don't use tdesc because %s is missing\n",
+				reg_info->names[0]);
+	      break;
+	    }
+	}
 
       if (use_tdesc_registers)
-        {
-          // This number apparently must be at least as large as the number of
-          // registers in the target description. (See assertion in
-          // tdesc_use_registers().) But that seems to defeat part of the point
-          // of the target description, so I might be missing something.
-          set_gdbarch_num_regs (gdbarch, RISCV_NUM_REGS);
-          set_gdbarch_sp_regnum (gdbarch, RISCV_SP_REGNUM);
-          set_gdbarch_pc_regnum (gdbarch, RISCV_PC_REGNUM);
-          set_gdbarch_ps_regnum (gdbarch, RISCV_FP_REGNUM);
-          set_gdbarch_deprecated_fp_regnum (gdbarch, RISCV_FP_REGNUM);
+	{
+	  // This number apparently must be at least as large as the number of
+	  // registers in the target description. (See assertion in
+	  // tdesc_use_registers().) But that seems to defeat part of the point
+	  // of the target description, so I might be missing something.
+	  set_gdbarch_num_regs (gdbarch, RISCV_NUM_REGS);
+	  set_gdbarch_sp_regnum (gdbarch, RISCV_SP_REGNUM);
+	  set_gdbarch_pc_regnum (gdbarch, RISCV_PC_REGNUM);
+	  set_gdbarch_ps_regnum (gdbarch, RISCV_FP_REGNUM);
+	  set_gdbarch_deprecated_fp_regnum (gdbarch, RISCV_FP_REGNUM);
 
-          // This is going to call set_gdbarch_register_reggroup_p (and a few
-          // others; see the end of tdesc_use_registers()).
-          tdesc_use_registers (gdbarch, info.target_desc, tdesc_data);
+	  // This is going to call set_gdbarch_register_reggroup_p (and a few
+	  // others; see the end of tdesc_use_registers()).
+	  tdesc_use_registers (gdbarch, info.target_desc, tdesc_data);
 
-          // Add the all group. No register explicitly belongs to it, but it
-          // does exist and we need to add it so users can use it.
-          reggroup_add (gdbarch, all_reggroup);
+	  // Add the all group. No register explicitly belongs to it, but it
+	  // does exist and we need to add it so users can use it.
+	  reggroup_add (gdbarch, all_reggroup);
 
-          // Now go through again, adding aliases.
-          for (auto reg_info = riscv_reg_info.begin();
-               reg_info != riscv_reg_info.end(); ++reg_info)
-            {
-              auto match = found.find(reg_info->number);
-              if (match == found.end())
-                continue;
-              for (auto name = reg_info->names.begin();
-                   name != reg_info->names.end(); ++name)
-                {
-                  if (*name != match->second)
-                    user_reg_add (gdbarch, *name, value_of_riscv_user_reg,
-                                  &reg_info->number);
-                }
-            }
-        }
+	  // Now go through again, adding aliases.
+	  for (auto reg_info = riscv_reg_info.begin();
+	       reg_info != riscv_reg_info.end(); ++reg_info)
+	    {
+	      auto match = found.find(reg_info->number);
+	      if (match == found.end())
+		continue;
+	      for (auto name = reg_info->names.begin();
+		   name != reg_info->names.end(); ++name)
+		{
+		  if (*name != match->second)
+		    user_reg_add (gdbarch, *name, value_of_riscv_user_reg,
+				  &reg_info->number);
+		}
+	    }
+	}
       else
-        tdesc_data_cleanup (tdesc_data);
+	tdesc_data_cleanup (tdesc_data);
     }
 
   if (!use_tdesc_registers)
     {
       // Using the built-in list. Just need to add aliases.
       for (auto reg_info = riscv_reg_info.begin();
-           reg_info != riscv_reg_info.end(); ++reg_info)
-        {
-          for (auto name = reg_info->names.begin() + 1;
-               name != reg_info->names.end(); ++name)
-            user_reg_add (gdbarch, *name,
-                          value_of_riscv_user_reg, &reg_info->number);
-        }
+	   reg_info != riscv_reg_info.end(); ++reg_info)
+	{
+	  for (auto name = reg_info->names.begin() + 1;
+	       name != reg_info->names.end(); ++name)
+	    user_reg_add (gdbarch, *name,
+			  value_of_riscv_user_reg, &reg_info->number);
+	}
       set_gdbarch_num_regs (gdbarch, RISCV_NUM_REGS);
       set_gdbarch_sp_regnum (gdbarch, RISCV_SP_REGNUM);
       set_gdbarch_pc_regnum (gdbarch, RISCV_PC_REGNUM);
