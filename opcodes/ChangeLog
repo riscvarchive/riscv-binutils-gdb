@@ -1,3 +1,9 @@
+2018-08-30  Kito Cheng  <kito@andestech.com>
+
+	* riscv-dis.c (riscv_disassemble_insn): Check XLEN by
+	riscv_opcode.xlen_requirement.
+	* riscv-opc.c (riscv_opcodes): Update for struct change.
+
 2018-07-30  Jim Wilson  <jimw@sifive.com>
 
 	* riscv-dis.c (riscv_disassemble_insn): Set insn_type and data_size
