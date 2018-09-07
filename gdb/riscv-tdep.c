@@ -578,9 +578,28 @@ riscv_print_register_formatted (struct ui_file *file, struct frame_info *frame,
 
       size = register_size (gdbarch, regnum);
       get_formatted_print_options (&opts, 'x');
+
+      char csize;
+      switch (size) {
+          case 1:
+            csize = 'b';
+            break;
+          case 2:
+            csize = 'h';
+            break;
+          case 4:
+            csize = 'w';
+            break;
+          case 8:
+            csize = 'g';
+            break;
+          default:
+            csize = 0;
+      }
+
       print_scalar_formatted (raw_buffer + offset,
 			      register_type (gdbarch, regnum), &opts,
-			      size == 8 ? 'g' : 'w', file);
+			      csize, file);
       fprintf_filtered (file, "\t");
       if (size == 4 && riscv_isa_regsize (gdbarch) == 8)
 	fprintf_filtered (file, "\t");
