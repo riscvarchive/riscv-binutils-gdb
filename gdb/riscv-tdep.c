@@ -594,7 +594,7 @@ riscv_print_register_formatted (struct ui_file *file, struct frame_info *frame,
             csize = 'g';
             break;
           default:
-            csize = 0;
+            internal_error (__FILE__, __LINE__, _("unknown size for register"));
       }
 
       print_scalar_formatted (raw_buffer + offset,
