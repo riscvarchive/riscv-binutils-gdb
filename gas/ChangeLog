@@ -1,3 +1,8 @@
+2018-09-17  Kito Cheng  <kito@andestech.com>
+
+	* testsuite/gas/riscv/bge.d: New.
+	* testsuite/gas/riscv/bge.s: Likewise.
+
 2018-08-31  Kito Cheng  <kito@andestech.com>
 
 	* testsuite/gas/riscv/c-fld-fsd-fail.d: New.
