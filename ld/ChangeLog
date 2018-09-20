@@ -1,3 +1,9 @@
+2018-09-20  Kito Cheng  <kito@andestech.com>
+
+	* emulparams/elf32lriscv.sh: Correct the library search path.
+	* emulparams/elf32lriscv_ilp32.sh: Likewise.
+	* emulparams/elf32lriscv_ilp32f.sh: Likewise.
+
 2018-07-18  Nick Clifton  <nickc@redhat.com>
 
 	2.31.1 Release point.
