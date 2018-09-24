@@ -172,9 +172,13 @@ struct register_alias
   int regnum;
 };
 
+/* Controls whether the debugger should step over hardware watchpoints before
+   checking if the watched variable has changed.  If true, then the debugger
+   will step over the watchpoint.  */
+
 static int riscv_have_nonsteppable_watchpoint = 1;
 
-/* The set callback for 'set riscv have-nonsteppable-watchpoint'. */
+/* The set callback for 'set riscv have-nonsteppable-watchpoint'.  */
 
 static void
 set_have_nonsteppable_watchpoint (char *args, int from_tty,
@@ -184,6 +188,18 @@ set_have_nonsteppable_watchpoint (char *args, int from_tty,
 
   set_gdbarch_have_nonsteppable_watchpoint(gdbarch,
 					   riscv_have_nonsteppable_watchpoint);
+}
+
+/* The show callback for 'show riscv have-nonsteppable-watchpoint'.  */
+
+static void
+show_have_nonsteppable_watchpoint (struct ui_file *file, int from_tty,
+				   struct cmd_list_element *c,
+				   const char *value)
+{
+  fprintf_filtered (file,
+		    _("Debugger must step over hardware watchpoints is set to "
+		      "%s.\n"), value);
 }
 
 static enum auto_boolean use_compressed_breakpoints;
@@ -1497,10 +1513,10 @@ Show whether debugger must step over hardware watchpoints"),
 			   _("\
 The RISC-V debug spec recommends that hardware write watchpoints fire before\n\
 the write is committed, in which case, GDB must step over the watchpoint\n\
-before checking the old and new values. Set this option to 1 (default) for\n\
-targets that follow this behaviour, otherwise set to 0."),
+before checking the old and new values.  Set this option to 'on' (default)\n\
+for targets that follow this behaviour, otherwise set to 'off'."),
 			   set_have_nonsteppable_watchpoint,
-			   NULL,
+			   show_have_nonsteppable_watchpoint,
 			   &setriscvcmdlist,
 			   &showriscvcmdlist);
 }
