@@ -1,3 +1,8 @@
+2018-10-04  Jim Wilson  <jimw@sifive.com>
+
+	* elfnn-riscv.c (riscv_elf_size_dynamic_sections): In dynobj->sections
+	loop, handle htab->sdyntdata section.
+
 2018-09-27  Jim Wilson  <jimw@sifive.com>
 
 	* elfnn-riscv.c (riscv_init_pcgp_relocs): Add explanatory comment.
