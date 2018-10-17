@@ -1,3 +1,45 @@
+2018-10-02  Palmer Dabbelt  <palmer@sifive.com>
+
+	* testsuite/gas/riscv/fence-tso.d: New file.
+	* testsuite/gas/riscv/fence-tso.s: Likewise.
+
+2018-09-17  Kito Cheng  <kito@andestech.com>
+
+	* testsuite/gas/riscv/bge.d: New.
+	* testsuite/gas/riscv/bge.s: Likewise.
+
+2018-08-31  Kito Cheng  <kito@andestech.com>
+
+	* testsuite/gas/riscv/c-fld-fsd-fail.d: New.
+	* testsuite/gas/riscv/c-fld-fsd-fail.l: Likewise.
+	* testsuite/gas/riscv/c-fld-fsd-fail.s: Likewise.
+
+2018-08-30  Kito Cheng  <kito@andestech.com>
+
+	* config/tc-riscv.c (riscv_subset_supports): New argument:
+	xlen_required.
+	(riscv_multi_subset_supports): New function, able to check more
+	than one extension.
+	(riscv_ip): Use riscv_multi_subset_supports instead of
+	riscv_subset_supports.
+	(riscv_set_arch): Update call-site for riscv_subset_supports.
+	(riscv_after_parse_args): Likewise.
+
+2018-08-23  Kito Cheng  <kito@andestech.com>
+
+	* config/tc-riscv.c (arg_lookup): Checking
+	length before look up.
+	* testsuite/gas/riscv/fence-fail.d: New file.
+	* testsuite/gas/riscv/fence-fail.l: Likewise.
+	* testsuite/gas/riscv/fence-fail.s: Likewise.
+	* testsuite/gas/riscv/rouding-fail.d: Likewise.
+	* testsuite/gas/riscv/rouding-fail.l: Likewise.
+	* testsuite/gas/riscv/rouding-fail.s: Likewise.
+
+2018-07-27  Jim Wilson  <jimw@sifive.com>
+
+	* configure.tgt (riscv*): Accept as alias for riscv32*.
+
 2018-07-18  Nick Clifton  <nickc@redhat.com>
 
 	2.31.1 Release point.

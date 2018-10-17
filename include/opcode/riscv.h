@@ -281,14 +281,20 @@ static const char * const riscv_pred_succ[16] =
 #define EXTRACT_OPERAND(FIELD, INSN) \
   EXTRACT_BITS ((INSN), OP_MASK_##FIELD, OP_SH_##FIELD)
 
+/* The maximal number of subset can be required. */
+#define MAX_SUBSET_NUM 4
+
 /* This structure holds information for a particular instruction.  */
 
 struct riscv_opcode
 {
   /* The name of the instruction.  */
   const char *name;
-  /* The ISA subset name (I, M, A, F, D, Xextension).  */
-  const char *subset;
+  /* The requirement of xlen for the instruction, 0 if no requirement.  */
+  int xlen_requirement;
+  /* An array of ISA subset name (I, M, A, F, D, Xextension), must ended
+     with a NULL pointer sential.  */
+  const char *subset[MAX_SUBSET_NUM];
   /* A string describing the arguments for this instruction.  */
   const char *args;
   /* The basic opcode for the instruction.  When assembling, this
@@ -312,6 +318,32 @@ struct riscv_opcode
 
 /* Instruction is a simple alias (e.g. "mv" for "addi").  */
 #define	INSN_ALIAS		0x00000001
+
+/* These are for setting insn_info fields.
+
+   Nonbranch is the default.  Noninsn is used only if there is no match.
+   There are no condjsr or dref2 instructions.  So that leaves condbranch,
+   branch, jsr, and dref that we need to handle here, encoded in 3 bits.  */
+#define INSN_TYPE		0x0000000e
+
+/* Instruction is an unconditional branch.  */
+#define INSN_BRANCH		0x00000002
+/* Instruction is a conditional branch.  */
+#define INSN_CONDBRANCH		0x00000004
+/* Instruction is a jump to subroutine.  */
+#define INSN_JSR		0x00000006
+/* Instruction is a data reference.  */
+#define INSN_DREF		0x00000008
+
+/* We have 5 data reference sizes, which we can encode in 3 bits.  */
+#define INSN_DATA_SIZE		0x00000070
+#define INSN_DATA_SIZE_SHIFT	4
+#define INSN_1_BYTE		0x00000010
+#define INSN_2_BYTE		0x00000020
+#define INSN_4_BYTE		0x00000030
+#define INSN_8_BYTE		0x00000040
+#define INSN_16_BYTE		0x00000050
+
 /* Instruction is actually a macro.  It should be ignored by the
    disassembler, and requires special treatment by the assembler.  */
 #define INSN_MACRO		0xffffffff

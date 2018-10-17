@@ -1,3 +1,48 @@
+2018-10-04  Jim Wilson  <jimw@sifive.com>
+
+	* elfnn-riscv.c (riscv_elf_size_dynamic_sections): In dynobj->sections
+	loop, handle htab->sdyntdata section.
+
+2018-09-27  Jim Wilson  <jimw@sifive.com>
+
+	* elfnn-riscv.c (riscv_init_pcgp_relocs): Add explanatory comment.
+	(riscv_free_pcgp_relocs, riscv_record_pcgp_reloc): Likewise.
+	(riscv_find_pcgp_hi_reloc, riscv_reocrd_pcgp_lo_reloc): Likewise.
+	(riscv_find_pcgp_lo_reloc): Likewise.
+	(riscv_delete_pcgp_hi_reloc, riscv_use_pcgp_hi_reloc): Delete.
+	(riscv_delete_pcgp_lo_reloc): Likewise.
+	(_bfd_riscv_relax_pc): Don't call riscv_use_pcgp_hi_reloc. Replace
+	calls to riscv_delete_pcgp_lo_reloc and riscv_delete_pcgp_hi_reloc
+	with TRUE.  Mark abfd arg as ATTRIBUTE_UNUSED.
+
+2018-09-25  Jim Wilson  <jimw@sifive.com>
+
+	* elfnn-riscv.c (riscv_make_plt_header): New arg output_bfd.  Change
+	return type to bfd_boolean.  If	EF_RISCV_RVE call _bfd_error_handler
+	and return FALSE.  Return TRUE at end.
+	(riscv_make_plt_entry): Likewise.
+	(riscv_elf_finish_dynamic_symbol): Update call to riscv_make_plt_entry.
+	(riscv_elf_finish_dynamic_sections): Update call to
+	riscv_make_plt_header.
+
+2018-09-24  Jim Wilson  <jimw@sifive.com>
+
+	* elfnn-riscv.c (_bfd_riscv_relax_pc) <R_RISCV_PCREL_LO12_I>: New local
+	hi_sec_off which is symbol address with addend subtracted.  Use in
+	riscv_find_pcgp_hi_reloc and riscv_record_pcgp_lo_reloc calls.
+
+	* elfnn-riscv.c (riscv_resolve_pcrel_lo_relocs): Add check for reloc
+	overflow with addend.  Use reloc_dangerous instead of reloc_overflow.
+	Add strings for the two errors handled here.
+	(riscv_elf_relocate_section) In case R_RISCV_PCREL_LO12_I, rewrite
+	comment.  Only give error with addend when used with section symbol.
+	In case bfd_reloc_dangerous, update error string.
+
+2018-08-02  Jim Wilson  <jimw@sifive.com>
+
+	* elfnn-riscv.c (riscv_elf_create_dynamic_sections): For .tdata.dyn,
+	add SEC_LINKER_CREATED flag.
+
 2018-07-18  Nick Clifton  <nickc@redhat.com>
 
 	2.31.1 Release point.

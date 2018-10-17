@@ -169,11 +169,20 @@ riscv_elf_got_plt_val (bfd_vma plt_index, struct bfd_link_info *info)
 
 /* Generate a PLT header.  */
 
-static void
-riscv_make_plt_header (bfd_vma gotplt_addr, bfd_vma addr, uint32_t *entry)
+static bfd_boolean
+riscv_make_plt_header (bfd *output_bfd, bfd_vma gotplt_addr, bfd_vma addr,
+		       uint32_t *entry)
 {
   bfd_vma gotplt_offset_high = RISCV_PCREL_HIGH_PART (gotplt_addr, addr);
   bfd_vma gotplt_offset_low = RISCV_PCREL_LOW_PART (gotplt_addr, addr);
+
+  /* RVE has no t3 register, so this won't work, and is not supported.  */
+  if (elf_elfheader (output_bfd)->e_flags & EF_RISCV_RVE)
+    {
+      _bfd_error_handler (_("%pB: warning: RVE PLT generation not supported"),
+			  output_bfd);
+      return FALSE;
+    }
 
   /* auipc  t2, %hi(.got.plt)
      sub    t1, t1, t3		     # shifted .got.plt offset + hdr size + 12
@@ -192,13 +201,24 @@ riscv_make_plt_header (bfd_vma gotplt_addr, bfd_vma addr, uint32_t *entry)
   entry[5] = RISCV_ITYPE (SRLI, X_T1, X_T1, 4 - RISCV_ELF_LOG_WORD_BYTES);
   entry[6] = RISCV_ITYPE (LREG, X_T0, X_T0, RISCV_ELF_WORD_BYTES);
   entry[7] = RISCV_ITYPE (JALR, 0, X_T3, 0);
+
+  return TRUE;
 }
 
 /* Generate a PLT entry.  */
 
-static void
-riscv_make_plt_entry (bfd_vma got, bfd_vma addr, uint32_t *entry)
+static bfd_boolean
+riscv_make_plt_entry (bfd *output_bfd, bfd_vma got, bfd_vma addr,
+		      uint32_t *entry)
 {
+  /* RVE has no t3 register, so this won't work, and is not supported.  */
+  if (elf_elfheader (output_bfd)->e_flags & EF_RISCV_RVE)
+    {
+      _bfd_error_handler (_("%pB: warning: RVE PLT generation not supported"),
+			  output_bfd);
+      return FALSE;
+    }
+
   /* auipc  t3, %hi(.got.plt entry)
      l[w|d] t3, %lo(.got.plt entry)(t3)
      jalr   t1, t3
@@ -208,6 +228,8 @@ riscv_make_plt_entry (bfd_vma got, bfd_vma addr, uint32_t *entry)
   entry[1] = RISCV_ITYPE (LREG,  X_T3, X_T3, RISCV_PCREL_LOW_PART (got, addr));
   entry[2] = RISCV_ITYPE (JALR, X_T1, X_T3, 0);
   entry[3] = RISCV_NOP;
+
+  return TRUE;
 }
 
 /* Create an entry in an RISC-V ELF linker hash table.  */
@@ -353,7 +375,8 @@ riscv_elf_create_dynamic_sections (bfd *dynobj,
     {
       htab->sdyntdata =
 	bfd_make_section_anyway_with_flags (dynobj, ".tdata.dyn",
-					    SEC_ALLOC | SEC_THREAD_LOCAL);
+					    (SEC_ALLOC | SEC_THREAD_LOCAL
+					     | SEC_LINKER_CREATED));
     }
 
   if (!htab->elf.splt || !htab->elf.srelplt || !htab->elf.sdynbss
@@ -1251,7 +1274,8 @@ riscv_elf_size_dynamic_sections (bfd *output_bfd, struct bfd_link_info *info)
 	  || s == htab->elf.sgot
 	  || s == htab->elf.sgotplt
 	  || s == htab->elf.sdynbss
-	  || s == htab->elf.sdynrelro)
+	  || s == htab->elf.sdynrelro
+	  || s == htab->sdyntdata)
 	{
 	  /* Strip this section if we don't need it; see the
 	     comment below.  */
@@ -1650,11 +1674,16 @@ riscv_resolve_pcrel_lo_relocs (riscv_pcrel_relocs *p)
 
       riscv_pcrel_hi_reloc search = {r->addr, 0};
       riscv_pcrel_hi_reloc *entry = htab_find (p->hi_relocs, &search);
-      if (entry == NULL)
+      if (entry == NULL
+	  /* Check for overflow into bit 11 when adding reloc addend.  */
+	  || (! (entry->value & 0x800)
+	      && ((entry->value + r->reloc->r_addend) & 0x800)))
 	{
-	  ((*r->info->callbacks->reloc_overflow)
-	   (r->info, NULL, r->name, r->howto->name, (bfd_vma) 0,
-	    input_bfd, r->input_section, r->reloc->r_offset));
+	  char *string = (entry == NULL
+			  ? "%pcrel_lo missing matching %pcrel_hi"
+			  : "%pcrel_lo overflow with an addend");
+	  (*r->info->callbacks->reloc_dangerous)
+	    (r->info, string, input_bfd, r->input_section, r->reloc->r_offset);
 	  return TRUE;
 	}
 
@@ -2025,11 +2054,12 @@ riscv_elf_relocate_section (bfd *output_bfd,
 
 	case R_RISCV_PCREL_LO12_I:
 	case R_RISCV_PCREL_LO12_S:
-	  /* Addends are not allowed, because then riscv_relax_delete_bytes
-	     would have to search through all relocs to update the addends.
-	     Also, riscv_resolve_pcrel_lo_relocs does not support addends
-	     when searching for a matching hi reloc.  */
-	  if (rel->r_addend)
+	  /* We don't allow section symbols plus addends as the auipc address,
+	     because then riscv_relax_delete_bytes would have to search through
+	     all relocs to update these addends.  This is also ambiguous, as
+	     we do allow offsets to be added to the target address, which are
+	     not to be used to find the auipc address.  */
+	  if ((ELF_ST_TYPE (sym->st_info) == STT_SECTION) && rel->r_addend)
 	    {
 	      r = bfd_reloc_dangerous;
 	      break;
@@ -2287,8 +2317,8 @@ riscv_elf_relocate_section (bfd *output_bfd,
 
 	case bfd_reloc_dangerous:
 	  info->callbacks->reloc_dangerous
-	    (info, "%pcrel_lo with addend", input_bfd, input_section,
-	     rel->r_offset);
+	    (info, "%pcrel_lo section symbol with an addend", input_bfd,
+	     input_section, rel->r_offset);
 	  break;
 
 	default:
@@ -2346,8 +2376,11 @@ riscv_elf_finish_dynamic_symbol (bfd *output_bfd,
       loc = htab->elf.splt->contents + h->plt.offset;
 
       /* Fill in the PLT entry itself.  */
-      riscv_make_plt_entry (got_address, header_address + h->plt.offset,
-			    plt_entry);
+      if (! riscv_make_plt_entry (output_bfd, got_address,
+				  header_address + h->plt.offset,
+				  plt_entry))
+	return FALSE;
+
       for (i = 0; i < PLT_ENTRY_INSNS; i++)
 	bfd_put_32 (output_bfd, plt_entry[i], loc + 4*i);
 
@@ -2522,8 +2555,11 @@ riscv_elf_finish_dynamic_sections (bfd *output_bfd,
 	{
 	  int i;
 	  uint32_t plt_header[PLT_HEADER_INSNS];
-	  riscv_make_plt_header (sec_addr (htab->elf.sgotplt),
-				 sec_addr (splt), plt_header);
+	  ret = riscv_make_plt_header (output_bfd,
+				       sec_addr (htab->elf.sgotplt),
+				       sec_addr (splt), plt_header);
+	  if (!ret)
+	    return ret;
 
 	  for (i = 0; i < PLT_HEADER_INSNS; i++)
 	    bfd_put_32 (output_bfd, plt_header[i], splt->contents + 4*i);
@@ -2795,6 +2831,8 @@ typedef struct
   riscv_pcgp_lo_reloc *lo;
 } riscv_pcgp_relocs;
 
+/* Initialize the pcgp reloc info in P.  */
+
 static bfd_boolean
 riscv_init_pcgp_relocs (riscv_pcgp_relocs *p)
 {
@@ -2802,6 +2840,8 @@ riscv_init_pcgp_relocs (riscv_pcgp_relocs *p)
   p->lo = NULL;
   return TRUE;
 }
+
+/* Free the pcgp reloc info in P.  */
 
 static void
 riscv_free_pcgp_relocs (riscv_pcgp_relocs *p,
@@ -2826,6 +2866,10 @@ riscv_free_pcgp_relocs (riscv_pcgp_relocs *p,
     }
 }
 
+/* Record pcgp hi part reloc info in P, using HI_SEC_OFF as the lookup index.
+   The HI_ADDEND, HI_ADDR, HI_SYM, and SYM_SEC args contain info required to
+   relax the corresponding lo part reloc.  */
+
 static bfd_boolean
 riscv_record_pcgp_hi_reloc (riscv_pcgp_relocs *p, bfd_vma hi_sec_off,
 			    bfd_vma hi_addend, bfd_vma hi_addr,
@@ -2844,6 +2888,9 @@ riscv_record_pcgp_hi_reloc (riscv_pcgp_relocs *p, bfd_vma hi_sec_off,
   return TRUE;
 }
 
+/* Look up hi part pcgp reloc info in P, using HI_SEC_OFF as the lookup index.
+   This is used by a lo part reloc to find the corresponding hi part reloc.  */
+
 static riscv_pcgp_hi_reloc *
 riscv_find_pcgp_hi_reloc(riscv_pcgp_relocs *p, bfd_vma hi_sec_off)
 {
@@ -2855,31 +2902,8 @@ riscv_find_pcgp_hi_reloc(riscv_pcgp_relocs *p, bfd_vma hi_sec_off)
   return NULL;
 }
 
-static bfd_boolean
-riscv_delete_pcgp_hi_reloc(riscv_pcgp_relocs *p, bfd_vma hi_sec_off)
-{
-  bfd_boolean out = FALSE;
-  riscv_pcgp_hi_reloc *c;
-
-  for (c = p->hi; c != NULL; c = c->next)
-      if (c->hi_sec_off == hi_sec_off)
-	out = TRUE;
-
-  return out;
-}
-
-static bfd_boolean
-riscv_use_pcgp_hi_reloc(riscv_pcgp_relocs *p, bfd_vma hi_sec_off)
-{
-  bfd_boolean out = FALSE;
-  riscv_pcgp_hi_reloc *c;
-
-  for (c = p->hi; c != NULL; c = c->next)
-    if (c->hi_sec_off == hi_sec_off)
-      out = TRUE;
-
-  return out;
-}
+/* Record pcgp lo part reloc info in P, using HI_SEC_OFF as the lookup info.
+   This is used to record relocs that can't be relaxed.  */
 
 static bfd_boolean
 riscv_record_pcgp_lo_reloc (riscv_pcgp_relocs *p, bfd_vma hi_sec_off)
@@ -2893,6 +2917,9 @@ riscv_record_pcgp_lo_reloc (riscv_pcgp_relocs *p, bfd_vma hi_sec_off)
   return TRUE;
 }
 
+/* Look up lo part pcgp reloc info in P, using HI_SEC_OFF as the lookup index.
+   This is used by a hi part reloc to find the corresponding lo part reloc.  */
+
 static bfd_boolean
 riscv_find_pcgp_lo_reloc (riscv_pcgp_relocs *p, bfd_vma hi_sec_off)
 {
@@ -2902,14 +2929,6 @@ riscv_find_pcgp_lo_reloc (riscv_pcgp_relocs *p, bfd_vma hi_sec_off)
     if (c->hi_sec_off == hi_sec_off)
       return TRUE;
   return FALSE;
-}
-
-static bfd_boolean
-riscv_delete_pcgp_lo_reloc (riscv_pcgp_relocs *p ATTRIBUTE_UNUSED,
-			    bfd_vma lo_sec_off ATTRIBUTE_UNUSED,
-			    size_t bytes ATTRIBUTE_UNUSED)
-{
-  return TRUE;
 }
 
 typedef bfd_boolean (*relax_func_t) (bfd *, asection *, asection *,
@@ -3195,7 +3214,7 @@ _bfd_riscv_relax_align (bfd *abfd, asection *sec,
 /* Relax PC-relative references to GP-relative references.  */
 
 static bfd_boolean
-_bfd_riscv_relax_pc  (bfd *abfd,
+_bfd_riscv_relax_pc  (bfd *abfd ATTRIBUTE_UNUSED,
 		      asection *sec,
 		      asection *sym_sec,
 		      struct bfd_link_info *link_info,
@@ -3219,22 +3238,22 @@ _bfd_riscv_relax_pc  (bfd *abfd,
     case R_RISCV_PCREL_LO12_I:
     case R_RISCV_PCREL_LO12_S:
       {
+	/* If the %lo has an addend, it isn't for the label pointing at the
+	   hi part instruction, but rather for the symbol pointed at by the
+	   hi part instruction.  So we must subtract it here for the lookup.
+	   It is still used below in the final symbol address.  */
+	bfd_vma hi_sec_off = symval - sec_addr (sym_sec) - rel->r_addend;
 	riscv_pcgp_hi_reloc *hi = riscv_find_pcgp_hi_reloc (pcgp_relocs,
-							    symval - sec_addr(sym_sec));
+							    hi_sec_off);
 	if (hi == NULL)
 	  {
-	    riscv_record_pcgp_lo_reloc (pcgp_relocs, symval - sec_addr(sym_sec));
+	    riscv_record_pcgp_lo_reloc (pcgp_relocs, hi_sec_off);
 	    return TRUE;
 	  }
 
 	hi_reloc = *hi;
 	symval = hi_reloc.hi_addr;
 	sym_sec = hi_reloc.sym_sec;
-	if (!riscv_use_pcgp_hi_reloc(pcgp_relocs, hi->hi_sec_off))
-	  _bfd_error_handler
-	    (_("%pB(%pA+%#" PRIx64 "): Unable to clear RISCV_PCREL_HI20 reloc "
-	       "for corresponding RISCV_PCREL_LO12 reloc"),
-	     abfd, sec, (uint64_t) rel->r_offset);
       }
       break;
 
@@ -3278,12 +3297,12 @@ _bfd_riscv_relax_pc  (bfd *abfd,
 	case R_RISCV_PCREL_LO12_I:
 	  rel->r_info = ELFNN_R_INFO (sym, R_RISCV_GPREL_I);
 	  rel->r_addend += hi_reloc.hi_addend;
-	  return riscv_delete_pcgp_lo_reloc (pcgp_relocs, rel->r_offset, 4);
+	  return TRUE;
 
 	case R_RISCV_PCREL_LO12_S:
 	  rel->r_info = ELFNN_R_INFO (sym, R_RISCV_GPREL_S);
 	  rel->r_addend += hi_reloc.hi_addend;
-	  return riscv_delete_pcgp_lo_reloc (pcgp_relocs, rel->r_offset, 4);
+	  return TRUE;
 
 	case R_RISCV_PCREL_HI20:
 	  riscv_record_pcgp_hi_reloc (pcgp_relocs,
@@ -3295,7 +3314,7 @@ _bfd_riscv_relax_pc  (bfd *abfd,
 	  /* We can delete the unnecessary AUIPC and reloc.  */
 	  rel->r_info = ELFNN_R_INFO (0, R_RISCV_DELETE);
 	  rel->r_addend = 4;
-	  return riscv_delete_pcgp_hi_reloc (pcgp_relocs, rel->r_offset);
+	  return TRUE;
 
 	default:
 	  abort ();

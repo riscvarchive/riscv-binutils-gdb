@@ -1,3 +1,28 @@
+2018-10-02  Palmer Dabbelt  <palmer@sifive.com>
+
+	* riscv-opc.c (riscv_opcodes) <fence.tso>: New opcode.
+
+2018-09-17  Kito Cheng  <kito@andestech.com>
+
+	* riscv-opc.c (riscv_opcodes): Adjust the order of ble and bleu.
+
+2018-08-31  Kito Cheng  <kito@andestech.com>
+
+	* riscv-opc.c (riscv_opcodes): Fix incorrect subset info for
+	compressed floating point instructions.
+
+2018-08-30  Kito Cheng  <kito@andestech.com>
+
+	* riscv-dis.c (riscv_disassemble_insn): Check XLEN by
+	riscv_opcode.xlen_requirement.
+	* riscv-opc.c (riscv_opcodes): Update for struct change.
+
+2018-07-30  Jim Wilson  <jimw@sifive.com>
+
+	* riscv-dis.c (riscv_disassemble_insn): Set insn_type and data_size
+	fields.
+	* riscv-opc.c (riscv_opcodes): Use new INSN_* flags to annotate insns.
+
 2018-07-18  Nick Clifton  <nickc@redhat.com>
 
 	2.31.1 Release point.

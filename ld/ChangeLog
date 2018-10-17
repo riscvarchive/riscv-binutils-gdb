@@ -1,3 +1,25 @@
+2018-10-15  Jim Wilson  <jimw@sifive.com>
+
+	* emulparams/elf32lriscv-defs.sh (DATA_START_SYMBOLS): New.
+	(SDATA_START_SYMBOLS): Define __SDATA_BEGIN__.  Don't define
+	__global_pointer$.
+	(OTHER_END_SYMBOLS): New.  Define __global_pointer$.
+	* testsuite/ld-riscv-elf/pcrel-lo-addend-2.d (#ld): Add --no-relax.
+
+2018-09-24  Jim Wilson  <jimw@sifive.com>
+
+	* testsuite/ld-riscv-elf/ld-riscv-elf.exp: Run pcrel-lo-addend-2.
+	* testsuite/ld-riscv/elf/ld-riscv-elf/pcrel-lo-addend-2.d: New.
+	* testsuite/ld-riscv/elf/ld-riscv-elf/pcrel-lo-addend-2.s: New.
+	* testsuite/ld-riscv/elf/ld-riscv-elf/pcrel-lo-addend.d: Update name
+	and error string.
+
+2018-09-20  Kito Cheng  <kito@andestech.com>
+
+	* emulparams/elf32lriscv.sh: Correct the library search path.
+	* emulparams/elf32lriscv_ilp32.sh: Likewise.
+	* emulparams/elf32lriscv_ilp32f.sh: Likewise.
+
 2018-07-18  Nick Clifton  <nickc@redhat.com>
 
 	2.31.1 Release point.

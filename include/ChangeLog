@@ -1,3 +1,20 @@
+2018-10-02  Palmer Dabbelt  <palmer@sifive.com>
+
+	* opcode/riscv-opc.h (MATCH_FENCE_TSO): New define.
+	(MASK_FENCE_TSO): Likewise.
+
+2018-08-30  Kito Cheng  <kito@andestech.com>
+
+	* opcode/riscv.h (MAX_SUBSET_NUM): New.
+	(riscv_opcode): Add xlen_requirement field and change type of
+	subset.
+
+2018-07-30  Jim Wilson  <jimw@sifive.com>
+
+	* opcode/riscv.h (INSN_TYPE, INSN_BRANCH, INSN_CONDBRANCH, INSN_JSR)
+	(INSN_DREF, INSN_DATA_SIZE, INSN_DATA_SIZE_SHIFT, INSN_1_BYTE)
+	(INSN_2_BYTE, INSN_4_BYTE, INSN_8_BYTE, INSN_16_BYTE): New.
+
 2018-07-18  Nick Clifton  <nickc@redhat.com>
 
 	2.31.1 Release point.
