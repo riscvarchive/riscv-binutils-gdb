@@ -549,11 +549,15 @@ validate_riscv_insn (const struct riscv_opcode *opc)
       case 'V': /* RVV */
 	switch (c = *p++)
 	  {
+	  case 'c': /* fallthru opcode encoded scalar dest */
 	  case 'd': USE_BITS (OP_MASK_RD, OP_SH_RD); break;
 	  case 's': USE_BITS (OP_MASK_RS1, OP_SH_RS1); break;
 	  case 't': USE_BITS (OP_MASK_RS2, OP_SH_RS2); break;
 	  case 'u': USE_BITS (OP_MASK_RS3, OP_SH_RS3); break;
 	  case 'm': USE_BITS (OP_MASK_VMASK, OP_SH_VMASK); break;
+	  case 'M': USE_BITS (OP_MASK_VMEMMASK, OP_SH_VMEMMASK); break; /* Memory op masks are in 26..25 */
+	  case 'F': break; /* opcode encoded false mask */
+	  case 'T': break; /* opcode encoded true mask */
 	  case 'i': USE_BITS (OP_MASK_VIMM, OP_SH_VIMM); break;
 	  case 'o': USE_BITS (OP_MASK_RS3, OP_SH_RS3); break;
 	  case 'q': USE_BITS (OP_MASK_RD, OP_SH_RD); break;
@@ -1240,6 +1244,7 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
   char *argsStart;
   unsigned int regno;
   char save_c = 0;
+  char vec_save_char = 0;
   int argnum;
   const struct percent_op_match *p;
   const char *error = "unrecognized opcode";
@@ -1501,6 +1506,24 @@ rvc_lui:
 		    break;
 		  INSERT_OPERAND (RD, *ip, regno);
 		  continue;
+		case 'c': /* VD.s */
+		  if (s[2] != '.')
+        break;
+      vec_save_char = s[2];
+      s[2] = ' ';
+		  if (!reg_lookup (&s, RCLASS_VPR, &regno)) {
+        s[2] = vec_save_char;
+		    break;
+      }
+		  INSERT_OPERAND (RD, *ip, regno);
+      s[0] = vec_save_char;
+		  if (*s == '.')
+		    ++s;
+      else break;
+		  if (*s == 's')
+		    ++s;
+      else break;
+		  continue;
 		case 's': /* VS1 */
 		  if (!reg_lookup (&s, RCLASS_VPR, &regno))
 		    break;
@@ -1520,6 +1543,23 @@ rvc_lui:
 		  if (arg_lookup (&s, riscv_vmask, ARRAY_SIZE (riscv_vmask), &regno))
 		    {
 		      INSERT_OPERAND (VMASK, *ip, regno);
+		      continue;
+		    }
+		  break;
+		case 'T': /* forced true mask v0.t */
+		  if (arg_lookup (&s, riscv_vmask, ARRAY_SIZE (riscv_vmask), &regno))
+        if (regno == 0x3)
+          continue; //opcode already includes it
+      break;
+		case 'F': /* forced false mask v0.f */
+		  if (arg_lookup (&s, riscv_vmask, ARRAY_SIZE (riscv_vmask), &regno))
+        if (regno == 0x2)
+          continue; //opcode already includes it
+      break;
+		case 'M': /* vmask for memory ops*/
+		  if (arg_lookup (&s, riscv_vmask, ARRAY_SIZE (riscv_vmask), &regno))
+		    {
+		      INSERT_OPERAND (VMEMMASK, *ip, regno);
 		      continue;
 		    }
 		  break;

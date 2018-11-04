@@ -54,7 +54,7 @@ static const char * const riscv_pred_succ[16] =
 
 static const char * const riscv_vmask[4] =
 {
-  0, "v1t", "v1f", 0
+  0, 0, "v0.f", "v0.t"
 };
 
 #define RVC_JUMP_BITS 11
@@ -256,6 +256,8 @@ static const char * const riscv_vmask[4] =
 
 #define OP_MASK_VMASK 0x3
 #define OP_SH_VMASK 12
+#define OP_MASK_VMEMMASK 0x3
+#define OP_SH_VMEMMASK 25
 #define OP_MASK_VIMM 0xff
 #define OP_SH_VIMM 20
 

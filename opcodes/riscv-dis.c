@@ -220,6 +220,10 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	      print (info->stream, "%s",
 		     riscv_vpr_names[EXTRACT_OPERAND (RD, l)]);
 	      break;
+		  case 'c': /* VD.s */
+	      print (info->stream, "%s.s",
+		     riscv_vpr_names[EXTRACT_OPERAND (RD, l)]);
+	      break;
 	    case 's': /* RS1 */
 	      print (info->stream, "%s",
 		     riscv_vpr_names[EXTRACT_OPERAND (RS1, l)]);
@@ -234,6 +238,16 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	      break;
 	    case 'm': /* mask */
 	      arg_print (info, EXTRACT_OPERAND (VMASK, l),
+		     riscv_vmask, ARRAY_SIZE (riscv_vmask));
+              break;
+		  case 'T': /* forced true mask v0.t */
+	      print (info->stream, "v0.t");
+        break;
+		  case 'F': /* forced true mask v0.f */
+	      print (info->stream, "v0.f");
+        break;
+		  case 'M': /* vmask for memory ops*/
+	      arg_print (info, EXTRACT_OPERAND (VMEMMASK, l),
 		     riscv_vmask, ARRAY_SIZE (riscv_vmask));
               break;
 	    case 'i':
