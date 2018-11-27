@@ -1,0 +1,16 @@
+2018-11-26  Jim Wilson  <jimw@sifive.com>
+
+	* sim-main.c (execute_a): Check xlen_requirement not subset.
+	(step_once): Likewise.
+	(execute_one): Check xlen_requirement against cpu instead of subset.
+	New local index.  Set to index of last non-zero char in subset.
+	Delete local subset.  Use op->subset[index] instead of subset.
+	Delete '3' and '6' support from switch.
+
+2015-04-27  Mike Frysinger  <vapier@gentoo.org>
+	    Kito Cheng, Kuan-Lin Chen, Monk Chiang, Palmer Dabbelt, Jim Wilson
+
+	* configure.ac, interp.c, Makefile.in, README, README-ISA,
+	sim-main.c, sim-main.h: New files for example simulator.
+	* aclocal.m4, config.in, configure: Regenerated.
+
