@@ -2165,7 +2165,7 @@ md_assemble (char *str)
 
   if (error)
     {
-      as_bad ("%s `%s'", error, str);
+      as_bad ("%s '%s'", error, str);
       return;
     }
 
