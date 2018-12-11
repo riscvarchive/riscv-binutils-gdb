@@ -751,6 +751,9 @@ const struct riscv_opcode riscv_opcodes[] =
 {"wfi",       "I",   "",     MATCH_WFI, MASK_WFI, match_opcode, 0 },
 
 /* Vector instruction subset */
+{"vconfig",   "V",   "d,s,Vi",  MATCH_VCONFIG, MASK_VCONFIG, match_opcode, 0 },
+{"vconfig",   "V",   "Vi",  MATCH_VCONFIG, MASK_VCONFIG | MASK_RD | MASK_RS1, match_opcode, 0 },
+{"vsetvl",    "V",   "d,s,Vi",  MATCH_VSETVL, MASK_VSETVL, match_opcode, 0 },
 {"vadd",      "V",   "Vd,Vs,Vt",  MATCH_VADD | MATCH_VMASK_ALL, MASK_VADD | MASK_VMASK, match_opcode, 0 },
 {"vadd",      "V",   "Vc,Vs,Vt",  MATCH_VADD, MASK_VADD | MASK_VMASK, match_opcode, 0 },
 {"vadd",      "V",   "Vd,Vs,Vt,Vm",  MATCH_VADD, MASK_VADD, match_opcode, 0 },
