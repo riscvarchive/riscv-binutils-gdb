@@ -549,7 +549,7 @@ validate_riscv_insn (const struct riscv_opcode *opc)
       case 'V': /* RVV */
 	switch (c = *p++)
 	  {
-	  case 'c': /* fallthru opcode encoded scalar dest */
+	  case 'c': used_bits |= ENCODE_RVV_CONF_IMM (-1U); break;
 	  case 'd': USE_BITS (OP_MASK_RD, OP_SH_RD); break;
 	  case 's': USE_BITS (OP_MASK_RS1, OP_SH_RS1); break;
 	  case 't': USE_BITS (OP_MASK_RS2, OP_SH_RS2); break;
@@ -1506,23 +1506,7 @@ rvc_lui:
 		    break;
 		  INSERT_OPERAND (RD, *ip, regno);
 		  continue;
-		case 'c': /* VD.s */
-		  if (s[2] != '.')
-        break;
-      vec_save_char = s[2];
-      s[2] = ' ';
-		  if (!reg_lookup (&s, RCLASS_VPR, &regno)) {
-        s[2] = vec_save_char;
-		    break;
-      }
-		  INSERT_OPERAND (RD, *ip, regno);
-      s[0] = vec_save_char;
-		  if (*s == '.')
-		    ++s;
-      else break;
-		  if (*s == 's')
-		    ++s;
-      else break;
+		case 'c': /* config imm */
 		  continue;
 		case 's': /* VS1 */
 		  if (!reg_lookup (&s, RCLASS_VPR, &regno))
@@ -1548,12 +1532,12 @@ rvc_lui:
 		  break;
 		case 'T': /* forced true mask v0.t */
 		  if (arg_lookup (&s, riscv_vmask, ARRAY_SIZE (riscv_vmask), &regno))
-        if (regno == 0x3)
+        if (regno == 0x1)
           continue; //opcode already includes it
       break;
 		case 'F': /* forced false mask v0.f */
 		  if (arg_lookup (&s, riscv_vmask, ARRAY_SIZE (riscv_vmask), &regno))
-        if (regno == 0x2)
+        if (regno == 0x0)
           continue; //opcode already includes it
       break;
 		case 'M': /* vmask for memory ops*/
@@ -1577,10 +1561,10 @@ rvc_lui:
 		    continue;
 		  if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
 		      || imm_expr->X_op != O_constant
-		      || !VALID_RVV_LOAD_IMM (imm_expr->X_add_number))
+		      || !VALID_RVV_MEM_IMM (imm_expr->X_add_number))
 		    break;
 		  ip->insn_opcode |=
-		    ENCODE_RVV_LOAD_IMM (imm_expr->X_add_number);
+		    ENCODE_RVV_MEM_IMM (imm_expr->X_add_number);
 	          s = expr_end;
 		  continue;
 		case 'q': /* Vector store offset */
@@ -1588,10 +1572,10 @@ rvc_lui:
 		    continue;
 		  if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
 		      || imm_expr->X_op != O_constant
-		      || !VALID_RVV_STORE_IMM (imm_expr->X_add_number))
+		      || !VALID_RVV_MEM_IMM (imm_expr->X_add_number))
 		    break;
 		  ip->insn_opcode |=
-		    ENCODE_RVV_STORE_IMM (imm_expr->X_add_number);
+		    ENCODE_RVV_MEM_IMM (imm_expr->X_add_number);
 	          s = expr_end;
 		  continue;
 		default:

@@ -220,9 +220,11 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	      print (info->stream, "%s",
 		     riscv_vpr_names[EXTRACT_OPERAND (RD, l)]);
 	      break;
-		  case 'c': /* VD.s */
+		  case 'c': /* vconfig imm */
+        /*
 	      print (info->stream, "%s.s",
 		     riscv_vpr_names[EXTRACT_OPERAND (RD, l)]);
+         */
 	      break;
 	    case 's': /* RS1 */
 	      print (info->stream, "%s",
@@ -254,10 +256,10 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	      print (info->stream, "%d", (int)EXTRACT_RVV_IMM (l));
 	      break;
 	    case 'o':
-	      print (info->stream, "%d", (int)EXTRACT_RVV_LOAD_IMM (l));
+	      print (info->stream, "%d", (int)EXTRACT_RVV_MEM_IMM (l));
 	      break;
 	    case 'q':
-	      print (info->stream, "%d", (int)EXTRACT_RVV_STORE_IMM (l));
+	      print (info->stream, "%d", (int)EXTRACT_RVV_MEM_IMM (l));
 	      break;
 	    }
 	  break;

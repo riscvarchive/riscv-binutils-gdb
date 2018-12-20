@@ -54,7 +54,7 @@ static const char * const riscv_pred_succ[16] =
 
 static const char * const riscv_vmask[4] =
 {
-  0, 0, "v0.f", "v0.t"
+  "v0.f", "v0.t", 0, 0
 };
 
 #define RVC_JUMP_BITS 11
@@ -102,12 +102,12 @@ static const char * const riscv_vmask[4] =
   ((RV_X(x, 3, 2) << 1) | (RV_X(x, 10, 2) << 3) | (RV_X(x, 2, 1) << 5) | (RV_X(x, 5, 2) << 6) | (-RV_X(x, 12, 1) << 8))
 #define EXTRACT_RVC_J_IMM(x) \
   ((RV_X(x, 3, 3) << 1) | (RV_X(x, 11, 1) << 4) | (RV_X(x, 2, 1) << 5) | (RV_X(x, 7, 1) << 6) | (RV_X(x, 6, 1) << 7) | (RV_X(x, 9, 2) << 8) | (RV_X(x, 8, 1) << 10) | (-RV_X(x, 12, 1) << 11))
+#define EXTRACT_RVV_MASK(x) \
+  (RV_X(x, 25, 2))
 #define EXTRACT_RVV_IMM(x) \
-  (RV_X(x, 20, 8))
-#define EXTRACT_RVV_LOAD_IMM(x) \
-  (RV_X(x, 27, 5))
-#define EXTRACT_RVV_STORE_IMM(x) \
-  (RV_X(x, 7, 5))
+  (RV_X(x, 20, 5))
+#define EXTRACT_RVV_MEM_IMM(x) \
+  (RV_X(x, 20, 5))
 
 #define ENCODE_ITYPE_IMM(x) \
   (RV_X(x, 0, 12) << 20)
@@ -146,11 +146,11 @@ static const char * const riscv_vmask[4] =
 #define ENCODE_RVC_J_IMM(x) \
   ((RV_X(x, 1, 3) << 3) | (RV_X(x, 4, 1) << 11) | (RV_X(x, 5, 1) << 2) | (RV_X(x, 6, 1) << 7) | (RV_X(x, 7, 1) << 6) | (RV_X(x, 8, 2) << 9) | (RV_X(x, 10, 1) << 8) | (RV_X(x, 11, 1) << 12))
 #define ENCODE_RVV_IMM(x) \
-  (RV_X(x, 0, 8) << 20)
-#define ENCODE_RVV_LOAD_IMM(x) \
-  (RV_X(x, 0, 5) << 27)
-#define ENCODE_RVV_STORE_IMM(x) \
-  (RV_X(x, 0, 5) << 7)
+  (RV_X(x, 0, 5) << 20)
+#define ENCODE_RVV_MEM_IMM(x) \
+  (RV_X(x, 0, 5) << 20)
+#define ENCODE_RVV_CONF_IMM(x) \
+  ((RV_X(x, 0, 3) << 12) | (RV_X(x, 3, 7) << 20))
 
 #define VALID_ITYPE_IMM(x) (EXTRACT_ITYPE_IMM(ENCODE_ITYPE_IMM(x)) == (x))
 #define VALID_STYPE_IMM(x) (EXTRACT_STYPE_IMM(ENCODE_STYPE_IMM(x)) == (x))
@@ -171,8 +171,7 @@ static const char * const riscv_vmask[4] =
 #define VALID_RVC_B_IMM(x) (EXTRACT_RVC_B_IMM(ENCODE_RVC_B_IMM(x)) == (x))
 #define VALID_RVC_J_IMM(x) (EXTRACT_RVC_J_IMM(ENCODE_RVC_J_IMM(x)) == (x))
 #define VALID_RVV_IMM(x) (EXTRACT_RVV_IMM(ENCODE_RVV_IMM(x)) == (x))
-#define VALID_RVV_LOAD_IMM(x) (EXTRACT_RVV_LOAD_IMM(ENCODE_RVV_LOAD_IMM(x)) == (x))
-#define VALID_RVV_STORE_IMM(x) (EXTRACT_RVV_STORE_IMM(ENCODE_RVV_STORE_IMM(x)) == (x))
+#define VALID_RVV_MEM_IMM(x) (EXTRACT_RVV_MEM_IMM(ENCODE_RVV_MEM_IMM(x)) == (x))
 
 #define RISCV_RTYPE(insn, rd, rs1, rs2) \
   ((MATCH_ ## insn) | ((rd) << OP_SH_RD) | ((rs1) << OP_SH_RS1) | ((rs2) << OP_SH_RS2))
@@ -255,10 +254,10 @@ static const char * const riscv_vmask[4] =
 /* RVV fields.  */
 
 #define OP_MASK_VMASK 0x3
-#define OP_SH_VMASK 12
+#define OP_SH_VMASK 25
 #define OP_MASK_VMEMMASK 0x3
 #define OP_SH_VMEMMASK 25
-#define OP_MASK_VIMM 0xff
+#define OP_MASK_VIMM 0x1f
 #define OP_SH_VIMM 20
 
 /* ABI names for selected x-registers.  */
