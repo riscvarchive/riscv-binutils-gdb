@@ -775,6 +775,10 @@ const struct riscv_opcode riscv_opcodes[] =
 {"vaddw.ws",  "V",   "Vd,Vs,Vt",  MATCH_VADDW_WS | MATCH_VMASK_ALL, MASK_VADDW_WS | MASK_VMASK, match_opcode, INSN_ALIAS },
 {"vaddw.ws",  "V",   "Vd,Vs,Vt,Vm",  MATCH_VADDW_WS, MASK_VADDW_WS, match_opcode, 0 },
 
+{"vlb.s",       "V",   "Vd,Vo(s)",  MATCH_VLB_S, MASK_VLSB_S, match_opcode, 0 },
+{"vlb.v",       "V",   "Vd,Vo(s)",  MATCH_VLB_V | MATCH_VMASK_ALL, MASK_VLB_V | MASK_VMASK, match_opcode, INSN_ALIAS },
+{"vlb.v",       "V",   "Vd,Vo(s),Vm",  MATCH_VLB_V, MASK_VLB_V, match_opcode, 0 },
+
 
 /* Terminate the list.  */
 {0, 0, 0, 0, 0, 0, 0}

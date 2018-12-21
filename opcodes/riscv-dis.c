@@ -256,10 +256,16 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	      print (info->stream, "%d", (int)EXTRACT_RVV_IMM (l));
 	      break;
 	    case 'o':
-	      print (info->stream, "%d", (int)EXTRACT_RVV_MEM_IMM (l));
+	      print (info->stream, "%d", (int)EXTRACT_RVV_ULOAD_IMM (l));
+	      break;
+	    case 'n':
+	      print (info->stream, "%d", (int)EXTRACT_RVV_LOAD_IMM (l));
 	      break;
 	    case 'q':
-	      print (info->stream, "%d", (int)EXTRACT_RVV_MEM_IMM (l));
+	      print (info->stream, "%d", (int)EXTRACT_RVV_USTORE_IMM (l));
+	      break;
+	    case 'p':
+	      print (info->stream, "%d", (int)EXTRACT_RVV_STORE_IMM (l));
 	      break;
 	    }
 	  break;
