@@ -224,6 +224,7 @@ static const char * const riscv_vmask[4] =
 #define RISCV_IMM_REACH (1LL << RISCV_IMM_BITS)
 #define RISCV_BIGIMM_REACH (1LL << RISCV_BIGIMM_BITS)
 #define RISCV_RVC_IMM_REACH (1LL << 6)
+#define RISCV_RVV_IMM_REACH (1LL << 5)
 #define RISCV_RVV_UMEM_IMM_REACH (1LL << 7)
 #define RISCV_RVV_MEM_IMM_REACH (1LL << 2)
 #define RISCV_BRANCH_BITS RISCV_IMM_BITS

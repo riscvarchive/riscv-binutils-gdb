@@ -1509,6 +1509,13 @@ rvc_lui:
 		  INSERT_OPERAND (RD, *ip, regno);
 		  continue;
 		case 'c': /* config imm */
+		  if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
+		      || imm_expr->X_op != O_constant
+		      || imm_expr->X_add_number > (1LL << 10))
+		    break;
+		  ip->insn_opcode |=
+		    ENCODE_RVV_CONF_IMM (imm_expr->X_add_number);
+	          s = expr_end;
 		  continue;
 		case 's': /* VS1 */
 		  if (!reg_lookup (&s, RCLASS_VPR, &regno))
@@ -1552,7 +1559,8 @@ rvc_lui:
 		case 'i': /* VIMM */
 		  if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
 		      || imm_expr->X_op != O_constant
-		      || !VALID_RVV_IMM (imm_expr->X_add_number))
+		      || imm_expr->X_add_number >= (signed)RISCV_RVV_IMM_REACH/2
+		      || imm_expr->X_add_number < -(signed)RISCV_RVV_IMM_REACH/2)
 		    break;
 		  ip->insn_opcode |=
 		    ENCODE_RVV_IMM (imm_expr->X_add_number);
