@@ -550,18 +550,11 @@ validate_riscv_insn (const struct riscv_opcode *opc)
 	switch (c = *p++)
 	  {
 	  case 'c': used_bits |= ENCODE_RVV_CONF_IMM (-1U); break;
-	  case 'o': used_bits |= ENCODE_RVV_ULOAD_IMM (-1U); break;
-	  case 'n': used_bits |= ENCODE_RVV_LOAD_IMM (-1U); break;
-	  case 'q': used_bits |= ENCODE_RVV_USTORE_IMM (-1U); break;
-	  case 'p': used_bits |= ENCODE_RVV_STORE_IMM (-1U); break;
+	  case 'o': used_bits |= ENCODE_RVV_MEM_IMM (-1U); break;
 	  case 'd': USE_BITS (OP_MASK_RD, OP_SH_RD); break;
 	  case 's': USE_BITS (OP_MASK_RS1, OP_SH_RS1); break;
 	  case 't': USE_BITS (OP_MASK_RS2, OP_SH_RS2); break;
-	  case 'u': USE_BITS (OP_MASK_RS3, OP_SH_RS3); break;
 	  case 'm': USE_BITS (OP_MASK_VMASK, OP_SH_VMASK); break;
-	  case 'M': USE_BITS (OP_MASK_VMEMMASK, OP_SH_VMEMMASK); break; /* Memory op masks are in 26..25 */
-	  case 'F': break; /* opcode encoded false mask */
-	  case 'T': break; /* opcode encoded true mask */
 	  case 'i': USE_BITS (OP_MASK_VIMM, OP_SH_VIMM); break;
 	  default:
 	    as_bad (_("internal: bad RISC-V opcode (unknown operand type `V%c'): %s %s"),
@@ -1511,7 +1504,7 @@ rvc_lui:
 		case 'c': /* config imm */
 		  if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
 		      || imm_expr->X_op != O_constant
-		      || imm_expr->X_add_number > (1LL << 10))
+		      || imm_expr->X_add_number > (1LL << 11))
 		    break;
 		  ip->insn_opcode |=
 		    ENCODE_RVV_CONF_IMM (imm_expr->X_add_number);
@@ -1527,32 +1520,10 @@ rvc_lui:
 		    break;
 		  INSERT_OPERAND (RS2, *ip, regno);
 		  continue;
-		case 'u': /* VS3 */
-		  if (!reg_lookup (&s, RCLASS_VPR, &regno))
-		    break;
-		  INSERT_OPERAND (RS3, *ip, regno);
-		  continue;
 		case 'm': /* vmask */
 		  if (arg_lookup (&s, riscv_vmask, ARRAY_SIZE (riscv_vmask), &regno))
 		    {
 		      INSERT_OPERAND (VMASK, *ip, regno);
-		      continue;
-		    }
-		  break;
-		case 'T': /* forced true mask v0.t */
-		  if (arg_lookup (&s, riscv_vmask, ARRAY_SIZE (riscv_vmask), &regno))
-        if (regno == 0x1)
-          continue; //opcode already includes it
-      break;
-		case 'F': /* forced false mask v0.f */
-		  if (arg_lookup (&s, riscv_vmask, ARRAY_SIZE (riscv_vmask), &regno))
-        if (regno == 0x0)
-          continue; //opcode already includes it
-      break;
-		case 'M': /* vmask for memory ops*/
-		  if (arg_lookup (&s, riscv_vmask, ARRAY_SIZE (riscv_vmask), &regno))
-		    {
-		      INSERT_OPERAND (VMEMMASK, *ip, regno);
 		      continue;
 		    }
 		  break;
@@ -1566,52 +1537,15 @@ rvc_lui:
 		    ENCODE_RVV_IMM (imm_expr->X_add_number);
 	          s = expr_end;
 		  continue;
-		case 'o': /* vector unit-stride load offset */
+		case 'o': /* vector load/store offset */
 		  if (riscv_handle_implicit_zero_offset (imm_expr, s))
 		    continue;
 		  if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
 		      || imm_expr->X_op != O_constant
-		      || imm_expr->X_add_number >= (signed)RISCV_RVV_UMEM_IMM_REACH/2
-		      || imm_expr->X_add_number < -(signed)RISCV_RVV_UMEM_IMM_REACH/2)
+		      || imm_expr->X_add_number >= RISCV_RVV_MEM_IMM_REACH)
 		    break;
 		  ip->insn_opcode |=
-		    ENCODE_RVV_ULOAD_IMM (imm_expr->X_add_number);
-	          s = expr_end;
-		  continue;
-		case 'n': /* vector stride/index load offset */
-		  if (riscv_handle_implicit_zero_offset (imm_expr, s))
-		    continue;
-		  if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
-		      || imm_expr->X_op != O_constant
-		      || imm_expr->X_add_number >= (signed)RISCV_RVV_MEM_IMM_REACH/2
-		      || imm_expr->X_add_number < -(signed)RISCV_RVV_MEM_IMM_REACH/2)
-		    break;
-		  ip->insn_opcode |=
-		    ENCODE_RVV_LOAD_IMM (imm_expr->X_add_number);
-	          s = expr_end;
-		  continue;
-		case 'q': /* Vector unit-stride store offset */
-		  if (riscv_handle_implicit_zero_offset (imm_expr, s))
-		    continue;
-		  if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
-		      || imm_expr->X_op != O_constant
-		      || imm_expr->X_add_number >= (signed)RISCV_RVV_UMEM_IMM_REACH/2
-		      || imm_expr->X_add_number < -(signed)RISCV_RVV_UMEM_IMM_REACH/2)
-		    break;
-		  ip->insn_opcode |=
-		    ENCODE_RVV_USTORE_IMM (imm_expr->X_add_number);
-	          s = expr_end;
-		  continue;
-		case 'p': /* Vector stride/index store offset */
-		  if (riscv_handle_implicit_zero_offset (imm_expr, s))
-		    continue;
-		  if (my_getSmallExpression (imm_expr, imm_reloc, s, p)
-		      || imm_expr->X_op != O_constant
-		      || imm_expr->X_add_number >= (signed)RISCV_RVV_MEM_IMM_REACH/2
-		      || imm_expr->X_add_number < -(signed)RISCV_RVV_MEM_IMM_REACH/2)
-		    break;
-		  ip->insn_opcode |=
-		    ENCODE_RVV_STORE_IMM (imm_expr->X_add_number);
+		    ENCODE_RVV_MEM_IMM (imm_expr->X_add_number);
 	          s = expr_end;
 		  continue;
 		default:

@@ -231,38 +231,15 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	      print (info->stream, "%s",
 		     riscv_vpr_names[EXTRACT_OPERAND (RS2, l)]);
 	      break;
-	    case 'u': /* RS3 */
-	      print (info->stream, "%s",
-		     riscv_vpr_names[EXTRACT_OPERAND (RS3, l)]);
-	      break;
 	    case 'm': /* mask */
 	      arg_print (info, EXTRACT_OPERAND (VMASK, l),
-		     riscv_vmask, ARRAY_SIZE (riscv_vmask));
-              break;
-		  case 'T': /* forced true mask v0.t */
-	      print (info->stream, "v0.t");
-        break;
-		  case 'F': /* forced true mask v0.f */
-	      print (info->stream, "v0.f");
-        break;
-		  case 'M': /* vmask for memory ops*/
-	      arg_print (info, EXTRACT_OPERAND (VMEMMASK, l),
 		     riscv_vmask, ARRAY_SIZE (riscv_vmask));
               break;
 	    case 'i':
 	      print (info->stream, "%d", (int)EXTRACT_RVV_IMM (l));
 	      break;
 	    case 'o':
-	      print (info->stream, "%d", (int)EXTRACT_RVV_ULOAD_IMM (l));
-	      break;
-	    case 'n':
-	      print (info->stream, "%d", (int)EXTRACT_RVV_LOAD_IMM (l));
-	      break;
-	    case 'q':
-	      print (info->stream, "%d", (int)EXTRACT_RVV_USTORE_IMM (l));
-	      break;
-	    case 'p':
-	      print (info->stream, "%d", (int)EXTRACT_RVV_STORE_IMM (l));
+	      print (info->stream, "%d", (int)EXTRACT_RVV_MEM_IMM (l));
 	      break;
 	    }
 	  break;
