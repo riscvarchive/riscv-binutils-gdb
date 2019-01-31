@@ -4099,7 +4099,8 @@ copy_section (bfd *ibfd, sec_ptr isection, void *obfdarg)
 		*to++ = from[i];
 	      }
 
-	  size = (size + interleave - 1 - copy_byte) / interleave * copy_width;
+          int offset = (interleave + copy_byte - osection->lma) % interleave;
+	  size = (size + interleave - 1 - offset) / interleave * copy_width;
 	  osection->lma /= interleave;
 	  if (copy_byte < extra)
 	    osection->lma++;
