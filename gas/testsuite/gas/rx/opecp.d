@@ -1,4 +1,0 @@
-#objdump: -dr
-
-.*:     file format .*
-
