@@ -1809,11 +1809,11 @@ funct6 VM  VS2  VS1/RS1/IMM func3 VD   opcode
 #define MATCH_VREMUVX 0x88006057
 #define MASK_VREMUVX  0xfc00707f
 
-#define MATCH_VMVVV    0x5c000057
-#define MASK_VMVVV     0xfe00707f
-#define MATCH_VMVVX    0x5c004057
+#define MATCH_VMVVV    0x5e000057
+#define MASK_VMVVV     0xfff0707f
+#define MATCH_VMVVX    0x5e004057
 #define MASK_VMVVX     0xfff0707f
-#define MATCH_VMVVI    0x5c003057
+#define MATCH_VMVVI    0x5e003057
 #define MASK_VMVVI     0xfff0707f
 
 #define MATCH_VMERGEVV 0x5c000057
