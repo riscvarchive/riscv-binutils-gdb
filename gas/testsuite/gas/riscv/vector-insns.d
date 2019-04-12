@@ -1340,9 +1340,9 @@ Disassembly of section .text:
 [ 	]+[0-9a-f]+:[ 	]+f4862257[ 	]+vwmacc.vv[ 	]+v4,v12,v8,v0.t
 [ 	]+[0-9a-f]+:[ 	]+f485e257[ 	]+vwmacc.vx[ 	]+v4,a1,v8,v0.t
 [ 	]+[0-9a-f]+:[ 	]+fa862257[ 	]+vwmsacu.vv[ 	]+v4,v12,v8
-[ 	]+[0-9a-f]+:[ 	]+fa85f257[ 	]+vwmsacu.vx[ 	]+v4,a1,v8
+[ 	]+[0-9a-f]+:[ 	]+fa85e257[ 	]+vwmsacu.vx[ 	]+v4,a1,v8
 [ 	]+[0-9a-f]+:[ 	]+f8862257[ 	]+vwmsacu.vv[ 	]+v4,v12,v8,v0.t
-[ 	]+[0-9a-f]+:[ 	]+f885f257[ 	]+vwmsacu.vx[ 	]+v4,a1,v8,v0.t
+[ 	]+[0-9a-f]+:[ 	]+f885e257[ 	]+vwmsacu.vx[ 	]+v4,a1,v8,v0.t
 [ 	]+[0-9a-f]+:[ 	]+fe862257[ 	]+vwmsac.vv[ 	]+v4,v12,v8
 [ 	]+[0-9a-f]+:[ 	]+fe85e257[ 	]+vwmsac.vx[ 	]+v4,a1,v8
 [ 	]+[0-9a-f]+:[ 	]+fc862257[ 	]+vwmsac.vv[ 	]+v4,v12,v8,v0.t
