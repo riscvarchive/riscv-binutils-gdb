@@ -1543,10 +1543,10 @@ const struct riscv_opcode riscv_opcodes[] =
 
 {"vext.x.v",   0, {"V", 0}, "d,Vt,s", MATCH_VEXTXV, MASK_VEXTXV, match_opcode, 0},
 
-{"vmv.s.x",    0, {"V", 0}, "Vd,t", MATCH_VMVSX, MASK_VMVSX, match_opcode, 0},
+{"vmv.s.x",    0, {"V", 0}, "Vd,s", MATCH_VMVSX, MASK_VMVSX, match_opcode, 0},
 
 {"vfmv.f.s",   0, {"V", "F", 0}, "D,Vt", MATCH_VFMVFS, MASK_VFMVFS, match_opcode, 0},
-{"vfmv.s.f",   0, {"V", "F", 0}, "Vd,T", MATCH_VFMVSF, MASK_VFMVSF, match_opcode, 0},
+{"vfmv.s.f",   0, {"V", "F", 0}, "Vd,S", MATCH_VFMVSF, MASK_VFMVSF, match_opcode, 0},
 
 {"vslideup.vx",0, {"V", 0}, "Vd,Vt,sVm", MATCH_VSLIDEUPVX, MASK_VSLIDEUPVX, match_opcode, 0},
 {"vslideup.vi",0, {"V", 0}, "Vd,Vt,VjVm", MATCH_VSLIDEUPVI, MASK_VSLIDEUPVI, match_opcode, 0},

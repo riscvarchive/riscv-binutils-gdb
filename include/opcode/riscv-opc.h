@@ -2066,7 +2066,7 @@ funct6 VM  VS2  VS1/RS1/IMM func3 VD   opcode
 #define MASK_VFLEVV   0xfc00707f
 #define MATCH_VFLEVF  0x64005057
 #define MASK_VFLEVF   0xfc00707f
-#define MATCH_VFGTVF   0x74001057
+#define MATCH_VFGTVF   0x74005057
 #define MASK_VFGTVF    0xfc00707f
 #define MATCH_VFGEVF  0x7c005057
 #define MASK_VFGEVF   0xfc00707f
@@ -2189,12 +2189,12 @@ funct6 VM  VS2  VS1/RS1/IMM func3 VD   opcode
 #define MATCH_VEXTXV   0x32002057
 #define MASK_VEXTXV    0xfe00707f
 #define MATCH_VMVSX    0x36006057
-#define MASK_VMVSX     0xfe0ff07f
+#define MASK_VMVSX     0xfff0707f
 
 #define MATCH_VFMVFS   0x32001057
 #define MASK_VFMVFS    0xfe0ff07f
 #define MATCH_VFMVSF   0x36005057
-#define MASK_VFMVSF    0xfe0ff07f
+#define MASK_VFMVSF    0xfff0707f
 
 #define MATCH_VSLIDEUPVX   0x38004057
 #define MASK_VSLIDEUPVX    0xfc00707f
@@ -2502,8 +2502,8 @@ funct6 VM  VS2  VS1/RS1/IMM func3 VD   opcode
 #define CSR_VSTART 0x008
 #define CSR_VXSAT 0x009
 #define CSR_VXRM 0x00a
-#define CSR_VTYPE 0x00b
 #define CSR_VL 0xc20
+#define CSR_VTYPE 0xc21
 
 /* These registers are present in priv spec 1.9.1, dropped in 1.10.  */
 #define CSR_HSTATUS 0x200
@@ -3053,8 +3053,8 @@ DECLARE_CSR(dscratch, CSR_DSCRATCH)
 DECLARE_CSR(vstart, CSR_VSTART)
 DECLARE_CSR(vxsat, CSR_VXSAT)
 DECLARE_CSR(vxrm, CSR_VXRM)
-DECLARE_CSR(vtype, CSR_VTYPE)
 DECLARE_CSR(vl, CSR_VL)
+DECLARE_CSR(vtype, CSR_VTYPE)
 
 /* These registers are present in priv spec 1.9.1, dropped in 1.10.  */
 DECLARE_CSR(hstatus, CSR_HSTATUS)
