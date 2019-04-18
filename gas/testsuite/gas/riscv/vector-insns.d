@@ -1583,7 +1583,7 @@ Disassembly of section .text:
 [ 	]+[0-9a-f]+:[ 	]+6e865257[ 	]+vflt.vf[ 	]+v4,v8,fa2
 [ 	]+[0-9a-f]+:[ 	]+66861257[ 	]+vfle.vv[ 	]+v4,v8,v12
 [ 	]+[0-9a-f]+:[ 	]+66865257[ 	]+vfle.vf[ 	]+v4,v8,fa2
-[ 	]+[0-9a-f]+:[ 	]+76861257[ 	]+vfgt.vf[ 	]+v4,v8,fa2
+[ 	]+[0-9a-f]+:[ 	]+76865257[ 	]+vfgt.vf[ 	]+v4,v8,fa2
 [ 	]+[0-9a-f]+:[ 	]+7e865257[ 	]+vfge.vf[ 	]+v4,v8,fa2
 [ 	]+[0-9a-f]+:[ 	]+60861257[ 	]+vfeq.vv[ 	]+v4,v8,v12,v0.t
 [ 	]+[0-9a-f]+:[ 	]+60865257[ 	]+vfeq.vf[ 	]+v4,v8,fa2,v0.t
@@ -1593,7 +1593,7 @@ Disassembly of section .text:
 [ 	]+[0-9a-f]+:[ 	]+6c865257[ 	]+vflt.vf[ 	]+v4,v8,fa2,v0.t
 [ 	]+[0-9a-f]+:[ 	]+64861257[ 	]+vfle.vv[ 	]+v4,v8,v12,v0.t
 [ 	]+[0-9a-f]+:[ 	]+64865257[ 	]+vfle.vf[ 	]+v4,v8,fa2,v0.t
-[ 	]+[0-9a-f]+:[ 	]+74861257[ 	]+vfgt.vf[ 	]+v4,v8,fa2,v0.t
+[ 	]+[0-9a-f]+:[ 	]+74865257[ 	]+vfgt.vf[ 	]+v4,v8,fa2,v0.t
 [ 	]+[0-9a-f]+:[ 	]+7c865257[ 	]+vfge.vf[ 	]+v4,v8,fa2,v0.t
 [ 	]+[0-9a-f]+:[ 	]+6a861257[ 	]+vford.vv[ 	]+v4,v8,v12
 [ 	]+[0-9a-f]+:[ 	]+6a865257[ 	]+vford.vf[ 	]+v4,v8,fa2
@@ -1692,9 +1692,9 @@ Disassembly of section .text:
 [ 	]+[0-9a-f]+:[ 	]+5808a257[ 	]+vid.v[ 	]+v4,v0.t
 [ 	]+[0-9a-f]+:[ 	]+32c02557[ 	]+vmv.x.s[ 	]+a0,v12
 [ 	]+[0-9a-f]+:[ 	]+32c62557[ 	]+vext.x.v[ 	]+a0,v12,a2
-[ 	]+[0-9a-f]+:[ 	]+36a06257[ 	]+vmv.s.x[ 	]+v4,a0
+[ 	]+[0-9a-f]+:[ 	]+36056257[ 	]+vmv.s.x[ 	]+v4,a0
 [ 	]+[0-9a-f]+:[ 	]+32801557[ 	]+vfmv.f.s[ 	]+fa0,v8
-[ 	]+[0-9a-f]+:[ 	]+36b05257[ 	]+vfmv.s.f[ 	]+v4,fa1
+[ 	]+[0-9a-f]+:[ 	]+3605d257[ 	]+vfmv.s.f[ 	]+v4,fa1
 [ 	]+[0-9a-f]+:[ 	]+3a85c257[ 	]+vslideup.vx[ 	]+v4,v8,a1
 [ 	]+[0-9a-f]+:[ 	]+3a803257[ 	]+vslideup.vi[ 	]+v4,v8,0
 [ 	]+[0-9a-f]+:[ 	]+3a8fb257[ 	]+vslideup.vi[ 	]+v4,v8,31
@@ -1729,5 +1729,5 @@ Disassembly of section .text:
 [ 	]+[0-9a-f]+:[ 	]+00802573[ 	]+csrr[ 	]+a0,vstart
 [ 	]+[0-9a-f]+:[ 	]+00902573[ 	]+csrr[ 	]+a0,vxsat
 [ 	]+[0-9a-f]+:[ 	]+00a02573[ 	]+csrr[ 	]+a0,vxrm
-[ 	]+[0-9a-f]+:[ 	]+00b02573[ 	]+csrr[ 	]+a0,vtype
 [ 	]+[0-9a-f]+:[ 	]+c2002573[ 	]+csrr[ 	]+a0,vl
+[ 	]+[0-9a-f]+:[ 	]+c2102573[ 	]+csrr[ 	]+a0,vtype
