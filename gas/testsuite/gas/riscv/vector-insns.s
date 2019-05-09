@@ -1146,8 +1146,6 @@
 	vadc.vi v4, v8, -16
 	vsbc.vv v4, v8, v12
 	vsbc.vx v4, v8, a1
-	vsbc.vi v4, v8, 15
-	vsbc.vi v4, v8, -16
 
 	# Aliases
 	vnot.v v4, v8
@@ -1499,20 +1497,20 @@
 
 	vnclipu.vv v4, v8, v12
 	vnclipu.vx v4, v8, a1
-	vnclipu.vi v4, v8, 15
-	vnclipu.vi v4, v8, -16
+	vnclipu.vi v4, v8, 1
+	vnclipu.vi v4, v8, 31
 	vnclipu.vv v4, v8, v12, v0.t
 	vnclipu.vx v4, v8, a1, v0.t
-	vnclipu.vi v4, v8, 15, v0.t
-	vnclipu.vi v4, v8, -16, v0.t
+	vnclipu.vi v4, v8, 1, v0.t
+	vnclipu.vi v4, v8, 31, v0.t
 	vnclip.vv v4, v8, v12
 	vnclip.vx v4, v8, a1
-	vnclip.vi v4, v8, 15
-	vnclip.vi v4, v8, -16
+	vnclip.vi v4, v8, 1
+	vnclip.vi v4, v8, 31
 	vnclip.vv v4, v8, v12, v0.t
 	vnclip.vx v4, v8, a1, v0.t
-	vnclip.vi v4, v8, 15, v0.t
-	vnclip.vi v4, v8, -16, v0.t
+	vnclip.vi v4, v8, 1, v0.t
+	vnclip.vi v4, v8, 31, v0.t
 
 	vfadd.vv v4, v8, v12
 	vfadd.vf v4, v8, fa2

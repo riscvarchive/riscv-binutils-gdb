@@ -1643,8 +1643,6 @@ funct6 VM  VS2  VS1/RS1/IMM func3 VD   opcode
 #define MASK_VSBCVV   0xfe00707f
 #define MATCH_VSBCVX  0x4a004057
 #define MASK_VSBCVX   0xfe00707f
-#define MATCH_VSBCVI  0x4a003057
-#define MASK_VSBCVI   0xfe00707f
 
 #define MATCH_VNOTV   0x2c0fb057
 #define MASK_VNOTV    0xfc0ff07f
@@ -2174,9 +2172,9 @@ funct6 VM  VS2  VS1/RS1/IMM func3 VD   opcode
 #define MASK_VMFIRSTM  0xfc0ff07f
 #define MATCH_VMSBFM   0x5800a057
 #define MASK_VMSBFM    0xfc0ff07f
-#define MATCH_VMSIFM   0x58012057
+#define MATCH_VMSIFM   0x5801a057
 #define MASK_VMSIFM    0xfc0ff07f
-#define MATCH_VMSOFM   0x5801a057
+#define MATCH_VMSOFM   0x58012057
 #define MASK_VMSOFM    0xfc0ff07f
 #define MATCH_VMIOTAM  0x58082057
 #define MASK_VMIOTAM   0xfc0ff07f
@@ -2220,9 +2218,9 @@ funct6 VM  VS2  VS1/RS1/IMM func3 VD   opcode
 #define MATCH_VCOMPRESSV   0x5e002057
 #define MASK_VCOMPRESSV    0xfe00707f
 
-#define MATCH_VDOTVV    0xe0000057
+#define MATCH_VDOTVV    0xe4000057
 #define MASK_VDOTVV     0xfc00707f
-#define MATCH_VDOTUVV   0xe4000057
+#define MATCH_VDOTUVV   0xe0000057
 #define MASK_VDOTUVV    0xfc00707f
 #define MATCH_VFDOTVV   0xe4001057
 #define MASK_VFDOTVV    0xfc00707f
