@@ -1223,7 +1223,6 @@ const struct riscv_opcode riscv_opcodes[] =
 {"vadc.vi",    0, {"V", 0},  "Vd,Vt,Vi", MATCH_VADCVI, MASK_VADCVI, match_opcode, 0 },
 {"vsbc.vv",    0, {"V", 0},  "Vd,Vt,Vs", MATCH_VSBCVV, MASK_VSBCVV, match_opcode, 0 },
 {"vsbc.vx",    0, {"V", 0},  "Vd,Vt,s", MATCH_VSBCVX, MASK_VSBCVX, match_opcode, 0 },
-{"vsbc.vi",    0, {"V", 0},  "Vd,Vt,Vi", MATCH_VSBCVI, MASK_VSBCVI, match_opcode, 0 },
 
 {"vnot.v",     0, {"V", 0},  "Vd,VtVm", MATCH_VNOTV, MASK_VNOTV, match_opcode, INSN_ALIAS },
 
@@ -1388,10 +1387,10 @@ const struct riscv_opcode riscv_opcodes[] =
 
 {"vnclipu.vv",   0, {"V", 0},  "Vd,Vt,VsVm", MATCH_VNCLIPUVV, MASK_VNCLIPUVV, match_opcode, 0 },
 {"vnclipu.vx",   0, {"V", 0},  "Vd,Vt,sVm", MATCH_VNCLIPUVX, MASK_VNCLIPUVX, match_opcode, 0 },
-{"vnclipu.vi",   0, {"V", 0},  "Vd,Vt,ViVm", MATCH_VNCLIPUVI, MASK_VNCLIPUVI, match_opcode, 0 },
+{"vnclipu.vi",   0, {"V", 0},  "Vd,Vt,VjVm", MATCH_VNCLIPUVI, MASK_VNCLIPUVI, match_opcode, 0 },
 {"vnclip.vv",   0, {"V", 0},  "Vd,Vt,VsVm", MATCH_VNCLIPVV, MASK_VNCLIPVV, match_opcode, 0 },
 {"vnclip.vx",   0, {"V", 0},  "Vd,Vt,sVm", MATCH_VNCLIPVX, MASK_VNCLIPVX, match_opcode, 0 },
-{"vnclip.vi",   0, {"V", 0},  "Vd,Vt,ViVm", MATCH_VNCLIPVI, MASK_VNCLIPVI, match_opcode, 0 },
+{"vnclip.vi",   0, {"V", 0},  "Vd,Vt,VjVm", MATCH_VNCLIPVI, MASK_VNCLIPVI, match_opcode, 0 },
 
 {"vfadd.vv",   0, {"V", "F", 0}, "Vd,Vt,VsVm", MATCH_VFADDVV, MASK_VFADDVV, match_opcode, 0},
 {"vfadd.vf",   0, {"V", "F", 0}, "Vd,Vt,SVm", MATCH_VFADDVF, MASK_VFADDVF, match_opcode, 0},
