@@ -2280,10 +2280,10 @@ jump:
 
 		case 'e': /* AMO VD */
 		  if (reg_lookup (&s, RCLASS_GPR, &regno) && regno == 0)
-		    INSERT_OPERAND (VWD, *ip, 1);
+		    INSERT_OPERAND (VWD, *ip, 0);
 		  else if (reg_lookup (&s, RCLASS_VECR, &regno))
 		    {
-		      INSERT_OPERAND (VWD, *ip, 0);
+		      INSERT_OPERAND (VWD, *ip, 1);
 		      INSERT_OPERAND (VD, *ip, regno);
 		    }
 		  else
@@ -2293,7 +2293,7 @@ jump:
 		case 'f': /* AMO VS3 */
 		  if (!reg_lookup (&s, RCLASS_VECR, &regno))
 		    break;
-		  if (EXTRACT_OPERAND (VWD, ip->insn_opcode))
+		  if (!EXTRACT_OPERAND (VWD, ip->insn_opcode))
 		    INSERT_OPERAND (VD, *ip, regno);
 		  else
 		    {
