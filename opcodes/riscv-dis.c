@@ -353,7 +353,7 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	      break;
 
 	    case 'e':
-	      if (EXTRACT_OPERAND (VWD, l))
+	      if (!EXTRACT_OPERAND (VWD, l))
 		print (info->stream, "%s", riscv_gpr_names[0]);
 	      else
 		print (info->stream, "%s",
