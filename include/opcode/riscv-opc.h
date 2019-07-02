@@ -1428,8 +1428,8 @@ funct6
 010001
 010010
 010011
-010100 vmpopc
-010101 vmfirst
+010100
+010101
 010110 VMUNARY0
 010111 vcompress
 011000 vmandnot
@@ -1480,6 +1480,8 @@ rs1
 00011 vmsif
 10000 vmiota
 10001 vid
+11000 vpopc
+11001 vfirst
 
 VFLOAT
 funct6
@@ -2174,10 +2176,10 @@ funct6 VM  VS2  VS1/RS1/IMM func3 VD   opcode
 #define MATCH_VMXNORMM   0x7e002057
 #define MASK_VMXNORMM    0xfe00707f
 
-#define MATCH_VMPOPCM  0x50002057
-#define MASK_VMPOPCM   0xfc0ff07f
-#define MATCH_VMFIRSTM 0x54002057
-#define MASK_VMFIRSTM  0xfc0ff07f
+#define MATCH_VPOPCM   0x580c2057
+#define MASK_VPOPCM    0xfc0ff07f
+#define MATCH_VFIRSTM  0x580ca057
+#define MASK_VFIRSTM   0xfc0ff07f
 #define MATCH_VMSBFM   0x5800a057
 #define MASK_VMSBFM    0xfc0ff07f
 #define MATCH_VMSIFM   0x5801a057

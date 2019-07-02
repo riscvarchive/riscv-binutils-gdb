@@ -1748,15 +1748,15 @@
 	vmornot.mm v4, v8, v12
 	vmxnor.mm v4, v8, v12
 
-	vmpopc.m a0, v12
-	vmfirst.m a0, v12
+	vpopc.m a0, v12
+	vfirst.m a0, v12
 	vmsbf.m v4, v8
 	vmsif.m v4, v8
 	vmsof.m v4, v8
 	viota.m v4, v8
 	vid.v v4
-	vmpopc.m a0, v12, v0.t
-	vmfirst.m a0, v12, v0.t
+	vpopc.m a0, v12, v0.t
+	vfirst.m a0, v12, v0.t
 	vmsbf.m v4, v8, v0.t
 	vmsif.m v4, v8, v0.t
 	vmsof.m v4, v8, v0.t
