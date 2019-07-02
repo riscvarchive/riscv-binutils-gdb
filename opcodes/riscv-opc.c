@@ -1535,8 +1535,8 @@ const struct riscv_opcode riscv_opcodes[] =
 {"vmornot.mm", 0, INSN_CLASS_V, "Vd,Vt,Vs", MATCH_VMORNOTMM, MASK_VMORNOTMM, match_opcode, 0},
 {"vmxnor.mm",  0, INSN_CLASS_V, "Vd,Vt,Vs", MATCH_VMXNORMM, MASK_VMXNORMM, match_opcode, 0},
 
-{"vmpopc.m",   0, INSN_CLASS_V, "d,VtVm", MATCH_VMPOPCM, MASK_VMPOPCM, match_opcode, 0},
-{"vmfirst.m",  0, INSN_CLASS_V, "d,VtVm", MATCH_VMFIRSTM, MASK_VMFIRSTM, match_opcode, 0},
+{"vpopc.m",    0, INSN_CLASS_V, "d,VtVm", MATCH_VPOPCM, MASK_VPOPCM, match_opcode, 0},
+{"vfirst.m",   0, INSN_CLASS_V, "d,VtVm", MATCH_VFIRSTM, MASK_VFIRSTM, match_opcode, 0},
 {"vmsbf.m",    0, INSN_CLASS_V, "Vd,VtVm", MATCH_VMSBFM, MASK_VMSBFM, match_opcode, 0},
 {"vmsif.m",    0, INSN_CLASS_V, "Vd,VtVm", MATCH_VMSIFM, MASK_VMSIFM, match_opcode, 0},
 {"vmsof.m",    0, INSN_CLASS_V, "Vd,VtVm", MATCH_VMSOFM, MASK_VMSOFM, match_opcode, 0},
