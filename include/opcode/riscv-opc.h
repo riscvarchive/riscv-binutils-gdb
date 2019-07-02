@@ -2497,6 +2497,14 @@ funct6 VM  VS2  VS1/RS1/IMM func3 VD   opcode
 #define CSR_DCSR 0x7b0
 #define CSR_DPC 0x7b1
 #define CSR_DSCRATCH 0x7b2
+
+/* RVV */
+#define CSR_VSTART 0x008
+#define CSR_VXSAT 0x009
+#define CSR_VXRM 0x00a
+#define CSR_VTYPE 0x00b
+#define CSR_VL 0xc20
+
 /* These registers are present in priv spec 1.9.1, dropped in 1.10.  */
 #define CSR_HSTATUS 0x200
 #define CSR_HEDELEG 0x202
@@ -3040,6 +3048,14 @@ DECLARE_CSR(tdata3, CSR_TDATA3)
 DECLARE_CSR(dcsr, CSR_DCSR)
 DECLARE_CSR(dpc, CSR_DPC)
 DECLARE_CSR(dscratch, CSR_DSCRATCH)
+
+/* RVV */
+DECLARE_CSR(vstart, CSR_VSTART)
+DECLARE_CSR(vxsat, CSR_VXSAT)
+DECLARE_CSR(vxrm, CSR_VXRM)
+DECLARE_CSR(vtype, CSR_VTYPE)
+DECLARE_CSR(vl, CSR_VL)
+
 /* These registers are present in priv spec 1.9.1, dropped in 1.10.  */
 DECLARE_CSR(hstatus, CSR_HSTATUS)
 DECLARE_CSR(hedeleg, CSR_HEDELEG)
