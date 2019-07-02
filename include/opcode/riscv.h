@@ -450,8 +450,8 @@ enum
   M_CALL,
   M_J,
   M_LI,
-  M_VSGE,
-  M_VSGEU,
+  M_VMSGE,
+  M_VMSGEU,
   M_NUM_MACROS
 };
 

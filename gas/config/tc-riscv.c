@@ -691,6 +691,7 @@ validate_riscv_insn (const struct riscv_opcode *opc, int length)
 	  case 'v': USE_BITS (OP_MASK_VD, OP_SH_VD);
 		    USE_BITS (OP_MASK_VS1, OP_SH_VS1);
 		    USE_BITS (OP_MASK_VS2, OP_SH_VS2); break;
+	  case '0': break;
 	  case 'c': used_bits |= ENCODE_RVV_VC_IMM (-1U); break;
 	  case 'i':
 	  case 'j':
@@ -1131,11 +1132,11 @@ vector_macro (struct riscv_cl_insn *ip)
 
   switch (mask)
     {
-    case M_VSGE:
+    case M_VMSGE:
       if (vm)
 	{
 	  /* Unmasked.  */
-	  macro_build (NULL, "vslt.vx", "Vd,Vt,sVm", vd, vs2, vs1, -1);
+	  macro_build (NULL, "vmslt.vx", "Vd,Vt,sVm", vd, vs2, vs1, -1);
 	  macro_build (NULL, "vmnand.mm", "Vd,Vt,Vs", vd, vs2, vs1);
 	}
       else
@@ -1143,12 +1144,12 @@ vector_macro (struct riscv_cl_insn *ip)
 	  /* Masked w/ v0.  */
 	  if (vtemp != 0)
 	    {
-	      macro_build (NULL, "vslt.vx", "Vd,Vt,s", vtemp, vs2, vs1);
+	      macro_build (NULL, "vmslt.vx", "Vd,Vt,s", vtemp, vs2, vs1);
 	      macro_build (NULL, "vmandnot.mm", "Vd,Vt,Vs", vd, vm, vtemp);
 	    }
 	  else if (vd != vm)
 	    {
-	      macro_build (NULL, "vslt.vx", "Vd,Vt,sVm", vd, vs2, vs1, vm);
+	      macro_build (NULL, "vmslt.vx", "Vd,Vt,sVm", vd, vs2, vs1, vm);
 	      macro_build (NULL, "vmxor.mm", "Vd,Vt,Vs", vd, vd, vm);
 	    }
 	  else
@@ -1156,11 +1157,11 @@ vector_macro (struct riscv_cl_insn *ip)
 	}
       break;
 
-    case M_VSGEU:
+    case M_VMSGEU:
       if (vm)
 	{
 	  /* Unmasked.  */
-	  macro_build (NULL, "vsltu.vx", "Vd,Vt,sVm", vd, vs2, vs1, -1);
+	  macro_build (NULL, "vmsltu.vx", "Vd,Vt,sVm", vd, vs2, vs1, -1);
 	  macro_build (NULL, "vmnand.mm", "Vd,Vt,Vs", vd, vs2, vs1);
 	}
       else
@@ -1168,12 +1169,12 @@ vector_macro (struct riscv_cl_insn *ip)
 	  /* Masked w/ v0.  */
 	  if (vtemp != 0)
 	    {
-	      macro_build (NULL, "vsltu.vx", "Vd,Vt,s", vtemp, vs2, vs1);
+	      macro_build (NULL, "vmsltu.vx", "Vd,Vt,s", vtemp, vs2, vs1);
 	      macro_build (NULL, "vmandnot.mm", "Vd,Vt,Vs", vd, vm, vtemp);
 	    }
 	  else if (vd != vm)
 	    {
-	      macro_build (NULL, "vsltu.vx", "Vd,Vt,sVm", vd, vs2, vs1, vm);
+	      macro_build (NULL, "vmsltu.vx", "Vd,Vt,sVm", vd, vs2, vs1, vm);
 	      macro_build (NULL, "vmxor.mm", "Vd,Vt,Vs", vd, vd, vm);
 	    }
 	  else
@@ -1308,8 +1309,8 @@ macro (struct riscv_cl_insn *ip, expressionS *imm_expr,
       riscv_call (rd, rs1, imm_expr, *imm_reloc);
       break;
 
-    case M_VSGE:
-    case M_VSGEU:
+    case M_VMSGE:
+    case M_VMSGEU:
       vector_macro (ip);
       break;
 
@@ -2330,6 +2331,11 @@ jump:
 		  INSERT_OPERAND (VS2, *ip, regno);
 		  continue;
 
+		case '0': /* required vector mask register without .t */
+		  if (reg_lookup (&s, RCLASS_VECR, &regno) && regno == 0)
+		    continue;
+		  break;
+
 		case 'c': /* vtypei for vsetvli */
 		  my_getVsetvliExpression (imm_expr, s);
 		  check_absolute_expr (ip, imm_expr, FALSE);
@@ -2393,6 +2399,7 @@ jump:
 		    }
 		  break;
 
+		  /* The following ones are only used in macros.  */
 		case 'M': /* required vector mask */
 		  if (reg_lookup (&s, RCLASS_VECM, &regno) && regno == 0)
 		    {
@@ -2402,8 +2409,7 @@ jump:
 		  break;
 
 		case 'T': /* vector macro temporary register */
-		  if (!reg_lookup (&s, RCLASS_VECR, &regno)
-		      || regno == 0)
+		  if (!reg_lookup (&s, RCLASS_VECR, &regno) || regno == 0)
 		    break;
 		  /* Store it in the FUNCT6 field as we don't have anyplace
 		     else to store it.  */
