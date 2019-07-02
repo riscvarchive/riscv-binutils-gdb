@@ -1140,12 +1140,18 @@
 	vwsub.wv v4, v8, v12, v0.t
 	vwsub.wx v4, v8, a1, v0.t
 
-	vadc.vv v4, v8, v12
-	vadc.vx v4, v8, a1
-	vadc.vi v4, v8, 15
-	vadc.vi v4, v8, -16
-	vsbc.vv v4, v8, v12
-	vsbc.vx v4, v8, a1
+	vadc.vvm v4, v8, v12, v0
+	vadc.vxm v4, v8, a1, v0
+	vadc.vim v4, v8, 15, v0
+	vadc.vim v4, v8, -16, v0
+	vmadc.vvm v4, v8, v12, v0
+	vmadc.vxm v4, v8, a1, v0
+	vmadc.vim v4, v8, 15, v0
+	vmadc.vim v4, v8, -16, v0
+	vsbc.vvm v4, v8, v12, v0
+	vsbc.vxm v4, v8, a1, v0
+	vmsbc.vvm v4, v8, v12, v0
+	vmsbc.vxm v4, v8, a1, v0
 
 	# Aliases
 	vnot.v v4, v8
@@ -1219,91 +1225,91 @@
 	vnsra.vi v4, v8, 31, v0.t
 
 	# Aliases
-	vsgt.vv v4, v8, v12
-	vsgtu.vv v4, v8, v12
-	vsge.vv v4, v8, v12
-	vsgeu.vv v4, v8, v12
-	vsgt.vv v4, v8, v12, v0.t
-	vsgtu.vv v4, v8, v12, v0.t
-	vsge.vv v4, v8, v12, v0.t
-	vsgeu.vv v4, v8, v12, v0.t
-	vslt.vi v4, v8, 16
-	vslt.vi v4, v8, -15
-	vsltu.vi v4, v8, 16
-	vsltu.vi v4, v8, -15
-	vsge.vi v4, v8, 16
-	vsge.vi v4, v8, -15
-	vsgeu.vi v4, v8, 16
-	vsgeu.vi v4, v8, -15
-	vslt.vi v4, v8, 16, v0.t
-	vslt.vi v4, v8, -15, v0.t
-	vsltu.vi v4, v8, 16, v0.t
-	vsltu.vi v4, v8, -15, v0.t
-	vsge.vi v4, v8, 16, v0.t
-	vsge.vi v4, v8, -15, v0.t
-	vsgeu.vi v4, v8, 16, v0.t
-	vsgeu.vi v4, v8, -15, v0.t
+	vmsgt.vv v4, v8, v12
+	vmsgtu.vv v4, v8, v12
+	vmsge.vv v4, v8, v12
+	vmsgeu.vv v4, v8, v12
+	vmsgt.vv v4, v8, v12, v0.t
+	vmsgtu.vv v4, v8, v12, v0.t
+	vmsge.vv v4, v8, v12, v0.t
+	vmsgeu.vv v4, v8, v12, v0.t
+	vmslt.vi v4, v8, 16
+	vmslt.vi v4, v8, -15
+	vmsltu.vi v4, v8, 16
+	vmsltu.vi v4, v8, -15
+	vmsge.vi v4, v8, 16
+	vmsge.vi v4, v8, -15
+	vmsgeu.vi v4, v8, 16
+	vmsgeu.vi v4, v8, -15
+	vmslt.vi v4, v8, 16, v0.t
+	vmslt.vi v4, v8, -15, v0.t
+	vmsltu.vi v4, v8, 16, v0.t
+	vmsltu.vi v4, v8, -15, v0.t
+	vmsge.vi v4, v8, 16, v0.t
+	vmsge.vi v4, v8, -15, v0.t
+	vmsgeu.vi v4, v8, 16, v0.t
+	vmsgeu.vi v4, v8, -15, v0.t
 
 	# Macros
-	vsge.vx v4, v8, a1
-	vsgeu.vx v4, v8, a1
-	vsge.vx v8, v12, a2, v0.t
-	vsgeu.vx v8, v12, a2, v0.t
-	vsge.vx v4, v8, a1, v0.t, v12
-	vsgeu.vx v4, v8, a1, v0.t, v12
+	vmsge.vx v4, v8, a1
+	vmsgeu.vx v4, v8, a1
+	vmsge.vx v8, v12, a2, v0.t
+	vmsgeu.vx v8, v12, a2, v0.t
+	vmsge.vx v4, v8, a1, v0.t, v12
+	vmsgeu.vx v4, v8, a1, v0.t, v12
 
-	vseq.vv v4, v8, v12
-	vseq.vx v4, v8, a1
-	vseq.vi v4, v8, 15
-	vseq.vi v4, v8, -16
-	vseq.vv v4, v8, v12, v0.t
-	vseq.vx v4, v8, a1, v0.t
-	vseq.vi v4, v8, 15, v0.t
-	vseq.vi v4, v8, -16, v0.t
-	vsne.vv v4, v8, v12
-	vsne.vx v4, v8, a1
-	vsne.vi v4, v8, 15
-	vsne.vi v4, v8, -16
-	vsne.vv v4, v8, v12, v0.t
-	vsne.vx v4, v8, a1, v0.t
-	vsne.vi v4, v8, 15, v0.t
-	vsne.vi v4, v8, -16, v0.t
-	vsltu.vv v4, v8, v12
-	vsltu.vx v4, v8, a1
-	vsltu.vv v4, v8, v12, v0.t
-	vsltu.vx v4, v8, a1, v0.t
-	vslt.vv v4, v8, v12
-	vslt.vx v4, v8, a1
-	vslt.vv v4, v8, v12, v0.t
-	vslt.vx v4, v8, a1, v0.t
-	vsleu.vv v4, v8, v12
-	vsleu.vx v4, v8, a1
-	vsleu.vi v4, v8, 15
-	vsleu.vi v4, v8, -16
-	vsleu.vv v4, v8, v12, v0.t
-	vsleu.vx v4, v8, a1, v0.t
-	vsleu.vi v4, v8, 15, v0.t
-	vsleu.vi v4, v8, -16, v0.t
-	vsle.vv v4, v8, v12
-	vsle.vx v4, v8, a1
-	vsle.vi v4, v8, 15
-	vsle.vi v4, v8, -16
-	vsle.vv v4, v8, v12, v0.t
-	vsle.vx v4, v8, a1, v0.t
-	vsle.vi v4, v8, 15, v0.t
-	vsle.vi v4, v8, -16, v0.t
-	vsgtu.vx v4, v8, a1
-	vsgtu.vi v4, v8, 15
-	vsgtu.vi v4, v8, -16
-	vsgtu.vx v4, v8, a1, v0.t
-	vsgtu.vi v4, v8, 15, v0.t
-	vsgtu.vi v4, v8, -16, v0.t
-	vsgt.vx v4, v8, a1
-	vsgt.vi v4, v8, 15
-	vsgt.vi v4, v8, -16
-	vsgt.vx v4, v8, a1, v0.t
-	vsgt.vi v4, v8, 15, v0.t
-	vsgt.vi v4, v8, -16, v0.t
+	vmseq.vv v4, v8, v12
+	vmseq.vx v4, v8, a1
+	vmseq.vi v4, v8, 15
+	vmseq.vi v4, v8, -16
+	vmseq.vv v4, v8, v12, v0.t
+	vmseq.vx v4, v8, a1, v0.t
+	vmseq.vi v4, v8, 15, v0.t
+	vmseq.vi v4, v8, -16, v0.t
+	vmsne.vv v4, v8, v12
+	vmsne.vx v4, v8, a1
+	vmsne.vi v4, v8, 15
+	vmsne.vi v4, v8, -16
+	vmsne.vv v4, v8, v12, v0.t
+	vmsne.vx v4, v8, a1, v0.t
+	vmsne.vi v4, v8, 15, v0.t
+	vmsne.vi v4, v8, -16, v0.t
+	vmsltu.vv v4, v8, v12
+	vmsltu.vx v4, v8, a1
+	vmsltu.vv v4, v8, v12, v0.t
+	vmsltu.vx v4, v8, a1, v0.t
+	vmslt.vv v4, v8, v12
+	vmslt.vx v4, v8, a1
+	vmslt.vv v4, v8, v12, v0.t
+	vmslt.vx v4, v8, a1, v0.t
+	vmsleu.vv v4, v8, v12
+	vmsleu.vx v4, v8, a1
+	vmsleu.vi v4, v8, 15
+	vmsleu.vi v4, v8, -16
+	vmsleu.vv v4, v8, v12, v0.t
+	vmsleu.vx v4, v8, a1, v0.t
+	vmsleu.vi v4, v8, 15, v0.t
+	vmsleu.vi v4, v8, -16, v0.t
+	vmsle.vv v4, v8, v12
+	vmsle.vx v4, v8, a1
+	vmsle.vi v4, v8, 15
+	vmsle.vi v4, v8, -16
+	vmsle.vv v4, v8, v12, v0.t
+	vmsle.vx v4, v8, a1, v0.t
+	vmsle.vi v4, v8, 15, v0.t
+	vmsle.vi v4, v8, -16, v0.t
+	vmsgtu.vx v4, v8, a1
+	vmsgtu.vi v4, v8, 15
+	vmsgtu.vi v4, v8, -16
+	vmsgtu.vx v4, v8, a1, v0.t
+	vmsgtu.vi v4, v8, 15, v0.t
+	vmsgtu.vi v4, v8, -16, v0.t
+	vmsgt.vx v4, v8, a1
+	vmsgt.vi v4, v8, 15
+	vmsgt.vi v4, v8, -16
+	vmsgt.vx v4, v8, a1, v0.t
+	vmsgt.vi v4, v8, 15, v0.t
+	vmsgt.vi v4, v8, -16, v0.t
 
 	vminu.vv v4, v8, v12
 	vminu.vx v4, v8, a1
@@ -1403,20 +1409,15 @@
 	vrem.vv v4, v8, v12, v0.t
 	vrem.vx v4, v8, a1, v0.t
 
-	# Aliases
+	vmerge.vvm v4, v8, v12, v0
+	vmerge.vxm v4, v8, a1, v0
+	vmerge.vim v4, v8, 15, v0
+	vmerge.vim v4, v8, -16, v0
+
 	vmv.v.v v8, v12
 	vmv.v.x v8, a1
 	vmv.v.i v8, 15
 	vmv.v.i v8, -16
-
-	vmerge.vv v4, v8, v12
-	vmerge.vv v4, v8, v12, v0.t
-	vmerge.vx v4, v8, a1
-	vmerge.vx v4, v8, a1, v0.t
-	vmerge.vi v4, v8, 15
-	vmerge.vi v4, v8, -16
-	vmerge.vi v4, v8, 15, v0.t
-	vmerge.vi v4, v8, -16, v0.t
 
 	vsaddu.vv v4, v8, v12
 	vsaddu.vx v4, v8, a1
@@ -1520,6 +1521,8 @@
 	vfsub.vf v4, v8, fa2
 	vfsub.vv v4, v8, v12, v0.t
 	vfsub.vf v4, v8, fa2, v0.t
+	vfrsub.vf v4, v8, fa2
+	vfrsub.vf v4, v8, fa2, v0.t
 
 	vfwadd.vv v4, v8, v12
 	vfwadd.vf v4, v8, fa2
@@ -1630,45 +1633,42 @@
 	vfsgnjx.vf v4, v8, fa2, v0.t
 
 	# Aliases
-	vfgt.vv v4, v8, v12
-	vfge.vv v4, v8, v12
-	vfgt.vv v4, v8, v12, v0.t
-	vfge.vv v4, v8, v12, v0.t
+	vmfgt.vv v4, v8, v12
+	vmfge.vv v4, v8, v12
+	vmfgt.vv v4, v8, v12, v0.t
+	vmfge.vv v4, v8, v12, v0.t
 
-	vfeq.vv v4, v8, v12
-	vfeq.vf v4, v8, fa2
-	vfne.vv v4, v8, v12
-	vfne.vf v4, v8, fa2
-	vflt.vv v4, v8, v12
-	vflt.vf v4, v8, fa2
-	vfle.vv v4, v8, v12
-	vfle.vf v4, v8, fa2
-	vfgt.vf v4, v8, fa2
-	vfge.vf v4, v8, fa2
-	vfeq.vv v4, v8, v12, v0.t
-	vfeq.vf v4, v8, fa2, v0.t
-	vfne.vv v4, v8, v12, v0.t
-	vfne.vf v4, v8, fa2, v0.t
-	vflt.vv v4, v8, v12, v0.t
-	vflt.vf v4, v8, fa2, v0.t
-	vfle.vv v4, v8, v12, v0.t
-	vfle.vf v4, v8, fa2, v0.t
-	vfgt.vf v4, v8, fa2, v0.t
-	vfge.vf v4, v8, fa2, v0.t
+	vmfeq.vv v4, v8, v12
+	vmfeq.vf v4, v8, fa2
+	vmfne.vv v4, v8, v12
+	vmfne.vf v4, v8, fa2
+	vmflt.vv v4, v8, v12
+	vmflt.vf v4, v8, fa2
+	vmfle.vv v4, v8, v12
+	vmfle.vf v4, v8, fa2
+	vmfgt.vf v4, v8, fa2
+	vmfge.vf v4, v8, fa2
+	vmfeq.vv v4, v8, v12, v0.t
+	vmfeq.vf v4, v8, fa2, v0.t
+	vmfne.vv v4, v8, v12, v0.t
+	vmfne.vf v4, v8, fa2, v0.t
+	vmflt.vv v4, v8, v12, v0.t
+	vmflt.vf v4, v8, fa2, v0.t
+	vmfle.vv v4, v8, v12, v0.t
+	vmfle.vf v4, v8, fa2, v0.t
+	vmfgt.vf v4, v8, fa2, v0.t
+	vmfge.vf v4, v8, fa2, v0.t
 
-	vford.vv v4, v8, v12
-	vford.vf v4, v8, fa2
-	vford.vv v4, v8, v12, v0.t
-	vford.vf v4, v8, fa2, v0.t
+	vmford.vv v4, v8, v12
+	vmford.vf v4, v8, fa2
+	vmford.vv v4, v8, v12, v0.t
+	vmford.vf v4, v8, fa2, v0.t
 
 	vfclass.v v4, v8
 	vfclass.v v4, v8, v0.t
 
-	# Alias
-	vmv.v.f v4, fa1
-
-	vfmerge.vf v4, v8, fa2
-	vfmerge.vf v4, v8, fa2, v0.t
+	vfmerge.vfm v4, v8, fa2, v0
+	vfmv.v.f v4, fa1
 
 	vfcvt.xu.f.v v4, v8
 	vfcvt.x.f.v v4, v8
@@ -1738,7 +1738,7 @@
 	vfwredsum.vs v4, v8, v12, v0.t
 
 	# Aliases
-	vmmv.m v4, v8
+	vmcpy.m v4, v8
 	vmclr.m v4
 	vmset.m v4
 	vmnot.m v4, v8
@@ -1757,14 +1757,14 @@
 	vmsbf.m v4, v8
 	vmsif.m v4, v8
 	vmsof.m v4, v8
-	vmiota.m v4, v8
+	viota.m v4, v8
 	vid.v v4
 	vmpopc.m a0, v12, v0.t
 	vmfirst.m a0, v12, v0.t
 	vmsbf.m v4, v8, v0.t
 	vmsif.m v4, v8, v0.t
 	vmsof.m v4, v8, v0.t
-	vmiota.m v4, v8, v0.t
+	viota.m v4, v8, v0.t
 	vid.v v4, v0.t
 
 	# Alias
