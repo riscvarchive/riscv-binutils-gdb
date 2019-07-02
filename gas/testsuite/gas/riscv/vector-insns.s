@@ -1362,18 +1362,18 @@
 	vmacc.vx v4, a1, v8
 	vmacc.vv v4, v12, v8, v0.t
 	vmacc.vx v4, a1, v8, v0.t
-	vmsac.vv v4, v12, v8
-	vmsac.vx v4, a1, v8
-	vmsac.vv v4, v12, v8, v0.t
-	vmsac.vx v4, a1, v8, v0.t
+	vnmsac.vv v4, v12, v8
+	vnmsac.vx v4, a1, v8
+	vnmsac.vv v4, v12, v8, v0.t
+	vnmsac.vx v4, a1, v8, v0.t
 	vmadd.vv v4, v12, v8
 	vmadd.vx v4, a1, v8
 	vmadd.vv v4, v12, v8, v0.t
 	vmadd.vx v4, a1, v8, v0.t
-	vmsub.vv v4, v12, v8
-	vmsub.vx v4, a1, v8
-	vmsub.vv v4, v12, v8, v0.t
-	vmsub.vx v4, a1, v8, v0.t
+	vnmsub.vv v4, v12, v8
+	vnmsub.vx v4, a1, v8
+	vnmsub.vv v4, v12, v8, v0.t
+	vnmsub.vx v4, a1, v8, v0.t
 
 	vwmaccu.vv v4, v12, v8
 	vwmaccu.vx v4, a1, v8
@@ -1383,14 +1383,12 @@
 	vwmacc.vx v4, a1, v8
 	vwmacc.vv v4, v12, v8, v0.t
 	vwmacc.vx v4, a1, v8, v0.t
-	vwmsacu.vv v4, v12, v8
-	vwmsacu.vx v4, a1, v8
-	vwmsacu.vv v4, v12, v8, v0.t
-	vwmsacu.vx v4, a1, v8, v0.t
-	vwmsac.vv v4, v12, v8
-	vwmsac.vx v4, a1, v8
-	vwmsac.vv v4, v12, v8, v0.t
-	vwmsac.vx v4, a1, v8, v0.t
+	vwmaccsu.vv v4, v12, v8
+	vwmaccsu.vx v4, a1, v8
+	vwmaccsu.vv v4, v12, v8, v0.t
+	vwmaccsu.vx v4, a1, v8, v0.t
+	vwmaccus.vx v4, a1, v8
+	vwmaccus.vx v4, a1, v8, v0.t
 
 	vdivu.vv v4, v8, v12
 	vdivu.vx v4, v8, a1
@@ -1466,18 +1464,16 @@
 	vwsmaccu.vx v4, a1, v8
 	vwsmacc.vv v4, v12, v8
 	vwsmacc.vx v4, a1, v8
-	vwsmsacu.vv v4, v12, v8
-	vwsmsacu.vx v4, a1, v8
-	vwsmsac.vv v4, v12, v8
-	vwsmsac.vx v4, a1, v8
+	vwsmaccsu.vv v4, v12, v8
+	vwsmaccsu.vx v4, a1, v8
+	vwsmaccus.vx v4, a1, v8
 	vwsmaccu.vv v4, v12, v8, v0.t
 	vwsmaccu.vx v4, a1, v8, v0.t
 	vwsmacc.vv v4, v12, v8, v0.t
 	vwsmacc.vx v4, a1, v8, v0.t
-	vwsmsacu.vv v4, v12, v8, v0.t
-	vwsmsacu.vx v4, a1, v8, v0.t
-	vwsmsac.vv v4, v12, v8, v0.t
-	vwsmsac.vx v4, a1, v8, v0.t
+	vwsmaccsu.vv v4, v12, v8, v0.t
+	vwsmaccsu.vx v4, a1, v8, v0.t
+	vwsmaccus.vx v4, a1, v8, v0.t
 
 	vssrl.vv v4, v8, v12
 	vssrl.vx v4, v8, a1
