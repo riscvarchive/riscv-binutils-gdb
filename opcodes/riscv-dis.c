@@ -403,25 +403,13 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	      print (info->stream, "%d", (int)EXTRACT_RVV_VI_UIMM (l));
 	      break;
 
-	    case 'm':
-	      if (! EXTRACT_OPERAND (VMASK, l))
-		print (info->stream, ",%s", riscv_vecm_names_numeric[0]);
-	      break;
-
 	    case 'k':
 	      print (info->stream, "%d", (int)EXTRACT_RVV_OFFSET (l));
 	      break;
 
-	    case 'l':
-	      print (info->stream, "%d", (int)EXTRACT_RVV_OFFSET (l) * 2);
-	      break;
-
-	    case 'n':
-	      print (info->stream, "%d", (int)EXTRACT_RVV_OFFSET (l) * 4);
-	      break;
-
-	    case 'o':
-	      print (info->stream, "%d", (int)EXTRACT_RVV_OFFSET (l) * 8);
+	    case 'm':
+	      if (! EXTRACT_OPERAND (VMASK, l))
+		print (info->stream, ",%s", riscv_vecm_names_numeric[0]);
 	      break;
 
 	    default:
