@@ -1131,7 +1131,7 @@ vector_macro (struct riscv_cl_insn *ip)
 
   switch (mask)
     {
-    case M_VSGTE:
+    case M_VSGE:
       if (vm)
 	{
 	  /* Unmasked.  */
@@ -1156,7 +1156,7 @@ vector_macro (struct riscv_cl_insn *ip)
 	}
       break;
 
-    case M_VSGTEU:
+    case M_VSGEU:
       if (vm)
 	{
 	  /* Unmasked.  */
@@ -1308,8 +1308,8 @@ macro (struct riscv_cl_insn *ip, expressionS *imm_expr,
       riscv_call (rd, rs1, imm_expr, *imm_reloc);
       break;
 
-    case M_VSGTE:
-    case M_VSGTEU:
+    case M_VSGE:
+    case M_VSGEU:
       vector_macro (ip);
       break;
 
