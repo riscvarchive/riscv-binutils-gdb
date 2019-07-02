@@ -40,6 +40,7 @@ struct riscv_private_data
 
 static const char * const *riscv_gpr_names;
 static const char * const *riscv_fpr_names;
+static const char * const *riscv_vecr_names;
 
 /* Other options.  */
 static int no_aliases;	/* If set disassemble as most general inst.  */
@@ -49,6 +50,7 @@ set_default_riscv_dis_options (void)
 {
   riscv_gpr_names = riscv_gpr_names_abi;
   riscv_fpr_names = riscv_fpr_names_abi;
+  riscv_vecr_names = riscv_vecr_names_numeric;
   no_aliases = 0;
 }
 
@@ -339,6 +341,95 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 
 	case 'Z':
 	  print (info->stream, "%d", rs1);
+	  break;
+
+	case 'V': /* RVV */
+	  switch (*++d)
+	    {
+	    case 'd':
+	    case 'f':
+	      print (info->stream, "%s",
+		      riscv_vecr_names[EXTRACT_OPERAND (VD, l)]);
+	      break;
+
+	    case 'e':
+	      if (EXTRACT_OPERAND (VWD, l))
+		print (info->stream, "%s", riscv_gpr_names[0]);
+	      else
+		print (info->stream, "%s",
+		       riscv_vecr_names[EXTRACT_OPERAND (VD, l)]);
+	      break;
+
+	    case 's':
+	      print (info->stream, "%s",
+		      riscv_vecr_names[EXTRACT_OPERAND (VS1, l)]);
+	      break;
+
+	    case 't':
+	    case 'u': /* VS1 == VS2 already verified at this point.  */
+	    case 'v': /* VD == VS1 == VS2 already verified at this point.  */
+	      print (info->stream, "%s",
+		      riscv_vecr_names[EXTRACT_OPERAND (VS2, l)]);
+	      break;
+
+	    case '0':
+	      print (info->stream, "%s", riscv_vecr_names[0]);
+	      break;
+
+	    case 'c':
+	      {
+		int imm = EXTRACT_RVV_VC_IMM (l);
+		unsigned int imm_vlmul = EXTRACT_OPERAND (VLMUL, imm);
+		unsigned int imm_vsew = EXTRACT_OPERAND (VSEW, imm);
+		unsigned int imm_vediv = EXTRACT_OPERAND (VEDIV, imm);
+		unsigned int imm_vtype_res = EXTRACT_OPERAND (VTYPE_RES, imm);
+
+		if (imm_vsew < ARRAY_SIZE (riscv_vsew)
+		    && imm_vlmul < ARRAY_SIZE (riscv_vlen)
+		    && imm_vediv < ARRAY_SIZE (riscv_vediv)
+		    && ! imm_vtype_res)
+		  print (info->stream, "%s,%s,%s", riscv_vsew[imm_vsew],
+			 riscv_vlen[imm_vlmul], riscv_vediv[imm_vediv]);
+		else
+		  print (info->stream, "%d", imm);
+	      }
+	      break;
+
+	    case 'i':
+	      print (info->stream, "%d", (int)EXTRACT_RVV_VI_IMM (l));
+	      break;
+
+	    case 'j':
+	      print (info->stream, "%d", (int)EXTRACT_RVV_VI_UIMM (l));
+	      break;
+
+	    case 'm':
+	      if (! EXTRACT_OPERAND (VMASK, l))
+		print (info->stream, ",%s", riscv_vecm_names_numeric[0]);
+	      break;
+
+	    case 'k':
+	      print (info->stream, "%d", (int)EXTRACT_RVV_OFFSET (l));
+	      break;
+
+	    case 'l':
+	      print (info->stream, "%d", (int)EXTRACT_RVV_OFFSET (l) * 2);
+	      break;
+
+	    case 'n':
+	      print (info->stream, "%d", (int)EXTRACT_RVV_OFFSET (l) * 4);
+	      break;
+
+	    case 'o':
+	      print (info->stream, "%d", (int)EXTRACT_RVV_OFFSET (l) * 8);
+	      break;
+
+	    default:
+	      /* xgettext:c-format */
+	      print (info->stream, _("# internal error, undefined modifier (V%c)"),
+		     *d);
+	      return;
+	    }
 	  break;
 
 	default:
