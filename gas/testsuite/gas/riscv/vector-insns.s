@@ -1758,10 +1758,7 @@
 	viota.m v4, v8, v0.t
 	vid.v v4, v0.t
 
-	# Alias
 	vmv.x.s a0, v12
-
-	vext.x.v a0, v12, a2
 	vmv.s.x v4, a0
 
 	vfmv.f.s fa0, v8
