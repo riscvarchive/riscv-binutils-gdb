@@ -1419,17 +1419,17 @@ funct6
 001001
 001010
 001011
-001100 vext.x.v
-001101 vmv.s.x
+001100
+001101
 001110 vslide1up
 001111 vslide1down
-010000
+010000 VRXUNARY0/VWXUNARY0
 010001
 010010
 010011
-010100
+010100 VMUNARY0
 010101
-010110 VMUNARY0
+010110
 010111 vcompress
 011000 vmandnot
 011001 vmand
@@ -1472,6 +1472,16 @@ funct6
 111110 vwmaccsu
 111111 vwmaccus
 
+VRXUNARY0
+vs2, funct3=X
+00000 vmv.s.x
+
+VWXUNARY0
+vs1, funct3=V
+00000 vmv.x.s
+11000 vpopc
+11001 vfirst
+
 VMUNARY0
 rs1
 00001 vmsbf
@@ -1479,8 +1489,6 @@ rs1
 00011 vmsif
 10000 viota
 10001 vid
-11000 vpopc
-11001 vfirst
 
 VFLOAT
 funct6
@@ -1496,11 +1504,11 @@ funct6
 001001 vfsgnn
 001010 vfsgnx
 001011
-001100 vfmv.f.s
-001101 vfmv.s.f
+001100
+001101
 001110
 001111
-010000
+010000 VRFUNARY0/VWFUNARY0
 010001
 010010
 010011
@@ -1549,6 +1557,14 @@ funct6
 111110 vfwmsac
 111111 vfwnmsac
 
+VRFUNARY0
+vs2, funct3=F
+00000 vfmv.s.f
+
+VWFUNARY0
+vs1, funct3=V
+00000 vfmv.f.s
+
 VFUNARY0
 vs1
 00000 vfcvt.xu.f.v
@@ -1574,11 +1590,9 @@ vs1
 10000 vfclass.v
 
 31-26 25 24-20   19-15     14-12 11-7 6-0
-funct6 VM  VS2  VS1/RS1/IMM func3 VD   opcode
-100000 x 00000 00000 000 00000 1010111
-1000 00x0 0000 0000 0000 0000 0101 0111
-1111 11x0 0000 0000 0111 0000 0111 1111
-
+funct6 VM  VS2  VS1/RS1/IMM funct3 VD   opcode
+010000 x xxxxx 00000 001 xxxxx 1010111
+0100 00xx xxxx 0000 0001 xxxx x101 0111
 */
 
 #define MATCH_VADDVV  0x00000057
@@ -2170,32 +2184,30 @@ funct6 VM  VS2  VS1/RS1/IMM func3 VD   opcode
 #define MATCH_VMXNORMM   0x7e002057
 #define MASK_VMXNORMM    0xfe00707f
 
-#define MATCH_VPOPCM   0x580c2057
+#define MATCH_VPOPCM   0x400c2057
 #define MASK_VPOPCM    0xfc0ff07f
-#define MATCH_VFIRSTM  0x580ca057
+#define MATCH_VFIRSTM  0x400ca057
 #define MASK_VFIRSTM   0xfc0ff07f
-#define MATCH_VMSBFM   0x5800a057
+
+#define MATCH_VMSBFM   0x5000a057
 #define MASK_VMSBFM    0xfc0ff07f
-#define MATCH_VMSIFM   0x5801a057
+#define MATCH_VMSIFM   0x5001a057
 #define MASK_VMSIFM    0xfc0ff07f
-#define MATCH_VMSOFM   0x58012057
+#define MATCH_VMSOFM   0x50012057
 #define MASK_VMSOFM    0xfc0ff07f
-#define MATCH_VIOTAM  0x58082057
-#define MASK_VIOTAM   0xfc0ff07f
-#define MATCH_VIDV     0x5808a057
+#define MATCH_VIOTAM   0x50082057
+#define MASK_VIOTAM    0xfc0ff07f
+#define MATCH_VIDV     0x5008a057
 #define MASK_VIDV      0xfdfff07f
 
-#define MATCH_VMVXS    0x32002057
+#define MATCH_VMVXS    0x42002057
 #define MASK_VMVXS     0xfe0ff07f
-
-#define MATCH_VEXTXV   0x32002057
-#define MASK_VEXTXV    0xfe00707f
-#define MATCH_VMVSX    0x36006057
+#define MATCH_VMVSX    0x42006057
 #define MASK_VMVSX     0xfff0707f
 
-#define MATCH_VFMVFS   0x32001057
+#define MATCH_VFMVFS   0x42001057
 #define MASK_VFMVFS    0xfe0ff07f
-#define MATCH_VFMVSF   0x36005057
+#define MATCH_VFMVSF   0x42005057
 #define MASK_VFMVSF    0xfff0707f
 
 #define MATCH_VSLIDEUPVX   0x38004057
