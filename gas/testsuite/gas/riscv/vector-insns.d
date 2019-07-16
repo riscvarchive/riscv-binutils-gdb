@@ -1593,10 +1593,6 @@ Disassembly of section .text:
 [ 	]+[0-9a-f]+:[ 	]+64865257[ 	]+vmfle.vf[ 	]+v4,v8,fa2,v0.t
 [ 	]+[0-9a-f]+:[ 	]+74865257[ 	]+vmfgt.vf[ 	]+v4,v8,fa2,v0.t
 [ 	]+[0-9a-f]+:[ 	]+7c865257[ 	]+vmfge.vf[ 	]+v4,v8,fa2,v0.t
-[ 	]+[0-9a-f]+:[ 	]+6a861257[ 	]+vmford.vv[ 	]+v4,v8,v12
-[ 	]+[0-9a-f]+:[ 	]+6a865257[ 	]+vmford.vf[ 	]+v4,v8,fa2
-[ 	]+[0-9a-f]+:[ 	]+68861257[ 	]+vmford.vv[ 	]+v4,v8,v12,v0.t
-[ 	]+[0-9a-f]+:[ 	]+68865257[ 	]+vmford.vf[ 	]+v4,v8,fa2,v0.t
 [ 	]+[0-9a-f]+:[ 	]+8e881257[ 	]+vfclass.v[ 	]+v4,v8
 [ 	]+[0-9a-f]+:[ 	]+8c881257[ 	]+vfclass.v[ 	]+v4,v8,v0.t
 [ 	]+[0-9a-f]+:[ 	]+5c865257[ 	]+vfmerge.vfm[ 	]+v4,v8,fa2,v0

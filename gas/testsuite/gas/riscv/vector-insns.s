@@ -1655,11 +1655,6 @@
 	vmfgt.vf v4, v8, fa2, v0.t
 	vmfge.vf v4, v8, fa2, v0.t
 
-	vmford.vv v4, v8, v12
-	vmford.vf v4, v8, fa2
-	vmford.vv v4, v8, v12, v0.t
-	vmford.vf v4, v8, fa2, v0.t
-
 	vfclass.v v4, v8
 	vfclass.v v4, v8, v0.t
 
