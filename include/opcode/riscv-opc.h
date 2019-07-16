@@ -1510,7 +1510,7 @@ funct6
 010111 vfmerge/vfmv
 011000 vmfeq
 011001 vmfle
-011010 vmford
+011010
 011011 vmflt
 011100 vmfne
 011101 vmfgt
@@ -2077,11 +2077,6 @@ funct6 VM  VS2  VS1/RS1/IMM func3 VD   opcode
 #define MASK_VMFGTVF    0xfc00707f
 #define MATCH_VMFGEVF  0x7c005057
 #define MASK_VMFGEVF   0xfc00707f
-
-#define MATCH_VMFORDVV 0x68001057
-#define MASK_VMFORDVV  0xfc00707f
-#define MATCH_VMFORDVF 0x68005057
-#define MASK_VMFORDVF  0xfc00707f
 
 #define MATCH_VFCLASSV 0x8c081057
 #define MASK_VFCLASSV  0xfc0ff07f
