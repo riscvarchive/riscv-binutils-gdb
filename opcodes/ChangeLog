@@ -1,3 +1,11 @@
+2019-07-30  Mel Chen <mel.chen@sifive.com>
+
+	* riscv-opc.c (riscv_opcodes): Set frsr, fssr, frcsr, fscsr, frrm,
+	fsrm, fsrmi, frflags, fsflags, fsflagsi to alias instructions.
+
+	* riscv-opc.c (riscv_opcodes): Adjust order of frsr, frcsr, fssr,
+	fscsr.
+
 2019-07-05  Kito Cheng <kito.cheng@sifive.com>
 
 	* riscv-opc.c (riscv_insn_types): Add r4 type.
