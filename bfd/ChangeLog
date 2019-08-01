@@ -1,3 +1,8 @@
+2019-08-01  Ilia Diachkov  <ilia.diachkov@optimitech.com>
+
+	* elfnn-riscv.c (_bfd_riscv_relax_lui): Set lui relax safety area to
+	two pages in relro presence.
+
 2019-06-24  Ilia Diachkov  <ilia.diachkov@optimitech.com>
 
 	* elfnn-riscv.c (_bfd_riscv_relax_lui): Delete early exit when
