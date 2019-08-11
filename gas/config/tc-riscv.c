@@ -235,6 +235,40 @@ riscv_multi_subset_supports (enum riscv_insn_class insn_class)
 
     case INSN_CLASS_Q: return riscv_subset_supports ("q");
 
+    case INSN_CLASS_B_OR_ZBB:
+      return riscv_subset_supports ("b") || riscv_subset_supports ("zbb");
+
+    case INSN_CLASS_B_OR_ZBA:
+      return riscv_subset_supports ("b") || riscv_subset_supports ("zba");
+
+    case INSN_CLASS_B_OR_ZBC:
+      return riscv_subset_supports ("b") || riscv_subset_supports ("zbc");
+
+    case INSN_CLASS_B_OR_ZBE:
+      return riscv_subset_supports ("b") || riscv_subset_supports ("zbe");
+
+    case INSN_CLASS_B_OR_ZBF:
+      return riscv_subset_supports ("b") || riscv_subset_supports ("zbf");
+
+    case INSN_CLASS_B_OR_ZBM:
+      return riscv_subset_supports ("b") || riscv_subset_supports ("zbm");
+
+    case INSN_CLASS_B_OR_ZBP:
+      return riscv_subset_supports ("b") || riscv_subset_supports ("zbp");
+
+    case INSN_CLASS_B_OR_ZBR:
+      return riscv_subset_supports ("b") || riscv_subset_supports ("zbr");
+
+    case INSN_CLASS_B_OR_ZBS:
+      return riscv_subset_supports ("b") || riscv_subset_supports ("zbs");
+
+    case INSN_CLASS_B_OR_ZBT:
+      return riscv_subset_supports ("b") || riscv_subset_supports ("zbt");
+
+    case INSN_CLASS_B_OR_ZBB_OR_ZBP:
+      return riscv_subset_supports ("b") || riscv_subset_supports ("zbb")
+	|| riscv_subset_supports ("zbp");
+
     default:
       as_fatal ("Unreachable");
       return FALSE;
@@ -940,6 +974,7 @@ validate_riscv_insn (const struct riscv_opcode *opc, int length)
       case '(': break;
       case ')': break;
       case '<': USE_BITS (OP_MASK_SHAMTW,	OP_SH_SHAMTW);	break;
+      case '|': USE_BITS (OP_MASK_SHAMTW,	OP_SH_SHAMTW);	break;
       case '>':	USE_BITS (OP_MASK_SHAMT,	OP_SH_SHAMT);	break;
       case 'A': break;
       case 'D':	USE_BITS (OP_MASK_RD,		OP_SH_RD);	break;
@@ -1222,6 +1257,15 @@ macro_build (expressionS *ep, const char *name, const char *fmt, ...)
 	  INSERT_OPERAND (RS2, insn, va_arg (args, int));
 	  continue;
 
+	case 'r':
+	  INSERT_OPERAND (RS3, insn, va_arg (args, int));
+	  continue;
+
+	case '<':
+	case '|':
+	  INSERT_OPERAND (SHAMTW, insn, va_arg (args, int));
+	  continue;
+
 	case '>':
 	  INSERT_OPERAND (SHAMT, insn, va_arg (args, int));
 	  continue;
@@ -1401,6 +1445,86 @@ load_const (int reg, expressionS *ep)
     }
 }
 
+/* Immediate rotate left shift via right shift.  */
+
+static void
+rotate_left (int rd, int rs, unsigned shamt, unsigned this_xlen)
+{
+  shamt = (this_xlen-1) & -shamt;
+
+  if (this_xlen == xlen)
+    macro_build (NULL, "rori", "d,s,>", rd, rs, shamt);
+  else if (this_xlen == 32)
+    macro_build (NULL, "roriw", "d,s,<", rd, rs, shamt);
+  else
+    as_fatal (_("internal error: bad left shift xlen %d"), this_xlen);
+}
+
+static void
+funnel_left (int rd, int rs1, int rs3, unsigned shamt, unsigned this_xlen)
+{
+  shamt = (this_xlen-1) & -shamt;
+
+  if (this_xlen == xlen)
+    macro_build (NULL, "fsri", "d,s,r,>", rd, rs3, rs1, shamt);
+  else if (this_xlen == 32)
+    macro_build (NULL, "fsriw", "d,s,r,<", rd, rs3, rs1, shamt);
+  else
+    as_fatal (_("internal error: bad left shift xlen %d"), this_xlen);
+}
+
+static void
+perm (int rd, int rs1, const char *op)
+{
+  const char *insn = NULL;
+  const char *p = op;
+  int shamt = 0;
+  int shfl = 0;
+
+  switch (p[0])
+    {
+    case 'r': insn = "grevi";   shamt = xlen-1;   p += 3; break;
+    case 'o': insn = "gorci";   shamt = xlen-1;   p += 3; break;
+    case 'z': insn = "shfli";   shamt = xlen/2-1; p += 3; shfl = 1; break;
+    case 'u': insn = "unshfli"; shamt = xlen/2-1; p += 5; shfl = 1; break;
+    default: as_fatal (_("internal error: bad permutation pseudo-instruction %s"), op);
+    }
+
+  switch (p[0])
+    {
+    case '2': shamt &= shamt << 1; p += 1; break;
+    case '4': shamt &= shamt << 2; p += 1; break;
+    case '8': shamt &= shamt << 3; p += 1; break;
+    case '1': shamt &= shamt << 4; p += 2; break;
+    case '3': shamt &= shamt << 5; p += 2;
+    }
+
+  if (p[0])
+    {
+      if (shfl)
+        switch (p[1])
+          {
+          case 'w': shamt &= 15; break;
+          case 'h': shamt &=  7; break;
+          case 'b': shamt &=  3; break;
+          case 'n': shamt &=  1; break;
+          default: as_fatal (_("internal error: bad permutation pseudo-instruction %s"), op);
+          }
+      else
+        switch (p[1])
+          {
+          case 'w': shamt &= 31; break;
+          case 'h': shamt &= 15; break;
+          case 'b': shamt &=  7; break;
+          case 'n': shamt &=  3; break;
+          case 'p': shamt &=  1; break;
+          default: as_fatal (_("internal error: bad permutation pseudo-instruction %s"), op);
+          }
+    }
+
+  macro_build (NULL, insn, "d,s,>", rd, rs1, shamt);
+}
+
 /* Expand RISC-V assembly macros into one or more instructions.  */
 static void
 macro (struct riscv_cl_insn *ip, expressionS *imm_expr,
@@ -1409,12 +1533,26 @@ macro (struct riscv_cl_insn *ip, expressionS *imm_expr,
   int rd = (ip->insn_opcode >> OP_SH_RD) & OP_MASK_RD;
   int rs1 = (ip->insn_opcode >> OP_SH_RS1) & OP_MASK_RS1;
   int rs2 = (ip->insn_opcode >> OP_SH_RS2) & OP_MASK_RS2;
+  int rs3 = (ip->insn_opcode >> OP_SH_RS3) & OP_MASK_RS3;
+  int shamt = (ip->insn_opcode >> OP_SH_SHAMT) & OP_MASK_SHAMT;
   int mask = ip->insn_mo->mask;
 
   switch (mask)
     {
     case M_LI:
       load_const (rd, imm_expr);
+      break;
+
+    case M_RL:
+      rotate_left (rd, rs1, shamt, ip->insn_mo->xlen_requirement ? ip->insn_mo->xlen_requirement/2 : xlen);
+      break;
+
+    case M_FL:
+      funnel_left (rd, rs1, rs3, shamt, ip->insn_mo->xlen_requirement ? ip->insn_mo->xlen_requirement/2 : xlen);
+      break;
+
+    case M_PERM:
+      perm (rd, rs1, ip->insn_mo->name);
       break;
 
     case M_LA:
@@ -2193,6 +2331,17 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 	      my_getExpression (imm_expr, s);
 	      check_absolute_expr (ip, imm_expr, FALSE);
 	      if ((unsigned long) imm_expr->X_add_number > 31)
+		as_bad (_("Improper shift amount (%lu)"),
+			(unsigned long) imm_expr->X_add_number);
+	      INSERT_OPERAND (SHAMTW, *ip, imm_expr->X_add_number);
+	      imm_expr->X_op = O_absent;
+	      s = expr_end;
+	      continue;
+
+	    case '|':		/* Shift amount, 0 - (XLEN/2-1).  */
+	      my_getExpression (imm_expr, s);
+	      check_absolute_expr (ip, imm_expr, FALSE);
+	      if ((unsigned long) imm_expr->X_add_number >= xlen/2)
 		as_bad (_("Improper shift amount (%lu)"),
 			(unsigned long) imm_expr->X_add_number);
 	      INSERT_OPERAND (SHAMTW, *ip, imm_expr->X_add_number);
