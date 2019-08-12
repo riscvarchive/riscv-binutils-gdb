@@ -1193,7 +1193,7 @@ riscv_parse_std_ext (riscv_parse_subset_t *rps,
     {
       char subset[2] = {0, 0};
 
-      if (*p == 'x' || *p == 's')
+      if (*p == 'x' || *p == 's' || *p == 'z')
 	break;
 
       if (*p == '_')
@@ -1237,28 +1237,77 @@ riscv_parse_std_ext (riscv_parse_subset_t *rps,
   return p;
 }
 
-/* Parsing function for non-standard and supervisor extensions.
+/* ISA extension name class. E.g. "zbb" corresponds to RV_ISA_CLASS_Z,
+   "xargs" corresponds to RV_ISA_CLASS_X, etc.  */
 
-   Return Value:
-     Points to the end of extensions.
+typedef enum riscv_isa_ext_class
+  {
+   RV_ISA_CLASS_UNKNOWN,
+   RV_ISA_CLASS_X,
+   RV_ISA_CLASS_S,
+   RV_ISA_CLASS_SX,
+   RV_ISA_CLASS_Z
+  } riscv_isa_ext_class_t;
 
-   Arguments:
-     `rps`: Hooks and status for parsing subset.
-     `march`: Full arch string.
-     `p`: Curent parsing position.
-     `ext_type`: What kind of extensions, 'x', 's' or 'sx'.
-     `ext_type_str`: Full name for kind of extension.  */
+/* Classify the argument 'arch' into one of riscv_isa_ext_class_t.  */
+
+static riscv_isa_ext_class_t
+riscv_get_prefix_class (const char *arch)
+{
+  switch (*arch)
+    {
+    case 's':
+      if (strlen (arch) > 1 && arch[1] == 'x')
+	return RV_ISA_CLASS_SX;
+      else
+	return RV_ISA_CLASS_S;
+
+    case 'x': return RV_ISA_CLASS_X;
+    case 'z': return RV_ISA_CLASS_Z;
+    default: return RV_ISA_CLASS_UNKNOWN;
+    }
+}
+
+/* Structure describing parameters to use when parsing a particular
+   riscv_isa_ext_class_t. One of these should be provided for each
+   possible class, except RV_ISA_CLASS_UNKNOWN.  */
+
+typedef struct riscv_parse_config
+{
+  /* Class of the extension. */
+  riscv_isa_ext_class_t class;
+
+  /* Lower-case prefix string for error printing
+     and internal parser usage, e.g. "sx", "z".  */
+  const char *prefix_lower;
+
+  /* Upper-case prefix string for error printing,
+     e.g. "SX". Used as "Error: SX extension ..."  */
+  const char *prefix_upper;
+
+  /* Predicate which is used for checking whether
+     this is a "known" extension. For 'x' and 'sx',
+     it always returns true (since they are by
+     definition non-standard and cannot be known.  */
+  int (*ext_valid_p) (const char *);
+} riscv_parse_config_t;
+
+/* Parse a generic prefixed extension.
+   march: The full architecture string as passed in by "-march=...".
+   p: Point from which to start parsing the -march string.
+   config: What class of extensions to parse, predicate funcs,
+   and strings to use in error reporting.  */
 
 static const char *
-riscv_parse_sv_or_non_std_ext (riscv_parse_subset_t *rps,
-			       const char *march,
-			       const char *p,
-			       const char *ext_type,
-			       const char *ext_type_str)
+riscv_parse_prefixed_ext (riscv_parse_subset_t *rps,
+			  const char *march,
+			  const char *p,
+			  const riscv_parse_config_t *config)
 {
   unsigned major_version = 0;
   unsigned minor_version = 0;
-  size_t ext_type_len = strlen (ext_type);
+  const char *last_name;
+  riscv_isa_ext_class_t class;
 
   while (*p)
     {
@@ -1268,12 +1317,9 @@ riscv_parse_sv_or_non_std_ext (riscv_parse_subset_t *rps,
 	  continue;
 	}
 
-      if (strncmp (p, ext_type, ext_type_len) != 0)
-	break;
-
-      /* It's non-standard supervisor extension if it prefix with sx.  */
-      if ((ext_type[0] == 's') && (ext_type_len == 1)
-	  && (*(p + 1) == 'x'))
+      /* Assert that the current extension specifier matches our parsing class.  */
+      class = riscv_get_prefix_class (p);
+      if (class != config->class)
 	break;
 
       char *subset = xstrdup (p);
@@ -1294,6 +1340,44 @@ riscv_parse_sv_or_non_std_ext (riscv_parse_subset_t *rps,
 
       *q = '\0';
 
+      /* Check that the name is valid.
+	 For 'x', anything goes but it cannot simply be 'x'.
+	 For 'z', it must be known from a list and also cannot simply be 'z'.
+	 For 's', it must be known from a list and also *can* simply be 's'.
+	 For 'sx', see 'x'.  */
+
+      /* Check that the extension name is well-formed.  */
+      if (!config->ext_valid_p (subset))
+	{
+	  rps->error_handler
+	    ("-march=%s: Invalid or unknown %s ISA extension: '%s'",
+	     march, config->prefix_upper, subset);
+	  free (subset);
+	  return NULL;
+	}
+
+      /* Check that the last item is not the same as this.  */
+      last_name = rps->subset_list->tail->name;
+
+      if (!strcasecmp (last_name, subset))
+	{
+	  rps->error_handler ("-march=%s: Duplicate %s ISA extension: \'%s\'",
+			      march, config->prefix_upper, subset);
+	  free (subset);
+	  return NULL;
+	}
+
+      /* Check that we are in alphabetical order within the subset.  */
+      if (!strncasecmp (last_name, config->prefix_lower, 1)
+	  && strcasecmp (last_name, subset) > 0)
+	{
+	  rps->error_handler ("-march=%s: %s ISA extension not in alphabetical order: "
+			      "\'%s\' must come before \'%s\'.",
+			      march, config->prefix_upper, subset, last_name);
+	  free (subset);
+	  return NULL;
+	}
+
       riscv_add_subset (rps->subset_list, subset, major_version, minor_version);
       free (subset);
       p += end_of_version - subset;
@@ -1301,13 +1385,112 @@ riscv_parse_sv_or_non_std_ext (riscv_parse_subset_t *rps,
       if (*p != '\0' && *p != '_')
 	{
 	  rps->error_handler ("-march=%s: %s must seperate with _",
-			      march, ext_type_str);
+			      march, config->prefix_lower);
 	  return NULL;
 	}
     }
 
   return p;
 }
+
+const char * const riscv_std_z_ext_strtab[RISCV_STD_Z_EXT_COUNT] =
+  {
+   "zbb", "zbc", "zbe", "zbf", "zbm", "zbp", "zbr", "zbs", "zbt"
+  };
+
+const char * const riscv_std_s_ext_strtab[RISCV_STD_S_EXT_COUNT] =
+  {
+
+  };
+
+/* Find the index corresponding to the z-extension
+   name `ext'. If not found, return -1.  */
+
+int
+riscv_std_z_ext_index (const char *ext)
+{
+  int i;
+
+  for (i = 0; i < RISCV_STD_Z_EXT_COUNT; ++i)
+    {
+      if (!strcasecmp (ext, riscv_std_z_ext_strtab[i]))
+	return i;
+    }
+
+  return -1;
+}
+
+/* Predicator function for x-prefixed extensions.
+   Anything goes, except the literal 'x'.  */
+
+static int
+riscv_ext_x_valid_p (const char *arg)
+{
+  if (!strcasecmp (arg, "x"))
+    return 0;
+
+  return 1;
+}
+
+/* Predicator functions for z-prefixed extensions.
+   Only known z-extensions are permitted.  */
+
+static int
+riscv_ext_z_valid_p (const char *arg)
+{
+  const size_t tabsize = ARRAY_SIZE (riscv_std_z_ext_strtab);
+
+  for (size_t i = 0; i < tabsize; ++i)
+    {
+      if (!strcasecmp (arg, riscv_std_z_ext_strtab[i]))
+	return 1;
+    }
+
+  return 0;
+}
+
+/* Predicator function for 's' prefixed extensions.
+   Must be either literal 's', or a known s-prefixed extension.  */
+
+static int
+riscv_ext_s_valid_p (const char *arg)
+{
+  const size_t tabsize = ARRAY_SIZE (riscv_std_s_ext_strtab);
+
+  if (strlen (arg) == 1 && *arg == 's')
+    return 1;
+
+  for (size_t i = 0; i < tabsize; ++i)
+    {
+      if (!strcasecmp (arg, riscv_std_s_ext_strtab[i]))
+	return 1;
+    }
+
+  return 0;
+}
+
+/* Predicator function for 'sx' prefixed extensions.
+   Anything goes, except the literal 'sx'.  */
+
+static int
+riscv_ext_sx_valid_p (const char *arg)
+{
+  if (!strcasecmp (arg, "sx"))
+    return 0;
+
+  return 1;
+}
+
+/* Parsing order that is needed for bitmanip.  */
+
+static const riscv_parse_config_t parse_config[] =
+{
+   {RV_ISA_CLASS_S, "s", "S", riscv_ext_s_valid_p},
+   {RV_ISA_CLASS_SX, "sx", "SX", riscv_ext_sx_valid_p},
+   {RV_ISA_CLASS_Z, "z", "Z", riscv_ext_z_valid_p},
+   {RV_ISA_CLASS_X, "x", "X", riscv_ext_x_valid_p},
+   {RV_ISA_CLASS_UNKNOWN, NULL, NULL, NULL}
+};
 
 /* Function for parsing arch string.
 
@@ -1347,26 +1530,14 @@ riscv_parse_subset (riscv_parse_subset_t *rps,
   if (p == NULL)
     return FALSE;
 
-  /* Parsing non-standard extension.  */
-  p = riscv_parse_sv_or_non_std_ext (
-	rps, arch, p, "x", "non-standard extension");
+  /* Parse the different classes of extensions in the specified order.  */
 
-  if (p == NULL)
-    return FALSE;
+  for (size_t i = 0; i < ARRAY_SIZE (parse_config); ++i) {
+    p = riscv_parse_prefixed_ext (rps, arch, p, &parse_config[i]);
 
-  /* Parsing supervisor extension.  */
-  p = riscv_parse_sv_or_non_std_ext (
-	rps, arch, p, "s", "supervisor extension");
-
-  if (p == NULL)
-    return FALSE;
-
-  /* Parsing non-standard supervisor extension.  */
-  p = riscv_parse_sv_or_non_std_ext (
-	rps, arch, p, "sx", "non-standard supervisor extension");
-
-  if (p == NULL)
-    return FALSE;
+    if (p == NULL)
+      return FALSE;
+  }
 
   if (*p != '\0')
     {

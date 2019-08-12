@@ -124,10 +124,10 @@ static bfd_boolean
 riscv_multi_subset_supports (const char *features[])
 {
   unsigned i = 0;
-  bfd_boolean supported = TRUE;
+  bfd_boolean supported = FALSE;
 
   for (;features[i]; ++i)
-    supported = supported && riscv_subset_supports (features[i]);
+    supported = supported || riscv_subset_supports (features[i]);
 
   return supported;
 }

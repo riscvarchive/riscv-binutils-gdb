@@ -2702,6 +2702,14 @@ riscv_non_std_sv_ext_p (const char *name)
   return (strlen (name) >= 3) && (name[0] == 's') && (name[1] == 'x');
 }
 
+/* Predicator for Z standard extensions. */
+
+static bfd_boolean
+riscv_std_z_ext_p (const char *name)
+{
+  return (strlen (name) >= 2) && (name[0] == 'z');
+}
+
 /* Error handler when version mis-match.  */
 
 static void
@@ -2877,6 +2885,139 @@ riscv_merge_non_std_and_sv_ext (bfd *ibfd,
   return TRUE;
 }
 
+typedef struct riscv_std_z_ext_mergetab {
+  riscv_subset_t *input[RISCV_STD_Z_EXT_COUNT];
+  riscv_subset_t *output[RISCV_STD_Z_EXT_COUNT];
+} riscv_std_z_ext_mergetab_t;
+
+/* True if the two Z extension slots at index IDX of merge table MT
+   have the same version. False if otherwise. */
+
+#define RISCV_MERGETAB_VER_MATCH_P(MT, IDX)				\
+  ((MT->input[IDX]->major_version == MT->output[IDX]->major_version)	\
+   && (MT->input[IDX]->minor_version == MT->output[IDX]->minor_version))
+
+static void
+riscv_init_std_z_ext_mergetab (riscv_std_z_ext_mergetab_t *map)
+{
+  memset ((void *)map, 0, sizeof (riscv_std_z_ext_mergetab_t));
+}
+
+/* Read in the subsets pointed by *pin, and if it's a Z-extension
+   add it to the corresponding slot in `param`.
+   If we're here, then elfxx-riscv.c:riscv_parse_std_z_ext
+   already did all the checking for us. */
+
+static bfd_boolean
+riscv_populate_std_z_ext_mergetab (bfd *ibfd ATTRIBUTE_UNUSED,
+				   riscv_subset_t **pin,
+				   bfd_boolean (*predicate_func) (const char *),
+				   riscv_subset_t **param)
+{
+  riscv_subset_t *in;
+  int ext_idx = -1;
+
+  for (in = *pin; in != NULL && predicate_func (in->name); in = in->next)
+    {
+      ext_idx = riscv_std_z_ext_index (in->name);
+      param[ext_idx] = in;
+    }
+
+  return TRUE;
+}
+
+/* Produce a merged list of Z-extension subsets, in alphabetical order.
+   Report version mismatches. */
+
+static bfd_boolean
+riscv_merge_std_z_ext_from_mergetab (bfd *ibfd,
+				     riscv_subset_list_t *subset,
+				     riscv_std_z_ext_mergetab_t *mt)
+{
+  const riscv_subset_t *selected;
+  int i;
+  bfd_boolean status = TRUE;
+
+  for (i = 0; i < RISCV_STD_Z_EXT_COUNT; ++i)
+    {
+      /* Neither object files use this extension. Skip. */
+      if (!mt->input[i] && !mt->output[i])
+	{
+	  continue;
+	}
+
+      /* Both object files use this extension. */
+      else if (mt->input[i] && mt->output[i])
+	{
+	  if (!RISCV_MERGETAB_VER_MATCH_P(mt, i))
+	    {
+	      riscv_version_mismatch (ibfd, mt->input[i], mt->output[i]);
+	      /* Don't leave immediately; Try to keep going and find
+		 other errors. */
+	      status = FALSE;
+	    }
+
+	  if (status == TRUE)
+	    {
+	      riscv_add_subset (subset, mt->input[i]->name,
+				mt->input[i]->major_version,
+				mt->input[i]->minor_version);
+	    }
+	}
+
+      /* One object file uses this extension. */
+      else
+	{
+	  selected = (mt->input[i] ? mt->input[i] : mt->output[i]);
+
+	  if (status == TRUE)
+	    {
+	      riscv_add_subset (subset, selected->name,
+				selected->major_version,
+				selected->minor_version);
+	    }
+	}
+    }
+
+  return status;
+}
+
+static bfd_boolean
+riscv_merge_std_z_ext (bfd *ibfd,
+		       riscv_subset_t **pin,
+		       riscv_subset_t **pout,
+		       bfd_boolean (*predicate_func) (const char *))
+{
+  riscv_subset_t *in = *pin;
+  riscv_subset_t *out = *pout;
+
+  bfd_boolean status_in = TRUE;
+  bfd_boolean status_out = TRUE;
+
+  riscv_std_z_ext_mergetab_t mt;
+
+  /* Initialize table. */
+  riscv_init_std_z_ext_mergetab (&mt);
+
+  /* Populate table. */
+  status_in = riscv_populate_std_z_ext_mergetab
+    (ibfd, pin, predicate_func, mt.input);
+  status_out = riscv_populate_std_z_ext_mergetab
+    (ibfd, pout, predicate_func, mt.output);
+
+  if ( !(status_in && status_out) )
+    return FALSE;
+
+  /* Generate the combined arch string in alphabetical order from the table. */
+  if (riscv_merge_std_z_ext_from_mergetab
+      (ibfd, &merged_subsets, &mt) == FALSE)
+    return FALSE;
+
+  *pin = in;
+  *pout = out;
+  return TRUE;
+}
+
 /* Merge Tag_RISCV_arch attribute.  */
 
 static char *
@@ -2940,6 +3081,9 @@ riscv_merge_arch_attr_info (bfd *ibfd, char *in_arch, char *out_arch)
     return NULL;
   /* Merge non-standard supervisor extension.  */
   if (!riscv_merge_non_std_and_sv_ext (ibfd, &in, &out, riscv_non_std_sv_ext_p))
+    return NULL;
+  /* Merge standard Z extensions. */
+  if (!riscv_merge_std_z_ext (ibfd, &in, &out, riscv_std_z_ext_p))
     return NULL;
 
   if (xlen_in != xlen_out)
