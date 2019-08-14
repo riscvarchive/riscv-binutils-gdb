@@ -120,20 +120,6 @@ riscv_subset_supports (const char *feature)
   return riscv_lookup_subset (&riscv_subsets, feature) != NULL;
 }
 
-#if 0
-static bfd_boolean
-riscv_multi_subset_supports (const char *features[])
-{
-  unsigned i = 0;
-  bfd_boolean supported = FALSE;
-
-  for (;features[i]; ++i)
-    supported = supported || riscv_subset_supports (features[i]);
-
-  return supported;
-}
-#endif
-
 static bfd_boolean
 riscv_multi_subset_supports (enum riscv_insn_class insn_class)
 {
