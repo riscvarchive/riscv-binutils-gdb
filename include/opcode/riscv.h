@@ -4,7 +4,7 @@
 
    This file is part of GDB, GAS, and the GNU binutils.
 
-   GDB, GAS, and the GNU binutils are free software; you can redistribute
+nn   GDB, GAS, and the GNU binutils are free software; you can redistribute
    them and/or modify them under the terms of the GNU General Public
    License as published by the Free Software Foundation; either version
    3, or (at your option) any later version.
@@ -312,14 +312,15 @@ enum riscv_insn_class
 
    INSN_CLASS_B,
    INSN_CLASS_B_ZBB,
+   INSN_CLASS_B_ZBB_ZBP,
    INSN_CLASS_B_ZBC,
    INSN_CLASS_B_ZBE,
+   INSN_CLASS_B_ZBF,
    INSN_CLASS_B_ZBM,
    INSN_CLASS_B_ZBP,
    INSN_CLASS_B_ZBR,
    INSN_CLASS_B_ZBS,
-   INSN_CLASS_B_ZBT,
-   INSN_CLASS_B_ZBB_ZBP
+   INSN_CLASS_B_ZBT
   };
 
 /* This structure holds information for a particular instruction.  */

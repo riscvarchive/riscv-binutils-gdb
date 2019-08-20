@@ -140,32 +140,41 @@ riscv_multi_subset_supports (enum riscv_insn_class insn_class)
 
     case INSN_CLASS_B: return riscv_subset_supports ("b");
     case INSN_CLASS_B_ZBB:
-      return riscv_subset_supports ("b") || riscv_subset_supports ("zbb");
-
-    case INSN_CLASS_B_ZBC:
-      return riscv_subset_supports ("b") || riscv_subset_supports ("zbc");
-
-    case INSN_CLASS_B_ZBE:
-      return riscv_subset_supports ("b") || riscv_subset_supports ("zbe");
-
-    case INSN_CLASS_B_ZBM:
-      return riscv_subset_supports ("b") || riscv_subset_supports ("zbm");
-
-    case INSN_CLASS_B_ZBP:
-      return riscv_subset_supports ("b") || riscv_subset_supports ("zbp");
-
-    case INSN_CLASS_B_ZBR:
-      return riscv_subset_supports ("b") || riscv_subset_supports ("zbr");
-
-    case INSN_CLASS_B_ZBS:
-      return riscv_subset_supports ("b") || riscv_subset_supports ("zbs");
-
-    case INSN_CLASS_B_ZBT:
-      return riscv_subset_supports ("b") || riscv_subset_supports ("zbt");
+      return riscv_subset_supports ("b")
+	|| riscv_subset_supports ("zbb");
 
     case INSN_CLASS_B_ZBB_ZBP:
-      return riscv_subset_supports ("b") || riscv_subset_supports ("zbb")
+      return riscv_subset_supports ("b")
+	|| riscv_subset_supports ("zbb")
 	|| riscv_subset_supports ("zbp");
+
+    case INSN_CLASS_B_ZBC:
+      return riscv_subset_supports ("b")
+	|| riscv_subset_supports ("zbc");
+
+    case INSN_CLASS_B_ZBE:
+      return riscv_subset_supports ("b")
+	|| riscv_subset_supports ("zbe");
+
+    case INSN_CLASS_B_ZBF:
+      return riscv_subset_supports ("zbf");
+
+    case INSN_CLASS_B_ZBM:
+      return riscv_subset_supports ("zbm");
+
+    case INSN_CLASS_B_ZBP:
+      return riscv_subset_supports ("b")
+	|| riscv_subset_supports ("zbp");
+
+    case INSN_CLASS_B_ZBR:
+      return riscv_subset_supports ("zbr");
+
+    case INSN_CLASS_B_ZBS:
+      return riscv_subset_supports ("b")
+	|| riscv_subset_supports ("zbs");
+
+    case INSN_CLASS_B_ZBT:
+      return riscv_subset_supports ("zbt");
 
     default:
       as_fatal ("Unreachable");
