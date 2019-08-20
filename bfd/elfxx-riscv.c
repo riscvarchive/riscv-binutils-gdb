@@ -1279,12 +1279,8 @@ typedef struct riscv_parse_config
 
   /* Lower-case prefix string for error printing
      and internal parser usage, e.g. "sx", "z".  */
-  const char *prefix_lower;
-
-  /* Upper-case prefix string for error printing,
-     e.g. "SX". Used as "Error: SX extension ..."  */
-  const char *prefix_upper;
-
+  const char *prefix;
+  
   /* Predicate which is used for checking whether
      this is a "known" extension. For 'x' and 'sx',
      it always returns true (since they are by
@@ -1351,7 +1347,7 @@ riscv_parse_prefixed_ext (riscv_parse_subset_t *rps,
 	{
 	  rps->error_handler
 	    ("-march=%s: Invalid or unknown %s ISA extension: '%s'",
-	     march, config->prefix_upper, subset);
+	     march, config->prefix, subset);
 	  free (subset);
 	  return NULL;
 	}
@@ -1362,18 +1358,18 @@ riscv_parse_prefixed_ext (riscv_parse_subset_t *rps,
       if (!strcasecmp (last_name, subset))
 	{
 	  rps->error_handler ("-march=%s: Duplicate %s ISA extension: \'%s\'",
-			      march, config->prefix_upper, subset);
+			      march, config->prefix, subset);
 	  free (subset);
 	  return NULL;
 	}
 
       /* Check that we are in alphabetical order within the subset.  */
-      if (!strncasecmp (last_name, config->prefix_lower, 1)
+      if (!strncasecmp (last_name, config->prefix, 1)
 	  && strcasecmp (last_name, subset) > 0)
 	{
 	  rps->error_handler ("-march=%s: %s ISA extension not in alphabetical order: "
 			      "\'%s\' must come before \'%s\'.",
-			      march, config->prefix_upper, subset, last_name);
+			      march, config->prefix, subset, last_name);
 	  free (subset);
 	  return NULL;
 	}
@@ -1385,7 +1381,7 @@ riscv_parse_prefixed_ext (riscv_parse_subset_t *rps,
       if (*p != '\0' && *p != '_')
 	{
 	  rps->error_handler ("-march=%s: %s must seperate with _",
-			      march, config->prefix_lower);
+			      march, config->prefix);
 	  return NULL;
 	}
     }
@@ -1485,11 +1481,11 @@ riscv_ext_sx_valid_p (const char *arg)
 
 static const riscv_parse_config_t parse_config[] =
 {
-   {RV_ISA_CLASS_S, "s", "S", riscv_ext_s_valid_p},
-   {RV_ISA_CLASS_SX, "sx", "SX", riscv_ext_sx_valid_p},
-   {RV_ISA_CLASS_Z, "z", "Z", riscv_ext_z_valid_p},
-   {RV_ISA_CLASS_X, "x", "X", riscv_ext_x_valid_p},
-   {RV_ISA_CLASS_UNKNOWN, NULL, NULL, NULL}
+   {RV_ISA_CLASS_S, "s", riscv_ext_s_valid_p},
+   {RV_ISA_CLASS_SX, "sx", riscv_ext_sx_valid_p},
+   {RV_ISA_CLASS_Z, "z", riscv_ext_z_valid_p},
+   {RV_ISA_CLASS_X, "x", riscv_ext_x_valid_p},
+   {RV_ISA_CLASS_UNKNOWN, NULL, NULL}
 };
 
 /* Function for parsing arch string.
