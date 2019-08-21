@@ -1285,7 +1285,7 @@ typedef struct riscv_parse_config
      this is a "known" extension. For 'x' and 'sx',
      it always returns true (since they are by
      definition non-standard and cannot be known.  */
-  int (*ext_valid_p) (const char *);
+  bfd_boolean (*ext_valid_p) (const char *);
 } riscv_parse_config_t;
 
 /* Parse a generic prefixed extension.
@@ -1419,19 +1419,19 @@ riscv_std_z_ext_index (const char *ext)
 /* Predicator function for x-prefixed extensions.
    Anything goes, except the literal 'x'.  */
 
-static int
+static bfd_boolean
 riscv_ext_x_valid_p (const char *arg)
 {
   if (!strcasecmp (arg, "x"))
-    return 0;
+    return FALSE;
 
-  return 1;
+  return TRUE;
 }
 
 /* Predicator functions for z-prefixed extensions.
    Only known z-extensions are permitted.  */
 
-static int
+static bfd_boolean
 riscv_ext_z_valid_p (const char *arg)
 {
   const size_t tabsize = ARRAY_SIZE (riscv_std_z_ext_strtab);
@@ -1439,42 +1439,42 @@ riscv_ext_z_valid_p (const char *arg)
   for (size_t i = 0; i < tabsize; ++i)
     {
       if (!strcasecmp (arg, riscv_std_z_ext_strtab[i]))
-	return 1;
+	return TRUE;
     }
 
-  return 0;
+  return FALSE;
 }
 
 /* Predicator function for 's' prefixed extensions.
    Must be either literal 's', or a known s-prefixed extension.  */
 
-static int
+static bfd_boolean
 riscv_ext_s_valid_p (const char *arg)
 {
   const size_t tabsize = ARRAY_SIZE (riscv_std_s_ext_strtab);
 
   if (strlen (arg) == 1 && *arg == 's')
-    return 1;
+    return TRUE;
 
   for (size_t i = 0; i < tabsize; ++i)
     {
       if (!strcasecmp (arg, riscv_std_s_ext_strtab[i]))
-	return 1;
+	return TRUE;
     }
 
-  return 0;
+  return FALSE;
 }
 
 /* Predicator function for 'sx' prefixed extensions.
    Anything goes, except the literal 'sx'.  */
 
-static int
+static bfd_boolean
 riscv_ext_sx_valid_p (const char *arg)
 {
   if (!strcasecmp (arg, "sx"))
-    return 0;
+    return FALSE;
 
-  return 1;
+  return TRUE;
 }
 
 /* Parsing order that is needed for bitmanip.  */
