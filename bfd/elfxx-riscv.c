@@ -1237,21 +1237,9 @@ riscv_parse_std_ext (riscv_parse_subset_t *rps,
   return p;
 }
 
-/* ISA extension name class. E.g. "zbb" corresponds to RV_ISA_CLASS_Z,
-   "xargs" corresponds to RV_ISA_CLASS_X, etc.  */
-
-typedef enum riscv_isa_ext_class
-  {
-   RV_ISA_CLASS_UNKNOWN,
-   RV_ISA_CLASS_X,
-   RV_ISA_CLASS_S,
-   RV_ISA_CLASS_SX,
-   RV_ISA_CLASS_Z
-  } riscv_isa_ext_class_t;
-
 /* Classify the argument 'arch' into one of riscv_isa_ext_class_t.  */
 
-static riscv_isa_ext_class_t
+riscv_isa_ext_class_t
 riscv_get_prefix_class (const char *arch)
 {
   switch (*arch)
@@ -1590,12 +1578,103 @@ riscv_add_subset (riscv_subset_list_t *subset_list,
   s->name = xstrdup (subset);
   s->major_version = major;
   s->minor_version = minor;
+  s->prev = NULL;
   s->next = NULL;
 
   if (subset_list->tail != NULL)
-    subset_list->tail->next = s;
+    {
+      subset_list->tail->next = s;
+      s->prev = subset_list->tail;
+      subset_list->tail = s;
+    }
 
   subset_list->tail = s;
+}
+
+riscv_subset_t *
+riscv_insert_subset_before (riscv_subset_list_t *subset_list,
+			    riscv_subset_t *item,
+			    const char *subset,
+			    int major, int minor);
+
+riscv_subset_t *
+riscv_insert_subset_before (riscv_subset_list_t *subset_list,
+			    riscv_subset_t *item,
+			    const char *subset,
+			    int major, int minor)
+{
+  riscv_subset_t *s;
+
+  if (subset_list->head == NULL || subset_list->tail == NULL)
+    return NULL;
+
+  s = xmalloc (sizeof *s);
+
+  s->name = xstrdup (subset);
+  s->major_version = major;
+  s->minor_version = minor;
+  s->prev = NULL;
+  s->next = NULL;
+
+  if (subset_list->head == item)
+    {
+      s->next = subset_list->head;
+      subset_list->head->prev = s;
+      subset_list->head = s;
+    }
+  else
+    {
+      item->prev->next = s;
+      s->prev = item->prev;
+
+      s->next = item;
+      item->prev = s;
+    }
+
+  return s;
+}
+
+riscv_subset_t *
+riscv_insert_subset_after (riscv_subset_list_t *subset_list,
+			   riscv_subset_t *item,
+			   const char *subset,
+			   int major, int minor);
+
+riscv_subset_t *
+riscv_insert_subset_after (riscv_subset_list_t *subset_list,
+			   riscv_subset_t *item,
+			   const char *subset,
+			   int major, int minor)
+{
+  riscv_subset_t *s;
+
+  if (subset_list->head == NULL || subset_list->tail == NULL)
+    return NULL;
+
+  s = xmalloc (sizeof *s);
+
+  s->name = xstrdup (subset);
+  s->major_version = major;
+  s->minor_version = minor;
+  s->prev = NULL;
+  s->next = NULL;
+
+  if (subset_list->tail == item)
+    {
+      s->prev = subset_list->tail;
+      subset_list->tail->next = s;
+      subset_list->tail = s;
+    }
+  else
+    {
+      item->next->prev = s;
+      s->next = item->next;
+
+      s->prev = item;
+      item->next = s;
+    }
+
+  return s;
 }
 
 /* Find subset in list without version checking, return NULL if not found.  */
