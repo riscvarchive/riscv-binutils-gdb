@@ -1377,14 +1377,14 @@ riscv_parse_prefixed_ext (riscv_parse_subset_t *rps,
   return p;
 }
 
-const char * const riscv_std_z_ext_strtab[RISCV_STD_Z_EXT_COUNT] =
+const char * const riscv_std_z_ext_strtab[] =
   {
-   "zbb", "zbc", "zbe", "zbf", "zbm", "zbp", "zbr", "zbs", "zbt"
+   "zbb", "zbc", "zbe", "zbf", "zbm", "zbp", "zbr", "zbs", "zbt", NULL
   };
 
-const char * const riscv_std_s_ext_strtab[RISCV_STD_S_EXT_COUNT] =
+const char * const riscv_std_s_ext_strtab[] =
   {
-
+   NULL
   };
 
 /* Find the index corresponding to the z-extension
@@ -1395,7 +1395,7 @@ riscv_std_z_ext_index (const char *ext)
 {
   int i;
 
-  for (i = 0; i < RISCV_STD_Z_EXT_COUNT; ++i)
+  for (i = 0; riscv_std_z_ext_strtab[i]; ++i)
     {
       if (!strcasecmp (ext, riscv_std_z_ext_strtab[i]))
 	return i;
@@ -1422,9 +1422,7 @@ riscv_ext_x_valid_p (const char *arg)
 static bfd_boolean
 riscv_ext_z_valid_p (const char *arg)
 {
-  const size_t tabsize = ARRAY_SIZE (riscv_std_z_ext_strtab);
-
-  for (size_t i = 0; i < tabsize; ++i)
+  for (size_t i = 0; riscv_std_z_ext_strtab[i]; ++i)
     {
       if (!strcasecmp (arg, riscv_std_z_ext_strtab[i]))
 	return TRUE;
@@ -1439,12 +1437,10 @@ riscv_ext_z_valid_p (const char *arg)
 static bfd_boolean
 riscv_ext_s_valid_p (const char *arg)
 {
-  const size_t tabsize = ARRAY_SIZE (riscv_std_s_ext_strtab);
-
   if (strlen (arg) == 1 && *arg == 's')
     return TRUE;
 
-  for (size_t i = 0; i < tabsize; ++i)
+  for (size_t i = 0; riscv_std_s_ext_strtab[i]; ++i)
     {
       if (!strcasecmp (arg, riscv_std_s_ext_strtab[i]))
 	return TRUE;

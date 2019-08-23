@@ -88,11 +88,8 @@ riscv_release_subset_list (riscv_subset_list_t *);
 extern char *
 riscv_arch_str (unsigned, const riscv_subset_list_t *);
 
-#define RISCV_STD_Z_EXT_COUNT 9
-extern const char * const z_ext_strtab[RISCV_STD_Z_EXT_COUNT];
-
-#define RISCV_STD_S_EXT_COUNT 0
-extern const char * const riscv_std_s_ext_strtab[RISCV_STD_S_EXT_COUNT];
+extern const char * const riscv_std_z_ext_strtab[];
+extern const char * const riscv_std_s_ext_strtab[];
 
 int
 riscv_std_z_ext_index (const char *ext);
