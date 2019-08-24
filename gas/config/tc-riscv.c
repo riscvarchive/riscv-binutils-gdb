@@ -636,6 +636,7 @@ validate_riscv_insn (const struct riscv_opcode *opc, int length)
       case '(': break;
       case ')': break;
       case '<': USE_BITS (OP_MASK_SHAMTW,	OP_SH_SHAMTW);	break;
+      case '|': USE_BITS (OP_MASK_SHAMTW,	OP_SH_SHAMTW);	break;
       case '>':	USE_BITS (OP_MASK_SHAMT,	OP_SH_SHAMT);	break;
       case 'A': break;
       case 'D':	USE_BITS (OP_MASK_RD,		OP_SH_RD);	break;
@@ -1786,6 +1787,17 @@ rvc_lui:
 	      my_getExpression (imm_expr, s);
 	      check_absolute_expr (ip, imm_expr, FALSE);
 	      if ((unsigned long) imm_expr->X_add_number > 31)
+		as_bad (_("Improper shift amount (%lu)"),
+			(unsigned long) imm_expr->X_add_number);
+	      INSERT_OPERAND (SHAMTW, *ip, imm_expr->X_add_number);
+	      imm_expr->X_op = O_absent;
+	      s = expr_end;
+	      continue;
+
+	    case '|':		/* Shift amount, 0 - (XLEN/2-1).  */
+	      my_getExpression (imm_expr, s);
+	      check_absolute_expr (ip, imm_expr, FALSE);
+	      if ((unsigned long) imm_expr->X_add_number >= xlen/2)
 		as_bad (_("Improper shift amount (%lu)"),
 			(unsigned long) imm_expr->X_add_number);
 	      INSERT_OPERAND (SHAMTW, *ip, imm_expr->X_add_number);
