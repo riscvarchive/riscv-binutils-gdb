@@ -916,6 +916,15 @@ macro_build (expressionS *ep, const char *name, const char *fmt, ...)
 	  INSERT_OPERAND (RS2, insn, va_arg (args, int));
 	  continue;
 
+	case 'r':
+	  INSERT_OPERAND (RS3, insn, va_arg (args, int));
+	  continue;
+
+	case '<':
+	case '|':
+	  INSERT_OPERAND (SHAMTW, insn, va_arg (args, int));
+	  continue;
+
 	case '>':
 	  INSERT_OPERAND (SHAMT, insn, va_arg (args, int));
 	  continue;
@@ -1095,6 +1104,34 @@ load_const (int reg, expressionS *ep)
     }
 }
 
+/* Immediate rotate left shift via right shift.  */
+
+static void
+rotate_left (int rd, int rs, unsigned shamt, unsigned this_xlen)
+{
+  shamt = (this_xlen-1) & -shamt;
+
+  if (this_xlen == xlen)
+    macro_build (NULL, "rori", "d,s,>", rd, rs, shamt);
+  else if (this_xlen == 32)
+    macro_build (NULL, "roriw", "d,s,<", rd, rs, shamt);
+  else
+    as_fatal (_("internal error: bad left shift xlen %d"), this_xlen);
+}
+
+static void
+funnel_left (int rd, int rs1, int rs3, unsigned shamt, unsigned this_xlen)
+{
+  shamt = (this_xlen-1) & -shamt;
+
+  if (this_xlen == xlen)
+    macro_build (NULL, "fsri", "d,s,r,>", rd, rs3, rs1, shamt);
+  else if (this_xlen == 32)
+    macro_build (NULL, "fsriw", "d,s,r,<", rd, rs3, rs1, shamt);
+  else
+    as_fatal (_("internal error: bad left shift xlen %d"), this_xlen);
+}
+
 /* Expand RISC-V assembly macros into one or more instructions.  */
 static void
 macro (struct riscv_cl_insn *ip, expressionS *imm_expr,
@@ -1103,12 +1140,22 @@ macro (struct riscv_cl_insn *ip, expressionS *imm_expr,
   int rd = (ip->insn_opcode >> OP_SH_RD) & OP_MASK_RD;
   int rs1 = (ip->insn_opcode >> OP_SH_RS1) & OP_MASK_RS1;
   int rs2 = (ip->insn_opcode >> OP_SH_RS2) & OP_MASK_RS2;
+  int rs3 = (ip->insn_opcode >> OP_SH_RS3) & OP_MASK_RS3;
+  int shamt = (ip->insn_opcode >> OP_SH_SHAMT) & OP_MASK_SHAMT;
   int mask = ip->insn_mo->mask;
 
   switch (mask)
     {
     case M_LI:
       load_const (rd, imm_expr);
+      break;
+
+    case M_RL:
+      rotate_left (rd, rs1, shamt, ip->insn_mo->xlen_requirement ? ip->insn_mo->xlen_requirement/2 : xlen);
+      break;
+
+    case M_FL:
+      funnel_left (rd, rs1, rs3, shamt, ip->insn_mo->xlen_requirement ? ip->insn_mo->xlen_requirement/2 : xlen);
       break;
 
     case M_LA:

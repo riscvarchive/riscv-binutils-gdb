@@ -409,6 +409,8 @@ enum
   M_CALL,
   M_J,
   M_LI,
+  M_RL,
+  M_FL,
   M_NUM_MACROS
 };
 

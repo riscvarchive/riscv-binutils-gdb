@@ -502,7 +502,7 @@ const struct riscv_opcode riscv_opcodes[] =
 {"grevi",     0, {"B", 0},   "d,s,>",  MATCH_GREVI, MASK_GREVI, match_opcode, 0 },
 {"sloi",      0, {"B", 0},   "d,s,>",  MATCH_SLOI, MASK_SLOI, match_opcode, 0 },
 {"sroi",      0, {"B", 0},   "d,s,>",  MATCH_SROI, MASK_SROI, match_opcode, 0 },
-// {"roli",   0, {"B", 0},   "d,s,>",  MATCH_ROLI, MASK_ROLI, match_opcode, 0 },   /** TBD **/
+{"roli",      0, {"B", 0},   "d,s,>",  0, (int) M_RL, match_never, INSN_MACRO },
 {"rori",      0, {"B", 0},   "d,s,>",  MATCH_RORI, MASK_RORI, match_opcode, 0 },
 {"grev",      0, {"B", 0},   "d,s,t",  MATCH_GREV, MASK_GREV, match_opcode, 0 },
 {"grev",      0, {"B", 0},   "d,s,>",  MATCH_GREVI, MASK_GREVI, match_opcode, INSN_ALIAS },
@@ -511,7 +511,7 @@ const struct riscv_opcode riscv_opcodes[] =
 {"sro",       0, {"B", 0},   "d,s,t",  MATCH_SRO, MASK_SRO, match_opcode, 0 },
 {"sro",       0, {"B", 0},   "d,s,>",  MATCH_SROI, MASK_SROI, match_opcode, INSN_ALIAS },
 {"rol",       0, {"B", 0},   "d,s,t",  MATCH_ROL, MASK_ROL, match_opcode, 0 },
-// {"rol",    0, {"B", 0},   "d,s,>",  MATCH_ROLI, MASK_ROLI, match_opcode, INSN_ALIAS },   /** TBD **/
+{"rol",       0, {"B", 0},   "d,s,>",  0, (int) M_RL, match_never, INSN_MACRO },
 {"ror",       0, {"B", 0},   "d,s,t",  MATCH_ROR, MASK_ROR, match_opcode, 0 },
 {"ror",       0, {"B", 0},   "d,s,>",  MATCH_RORI, MASK_RORI, match_opcode, INSN_ALIAS },
 {"sbseti",    0, {"B", 0},   "d,s,>",  MATCH_SBSETI, MASK_SBSETI, match_opcode, 0 },
@@ -528,10 +528,10 @@ const struct riscv_opcode riscv_opcodes[] =
 {"sbext",     0, {"B", 0},   "d,s,>",  MATCH_SBEXTI, MASK_SBEXTI, match_opcode, INSN_ALIAS },
 {"cmix",      0, {"B", 0},   "d,t,s,r",  MATCH_CMIX, MASK_CMIX, match_opcode, 0 },
 {"cmov",      0, {"B", 0},   "d,t,s,r",  MATCH_CMOV, MASK_CMOV, match_opcode, 0 },
-// {"fsli",   0, {"B", 0},   "d,s,r,>",  MATCH_FSLI, MASK_FSLI, match_opcode, 0 },   /** TBD **/
+{"fsli",      0, {"B", 0},   "d,s,r,>",  0, (int) M_FL, match_never, INSN_MACRO },
 {"fsri",      0, {"B", 0},   "d,s,r,>",  MATCH_FSRI, MASK_FSRI, match_opcode, 0 },
 {"fsl",       0, {"B", 0},   "d,s,r,t",  MATCH_FSL, MASK_FSL, match_opcode, 0 },
-// {"fsl",    0, {"B", 0},   "d,s,r,>",  MATCH_FSLI, MASK_FSLI, match_opcode, INSN_ALIAS },   /** TBD **/
+{"fsl",       0, {"B", 0},   "d,s,r,>",  0, (int) M_FL, match_never, INSN_MACRO },
 {"fsr",       0, {"B", 0},   "d,s,r,t",  MATCH_FSR, MASK_FSR, match_opcode, 0 },
 {"fsr",       0, {"B", 0},   "d,s,r,>",  MATCH_FSRI, MASK_FSRI, match_opcode, INSN_ALIAS },
 {"clz",       0, {"B", 0},   "d,s",  MATCH_CLZ, MASK_CLZ, match_opcode, 0 },
@@ -573,7 +573,7 @@ const struct riscv_opcode riscv_opcodes[] =
 {"greviw",   64, {"B", 0},   "d,s,<",  MATCH_GREVIW, MASK_GREVIW, match_opcode, 0 },
 {"sloiw",    64, {"B", 0},   "d,s,<",  MATCH_SLOIW, MASK_SLOIW, match_opcode, 0 },
 {"sroiw",    64, {"B", 0},   "d,s,<",  MATCH_SROIW, MASK_SROIW, match_opcode, 0 },
-// {"roliw", 64, {"B", 0},   "d,s,<",  MATCH_ROLIW, MASK_ROLIW, match_opcode, 0 },   /** TBD **/
+{"roliw",    64, {"B", 0},   "d,s,<",  0, (int) M_RL, match_never, INSN_MACRO },
 {"roriw",    64, {"B", 0},   "d,s,<",  MATCH_RORIW, MASK_RORIW, match_opcode, 0 },
 {"grevw",    64, {"B", 0},   "d,s,t",  MATCH_GREVW, MASK_GREVW, match_opcode, 0 },
 {"grevw",    64, {"B", 0},   "d,s,<",  MATCH_GREVIW, MASK_GREVIW, match_opcode, INSN_ALIAS },
@@ -582,7 +582,7 @@ const struct riscv_opcode riscv_opcodes[] =
 {"srow",     64, {"B", 0},   "d,s,t",  MATCH_SROW, MASK_SROW, match_opcode, 0 },
 {"srow",     64, {"B", 0},   "d,s,<",  MATCH_SROIW, MASK_SROIW, match_opcode, INSN_ALIAS },
 {"rolw",     64, {"B", 0},   "d,s,t",  MATCH_ROLW, MASK_ROLW, match_opcode, 0 },
-// {"rolw",  64, {"B", 0},   "d,s,<",  MATCH_ROLIW, MASK_ROLIW, match_opcode, INSN_ALIAS },   /** TBD **/
+{"rolw",     64, {"B", 0},   "d,s,<",  0, (int) M_RL, match_never, INSN_MACRO },
 {"rorw",     64, {"B", 0},   "d,s,t",  MATCH_RORW, MASK_RORW, match_opcode, 0 },
 {"rorw",     64, {"B", 0},   "d,s,<",  MATCH_RORIW, MASK_RORIW, match_opcode, INSN_ALIAS },
 {"sbsetiw",  64, {"B", 0},   "d,s,<",  MATCH_SBSETIW, MASK_SBSETIW, match_opcode, 0 },
@@ -595,10 +595,10 @@ const struct riscv_opcode riscv_opcodes[] =
 {"sbinvw",   64, {"B", 0},   "d,s,t",  MATCH_SBINVW, MASK_SBINVW, match_opcode, 0 },
 {"sbinvw",   64, {"B", 0},   "d,s,<",  MATCH_SBINVIW, MASK_SBINVIW, match_opcode, INSN_ALIAS },
 {"sbextw",   64, {"B", 0},   "d,s,t",  MATCH_SBEXTW, MASK_SBEXTW, match_opcode, 0 },
-// {"fsliw", 64, {"B", 0},   "d,s,r,<",  MATCH_FSLIW, MASK_FSLIW, match_opcode, 0 },   /** TBD **/
+{"fsliw",    64, {"B", 0},   "d,s,r,<",  0, (int) M_FL, match_never, INSN_MACRO },
 {"fsriw",    64, {"B", 0},   "d,s,r,<",  MATCH_FSRIW, MASK_FSRIW, match_opcode, 0 },
 {"fslw",     64, {"B", 0},   "d,s,r,t",  MATCH_FSLW, MASK_FSLW, match_opcode, 0 },
-// {"fslw",  64, {"B", 0},   "d,s,r,<",  MATCH_FSLIW, MASK_FSLIW, match_opcode, INSN_ALIAS },   /** TBD **/
+{"fslw",     64, {"B", 0},   "d,s,r,<",  0, (int) M_FL, match_never, INSN_MACRO },
 {"fsrw",     64, {"B", 0},   "d,s,r,t",  MATCH_FSRW, MASK_FSRW, match_opcode, 0 },
 {"fsrw",     64, {"B", 0},   "d,s,r,<",  MATCH_FSRIW, MASK_FSRIW, match_opcode, INSN_ALIAS },
 {"clzw",     64, {"B", 0},   "d,s",  MATCH_CLZW, MASK_CLZW, match_opcode, 0 },
