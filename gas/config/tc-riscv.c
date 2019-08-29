@@ -134,7 +134,7 @@ riscv_multi_subset_supports (enum riscv_insn_class insn_class)
 
     case INSN_CLASS_D_C:
       return riscv_subset_supports ("d") && riscv_subset_supports ("c");
-    case INSN_CLASS_F_C: return riscv_subset_supports ("i");
+    case INSN_CLASS_F_C:
       return riscv_subset_supports ("f") && riscv_subset_supports ("c");
 
     case INSN_CLASS_Q: return riscv_subset_supports ("q");
