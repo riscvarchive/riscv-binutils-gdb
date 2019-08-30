@@ -1,3 +1,8 @@
+2019-08-30  Jim Wilson  <jimw@sifive.com>
+
+	* elfnn-riscv.c (riscv_elf_relocate_section): For unresolvable reloc
+	error, call bfd_set_error, set ret to FALSE, and goto out label.
+
 2019-08-28  Jim Wilson  <jimw@sifive.com>
 
 	* elfnn-riscv.c (_bfd_riscv_relax_lui): Add check to exclude abs
