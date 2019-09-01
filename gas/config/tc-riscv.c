@@ -1132,6 +1132,58 @@ funnel_left (int rd, int rs1, int rs3, unsigned shamt, unsigned this_xlen)
     as_fatal (_("internal error: bad left shift xlen %d"), this_xlen);
 }
 
+static void
+perm (int rd, int rs1, const char *op)
+{
+  const char *insn = NULL;
+  const char *p = op;
+  int shamt = 0;
+  int shfl = 0;
+
+  switch (p[0])
+    {
+    case 'r': insn = "grevi";   shamt = xlen-1;   p += 3; break;
+    case 'o': insn = "gorci";   shamt = xlen-1;   p += 3; break;
+    case 'z': insn = "shfli";   shamt = xlen/2-1; p += 3; shfl = 1; break;
+    case 'u': insn = "unshfli"; shamt = xlen/2-1; p += 5; shfl = 1; break;
+    default: as_fatal (_("internal error: bad permutation pseudo-instruction %s"), op);
+    }
+
+  switch (p[0])
+    {
+    case '2': shamt &= shamt << 1; p += 1; break;
+    case '4': shamt &= shamt << 2; p += 1; break;
+    case '8': shamt &= shamt << 3; p += 1; break;
+    case '1': shamt &= shamt << 4; p += 2; break;
+    case '3': shamt &= shamt << 5; p += 2;
+    }
+
+  if (p[0])
+    {
+      if (shfl)
+        switch (p[1])
+          {
+          case 'w': shamt &= 15; break;
+          case 'h': shamt &=  7; break;
+          case 'b': shamt &=  3; break;
+          case 'n': shamt &=  1; break;
+          default: as_fatal (_("internal error: bad permutation pseudo-instruction %s"), op);
+          }
+      else
+        switch (p[1])
+          {
+          case 'w': shamt &= 31; break;
+          case 'h': shamt &= 15; break;
+          case 'b': shamt &=  7; break;
+          case 'n': shamt &=  3; break;
+          case 'p': shamt &=  1; break;
+          default: as_fatal (_("internal error: bad permutation pseudo-instruction %s"), op);
+          }
+    }
+
+  macro_build (NULL, insn, "d,s,>", rd, rs1, shamt);
+}
+
 /* Expand RISC-V assembly macros into one or more instructions.  */
 static void
 macro (struct riscv_cl_insn *ip, expressionS *imm_expr,
@@ -1156,6 +1208,10 @@ macro (struct riscv_cl_insn *ip, expressionS *imm_expr,
 
     case M_FL:
       funnel_left (rd, rs1, rs3, shamt, ip->insn_mo->xlen_requirement ? ip->insn_mo->xlen_requirement/2 : xlen);
+      break;
+
+    case M_PERM:
+      perm (rd, rs1, ip->insn_mo->name);
       break;
 
     case M_LA:
