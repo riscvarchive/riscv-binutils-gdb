@@ -1479,8 +1479,8 @@ vs2, funct3=X
 VWXUNARY0
 vs1, funct3=V
 00000 vmv.x.s
-11000 vpopc
-11001 vfirst
+10000 vpopc
+10001 vfirst
 
 VMUNARY0
 rs1
@@ -2184,9 +2184,9 @@ funct6 VM  VS2  VS1/RS1/IMM funct3 VD   opcode
 #define MATCH_VMXNORMM   0x7e002057
 #define MASK_VMXNORMM    0xfe00707f
 
-#define MATCH_VPOPCM   0x400c2057
+#define MATCH_VPOPCM   0x40082057
 #define MASK_VPOPCM    0xfc0ff07f
-#define MATCH_VFIRSTM  0x400ca057
+#define MATCH_VFIRSTM  0x4008a057
 #define MASK_VFIRSTM   0xfc0ff07f
 
 #define MATCH_VMSBFM   0x5000a057
