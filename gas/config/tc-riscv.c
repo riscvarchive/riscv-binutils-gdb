@@ -132,49 +132,49 @@ riscv_multi_subset_supports (enum riscv_insn_class insn_class)
     case INSN_CLASS_F: return riscv_subset_supports ("f");
     case INSN_CLASS_D: return riscv_subset_supports ("d");
 
-    case INSN_CLASS_D_C:
+    case INSN_CLASS_D_AND_C:
       return riscv_subset_supports ("d") && riscv_subset_supports ("c");
-    case INSN_CLASS_F_C:
+    case INSN_CLASS_F_AND_C:
       return riscv_subset_supports ("f") && riscv_subset_supports ("c");
 
     case INSN_CLASS_Q: return riscv_subset_supports ("q");
 
     case INSN_CLASS_B: return riscv_subset_supports ("b");
-    case INSN_CLASS_B_ZBB:
+    case INSN_CLASS_B_OR_ZBB:
       return riscv_subset_supports ("b")
 	|| riscv_subset_supports ("zbb");
 
-    case INSN_CLASS_B_ZBB_ZBP:
+    case INSN_CLASS_B_OR_ZBB_OR_ZBP:
       return riscv_subset_supports ("b")
 	|| riscv_subset_supports ("zbb")
 	|| riscv_subset_supports ("zbp");
 
-    case INSN_CLASS_B_ZBC:
+    case INSN_CLASS_B_OR_ZBC:
       return riscv_subset_supports ("b")
 	|| riscv_subset_supports ("zbc");
 
-    case INSN_CLASS_B_ZBE:
+    case INSN_CLASS_B_OR_ZBE:
       return riscv_subset_supports ("b")
 	|| riscv_subset_supports ("zbe");
 
-    case INSN_CLASS_B_ZBF:
+    case INSN_CLASS_B_OR_ZBF:
       return riscv_subset_supports ("zbf");
 
-    case INSN_CLASS_B_ZBM:
+    case INSN_CLASS_B_OR_ZBM:
       return riscv_subset_supports ("zbm");
 
-    case INSN_CLASS_B_ZBP:
+    case INSN_CLASS_B_OR_ZBP:
       return riscv_subset_supports ("b")
 	|| riscv_subset_supports ("zbp");
 
-    case INSN_CLASS_B_ZBR:
+    case INSN_CLASS_B_OR_ZBR:
       return riscv_subset_supports ("zbr");
 
-    case INSN_CLASS_B_ZBS:
+    case INSN_CLASS_B_OR_ZBS:
       return riscv_subset_supports ("b")
 	|| riscv_subset_supports ("zbs");
 
-    case INSN_CLASS_B_ZBT:
+    case INSN_CLASS_B_OR_ZBT:
       return riscv_subset_supports ("zbt");
 
     default:
