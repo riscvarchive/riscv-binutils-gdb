@@ -304,6 +304,7 @@ enum riscv_insn_class
    INSN_CLASS_C,
    INSN_CLASS_A,
    INSN_CLASS_M,
+   INSN_CLASS_B,
    INSN_CLASS_F,
    INSN_CLASS_D,
    INSN_CLASS_D_AND_C,
