@@ -1237,21 +1237,9 @@ riscv_parse_std_ext (riscv_parse_subset_t *rps,
   return p;
 }
 
-/* ISA extension name class. E.g. "zbb" corresponds to RV_ISA_CLASS_Z,
-   "xargs" corresponds to RV_ISA_CLASS_X, etc.  */
-
-typedef enum riscv_isa_ext_class
-  {
-   RV_ISA_CLASS_UNKNOWN,
-   RV_ISA_CLASS_X,
-   RV_ISA_CLASS_S,
-   RV_ISA_CLASS_SX,
-   RV_ISA_CLASS_Z
-  } riscv_isa_ext_class_t;
-
 /* Classify the argument 'arch' into one of riscv_isa_ext_class_t.  */
 
-static riscv_isa_ext_class_t
+riscv_isa_ext_class_t
 riscv_get_prefix_class (const char *arch)
 {
   switch (*arch)
