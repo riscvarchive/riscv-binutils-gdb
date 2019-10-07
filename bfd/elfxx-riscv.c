@@ -1430,24 +1430,11 @@ riscv_ext_s_valid_p (const char *arg)
   return riscv_multi_letter_ext_valid_p (arg, riscv_std_s_ext_strtab);
 }
 
-/* Predicator function for 'sx' prefixed extensions.
-   Anything goes, except the literal 'sx'.  */
-
-static bfd_boolean
-riscv_ext_sx_valid_p (const char *arg)
-{
-  if (!strcasecmp (arg, "sx"))
-    return FALSE;
-
-  return TRUE;
-}
-
 /* Parsing order that is needed for bitmanip.  */
 
 static const riscv_parse_config_t parse_config[] =
 {
    {RV_ISA_CLASS_S, "s", riscv_ext_s_valid_p},
-   {RV_ISA_CLASS_SX, "sx", riscv_ext_sx_valid_p},
    {RV_ISA_CLASS_Z, "z", riscv_ext_z_valid_p},
    {RV_ISA_CLASS_X, "x", riscv_ext_x_valid_p},
    {RV_ISA_CLASS_UNKNOWN, NULL, NULL}
