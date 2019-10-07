@@ -1263,11 +1263,11 @@ typedef struct riscv_parse_config
   riscv_isa_ext_class_t class;
 
   /* Lower-case prefix string for error printing
-     and internal parser usage, e.g. "sx", "z".  */
+     and internal parser usage, e.g. "z", "x".  */
   const char *prefix;
 
   /* Predicate which is used for checking whether
-     this is a "known" extension. For 'x' and 'sx',
+     this is a "known" extension. For 'x',
      it always returns true (since they are by
      definition non-standard and cannot be known.  */
   bfd_boolean (*ext_valid_p) (const char *);
@@ -1324,8 +1324,7 @@ riscv_parse_prefixed_ext (riscv_parse_subset_t *rps,
       /* Check that the name is valid.
 	 For 'x', anything goes but it cannot simply be 'x'.
 	 For 'z', it must be known from a list and also cannot simply be 'z'.
-	 For 's', it must be known from a list and also *can* simply be 's'.
-	 For 'sx', see 'x'.  */
+	 For 's', it must be known from a list and also *can* simply be 's'.  */
 
       /* Check that the extension name is well-formed.  */
       if (!config->ext_valid_p (subset))
