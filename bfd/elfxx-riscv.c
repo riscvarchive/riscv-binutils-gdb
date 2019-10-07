@@ -1245,10 +1245,7 @@ riscv_get_prefix_class (const char *arch)
   switch (*arch)
     {
     case 's':
-      if (strlen (arch) > 1 && arch[1] == 'x')
-	return RV_ISA_CLASS_SX;
-      else
-	return RV_ISA_CLASS_S;
+      return RV_ISA_CLASS_S;
 
     case 'x': return RV_ISA_CLASS_X;
     case 'z': return RV_ISA_CLASS_Z;

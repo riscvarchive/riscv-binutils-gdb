@@ -2838,7 +2838,6 @@ riscv_skip_prefix (const char *ext, riscv_isa_ext_class_t c)
     {
     case RV_ISA_CLASS_X: return &ext[1];
     case RV_ISA_CLASS_S: return &ext[1];
-    case RV_ISA_CLASS_SX: return &ext[2];
     case RV_ISA_CLASS_Z: return &ext[1];
     default: return ext;
     }

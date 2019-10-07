@@ -97,7 +97,6 @@ extern const char * const riscv_std_s_ext_strtab[];
 typedef enum riscv_isa_ext_class
   {
    RV_ISA_CLASS_S,
-   RV_ISA_CLASS_SX,
    RV_ISA_CLASS_Z,
    RV_ISA_CLASS_X,
    RV_ISA_CLASS_UNKNOWN
