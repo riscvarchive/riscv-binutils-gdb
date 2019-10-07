@@ -2863,9 +2863,9 @@ riscv_prefix_cmp (const char *a, const char *b)
 }
 
 static bfd_boolean
-riscv_merge_non_std_ext (bfd *ibfd,
-			 riscv_subset_t **pin,
-			 riscv_subset_t **pout)
+riscv_merge_multi_letter_ext (bfd *ibfd,
+			      riscv_subset_t **pin,
+			      riscv_subset_t **pout)
 {
   riscv_subset_t *in = *pin;
   riscv_subset_t *out = *pout;
@@ -2981,7 +2981,7 @@ riscv_merge_arch_attr_info (bfd *ibfd, char *in_arch, char *out_arch)
     return NULL;
 
   /* Merge all non-single letter extensions with single call.  */
-  if (!riscv_merge_non_std_ext (ibfd, &in, &out))
+  if (!riscv_merge_multi_letter_ext (ibfd, &in, &out))
     return NULL;
 
   if (xlen_in != xlen_out)
