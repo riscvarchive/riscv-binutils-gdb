@@ -293,7 +293,7 @@ static const char * const riscv_pred_succ[16] =
 
 /* The maximal number of subset can be required. */
 #define MAX_SUBSET_NUM 4
-   
+
 /* All RISC-V instructions belong to at least one of these classes.  */
 
 enum riscv_insn_class
