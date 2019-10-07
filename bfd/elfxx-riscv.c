@@ -1387,23 +1387,6 @@ const char * const riscv_std_s_ext_strtab[] =
    NULL
   };
 
-/* Find the index corresponding to the z-extension
-   name `ext'. If not found, return -1.  */
-
-int
-riscv_std_z_ext_index (const char *ext)
-{
-  int i;
-
-  for (i = 0; riscv_std_z_ext_strtab[i]; ++i)
-    {
-      if (!strcasecmp (ext, riscv_std_z_ext_strtab[i]))
-	return i;
-    }
-
-  return -1;
-}
-
 /* Predicator function for x-prefixed extensions.
    Anything goes, except the literal 'x'.  */
 
