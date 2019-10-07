@@ -1387,6 +1387,19 @@ const char * const riscv_std_s_ext_strtab[] =
    NULL
   };
 
+static bfd_boolean
+riscv_multi_letter_ext_valid_p (const char *ext,
+				const char *const *known_exts)
+{
+  for (size_t i = 0; known_exts[i]; ++i)
+    {
+      if (!strcmp (ext, known_exts[i]))
+	return TRUE;
+    }
+
+  return FALSE;
+}
+
 /* Predicator function for x-prefixed extensions.
    Anything goes, except the literal 'x'.  */
 
@@ -1405,13 +1418,7 @@ riscv_ext_x_valid_p (const char *arg)
 static bfd_boolean
 riscv_ext_z_valid_p (const char *arg)
 {
-  for (size_t i = 0; riscv_std_z_ext_strtab[i]; ++i)
-    {
-      if (!strcasecmp (arg, riscv_std_z_ext_strtab[i]))
-	return TRUE;
-    }
-
-  return FALSE;
+  return riscv_multi_letter_ext_valid_p (arg, riscv_std_z_ext_strtab);
 }
 
 /* Predicator function for 's' prefixed extensions.
@@ -1420,16 +1427,7 @@ riscv_ext_z_valid_p (const char *arg)
 static bfd_boolean
 riscv_ext_s_valid_p (const char *arg)
 {
-  if (strlen (arg) == 1 && *arg == 's')
-    return TRUE;
-
-  for (size_t i = 0; riscv_std_s_ext_strtab[i]; ++i)
-    {
-      if (!strcasecmp (arg, riscv_std_s_ext_strtab[i]))
-	return TRUE;
-    }
-
-  return FALSE;
+  return riscv_multi_letter_ext_valid_p (arg, riscv_std_s_ext_strtab);
 }
 
 /* Predicator function for 'sx' prefixed extensions.
