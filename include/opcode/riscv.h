@@ -53,9 +53,9 @@ static const char * const riscv_pred_succ[16] =
 };
 
 /* List of vsetvli vsew constants.  */
-static const char * const riscv_vsew[5] =
+static const char * const riscv_vsew[8] =
 {
-  "e8", "e16", "e32", "e64", "e128"
+  "e8", "e16", "e32", "e64", "e128", "e256", "e512", "e1024"
 };
 
 /* List of vsetvli vlmul constants.  */
