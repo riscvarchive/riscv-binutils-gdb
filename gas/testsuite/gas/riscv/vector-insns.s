@@ -2,6 +2,9 @@
 	vsetvli a0, a1, 0
 	vsetvli a0, a1, 0x7ff
 	vsetvli a0, a1, e16,m2,d4
+	vsetvli a0, a1, e256, m8, d8
+	vsetvli a0, a1, e512, m8, d8
+	vsetvli a0, a1, e1024, m8, d8
 
 	vlb.v v4, (a0)
 	vlb.v v4, 0(a0)
