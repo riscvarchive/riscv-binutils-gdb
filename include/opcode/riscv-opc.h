@@ -1583,6 +1583,7 @@ vs1
 10010 vfncvt.f.xu.v
 10011 vfncvt.f.x.v
 10100 vfncvt.f.f.v
+10101 vfncvt.rod.f.f.v
 
 VFUNARY1
 vs1
@@ -2130,6 +2131,8 @@ funct6 VM  VS2  VS1/RS1/IMM funct3 VD   opcode
 #define MASK_VFNCVTFXV    0xfc0ff07f
 #define MATCH_VFNCVTFFV   0x880a1057
 #define MASK_VFNCVTFFV    0xfc0ff07f
+#define MATCH_VFNCVTRFFV  0x880a9057
+#define MASK_VFNCVTRFFV   0xfc0ff07f
 
 #define MATCH_VREDSUMVV  0x00002057
 #define MASK_VREDSUMVV   0xfc00707f

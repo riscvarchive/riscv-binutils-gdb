@@ -1689,11 +1689,13 @@
 	vfncvt.f.xu.v v4, v8
 	vfncvt.f.x.v v4, v8
 	vfncvt.f.f.v v4, v8
+	vfncvt.rod.f.f.v v4, v8
 	vfncvt.xu.f.v v4, v8, v0.t
 	vfncvt.x.f.v v4, v8, v0.t
 	vfncvt.f.xu.v v4, v8, v0.t
 	vfncvt.f.x.v v4, v8, v0.t
 	vfncvt.f.f.v v4, v8, v0.t
+	vfncvt.rod.f.f.v v4, v8, v0.t
 
 	vredsum.vs v4, v8, v12
 	vredmaxu.vs v4, v8, v8
