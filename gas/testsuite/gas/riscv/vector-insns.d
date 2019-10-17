@@ -1623,11 +1623,13 @@ Disassembly of section .text:
 [ 	]+[0-9a-f]+:[ 	]+8a891257[ 	]+vfncvt.f.xu.v[ 	]+v4,v8
 [ 	]+[0-9a-f]+:[ 	]+8a899257[ 	]+vfncvt.f.x.v[ 	]+v4,v8
 [ 	]+[0-9a-f]+:[ 	]+8a8a1257[ 	]+vfncvt.f.f.v[ 	]+v4,v8
+[ 	]+[0-9a-f]+:[ 	]+8a8a9257[ 	]+vfncvt.rod.f.f.v[ 	]+v4,v8
 [ 	]+[0-9a-f]+:[ 	]+88881257[ 	]+vfncvt.xu.f.v[ 	]+v4,v8,v0.t
 [ 	]+[0-9a-f]+:[ 	]+88889257[ 	]+vfncvt.x.f.v[ 	]+v4,v8,v0.t
 [ 	]+[0-9a-f]+:[ 	]+88891257[ 	]+vfncvt.f.xu.v[ 	]+v4,v8,v0.t
 [ 	]+[0-9a-f]+:[ 	]+88899257[ 	]+vfncvt.f.x.v[ 	]+v4,v8,v0.t
 [ 	]+[0-9a-f]+:[ 	]+888a1257[ 	]+vfncvt.f.f.v[ 	]+v4,v8,v0.t
+[ 	]+[0-9a-f]+:[ 	]+888a9257[ 	]+vfncvt.rod.f.f.v[ 	]+v4,v8,v0.t
 [ 	]+[0-9a-f]+:[ 	]+02862257[ 	]+vredsum.vs[ 	]+v4,v8,v12
 [ 	]+[0-9a-f]+:[ 	]+1a842257[ 	]+vredmaxu.vs[ 	]+v4,v8,v8
 [ 	]+[0-9a-f]+:[ 	]+1e842257[ 	]+vredmax.vs[ 	]+v4,v8,v8

@@ -1495,6 +1495,7 @@ const struct riscv_opcode riscv_opcodes[] =
 {"vfncvt.f.xu.v",0,{"V", "F", 0}, "Vd,VtVm", MATCH_VFNCVTFXUV, MASK_VFNCVTFXUV, match_opcode, 0},
 {"vfncvt.f.x.v",0, {"V", "F", 0}, "Vd,VtVm", MATCH_VFNCVTFXV, MASK_VFNCVTFXV, match_opcode, 0},
 {"vfncvt.f.f.v",0, {"V", "F", 0}, "Vd,VtVm", MATCH_VFNCVTFFV, MASK_VFNCVTFFV, match_opcode, 0},
+{"vfncvt.rod.f.f.v",0, {"V", "F", 0}, "Vd,VtVm", MATCH_VFNCVTRFFV, MASK_VFNCVTRFFV, match_opcode, 0},
 
 {"vredsum.vs", 0, {"V", 0}, "Vd,Vt,VsVm", MATCH_VREDSUMVV, MASK_VREDSUMVV, match_opcode, 0},
 {"vredmaxu.vs",0, {"V", 0}, "Vd,Vt,VsVm", MATCH_VREDMAXUVV, MASK_VREDMAXUVV, match_opcode, 0},
