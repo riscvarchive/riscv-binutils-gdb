@@ -1210,22 +1210,22 @@
 	vsra.vi v4, v8, 1, v0.t
 	vsra.vi v4, v8, 31, v0.t
 
-	vnsrl.vv v4, v8, v12
-	vnsrl.vx v4, v8, a1
-	vnsrl.vi v4, v8, 1
-	vnsrl.vi v4, v8, 31
-	vnsrl.vv v4, v8, v12, v0.t
-	vnsrl.vx v4, v8, a1, v0.t
-	vnsrl.vi v4, v8, 1, v0.t
-	vnsrl.vi v4, v8, 31, v0.t
-	vnsra.vv v4, v8, v12
-	vnsra.vx v4, v8, a1
-	vnsra.vi v4, v8, 1
-	vnsra.vi v4, v8, 31
-	vnsra.vv v4, v8, v12, v0.t
-	vnsra.vx v4, v8, a1, v0.t
-	vnsra.vi v4, v8, 1, v0.t
-	vnsra.vi v4, v8, 31, v0.t
+	vnsrl.wv v4, v8, v12
+	vnsrl.wx v4, v8, a1
+	vnsrl.wi v4, v8, 1
+	vnsrl.wi v4, v8, 31
+	vnsrl.wv v4, v8, v12, v0.t
+	vnsrl.wx v4, v8, a1, v0.t
+	vnsrl.wi v4, v8, 1, v0.t
+	vnsrl.wi v4, v8, 31, v0.t
+	vnsra.wv v4, v8, v12
+	vnsra.wx v4, v8, a1
+	vnsra.wi v4, v8, 1
+	vnsra.wi v4, v8, 31
+	vnsra.wv v4, v8, v12, v0.t
+	vnsra.wx v4, v8, a1, v0.t
+	vnsra.wi v4, v8, 1, v0.t
+	vnsra.wi v4, v8, 31, v0.t
 
 	# Aliases
 	vmsgt.vv v4, v8, v12
@@ -1495,22 +1495,22 @@
 	vssra.vi v4, v8, 1, v0.t
 	vssra.vi v4, v8, 31, v0.t
 
-	vnclipu.vv v4, v8, v12
-	vnclipu.vx v4, v8, a1
-	vnclipu.vi v4, v8, 1
-	vnclipu.vi v4, v8, 31
-	vnclipu.vv v4, v8, v12, v0.t
-	vnclipu.vx v4, v8, a1, v0.t
-	vnclipu.vi v4, v8, 1, v0.t
-	vnclipu.vi v4, v8, 31, v0.t
-	vnclip.vv v4, v8, v12
-	vnclip.vx v4, v8, a1
-	vnclip.vi v4, v8, 1
-	vnclip.vi v4, v8, 31
-	vnclip.vv v4, v8, v12, v0.t
-	vnclip.vx v4, v8, a1, v0.t
-	vnclip.vi v4, v8, 1, v0.t
-	vnclip.vi v4, v8, 31, v0.t
+	vnclipu.wv v4, v8, v12
+	vnclipu.wx v4, v8, a1
+	vnclipu.wi v4, v8, 1
+	vnclipu.wi v4, v8, 31
+	vnclipu.wv v4, v8, v12, v0.t
+	vnclipu.wx v4, v8, a1, v0.t
+	vnclipu.wi v4, v8, 1, v0.t
+	vnclipu.wi v4, v8, 31, v0.t
+	vnclip.wv v4, v8, v12
+	vnclip.wx v4, v8, a1
+	vnclip.wi v4, v8, 1
+	vnclip.wi v4, v8, 31
+	vnclip.wv v4, v8, v12, v0.t
+	vnclip.wx v4, v8, a1, v0.t
+	vnclip.wi v4, v8, 1, v0.t
+	vnclip.wi v4, v8, 31, v0.t
 
 	vfadd.vv v4, v8, v12
 	vfadd.vf v4, v8, fa2
@@ -1684,18 +1684,18 @@
 	vfwcvt.f.x.v v4, v8, v0.t
 	vfwcvt.f.f.v v4, v8, v0.t
 
-	vfncvt.xu.f.v v4, v8
-	vfncvt.x.f.v v4, v8
-	vfncvt.f.xu.v v4, v8
-	vfncvt.f.x.v v4, v8
-	vfncvt.f.f.v v4, v8
-	vfncvt.rod.f.f.v v4, v8
-	vfncvt.xu.f.v v4, v8, v0.t
-	vfncvt.x.f.v v4, v8, v0.t
-	vfncvt.f.xu.v v4, v8, v0.t
-	vfncvt.f.x.v v4, v8, v0.t
-	vfncvt.f.f.v v4, v8, v0.t
-	vfncvt.rod.f.f.v v4, v8, v0.t
+	vfncvt.xu.f.w v4, v8
+	vfncvt.x.f.w v4, v8
+	vfncvt.f.xu.w v4, v8
+	vfncvt.f.x.w v4, v8
+	vfncvt.f.f.w v4, v8
+	vfncvt.rod.f.f.w v4, v8
+	vfncvt.xu.f.w v4, v8, v0.t
+	vfncvt.x.f.w v4, v8, v0.t
+	vfncvt.f.xu.w v4, v8, v0.t
+	vfncvt.f.x.w v4, v8, v0.t
+	vfncvt.f.f.w v4, v8, v0.t
+	vfncvt.rod.f.f.w v4, v8, v0.t
 
 	vredsum.vs v4, v8, v12
 	vredmaxu.vs v4, v8, v8
