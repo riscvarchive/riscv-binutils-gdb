@@ -44,6 +44,9 @@ if [istarget "riscv*-*-*"] {
 	{ "Weak reference 64" "-T weakref.ld -melf64lriscv" ""
 	    "-march=rv64i -mabi=lp64" {weakref64.s}
 	    {{objdump -d weakref64.d}} "weakref64"}
+	{ "Linker relaxation" "-T relax.ld -melf64lriscv" ""
+	    "-march=rv64imafdc -mabi=lp64d" {relax_a.s relax_align1.s relax_align2.s relax_c.s}
+	    {} "relax"}
     }
 
     # The following tests require shared library support.

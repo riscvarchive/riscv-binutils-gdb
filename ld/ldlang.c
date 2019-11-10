@@ -4882,25 +4882,23 @@ insert_pad (lang_statement_union_type **ptr,
 /* Work out how much this section will move the dot point.  */
 
 static bfd_vma
-size_input_section
+size_input_section_part1
   (lang_statement_union_type **this_ptr,
    lang_output_section_statement_type *output_section_statement,
-   fill_type *fill,
-   bfd_vma dot)
+   bfd_vma dot,
+   bfd_size_type *alignment_needed)
 {
   lang_input_section_type *is = &((*this_ptr)->input_section);
   asection *i = is->section;
   asection *o = output_section_statement->bfd_section;
 
   if (i->sec_info_type == SEC_INFO_TYPE_JUST_SYMS)
-    i->output_offset = i->vma - o->vma;
+    ;
   else if (((i->flags & SEC_EXCLUDE) != 0)
 	   || output_section_statement->ignored)
-    i->output_offset = dot - o->vma;
+    ;
   else
     {
-      bfd_size_type alignment_needed;
-
       /* Align this section first to the input sections requirement,
 	 then to the output section's requirement.  If this alignment
 	 is greater than any seen before, then record it too.  Perform
@@ -4914,16 +4912,39 @@ size_input_section
       if (o->alignment_power < i->alignment_power)
 	o->alignment_power = i->alignment_power;
 
-      alignment_needed = align_power (dot, i->alignment_power) - dot;
-
-      if (alignment_needed != 0)
-	{
-	  insert_pad (this_ptr, fill, TO_SIZE (alignment_needed), o, dot);
-	  dot += alignment_needed;
-	}
+      *alignment_needed = align_power (dot, i->alignment_power) - dot;
 
       /* Remember where in the output section this input section goes.  */
-      i->output_offset = dot - o->vma;
+      i->output_offset = dot + *alignment_needed - o->vma;
+    }
+
+  return dot;
+}
+
+static bfd_vma
+size_input_section_part2
+  (lang_statement_union_type **this_ptr,
+   lang_output_section_statement_type *output_section_statement,
+   fill_type *fill,
+   bfd_vma dot,
+   bfd_size_type *alignment_needed)
+{
+  lang_input_section_type *is = &((*this_ptr)->input_section);
+  asection *i = is->section;
+  asection *o = output_section_statement->bfd_section;
+
+  if (i->sec_info_type == SEC_INFO_TYPE_JUST_SYMS)
+    i->output_offset = i->vma - o->vma;
+  else if (((i->flags & SEC_EXCLUDE) != 0)
+	   || output_section_statement->ignored)
+    i->output_offset = dot - o->vma;
+  else
+    {
+      if (*alignment_needed != 0)
+        {
+	  insert_pad (this_ptr, fill, TO_SIZE (*alignment_needed), o, dot);
+	  dot += *alignment_needed;
+        }
 
       /* Mark how big the output section must be to contain this now.  */
       dot += TO_ADDR (i->size);
@@ -5630,8 +5651,12 @@ lang_size_sections_1
 	case lang_input_section_enum:
 	  {
 	    asection *i;
+	    bfd_size_type alignment_needed;
 
 	    i = s->input_section.section;
+
+	    dot = size_input_section_part1 (prev, output_section_statement,
+					    dot, &alignment_needed);
 	    if (relax)
 	      {
 		bfd_boolean again;
@@ -5641,8 +5666,8 @@ lang_size_sections_1
 		if (again)
 		  *relax = TRUE;
 	      }
-	    dot = size_input_section (prev, output_section_statement,
-				      fill, dot);
+	    dot = size_input_section_part2 (prev, output_section_statement,
+					    fill, dot, &alignment_needed);
 	  }
 	  break;
 
