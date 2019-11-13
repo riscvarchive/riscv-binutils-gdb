@@ -1151,10 +1151,16 @@
 	vmadc.vxm v4, v8, a1, v0
 	vmadc.vim v4, v8, 15, v0
 	vmadc.vim v4, v8, -16, v0
+	vmadc.vv v4, v8, v12
+	vmadc.vx v4, v8, a1
+	vmadc.vi v4, v8, 15
+	vmadc.vi v4, v8, -16
 	vsbc.vvm v4, v8, v12, v0
 	vsbc.vxm v4, v8, a1, v0
 	vmsbc.vvm v4, v8, v12, v0
 	vmsbc.vxm v4, v8, a1, v0
+	vmsbc.vv v4, v8, v12
+	vmsbc.vx v4, v8, a1
 
 	# Aliases
 	vnot.v v4, v8
