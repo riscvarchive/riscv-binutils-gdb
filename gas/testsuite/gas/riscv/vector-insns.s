@@ -1473,21 +1473,6 @@
 	vsmul.vv v4, v8, v12, v0.t
 	vsmul.vx v4, v8, a1, v0.t
 
-	vwsmaccu.vv v4, v12, v8
-	vwsmaccu.vx v4, a1, v8
-	vwsmacc.vv v4, v12, v8
-	vwsmacc.vx v4, a1, v8
-	vwsmaccsu.vv v4, v12, v8
-	vwsmaccsu.vx v4, a1, v8
-	vwsmaccus.vx v4, a1, v8
-	vwsmaccu.vv v4, v12, v8, v0.t
-	vwsmaccu.vx v4, a1, v8, v0.t
-	vwsmacc.vv v4, v12, v8, v0.t
-	vwsmacc.vx v4, a1, v8, v0.t
-	vwsmaccsu.vv v4, v12, v8, v0.t
-	vwsmaccsu.vx v4, a1, v8, v0.t
-	vwsmaccus.vx v4, a1, v8, v0.t
-
 	vssrl.vv v4, v8, v12
 	vssrl.vx v4, v8, a1
 	vssrl.vi v4, v8, 1
