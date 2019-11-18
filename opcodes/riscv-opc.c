@@ -1343,6 +1343,14 @@ const struct riscv_opcode riscv_opcodes[] =
 {"vwmaccsu.vx", 0, INSN_CLASS_V,  "Vd,s,VtVm", MATCH_VWMACCSUVX, MASK_VWMACCSUVX, match_opcode, 0},
 {"vwmaccus.vx", 0, INSN_CLASS_V,  "Vd,s,VtVm", MATCH_VWMACCUSVX, MASK_VWMACCUSVX, match_opcode, 0},
 
+{"vqmaccu.vv",  0, INSN_CLASS_V,  "Vd,Vs,VtVm", MATCH_VQMACCUVV, MASK_VQMACCUVV, match_opcode, 0},
+{"vqmaccu.vx",  0, INSN_CLASS_V,  "Vd,s,VtVm",  MATCH_VQMACCUVX, MASK_VQMACCUVX, match_opcode, 0},
+{"vqmacc.vv",   0, INSN_CLASS_V,  "Vd,Vs,VtVm", MATCH_VQMACCVV, MASK_VQMACCVV, match_opcode, 0},
+{"vqmacc.vx",   0, INSN_CLASS_V,  "Vd,s,VtVm",  MATCH_VQMACCVX, MASK_VQMACCVX, match_opcode, 0},
+{"vqmaccsu.vv", 0, INSN_CLASS_V,  "Vd,Vs,VtVm", MATCH_VQMACCSUVV, MASK_VQMACCSUVV, match_opcode, 0},
+{"vqmaccsu.vx", 0, INSN_CLASS_V,  "Vd,s,VtVm",  MATCH_VQMACCSUVX, MASK_VQMACCSUVX, match_opcode, 0},
+{"vqmaccus.vx", 0, INSN_CLASS_V,  "Vd,s,VtVm",  MATCH_VQMACCUSVX, MASK_VQMACCUSVX, match_opcode, 0},
+
 {"vdivu.vv",   0, INSN_CLASS_V,  "Vd,Vt,VsVm", MATCH_VDIVUVV, MASK_VDIVUVV, match_opcode, 0 },
 {"vdivu.vx",   0, INSN_CLASS_V,  "Vd,Vt,sVm", MATCH_VDIVUVX, MASK_VDIVUVX, match_opcode, 0 },
 {"vdiv.vv",    0, INSN_CLASS_V,  "Vd,Vt,VsVm", MATCH_VDIVVV, MASK_VDIVVV, match_opcode, 0 },
