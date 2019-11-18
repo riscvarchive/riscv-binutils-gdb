@@ -1451,14 +1451,18 @@
 	vssub.vv v4, v8, v12, v0.t
 	vssub.vx v4, v8, a1, v0.t
 
+	vaaddu.vv v4, v8, v12
+	vaaddu.vx v4, v8, a1
+	vaaddu.vv v4, v8, v12, v0.t
+	vaaddu.vx v4, v8, a1, v0.t
 	vaadd.vv v4, v8, v12
 	vaadd.vx v4, v8, a1
-	vaadd.vi v4, v8, 15
-	vaadd.vi v4, v8, -16
 	vaadd.vv v4, v8, v12, v0.t
 	vaadd.vx v4, v8, a1, v0.t
-	vaadd.vi v4, v8, 15, v0.t
-	vaadd.vi v4, v8, -16, v0.t
+	vasubu.vv v4, v8, v12
+	vasubu.vx v4, v8, a1
+	vasubu.vv v4, v8, v12, v0.t
+	vasubu.vx v4, v8, a1, v0.t
 	vasub.vv v4, v8, v12
 	vasub.vx v4, v8, a1
 	vasub.vv v4, v8, v12, v0.t
