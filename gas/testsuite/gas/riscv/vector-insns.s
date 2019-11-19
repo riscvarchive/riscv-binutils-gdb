@@ -1010,6 +1010,39 @@
 	vlseg8eff.v v4, 0(a0)
 	vlseg8eff.v v4, (a0), v0.t
 
+	vl1r.v v3, (a0)
+	vl1r.v v3, 0(a0)
+	vl2r.v v3, (a0)
+	vl2r.v v3, 0(a0)
+	vl3r.v v3, (a0)
+	vl3r.v v3, 0(a0)
+	vl4r.v v3, (a0)
+	vl4r.v v3, 0(a0)
+	vl5r.v v3, (a0)
+	vl5r.v v3, 0(a0)
+	vl6r.v v3, (a0)
+	vl6r.v v3, 0(a0)
+	vl7r.v v3, (a0)
+	vl7r.v v3, 0(a0)
+	vl8r.v v3, (a0)
+	vl8r.v v3, 0(a0)
+	vs1r.v v3, (a1)
+	vs1r.v v3, 0(a1)
+	vs2r.v v3, (a1)
+	vs2r.v v3, 0(a1)
+	vs3r.v v3, (a1)
+	vs3r.v v3, 0(a1)
+	vs4r.v v3, (a1)
+	vs4r.v v3, 0(a1)
+	vs5r.v v3, (a1)
+	vs5r.v v3, 0(a1)
+	vs6r.v v3, (a1)
+	vs6r.v v3, 0(a1)
+	vs7r.v v3, (a1)
+	vs7r.v v3, 0(a1)
+	vs8r.v v3, (a1)
+	vs8r.v v3, 0(a1)
+
 	vamoaddw.v v4, v8, (a1), v4
 	vamoaddw.v x0, v8, (a1), v4
 	vamoadde.v v4, v8, (a1), v4
@@ -1807,6 +1840,15 @@
 	vrgather.vi v4, v8, 31, v0.t
 
 	vcompress.vm v4, v8, v12
+
+	vmv1r.v v1, v2
+	vmv2r.v v1, v3
+	vmv3r.v v1, v4
+	vmv4r.v v1, v5
+	vmv5r.v v1, v6
+	vmv6r.v v1, v7
+	vmv7r.v v1, v8
+	vmv8r.v v1, v9
 
 	vdot.vv v4, v8, v12
 	vdotu.vv v4, v8, v12
