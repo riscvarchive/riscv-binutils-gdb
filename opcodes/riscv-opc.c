@@ -292,6 +292,36 @@ match_widen_vd_neq_vm (const struct riscv_opcode *op,
 }
 
 static int
+match_quad_vd_neq_vs1_neq_vs2_neq_vm (const struct riscv_opcode *op,
+				      insn_t insn)
+{
+  int vd = (insn & MASK_VD) >> OP_SH_VD;
+  int vs1 = (insn & MASK_VS1) >> OP_SH_VS1;
+  int vs2 = (insn & MASK_VS2) >> OP_SH_VS2;
+  int vm = (insn & MASK_VMASK) >> OP_SH_VMASK;
+
+  return (match_opcode (op, insn)
+	  && (vd % 4) == 0
+	  && (vs1 < vd || vs1 > (vd + 3))
+	  && (vs2 < vd || vs2 > (vd + 3))
+	  && (vm || vm < vd || vm > (vd + 3)));
+}
+
+static int
+match_quad_vd_neq_vs2_neq_vm (const struct riscv_opcode *op,
+			      insn_t insn)
+{
+  int vd = (insn & MASK_VD) >> OP_SH_VD;
+  int vs2 = (insn & MASK_VS2) >> OP_SH_VS2;
+  int vm = (insn & MASK_VMASK) >> OP_SH_VMASK;
+
+  return (match_opcode (op, insn)
+	  && (vd % 4) == 0
+	  && (vs2 < vd || vs2 > (vd + 3))
+	  && (vm || vm < vd || vm > (vd + 3)));
+}
+
+static int
 match_narrow_vd_neq_vs2 (const struct riscv_opcode *op,
 			 insn_t insn)
 {
@@ -1459,13 +1489,13 @@ const struct riscv_opcode riscv_opcodes[] =
 {"vwmaccsu.vx", 0, INSN_CLASS_V,  "Vd,s,VtVm", MATCH_VWMACCSUVX, MASK_VWMACCSUVX, match_widen_vd_neq_vs2_neq_vm, 0},
 {"vwmaccus.vx", 0, INSN_CLASS_V,  "Vd,s,VtVm", MATCH_VWMACCUSVX, MASK_VWMACCUSVX, match_widen_vd_neq_vs2_neq_vm, 0},
 
-{"vqmaccu.vv",  0, INSN_CLASS_V,  "Vd,Vs,VtVm", MATCH_VQMACCUVV, MASK_VQMACCUVV, match_opcode, 0},
-{"vqmaccu.vx",  0, INSN_CLASS_V,  "Vd,s,VtVm",  MATCH_VQMACCUVX, MASK_VQMACCUVX, match_opcode, 0},
-{"vqmacc.vv",   0, INSN_CLASS_V,  "Vd,Vs,VtVm", MATCH_VQMACCVV, MASK_VQMACCVV, match_opcode, 0},
-{"vqmacc.vx",   0, INSN_CLASS_V,  "Vd,s,VtVm",  MATCH_VQMACCVX, MASK_VQMACCVX, match_opcode, 0},
-{"vqmaccsu.vv", 0, INSN_CLASS_V,  "Vd,Vs,VtVm", MATCH_VQMACCSUVV, MASK_VQMACCSUVV, match_opcode, 0},
-{"vqmaccsu.vx", 0, INSN_CLASS_V,  "Vd,s,VtVm",  MATCH_VQMACCSUVX, MASK_VQMACCSUVX, match_opcode, 0},
-{"vqmaccus.vx", 0, INSN_CLASS_V,  "Vd,s,VtVm",  MATCH_VQMACCUSVX, MASK_VQMACCUSVX, match_opcode, 0},
+{"vqmaccu.vv",  0, INSN_CLASS_V,  "Vd,Vs,VtVm", MATCH_VQMACCUVV, MASK_VQMACCUVV, match_quad_vd_neq_vs1_neq_vs2_neq_vm, 0},
+{"vqmaccu.vx",  0, INSN_CLASS_V,  "Vd,s,VtVm",  MATCH_VQMACCUVX, MASK_VQMACCUVX, match_quad_vd_neq_vs2_neq_vm, 0},
+{"vqmacc.vv",   0, INSN_CLASS_V,  "Vd,Vs,VtVm", MATCH_VQMACCVV, MASK_VQMACCVV, match_quad_vd_neq_vs1_neq_vs2_neq_vm, 0},
+{"vqmacc.vx",   0, INSN_CLASS_V,  "Vd,s,VtVm",  MATCH_VQMACCVX, MASK_VQMACCVX, match_quad_vd_neq_vs2_neq_vm, 0},
+{"vqmaccsu.vv", 0, INSN_CLASS_V,  "Vd,Vs,VtVm", MATCH_VQMACCSUVV, MASK_VQMACCSUVV, match_quad_vd_neq_vs1_neq_vs2_neq_vm, 0},
+{"vqmaccsu.vx", 0, INSN_CLASS_V,  "Vd,s,VtVm",  MATCH_VQMACCSUVX, MASK_VQMACCSUVX, match_quad_vd_neq_vs2_neq_vm, 0},
+{"vqmaccus.vx", 0, INSN_CLASS_V,  "Vd,s,VtVm",  MATCH_VQMACCUSVX, MASK_VQMACCUSVX, match_quad_vd_neq_vs2_neq_vm, 0},
 
 {"vdivu.vv",   0, INSN_CLASS_V,  "Vd,Vt,VsVm", MATCH_VDIVUVV, MASK_VDIVUVV, match_opcode, 0 },
 {"vdivu.vx",   0, INSN_CLASS_V,  "Vd,Vt,sVm", MATCH_VDIVUVX, MASK_VDIVUVX, match_opcode, 0 },

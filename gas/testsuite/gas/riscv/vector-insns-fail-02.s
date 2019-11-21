@@ -1,4 +1,5 @@
 # Widening Vector Arithmetic Instructions (VV)
+# Quad-Widening Vector Arithmetic Instructions (VV)
 
 	vwaddu.vv v0, v2, v4		# OK
 	vwaddu.vv v1, v2, v4		# vd should be multiple of 2
@@ -79,6 +80,30 @@
 	vwmaccsu.vv v4, v2, v4		# vd overlap vs2
 	vwmaccsu.vv v4, v2, v5		# vd overlap vs2
 	vwmaccsu.vv v0, v2, v4, v0.t	# vd overlap vm
+
+	vqmaccu.vv v0, v4, v8		# OK
+	vqmaccu.vv v2, v4, v8		# vd should be multiple of 4
+	vqmaccu.vv v4, v4, v8		# vd overlap vs1
+	vqmaccu.vv v4, v6, v8		# vd overlap vs1
+	vqmaccu.vv v8, v4, v8		# vd overlap vs2
+	vqmaccu.vv v8, v4, v10		# vd overlap vs2
+	vqmaccu.vv v0, v4, v8, v0.t	# vd overlap vm
+
+	vqmacc.vv v0, v4, v8		# OK
+	vqmacc.vv v2, v4, v8		# vd should be multiple of 4
+	vqmacc.vv v4, v4, v8		# vd overlap vs1
+	vqmacc.vv v4, v6, v8		# vd overlap vs1
+	vqmacc.vv v8, v4, v8		# vd overlap vs2
+	vqmacc.vv v8, v4, v10		# vd overlap vs2
+	vqmacc.vv v0, v4, v8, v0.t	# vd overlap vm
+
+	vqmaccsu.vv v0, v4, v8		# OK
+	vqmaccsu.vv v2, v4, v8		# vd should be multiple of 4
+	vqmaccsu.vv v4, v4, v8		# vd overlap vs1
+	vqmaccsu.vv v4, v6, v8		# vd overlap vs1
+	vqmaccsu.vv v8, v4, v8		# vd overlap vs2
+	vqmaccsu.vv v8, v4, v10		# vd overlap vs2
+	vqmaccsu.vv v0, v4, v8, v0.t	# vd overlap vm
 
 	vfwadd.vv v0, v2, v4		# OK
 	vfwadd.vv v1, v2, v4		# vd should be multiple of 2

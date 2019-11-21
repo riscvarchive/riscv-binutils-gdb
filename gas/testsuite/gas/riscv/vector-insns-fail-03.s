@@ -78,6 +78,30 @@
 	vwmaccus.vx v4, a1, v5		# vd overlap vs2
 	vwmaccus.vx v0, a1, v4, v0.t	# vd overlap vm
 
+	vqmaccu.vx v0, a1, v4		# OK
+	vqmaccu.vx v2, a1, v4		# vd should be multiple of 4
+	vqmaccu.vx v4, a1, v4		# vd overlap vs2
+	vqmaccu.vx v4, a1, v6		# vd overlap vs2
+	vqmaccu.vx v0, a1, v4, v0.t	# vd overlap vm
+
+	vqmacc.vx v0, a1, v4		# OK
+	vqmacc.vx v2, a1, v4		# vd should be multiple of 4
+	vqmacc.vx v4, a1, v4		# vd overlap vs2
+	vqmacc.vx v4, a1, v6		# vd overlap vs2
+	vqmacc.vx v0, a1, v4, v0.t	# vd overlap vm
+
+	vqmaccsu.vx v0, a1, v4		# OK
+	vqmaccsu.vx v2, a1, v4		# vd should be multiple of 4
+	vqmaccsu.vx v4, a1, v4		# vd overlap vs2
+	vqmaccsu.vx v4, a1, v6		# vd overlap vs2
+	vqmaccsu.vx v0, a1, v4, v0.t	# vd overlap vm
+
+	vqmaccus.vx v0, a1, v4		# OK
+	vqmaccus.vx v2, a1, v4		# vd should be multiple of 4
+	vqmaccus.vx v4, a1, v4		# vd overlap vs2
+	vqmaccus.vx v4, a1, v6		# vd overlap vs2
+	vqmaccus.vx v0, a1, v4, v0.t	# vd overlap vm
+
 	vfwadd.vf v0, v2, fa1		# OK
 	vfwadd.vf v1, v2, fa1		# vd should be multiple of 2
 	vfwadd.vf v2, v2, fa1		# vd overlap vs2
