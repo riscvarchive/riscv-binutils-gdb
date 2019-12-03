@@ -1043,80 +1043,80 @@
 	vs8r.v v3, (a1)
 	vs8r.v v3, 0(a1)
 
-	vamoaddw.v v4, v8, (a1), v4
-	vamoaddw.v x0, v8, (a1), v4
-	vamoadde.v v4, v8, (a1), v4
-	vamoadde.v x0, v8, (a1), v4
-	vamoaddw.v v4, v8, (a1), v4, v0.t
-	vamoaddw.v x0, v8, (a1), v4, v0.t
-	vamoadde.v v4, v8, (a1), v4, v0.t
-	vamoadde.v x0, v8, (a1), v4, v0.t
-	vamoswapw.v v4, v8, (a1), v4
-	vamoswapw.v x0, v8, (a1), v4
-	vamoswape.v v4, v8, (a1), v4
-	vamoswape.v x0, v8, (a1), v4
-	vamoswapw.v v4, v8, (a1), v4, v0.t
-	vamoswapw.v x0, v8, (a1), v4, v0.t
-	vamoswape.v v4, v8, (a1), v4, v0.t
-	vamoswape.v x0, v8, (a1), v4, v0.t
+	vamoaddw.v v4, (a1), v8, v4
+	vamoaddw.v x0, (a1), v8, v4
+	vamoadde.v v4, (a1), v8, v4
+	vamoadde.v x0, (a1), v8, v4
+	vamoaddw.v v4, (a1), v8, v4, v0.t
+	vamoaddw.v x0, (a1), v8, v4, v0.t
+	vamoadde.v v4, (a1), v8, v4, v0.t
+	vamoadde.v x0, (a1), v8, v4, v0.t
+	vamoswapw.v v4, (a1), v8, v4
+	vamoswapw.v x0, (a1), v8, v4
+	vamoswape.v v4, (a1), v8, v4
+	vamoswape.v x0, (a1), v8, v4
+	vamoswapw.v v4, (a1), v8, v4, v0.t
+	vamoswapw.v x0, (a1), v8, v4, v0.t
+	vamoswape.v v4, (a1), v8, v4, v0.t
+	vamoswape.v x0, (a1), v8, v4, v0.t
 
-	vamoxorw.v v4, v8, (a1), v4
-	vamoxorw.v x0, v8, (a1), v4
-	vamoxore.v v4, v8, (a1), v4
-	vamoxore.v x0, v8, (a1), v4
-	vamoxorw.v v4, v8, (a1), v4, v0.t
-	vamoxorw.v x0, v8, (a1), v4, v0.t
-	vamoxore.v v4, v8, (a1), v4, v0.t
-	vamoxore.v x0, v8, (a1), v4, v0.t
-	vamoandw.v v4, v8, (a1), v4
-	vamoandw.v x0, v8, (a1), v4
-	vamoande.v v4, v8, (a1), v4
-	vamoande.v x0, v8, (a1), v4
-	vamoandw.v v4, v8, (a1), v4, v0.t
-	vamoandw.v x0, v8, (a1), v4, v0.t
-	vamoande.v v4, v8, (a1), v4, v0.t
-	vamoande.v x0, v8, (a1), v4, v0.t
-	vamoorw.v v4, v8, (a1), v4
-	vamoorw.v x0, v8, (a1), v4
-	vamoore.v v4, v8, (a1), v4
-	vamoore.v x0, v8, (a1), v4
-	vamoorw.v v4, v8, (a1), v4, v0.t
-	vamoorw.v x0, v8, (a1), v4, v0.t
-	vamoore.v v4, v8, (a1), v4, v0.t
-	vamoore.v x0, v8, (a1), v4, v0.t
+	vamoxorw.v v4, (a1), v8, v4
+	vamoxorw.v x0, (a1), v8, v4
+	vamoxore.v v4, (a1), v8, v4
+	vamoxore.v x0, (a1), v8, v4
+	vamoxorw.v v4, (a1), v8, v4, v0.t
+	vamoxorw.v x0, (a1), v8, v4, v0.t
+	vamoxore.v v4, (a1), v8, v4, v0.t
+	vamoxore.v x0, (a1), v8, v4, v0.t
+	vamoandw.v v4, (a1), v8, v4
+	vamoandw.v x0, (a1), v8, v4
+	vamoande.v v4, (a1), v8, v4
+	vamoande.v x0, (a1), v8, v4
+	vamoandw.v v4, (a1), v8, v4, v0.t
+	vamoandw.v x0, (a1), v8, v4, v0.t
+	vamoande.v v4, (a1), v8, v4, v0.t
+	vamoande.v x0, (a1), v8, v4, v0.t
+	vamoorw.v v4, (a1), v8, v4
+	vamoorw.v x0, (a1), v8, v4
+	vamoore.v v4, (a1), v8, v4
+	vamoore.v x0, (a1), v8, v4
+	vamoorw.v v4, (a1), v8, v4, v0.t
+	vamoorw.v x0, (a1), v8, v4, v0.t
+	vamoore.v v4, (a1), v8, v4, v0.t
+	vamoore.v x0, (a1), v8, v4, v0.t
 
-	vamominw.v v4, v8, (a1), v4
-	vamominw.v x0, v8, (a1), v4
-	vamomine.v v4, v8, (a1), v4
-	vamomine.v x0, v8, (a1), v4
-	vamominw.v v4, v8, (a1), v4, v0.t
-	vamominw.v x0, v8, (a1), v4, v0.t
-	vamomine.v v4, v8, (a1), v4, v0.t
-	vamomine.v x0, v8, (a1), v4, v0.t
-	vamomaxw.v v4, v8, (a1), v4
-	vamomaxw.v x0, v8, (a1), v4
-	vamomaxe.v v4, v8, (a1), v4
-	vamomaxe.v x0, v8, (a1), v4
-	vamomaxw.v v4, v8, (a1), v4, v0.t
-	vamomaxw.v x0, v8, (a1), v4, v0.t
-	vamomaxe.v v4, v8, (a1), v4, v0.t
-	vamomaxe.v x0, v8, (a1), v4, v0.t
-	vamominuw.v v4, v8, (a1), v4
-	vamominuw.v x0, v8, (a1), v4
-	vamominue.v v4, v8, (a1), v4
-	vamominue.v x0, v8, (a1), v4
-	vamominuw.v v4, v8, (a1), v4, v0.t
-	vamominuw.v x0, v8, (a1), v4, v0.t
-	vamominue.v v4, v8, (a1), v4, v0.t
-	vamominue.v x0, v8, (a1), v4, v0.t
-	vamomaxuw.v v4, v8, (a1), v4
-	vamomaxuw.v x0, v8, (a1), v4
-	vamomaxue.v v4, v8, (a1), v4
-	vamomaxue.v x0, v8, (a1), v4
-	vamomaxuw.v v4, v8, (a1), v4, v0.t
-	vamomaxuw.v x0, v8, (a1), v4, v0.t
-	vamomaxue.v v4, v8, (a1), v4, v0.t
-	vamomaxue.v x0, v8, (a1), v4, v0.t
+	vamominw.v v4, (a1), v8, v4
+	vamominw.v x0, (a1), v8, v4
+	vamomine.v v4, (a1), v8, v4
+	vamomine.v x0, (a1), v8, v4
+	vamominw.v v4, (a1), v8, v4, v0.t
+	vamominw.v x0, (a1), v8, v4, v0.t
+	vamomine.v v4, (a1), v8, v4, v0.t
+	vamomine.v x0, (a1), v8, v4, v0.t
+	vamomaxw.v v4, (a1), v8, v4
+	vamomaxw.v x0, (a1), v8, v4
+	vamomaxe.v v4, (a1), v8, v4
+	vamomaxe.v x0, (a1), v8, v4
+	vamomaxw.v v4, (a1), v8, v4, v0.t
+	vamomaxw.v x0, (a1), v8, v4, v0.t
+	vamomaxe.v v4, (a1), v8, v4, v0.t
+	vamomaxe.v x0, (a1), v8, v4, v0.t
+	vamominuw.v v4, (a1), v8, v4
+	vamominuw.v x0, (a1), v8, v4
+	vamominue.v v4, (a1), v8, v4
+	vamominue.v x0, (a1), v8, v4
+	vamominuw.v v4, (a1), v8, v4, v0.t
+	vamominuw.v x0, (a1), v8, v4, v0.t
+	vamominue.v v4, (a1), v8, v4, v0.t
+	vamominue.v x0, (a1), v8, v4, v0.t
+	vamomaxuw.v v4, (a1), v8, v4
+	vamomaxuw.v x0, (a1), v8, v4
+	vamomaxue.v v4, (a1), v8, v4
+	vamomaxue.v x0, (a1), v8, v4
+	vamomaxuw.v v4, (a1), v8, v4, v0.t
+	vamomaxuw.v x0, (a1), v8, v4, v0.t
+	vamomaxue.v v4, (a1), v8, v4, v0.t
+	vamomaxue.v x0, (a1), v8, v4, v0.t
 
 	vadd.vv v4, v8, v12
 	vadd.vx v4, v8, a1
