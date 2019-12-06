@@ -142,6 +142,9 @@ riscv_multi_subset_supports (enum riscv_insn_class insn_class)
     case INSN_CLASS_B_OR_ZBB:
       return riscv_subset_supports ("b") || riscv_subset_supports ("zbb");
 
+    case INSN_CLASS_B_OR_ZBA:
+      return riscv_subset_supports ("b") || riscv_subset_supports ("zba");
+
     case INSN_CLASS_B_OR_ZBC:
       return riscv_subset_supports ("b") || riscv_subset_supports ("zbc");
 
