@@ -1172,21 +1172,7 @@ const struct riscv_opcode riscv_opcodes[] =
 {"vlseg8eff.v",  0, INSN_CLASS_V,  "Vd,0(s)Vm", MATCH_VLSEG8EFFV, MASK_VLSEG8EFFV, match_opcode, INSN_DREF },
 
 {"vl1r.v",  0, INSN_CLASS_V,  "Vd,0(s)", MATCH_VL1RV, MASK_VL1RV, match_opcode, INSN_DREF },
-{"vl2r.v",  0, INSN_CLASS_V,  "Vd,0(s)", MATCH_VL2RV, MASK_VL2RV, match_opcode, INSN_DREF },
-{"vl3r.v",  0, INSN_CLASS_V,  "Vd,0(s)", MATCH_VL3RV, MASK_VL3RV, match_opcode, INSN_DREF },
-{"vl4r.v",  0, INSN_CLASS_V,  "Vd,0(s)", MATCH_VL4RV, MASK_VL4RV, match_opcode, INSN_DREF },
-{"vl5r.v",  0, INSN_CLASS_V,  "Vd,0(s)", MATCH_VL5RV, MASK_VL5RV, match_opcode, INSN_DREF },
-{"vl6r.v",  0, INSN_CLASS_V,  "Vd,0(s)", MATCH_VL6RV, MASK_VL6RV, match_opcode, INSN_DREF },
-{"vl7r.v",  0, INSN_CLASS_V,  "Vd,0(s)", MATCH_VL7RV, MASK_VL7RV, match_opcode, INSN_DREF },
-{"vl8r.v",  0, INSN_CLASS_V,  "Vd,0(s)", MATCH_VL8RV, MASK_VL8RV, match_opcode, INSN_DREF },
 {"vs1r.v",  0, INSN_CLASS_V,  "Vd,0(s)", MATCH_VS1RV, MASK_VS1RV, match_opcode, INSN_DREF },
-{"vs2r.v",  0, INSN_CLASS_V,  "Vd,0(s)", MATCH_VS2RV, MASK_VS2RV, match_opcode, INSN_DREF },
-{"vs3r.v",  0, INSN_CLASS_V,  "Vd,0(s)", MATCH_VS3RV, MASK_VS3RV, match_opcode, INSN_DREF },
-{"vs4r.v",  0, INSN_CLASS_V,  "Vd,0(s)", MATCH_VS4RV, MASK_VS4RV, match_opcode, INSN_DREF },
-{"vs5r.v",  0, INSN_CLASS_V,  "Vd,0(s)", MATCH_VS5RV, MASK_VS5RV, match_opcode, INSN_DREF },
-{"vs6r.v",  0, INSN_CLASS_V,  "Vd,0(s)", MATCH_VS6RV, MASK_VS6RV, match_opcode, INSN_DREF },
-{"vs7r.v",  0, INSN_CLASS_V,  "Vd,0(s)", MATCH_VS7RV, MASK_VS7RV, match_opcode, INSN_DREF },
-{"vs8r.v",  0, INSN_CLASS_V,  "Vd,0(s)", MATCH_VS8RV, MASK_VS8RV, match_opcode, INSN_DREF },
 
 {"vamoaddw.v",   0, INSN_CLASS_V,  "Ve,(s),Vt,VfVm", MATCH_VAMOADDWV, MASK_VAMOADDWV, match_opcode, INSN_DREF},
 {"vamoadde.v",   0, INSN_CLASS_V,  "Ve,(s),Vt,VfVm", MATCH_VAMOADDEV, MASK_VAMOADDEV, match_opcode, INSN_DREF},
@@ -1588,11 +1574,7 @@ const struct riscv_opcode riscv_opcodes[] =
 
 {"vmv1r.v",    0, INSN_CLASS_V, "Vd,Vt", MATCH_VMV1RV, MASK_VMV1RV, match_opcode, 0},
 {"vmv2r.v",    0, INSN_CLASS_V, "Vd,Vt", MATCH_VMV2RV, MASK_VMV2RV, match_opcode, 0},
-{"vmv3r.v",    0, INSN_CLASS_V, "Vd,Vt", MATCH_VMV3RV, MASK_VMV3RV, match_opcode, 0},
 {"vmv4r.v",    0, INSN_CLASS_V, "Vd,Vt", MATCH_VMV4RV, MASK_VMV4RV, match_opcode, 0},
-{"vmv5r.v",    0, INSN_CLASS_V, "Vd,Vt", MATCH_VMV5RV, MASK_VMV5RV, match_opcode, 0},
-{"vmv6r.v",    0, INSN_CLASS_V, "Vd,Vt", MATCH_VMV6RV, MASK_VMV6RV, match_opcode, 0},
-{"vmv7r.v",    0, INSN_CLASS_V, "Vd,Vt", MATCH_VMV7RV, MASK_VMV7RV, match_opcode, 0},
 {"vmv8r.v",    0, INSN_CLASS_V, "Vd,Vt", MATCH_VMV8RV, MASK_VMV8RV, match_opcode, 0},
 
 {"vdot.vv",    0, INSN_CLASS_V,  "Vd,Vt,VsVm", MATCH_VDOTVV, MASK_VDOTVV, match_opcode, 0},
