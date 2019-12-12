@@ -538,7 +538,7 @@
 
 /* Temporary Load/store encoding info
 MOP load
-000 zero-extended unit-stride	VLxU, VLE, VL<nf>RV
+000 zero-extended unit-stride	VLxU, VLE, VL<nf>RV (nf = 1)
 001 reserved
 010 zero-extended strided	VLSxU, VLSE
 011 zero-extended indexed	VLXxU, VLXE
@@ -547,7 +547,7 @@ MOP load
 110 sign-extended strided	VLSx (x!=E)
 111 sign-extended indexed	VLXx (x!=E)
 MOP store
-000 unit-stride		VSx, VS<nf>RV
+000 unit-stride		VSx, VS<nf>RV (nf = 1)
 001 reserved
 010 strided		VSSx
 011 indexed-ordered	VSXx
@@ -1270,36 +1270,8 @@ xxx0 0011 0000 xxxx x000 xxxx x000 0111 VLB
 
 #define MATCH_VL1RV  0x02807007
 #define MASK_VL1RV   0xfff0707f
-#define MATCH_VL2RV  0x22807007
-#define MASK_VL2RV   0xfff0707f
-#define MATCH_VL3RV  0x42807007
-#define MASK_VL3RV   0xfff0707f
-#define MATCH_VL4RV  0x62807007
-#define MASK_VL4RV   0xfff0707f
-#define MATCH_VL5RV  0x82807007
-#define MASK_VL5RV   0xfff0707f
-#define MATCH_VL6RV  0xa2807007
-#define MASK_VL6RV   0xfff0707f
-#define MATCH_VL7RV  0xc2807007
-#define MASK_VL7RV   0xfff0707f
-#define MATCH_VL8RV  0xe2807007
-#define MASK_VL8RV   0xfff0707f
 #define MATCH_VS1RV  0x02807027
 #define MASK_VS1RV   0xfff0707f
-#define MATCH_VS2RV  0x22807027
-#define MASK_VS2RV   0xfff0707f
-#define MATCH_VS3RV  0x42807027
-#define MASK_VS3RV   0xfff0707f
-#define MATCH_VS4RV  0x62807027
-#define MASK_VS4RV   0xfff0707f
-#define MATCH_VS5RV  0x82807027
-#define MASK_VS5RV   0xfff0707f
-#define MATCH_VS6RV  0xa2807027
-#define MASK_VS6RV   0xfff0707f
-#define MATCH_VS7RV  0xc2807027
-#define MASK_VS7RV   0xfff0707f
-#define MATCH_VS8RV  0xe2807027
-#define MASK_VS8RV   0xfff0707f
 
 /* Temporary AMO encoding info
 
@@ -1417,7 +1389,7 @@ funct6
 100100
 100101 vsll
 100110
-100111 vmv<nf>r
+100111 vmv<nf>r (nf = 1, 2, 4, 8)
 101000 vsrl
 101001 vsra
 101010 vssrl
@@ -2295,16 +2267,8 @@ funct6 VM  VS2  VS1/RS1/IMM funct3 VD   opcode
 #define MASK_VMV1RV  0xfe0ff07f
 #define MATCH_VMV2RV 0x9e00b057
 #define MASK_VMV2RV  0xfe0ff07f
-#define MATCH_VMV3RV 0x9e013057
-#define MASK_VMV3RV  0xfe0ff07f
 #define MATCH_VMV4RV 0x9e01b057
 #define MASK_VMV4RV  0xfe0ff07f
-#define MATCH_VMV5RV 0x9e023057
-#define MASK_VMV5RV  0xfe0ff07f
-#define MATCH_VMV6RV 0x9e02b057
-#define MASK_VMV6RV  0xfe0ff07f
-#define MATCH_VMV7RV 0x9e033057
-#define MASK_VMV7RV  0xfe0ff07f
 #define MATCH_VMV8RV 0x9e03b057
 #define MASK_VMV8RV  0xfe0ff07f
 
