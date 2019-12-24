@@ -83,6 +83,7 @@ struct riscv_set_options
   int rve; /* Generate RVE code.  */
   int relax; /* Emit relocs the linker is allowed to relax.  */
   int arch_attr; /* Emit arch attribute.  */
+  int check_constraints; /* Enable/disable the match_func checking.  */
 };
 
 static struct riscv_set_options riscv_opts =
@@ -92,6 +93,7 @@ static struct riscv_set_options riscv_opts =
   0,	/* rve */
   1,	/* relax */
   DEFAULT_RISCV_ATTR, /* arch_attr */
+  0,	/* check_constraints */
 };
 
 static void
@@ -1642,7 +1644,8 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 	    case '\0': 	/* End of args.  */
 	      if (insn->pinfo != INSN_MACRO)
 		{
-		  if (!insn->match_func (insn, ip->insn_opcode))
+		  if (!insn->match_func (insn, ip->insn_opcode,
+					 riscv_opts.check_constraints))
 		    break;
 
 		  /* For .insn, insn->match and insn->mask are 0.  */
@@ -2525,6 +2528,8 @@ enum options
   OPTION_NO_RELAX,
   OPTION_ARCH_ATTR,
   OPTION_NO_ARCH_ATTR,
+  OPTION_CHECK_CONSTRAINTS,
+  OPTION_NO_CHECK_CONSTRAINTS,
   OPTION_END_OF_ENUM
 };
 
@@ -2539,6 +2544,8 @@ struct option md_longopts[] =
   {"mno-relax", no_argument, NULL, OPTION_NO_RELAX},
   {"march-attr", no_argument, NULL, OPTION_ARCH_ATTR},
   {"mno-arch-attr", no_argument, NULL, OPTION_NO_ARCH_ATTR},
+  {"mcheck-constraints", no_argument, NULL, OPTION_CHECK_CONSTRAINTS},
+  {"mno-check-constraints", no_argument, NULL, OPTION_NO_CHECK_CONSTRAINTS},
 
   {NULL, no_argument, NULL, 0}
 };
@@ -2615,6 +2622,14 @@ md_parse_option (int c, const char *arg)
 
     case OPTION_NO_ARCH_ATTR:
       riscv_opts.arch_attr = FALSE;
+      break;
+
+    case OPTION_CHECK_CONSTRAINTS:
+      riscv_opts.check_constraints = TRUE;
+      break;
+
+    case OPTION_NO_CHECK_CONSTRAINTS:
+      riscv_opts.check_constraints = FALSE;
       break;
 
     default:
@@ -3009,6 +3024,10 @@ s_riscv_option (int x ATTRIBUTE_UNUSED)
     riscv_opts.relax = TRUE;
   else if (strcmp (name, "norelax") == 0)
     riscv_opts.relax = FALSE;
+  else if (strcmp (name, "checkconstraints") == 0)
+    riscv_opts.check_constraints = TRUE;
+  else if (strcmp (name, "nocheckconstraints") == 0)
+    riscv_opts.check_constraints = FALSE;
   else if (strcmp (name, "push") == 0)
     {
       struct riscv_option_stack *s;
