@@ -45,14 +45,13 @@
 	vcompress.vm v1, v2, v4		# OK
 	vcompress.vm v2, v2, v4		# vd overlap vs2
 	vcompress.vm v4, v2, v4		# vd overlap vs1
-	vcompress.vm v0, v2, v4, v0.t	# vd overlap vm
 
 	vmv1r.v v0, v1		# OK
 	vmv1r.v v2, v3		# OK
 
 	vmv2r.v v0, v2		# OK
-	vmv2r.v v1, v2		# vd must be aligned to 4
-	vmv2r.v v2, v3		# vs2 must be aligned to 4
+	vmv2r.v v1, v2		# vd must be aligned to 2
+	vmv2r.v v2, v3		# vs2 must be aligned to 2
 
 	vmv4r.v v0, v4		# OK
 	vmv4r.v v2, v4		# vd must be aligned to 4

@@ -331,11 +331,19 @@ match_widen_vd_neq_vs1_neq_vs2_neq_vm (const struct riscv_opcode *op, insn_t ins
   int vs2 = (insn & MASK_VS2) >> OP_SH_VS2;
   int vm = (insn & MASK_VMASK) >> OP_SH_VMASK;
 
-  return (match_opcode (op, insn, error)
-	  && (vd % 2) == 0
-	  && (vs1 < vd || vs1 > (vd + 1))
-	  && (vs2 < vd || vs2 > (vd + 1))
-	  && (vm || vm < vd || vm > (vd + 1)));
+  if ((vd % 2) != 0)
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vd must be multiple of 2"));
+  else if (vs1 >= vd && vs1 <= (vd + 1))
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vs1 can not overlap with vd"));
+  else if (vs2 >= vd && vs2 <= (vd + 1))
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vs2 can not overlap with vd"));
+  else if (!vm && vm >= vd && vm <= (vd + 1))
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vm can not overlap with vd"));
+  return match_opcode (op, insn, error);
 }
 
 static bfd_boolean
@@ -347,11 +355,19 @@ match_widen_vd_neq_vs1_neq_vm (const struct riscv_opcode *op, insn_t insn,
   int vs2 = (insn & MASK_VS2) >> OP_SH_VS2;
   int vm = (insn & MASK_VMASK) >> OP_SH_VMASK;
 
-  return (match_opcode (op, insn, error)
-	  && (vd % 2) == 0
-	  && (vs2 % 2) == 0
-	  && (vs1 < vd || vs1 > (vd + 1))
-	  && (vm || vm < vd || vm > (vd + 1)));
+  if ((vd % 2) != 0)
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vd must be multiple of 2"));
+  else if ((vs2 % 2) != 0)
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vs2 must be multiple of 2"));
+  else if (vs1 >= vd && vs1 <= (vd + 1))
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vs1 can not overlap with vd"));
+  else if (!vm && vm >= vd && vm <= (vd + 1))
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vm can not overlap with vd"));
+  return match_opcode (op, insn, error);
 }
 
 static bfd_boolean
@@ -362,10 +378,16 @@ match_widen_vd_neq_vs2_neq_vm (const struct riscv_opcode *op, insn_t insn,
   int vs2 = (insn & MASK_VS2) >> OP_SH_VS2;
   int vm = (insn & MASK_VMASK) >> OP_SH_VMASK;
 
-  return (match_opcode (op, insn, error)
-	  && (vd % 2) == 0
-	  && (vs2 < vd || vs2 > (vd + 1))
-	  && (vm || vm < vd || vm > (vd + 1)));
+  if ((vd % 2) != 0)
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vd must be multiple of 2"));
+  else if (vs2 >= vd && vs2 <= (vd + 1))
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vs2 can not overlap with vd"));
+  else if (!vm && vm >= vd && vm <= (vd + 1))
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vm can not overlap with vd"));
+  return match_opcode (op, insn, error);
 }
 
 static bfd_boolean
@@ -376,10 +398,16 @@ match_widen_vd_neq_vm (const struct riscv_opcode *op, insn_t insn,
   int vs2 = (insn & MASK_VS2) >> OP_SH_VS2;
   int vm = (insn & MASK_VMASK) >> OP_SH_VMASK;
 
-  return (match_opcode (op, insn, error)
-	  && (vd % 2) == 0
-	  && (vs2 % 2) == 0
-	  && (vm || vm < vd || vm > (vd + 1)));
+  if ((vd % 2) != 0)
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vd must be multiple of 2"));
+  else if ((vs2 % 2) != 0)
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vs2 must be multiple of 2"));
+  else if (!vm && vm >= vd && vm <= (vd + 1))
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vm can not overlap with vd"));
+  return match_opcode (op, insn, error);
 }
 
 static bfd_boolean
@@ -391,11 +419,19 @@ match_quad_vd_neq_vs1_neq_vs2_neq_vm (const struct riscv_opcode *op, insn_t insn
   int vs2 = (insn & MASK_VS2) >> OP_SH_VS2;
   int vm = (insn & MASK_VMASK) >> OP_SH_VMASK;
 
-  return (match_opcode (op, insn, error)
-	  && (vd % 4) == 0
-	  && (vs1 < vd || vs1 > (vd + 3))
-	  && (vs2 < vd || vs2 > (vd + 3))
-	  && (vm || vm < vd || vm > (vd + 3)));
+  if ((vd % 4) != 0)
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vd must be multiple of 4"));
+  else if (vs1 >= vd && vs1 <= (vd + 3))
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vs1 can not overlap with vd"));
+  else if (vs2 >= vd && vs2 <= (vd + 3))
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vs2 can not overlap with vd"));
+  else if (!vm && vm >= vd && vm <= (vd + 3))
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vm can not overlap with vd"));
+  return match_opcode (op, insn, error);
 }
 
 static bfd_boolean
@@ -406,10 +442,16 @@ match_quad_vd_neq_vs2_neq_vm (const struct riscv_opcode *op, insn_t insn,
   int vs2 = (insn & MASK_VS2) >> OP_SH_VS2;
   int vm = (insn & MASK_VMASK) >> OP_SH_VMASK;
 
-  return (match_opcode (op, insn, error)
-	  && (vd % 4) == 0
-	  && (vs2 < vd || vs2 > (vd + 3))
-	  && (vm || vm < vd || vm > (vd + 3)));
+  if ((vd % 4) != 0)
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vd must be multiple of 4"));
+  else if (vs2 >= vd && vs2 <= (vd + 3))
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vs2 can not overlap with vd"));
+  else if (!vm && vm >= vd && vm <= (vd + 3))
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vm can not overlap with vd"));
+  return match_opcode (op, insn, error);
 }
 
 static bfd_boolean
@@ -419,9 +461,13 @@ match_narrow_vd_neq_vs2 (const struct riscv_opcode *op, insn_t insn,
   int vd = (insn & MASK_VD) >> OP_SH_VD;
   int vs2 = (insn & MASK_VS2) >> OP_SH_VS2;
 
-  return (match_opcode (op, insn, error)
-	  && (vs2 % 2) == 0
-	  && (vd < vs2 || vd > (vs2 + 1)));
+  if ((vs2 % 2) != 0)
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vs2 must be multiple of 2"));
+  else if (vd >= vs2 && vd <= (vs2 + 1))
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vd can not overlap with vs2"));
+  return match_opcode (op, insn, error);
 }
 
 static bfd_boolean
@@ -433,10 +479,16 @@ match_vd_neq_vs1_neq_vs2_neq_vm (const struct riscv_opcode *op, insn_t insn,
   int vs2 = (insn & MASK_VS2) >> OP_SH_VS2;
   int vm = (insn & MASK_VMASK) >> OP_SH_VMASK;
 
-  return (match_opcode (op, insn, error)
-	  && vs1 != vd
-	  && vs2 != vd
-	  && (vm || vm != vd));
+  if (vs1 == vd)
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vs1 can not overlap with vd"));
+  else if (vs2 == vd)
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vs2 can not overlap with vd"));
+  else if (!vm && vm == vd)
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vm can not overlap with vd"));
+  return match_opcode (op, insn, error);
 }
 
 static bfd_boolean
@@ -447,9 +499,13 @@ match_vd_neq_vs2_neq_vm (const struct riscv_opcode *op, insn_t insn,
   int vs2 = (insn & MASK_VS2) >> OP_SH_VS2;
   int vm = (insn & MASK_VMASK) >> OP_SH_VMASK;
 
-  return (match_opcode (op, insn, error)
-	  && vs2 != vd
-	  && (vm || vm != vd));
+  if (vs2 == vd)
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vs2 can not overlap with vd"));
+  else if (!vm && vm == vd)
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vm can not overlap with vd"));
+  return match_opcode (op, insn, error);
 }
 
 static bfd_boolean
@@ -459,7 +515,10 @@ match_vd_neq_vm (const struct riscv_opcode *op, insn_t insn,
   int vd = (insn & MASK_VD) >> OP_SH_VD;
   int vm = (insn & MASK_VMASK) >> OP_SH_VMASK;
 
-  return match_opcode (op, insn, error) && (vm || vm != vd);
+  if (!vm && vm == vd)
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vm can not overlap with vd"));
+  return match_opcode (op, insn, error);
 }
 
 static bfd_boolean
@@ -470,9 +529,13 @@ match_vmv_nf_rv (const struct riscv_opcode *op, insn_t insn,
   int vs2 = (insn & MASK_VS2) >> OP_SH_VS2;
   int nf = ((insn & (0x7 << 15) ) >> 15) + 1;
 
-  return (match_opcode (op, insn, error)
-	  && (vd % nf) == 0
-	  && (vs2 % nf) == 0);
+  if ((vd % nf) != 0)
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vd must be multiple of nf"));
+  else if ((vs2 % nf) != 0)
+    return set_insn_error (error, RISCV_ILLEGAL_OPERAND, 0,
+			   _("vs2 must be multiple of nf"));
+  return match_opcode (op, insn, error);
 }
 
 const struct riscv_opcode riscv_opcodes[] =
