@@ -24,6 +24,7 @@
 #include "riscv-opc.h"
 #include <stdlib.h>
 #include <stdint.h>
+#include "bfd.h"
 
 typedef uint64_t insn_t;
 
@@ -371,6 +372,28 @@ enum riscv_insn_class
    INSN_CLASS_V_AND_F,
   };
 
+enum riscv_error_type
+{
+  RISCV_DEFAULT,
+  RISCV_OK,
+  RISCV_UNRECOGNIZED_OPCODE,
+  RISCV_INVALID_INSN,
+  RISCV_ILLEGAL_OPERAND
+};
+
+struct riscv_insn_error
+{
+  /* Error type.  */
+  enum riscv_error_type type;
+  /* Detail message.  */
+  const char *msg;
+  /* Which operand is invalid.  */
+  int argnum;
+};
+
+extern bfd_boolean set_insn_error (struct riscv_insn_error *,
+				   enum riscv_error_type, int, const char *);
+
 /* This structure holds information for a particular instruction.  */
 
 struct riscv_opcode
@@ -396,7 +419,8 @@ struct riscv_opcode
   insn_t mask;
   /* A function to determine if a word corresponds to this instruction.
      Usually, this computes ((word & mask) == match).  */
-  int (*match_func) (const struct riscv_opcode *op, insn_t word);
+  bfd_boolean (*match_func) (const struct riscv_opcode *op, insn_t word,
+			     struct riscv_insn_error *error);
   /* For a macro, this is INSN_MACRO.  Otherwise, it is a collection
      of bits describing the instruction, notably any relevant hazard
      information.  */

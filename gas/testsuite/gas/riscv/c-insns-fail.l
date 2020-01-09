@@ -1,0 +1,10 @@
+.*: Assembler messages:
+.*: Error: illegal operand 2 `c.lwsp x1,0\(x3\)'
+.*: Error: illegal operand 2 `c.ldsp x1,0\(x3\)'
+.*: Error: illegal operand rd can not be x2 `c.lui x2,0x10'
+.*: Error: illegal operand 1 `c.addi16sp x1,0'
+.*: Error: illegal operand 1 `c.addi4spn x1,x3,0'
+.*: Error: illegal operand 2 `c.addi4spn x8,x3,0'
+.*: Error: illegal operand 2 `c.slli x1,0'
+.*: Error: illegal operand 1 `c.srli x1,0x10'
+.*: Error: illegal operand 1 `c.srai x1,0x10'

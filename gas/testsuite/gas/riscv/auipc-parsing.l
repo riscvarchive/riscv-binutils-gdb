@@ -1,5 +1,5 @@
 .*: Assembler messages:
-.*: Error: illegal operands `auipc x8,x9'
-.*: Error: illegal operands `lui x10,x11'
-.*: Error: illegal operands `auipc x12,symbol'
-.*: Error: illegal operands `lui x13,symbol'
+.*: Error: illegal operand 2 `auipc x8,x9'
+.*: Error: illegal operand 2 `lui x10,x11'
+.*: Error: illegal operand 2 `auipc x12,symbol'
+.*: Error: illegal operand 2 `lui x13,symbol'

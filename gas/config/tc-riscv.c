@@ -53,6 +53,9 @@ struct riscv_cl_insn
 
   /* The relocs associated with the instruction, if any.  */
   fixS *fixp;
+
+  /* For error reporting.  */
+  struct riscv_insn_error error;
 };
 
 #ifndef DEFAULT_ARCH
@@ -247,16 +250,58 @@ insn_length (const struct riscv_cl_insn *insn)
   return riscv_insn_length (insn->insn_opcode);
 }
 
+/* Report errors according to the INSN error types.  */
+
+static void
+report_insn_error (struct riscv_insn_error error, const char *insn)
+{
+  switch (error.type)
+    {
+    case RISCV_UNRECOGNIZED_OPCODE:
+      as_bad ("unrecognized opcode `%s'", insn);
+      break;
+    case RISCV_INVALID_INSN:
+      as_bad ("invalid instruciton %s `%s'", error.msg, insn);
+      break;
+    case RISCV_ILLEGAL_OPERAND:
+      if (error.argnum)
+        as_bad ("illegal operand %d `%s'", error.argnum, insn);
+      else
+        as_bad ("illegal operand %s `%s'", error.msg, insn);
+      break;
+    default:
+      as_bad ("unknown error type `%s'", insn);
+    }
+}
+
+/* Initialise the error information of INSN.  */
+
+static void
+init_insn_error (struct riscv_insn_error *error)
+{
+  set_insn_error (error, RISCV_DEFAULT, 0, NULL);
+}
+
 /* Initialise INSN from opcode entry MO.  Leave its position unspecified.  */
 
 static void
-create_insn (struct riscv_cl_insn *insn, const struct riscv_opcode *mo)
+init_insn (struct riscv_cl_insn *insn)
 {
-  insn->insn_mo = mo;
-  insn->insn_opcode = mo->match;
+  insn->insn_mo = NULL;
+  insn->insn_opcode = 0;
   insn->frag = NULL;
   insn->where = 0;
   insn->fixp = NULL;
+  init_insn_error (&(insn->error));
+}
+
+/* Set the opcode for the INSN.  */
+
+static void
+set_insn_opcode (struct riscv_cl_insn *insn, const struct riscv_opcode *mo)
+{
+  insn->insn_mo = mo;
+  insn->insn_opcode = mo->match;
 }
 
 /* Install INSN at the location specified by its "frag" and "where" fields.  */
@@ -931,7 +976,8 @@ macro_build (expressionS *ep, const char *name, const char *fmt, ...)
     mo++;
   gas_assert (strcmp (name, mo->name) == 0);
 
-  create_insn (&insn, mo);
+  init_insn (&insn);
+  set_insn_opcode (&insn, mo);
   for (;;)
     {
       switch (*fmt++)
@@ -1597,7 +1643,7 @@ riscv_handle_implicit_zero_offset (expressionS *ep, const char *s)
    side effect, it sets the global variable imm_reloc to the type of
    relocation to do if one of the operands is an address expression.  */
 
-static const char *
+static void
 riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 	  bfd_reloc_code_real_type *imm_reloc, struct hash_control *hash)
 {
@@ -1610,7 +1656,6 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
   char save_c = 0;
   int argnum;
   const struct percent_op_match *p;
-  const char *error = "unrecognized opcode";
 
   /* Parse the name of the instruction.  Terminate the string if whitespace
      is found so that hash_find only sees the name part of the string.  */
@@ -1622,18 +1667,37 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 	break;
       }
 
+  init_insn (ip);
   insn = (struct riscv_opcode *) hash_find (hash, str);
+  if (!insn)
+    set_insn_error (&(ip->error), RISCV_UNRECOGNIZED_OPCODE, 0, NULL);
 
+  /* The error information may be set multiple times during parsing.  For now
+     we just report the last error.  */
   argsStart = s;
   for ( ; insn && insn->name && strcmp (insn->name, str) == 0; insn++)
     {
       if ((insn->xlen_requirement != 0) && (xlen != insn->xlen_requirement))
-	continue;
+	{
+	  if (insn->xlen_requirement == 32)
+	    set_insn_error (&(ip->error), RISCV_INVALID_INSN, 0,
+			    _("is only allowed for RV32"));
+	  else
+	    set_insn_error (&(ip->error), RISCV_INVALID_INSN, 0,
+			    _("is only allowed for RV64"));
+	  continue;
+	}
 
       if (!riscv_multi_subset_supports (insn->insn_class))
-	continue;
+	{
+	  set_insn_error (&(ip->error), RISCV_INVALID_INSN, 0,
+			  _("isn't allowed for the -march setting"));
+	  continue;
+	}
 
-      create_insn (ip, insn);
+      /* Reset the error information for previous round.  */
+      init_insn_error (&(ip->error));
+      set_insn_opcode (ip, insn);
       argnum = 1;
 
       imm_expr->X_op = O_absent;
@@ -1648,7 +1712,7 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 	    case '\0': 	/* End of args.  */
 	      if (insn->pinfo != INSN_MACRO)
 		{
-		  if (!insn->match_func (insn, ip->insn_opcode))
+		  if (!insn->match_func (insn, ip->insn_opcode, &(ip->error)))
 		    break;
 
 		  /* For .insn, insn->match and insn->mask are 0.  */
@@ -1656,12 +1720,21 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 					 ? ip->insn_opcode
 					 : insn->match) == 2
 		      && !riscv_opts.rvc)
-		    break;
+		    {
+		      /* I believe this is a obsolete checking and we don't
+			 need this anymore. We already use INSN_CLASS_C and
+			 riscv_multi_subset_supports to check the c-type .insn.
+			 And we also do the checking for O4 and O2 to prevent
+			 this error happening.  */
+		      set_insn_error (&(ip->error), RISCV_INVALID_INSN, 0,
+				      _("in the non-RVC code"));
+		      break;
+		    }
 		}
 	      if (*s != '\0')
 		break;
 	      /* Successful assembly.  */
-	      error = NULL;
+	      set_insn_error (&(ip->error), RISCV_OK, 0, NULL);
 	      goto out;
 
 	    case 'C': /* RVC */
@@ -2473,7 +2546,8 @@ jump:
 	  break;
 	}
       s = argsStart;
-      error = _("illegal operands");
+      if (ip->error.type == RISCV_DEFAULT)
+	set_insn_error (&(ip->error), RISCV_ILLEGAL_OPERAND, argnum, NULL);
     }
 
 out:
@@ -2481,7 +2555,7 @@ out:
   if (save_c)
     *(argsStart - 1) = save_c;
 
-  return error;
+  return;
 }
 
 void
@@ -2491,13 +2565,13 @@ md_assemble (char *str)
   expressionS imm_expr;
   bfd_reloc_code_real_type imm_reloc = BFD_RELOC_UNUSED;
 
-  const char *error = riscv_ip (str, &insn, &imm_expr, &imm_reloc, op_hash);
+  riscv_ip (str, &insn, &imm_expr, &imm_reloc, op_hash);
 
   start_assemble = TRUE;
 
-  if (error)
+  if (insn.error.type != RISCV_OK)
     {
-      as_bad ("%s `%s'", error, str);
+      report_insn_error (insn.error, str);
       return;
     }
 
@@ -3426,13 +3500,10 @@ s_riscv_insn (int x ATTRIBUTE_UNUSED)
   save_c = *input_line_pointer;
   *input_line_pointer = '\0';
 
-  const char *error = riscv_ip (str, &insn, &imm_expr,
-				&imm_reloc, insn_type_hash);
+  riscv_ip (str, &insn, &imm_expr, &imm_reloc, insn_type_hash);
 
-  if (error)
-    {
-      as_bad ("%s `%s'", error, str);
-    }
+  if (insn.error.type != RISCV_OK)
+    report_insn_error (insn.error, str);
   else
     {
       gas_assert (insn.insn_mo->pinfo != INSN_MACRO);
