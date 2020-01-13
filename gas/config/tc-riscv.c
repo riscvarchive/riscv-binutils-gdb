@@ -2484,8 +2484,12 @@ jump:
 		  my_getVsetvliExpression (imm_expr, s);
 		  check_absolute_expr (ip, imm_expr, FALSE);
 		  if (!VALID_RVV_VC_IMM (imm_expr->X_add_number))
-		    as_bad (_("bad value for vsetvli immediate field, "
-			      "value must be 0..2047"));
+		    {
+		      set_insn_error (&(ip->error), RISCV_ILLEGAL_OPERAND, 0,
+				      _("for vsetvli immediate field, "
+					"value must be 0...2047"));
+		      break;
+		    }
 		  ip->insn_opcode
 		    |= ENCODE_RVV_VC_IMM (imm_expr->X_add_number);
 		  imm_expr->X_op = O_absent;
@@ -2497,8 +2501,12 @@ jump:
 		  check_absolute_expr (ip, imm_expr, FALSE);
 		  if (imm_expr->X_add_number > 15
 		      || imm_expr->X_add_number < -16)
-		    as_bad (_("bad value for vector immediate field, "
-			      "value must be -16...15"));
+		    {
+		      set_insn_error (&(ip->error), RISCV_ILLEGAL_OPERAND, 0,
+				      _("for vector immediate field, "
+					"value must be -16...15"));
+		      break;
+		    }
 		  INSERT_OPERAND (VIMM, *ip, imm_expr->X_add_number);
 		  imm_expr->X_op = O_absent;
 		  s = expr_end;
@@ -2509,8 +2517,12 @@ jump:
 		  check_absolute_expr (ip, imm_expr, FALSE);
 		  if (imm_expr->X_add_number < 0
 		      || imm_expr->X_add_number >= 32)
-		    as_bad (_("bad value for vector immediate field, "
-			      "value must be 0...31"));
+		    {
+		      set_insn_error (&(ip->error), RISCV_ILLEGAL_OPERAND, 0,
+				      _("for vector immediate field, "
+					"value must be 0...31"));
+		      break;
+		    }
 		  INSERT_OPERAND (VIMM, *ip, imm_expr->X_add_number);
 		  imm_expr->X_op = O_absent;
 		  s = expr_end;
@@ -2521,8 +2533,12 @@ jump:
 		  check_absolute_expr (ip, imm_expr, FALSE);
 		  if (imm_expr->X_add_number > 16
 		      || imm_expr->X_add_number < -15)
-		    as_bad (_("bad value for vector immediate field, "
-			      "value must be -15...16"));
+		    {
+		      set_insn_error (&(ip->error), RISCV_ILLEGAL_OPERAND, 0,
+				      _("for vector immediate field, "
+					"value must be -15...16"));
+		      break;
+		    }
 		  INSERT_OPERAND (VIMM, *ip, imm_expr->X_add_number - 1);
 		  imm_expr->X_op = O_absent;
 		  s = expr_end;
