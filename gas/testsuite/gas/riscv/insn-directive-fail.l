@@ -1,0 +1,10 @@
+.*: Assembler messages:
+.*: Error: illegal operand O4 \(opcode\) must be 0...127 and lower 2 bits must be 0x3 `r 0x30,0,0,a0,a1,a2'
+.*: Error: illegal operand O2 \(opcode\) must be 0...2  `cr 0x3,0x8,a0,a1'
+.*: Error: illegal operand F3 \(funct3\) must be 0...7 `r 0x33,0x8,0x128,a0,a1,a2'
+.*: Error: illegal operand F2 \(funct2\) must be 0...3 `r 0x33,0x0,0x128,a0,a1,a2'
+.*: Error: illegal operand F2 \(funct2\) must be 0...3 `r MADD,0x0,0x4,a0,a1,a2,a3'
+.*: Error: illegal operand CF6 \(funct6\) must be 0...63 `ca C1,0x64,0x4,a0,a'
+.*: Error: illegal operand CF2 \(funct2\) must be 0...3 `ca C1,0x23,0x4,a0,a'
+.*: Error: illegal operand CF3 \(funct3\) must be 0...7 `cb C1,0x8,a1,target'
+.*: Error: illegal operand CF4 \(funct4\) must be 0...15 `cr C2,0x16,a0,a1'

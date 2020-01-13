@@ -1966,8 +1966,8 @@ rvc_lui:
 			    || imm_expr->X_add_number < 0
 			    || imm_expr->X_add_number >= 64)
 			  {
-			    as_bad (_("bad value for funct6 field, "
-				      "value must be 0...64"));
+			    set_insn_error (&(ip->error), RISCV_ILLEGAL_OPERAND, 0,
+					    _("CF6 (funct6) must be 0...63"));
 			    break;
 			  }
 
@@ -1981,8 +1981,8 @@ rvc_lui:
 			    || imm_expr->X_add_number < 0
 			    || imm_expr->X_add_number >= 16)
 			  {
-			    as_bad (_("bad value for funct4 field, "
-				      "value must be 0...15"));
+			    set_insn_error (&(ip->error), RISCV_ILLEGAL_OPERAND, 0,
+					    _("CF4 (funct4) must be 0...15"));
 			    break;
 			  }
 
@@ -1996,8 +1996,8 @@ rvc_lui:
 			    || imm_expr->X_add_number < 0
 			    || imm_expr->X_add_number >= 8)
 			  {
-			    as_bad (_("bad value for funct3 field, "
-				      "value must be 0...7"));
+			    set_insn_error (&(ip->error), RISCV_ILLEGAL_OPERAND, 0,
+					    _("CF3 (funct3) must be 0...7"));
 			    break;
 			  }
 			INSERT_OPERAND (CFUNCT3, *ip, imm_expr->X_add_number);
@@ -2010,8 +2010,8 @@ rvc_lui:
 			    || imm_expr->X_add_number < 0
 			    || imm_expr->X_add_number >= 4)
 			  {
-			    as_bad (_("bad value for funct2 field, "
-				      "value must be 0...3"));
+			    set_insn_error (&(ip->error), RISCV_ILLEGAL_OPERAND, 0,
+					    _("CF2 (funct2) must be 0...3"));
 			    break;
 			  }
 			INSERT_OPERAND (CFUNCT2, *ip, imm_expr->X_add_number);
@@ -2049,8 +2049,11 @@ rvc_lui:
 	      my_getExpression (imm_expr, s);
 	      check_absolute_expr (ip, imm_expr, FALSE);
 	      if ((unsigned long) imm_expr->X_add_number > 31)
-		as_bad (_("Improper shift amount (%lu)"),
-			(unsigned long) imm_expr->X_add_number);
+		{
+		  set_insn_error (&(ip->error), RISCV_ILLEGAL_OPERAND, 0,
+				  _("imm (shift amount) must be 0...31"));
+		  break;
+		}
 	      INSERT_OPERAND (SHAMTW, *ip, imm_expr->X_add_number);
 	      imm_expr->X_op = O_absent;
 	      s = expr_end;
@@ -2060,8 +2063,11 @@ rvc_lui:
 	      my_getExpression (imm_expr, s);
 	      check_absolute_expr (ip, imm_expr, FALSE);
 	      if ((unsigned long) imm_expr->X_add_number >= xlen)
-		as_bad (_("Improper shift amount (%lu)"),
-			(unsigned long) imm_expr->X_add_number);
+		{
+		  set_insn_error (&(ip->error), RISCV_ILLEGAL_OPERAND, 0,
+				  _("imm (shift amount) must be 0...(XLEN-1)"));
+		  break;
+		}
 	      INSERT_OPERAND (SHAMT, *ip, imm_expr->X_add_number);
 	      imm_expr->X_op = O_absent;
 	      s = expr_end;
@@ -2071,8 +2077,11 @@ rvc_lui:
 	      my_getExpression (imm_expr, s);
 	      check_absolute_expr (ip, imm_expr, FALSE);
 	      if ((unsigned long) imm_expr->X_add_number > 31)
-		as_bad (_("Improper CSRxI immediate (%lu)"),
-			(unsigned long) imm_expr->X_add_number);
+		{
+		  set_insn_error (&(ip->error), RISCV_ILLEGAL_OPERAND, 0,
+				  _("CSRXI imm must be 0...31"));
+		  break;
+		}
 	      INSERT_OPERAND (RS1, *ip, imm_expr->X_add_number);
 	      imm_expr->X_op = O_absent;
 	      s = expr_end;
@@ -2086,8 +2095,11 @@ rvc_lui:
 		  my_getExpression (imm_expr, s);
 		  check_absolute_expr (ip, imm_expr, TRUE);
 		  if ((unsigned long) imm_expr->X_add_number > 0xfff)
-		    as_bad (_("Improper CSR address (%lu)"),
-			    (unsigned long) imm_expr->X_add_number);
+		    {
+		      set_insn_error (&(ip->error), RISCV_ILLEGAL_OPERAND, 0,
+				      _("CSR address must be 0x0...0xfff"));
+		      break;
+		    }
 		  INSERT_OPERAND (CSR, *ip, imm_expr->X_add_number);
 		  imm_expr->X_op = O_absent;
 		  s = expr_end;
@@ -2263,7 +2275,12 @@ branch:
 
 		  if (imm_expr->X_add_number < 0
 		      || imm_expr->X_add_number >= (signed)RISCV_BIGIMM_REACH)
-		    as_bad (_("lui expression not in range 0..1048575"));
+		    {
+		      set_insn_error (&(ip->error), RISCV_ILLEGAL_OPERAND, 0,
+				      _("lui expression not in range "
+					"0x0...0xfffff"));
+		      break;
+		    }
 
 		  *imm_reloc = BFD_RELOC_RISCV_HI20;
 		  imm_expr->X_add_number <<= RISCV_IMM_BITS;
@@ -2299,9 +2316,9 @@ jump:
 		      || imm_expr->X_add_number >= 128
 		      || (imm_expr->X_add_number & 0x3) != 3)
 		    {
-		      as_bad (_("bad value for opcode field, "
-				"value must be 0...127 and "
-				"lower 2 bits must be 0x3"));
+		      set_insn_error (&(ip->error), RISCV_ILLEGAL_OPERAND, 0,
+				      _("O4 (opcode) must be 0...127 "
+					"and lower 2 bits must be 0x3"));
 		      break;
 		    }
 
@@ -2315,8 +2332,8 @@ jump:
 		      || imm_expr->X_add_number < 0
 		      || imm_expr->X_add_number >= 3)
 		    {
-		      as_bad (_("bad value for opcode field, "
-				"value must be 0...2"));
+		      set_insn_error (&(ip->error), RISCV_ILLEGAL_OPERAND, 0,
+				      _("O2 (opcode) must be 0...2 "));
 		      break;
 		    }
 
@@ -2338,8 +2355,8 @@ jump:
 		      || imm_expr->X_add_number < 0
 		      || imm_expr->X_add_number >= 128)
 		    {
-		      as_bad (_("bad value for funct7 field, "
-				"value must be 0...127"));
+		      set_insn_error (&(ip->error), RISCV_ILLEGAL_OPERAND, 0,
+				      _("F7 (funct7) must be 0...127"));
 		      break;
 		    }
 
@@ -2353,8 +2370,8 @@ jump:
 		      || imm_expr->X_add_number < 0
 		      || imm_expr->X_add_number >= 8)
 		    {
-		      as_bad (_("bad value for funct3 field, "
-			        "value must be 0...7"));
+		      set_insn_error (&(ip->error), RISCV_ILLEGAL_OPERAND, 0,
+				      _("F3 (funct3) must be 0...7"));
 		      break;
 		    }
 
@@ -2368,8 +2385,8 @@ jump:
 		      || imm_expr->X_add_number < 0
 		      || imm_expr->X_add_number >= 4)
 		    {
-		      as_bad (_("bad value for funct2 field, "
-			        "value must be 0...3"));
+		      set_insn_error (&(ip->error), RISCV_ILLEGAL_OPERAND, 0,
+				      _("F2 (funct2) must be 0...3"));
 		      break;
 		    }
 
