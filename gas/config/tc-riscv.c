@@ -269,6 +269,9 @@ report_insn_error (struct riscv_insn_error error, const char *insn)
       else
         as_bad ("illegal operand %s `%s'", error.msg, insn);
       break;
+    case RISCV_INTERNAL_ERROR:
+      as_bad ("internal error: %s", error.msg);
+      break;
     default:
       as_bad ("unknown error type `%s'", insn);
     }
@@ -2019,14 +2022,14 @@ rvc_lui:
 			s = expr_end;
 			continue;
 		      default:
-			as_bad (_("bad compressed FUNCT field"
-				  " specifier 'CF%c'\n"),
-				*args);
+			set_insn_error (&(ip->error), RISCV_INTERNAL_ERROR, 0,
+					_("bad RVC FUNCT field specifier 'CF'"));
 		    }
 		  break;
 
 		default:
-		  as_bad (_("bad RVC field specifier 'C%c'\n"), *args);
+		  set_insn_error (&(ip->error), RISCV_INTERNAL_ERROR, 0,
+				  _("bad RVC argument type specifier 'C'"));
 		}
 	      break;
 
@@ -2342,7 +2345,8 @@ jump:
 		  s = expr_end;
 		  continue;
 		default:
-		  as_bad (_("bad Opcode field specifier 'O%c'\n"), *args);
+		  set_insn_error (&(ip->error), RISCV_INTERNAL_ERROR, 0,
+				  _("bad Opcode field specifier 'O'"));
 		}
 	      break;
 
@@ -2396,7 +2400,8 @@ jump:
 		  continue;
 
 		default:
-		  as_bad (_("bad FUNCT field specifier 'F%c'\n"), *args);
+		  set_insn_error (&(ip->error), RISCV_INTERNAL_ERROR, 0,
+				  _("bad FUNCT field specifier 'F'"));
 		}
 	      break;
 
@@ -2558,7 +2563,8 @@ jump:
 	      break;
 
 	    default:
-	      as_fatal (_("internal error: bad argument type %c"), *args);
+	      set_insn_error (&(ip->error), RISCV_INTERNAL_ERROR, 0,
+			      _("bad argument type"));
 	    }
 	  break;
 	}
