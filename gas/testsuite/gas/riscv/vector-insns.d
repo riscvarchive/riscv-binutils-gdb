@@ -1,4 +1,4 @@
-#as: -march=rv32ifv
+#as: -march=rv32iafv_zvamo_zvediv_zvlsseg_zvqmac
 #objdump: -dr
 
 .*:[ 	]+file format .*

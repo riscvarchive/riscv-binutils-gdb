@@ -145,6 +145,16 @@ riscv_multi_subset_supports (enum riscv_insn_class insn_class)
     case INSN_CLASS_V: return riscv_subset_supports ("v");
     case INSN_CLASS_V_AND_F:
       return riscv_subset_supports ("v") && riscv_subset_supports ("f");
+    case INSN_CLASS_V_AND_ZVAMO:
+      return (riscv_subset_supports ("v")
+	      && riscv_subset_supports ("a")
+	      && riscv_subset_supports ("zvamo"));
+    case INSN_CLASS_V_AND_ZVEDIV:
+      return riscv_subset_supports ("v") && riscv_subset_supports ("zvediv");
+    case INSN_CLASS_V_AND_ZVLSSEG:
+      return riscv_subset_supports ("v") && riscv_subset_supports ("zvlsseg");
+    case INSN_CLASS_V_AND_ZVQMAC:
+      return riscv_subset_supports ("v") && riscv_subset_supports ("zvqmac");
 
     default:
       as_fatal ("Unreachable");
@@ -1637,11 +1647,18 @@ my_getVsetvliExpression (expressionS *ep, char *str)
       ep->X_op = O_constant;
       ep->X_add_number = (vediv_value << 5) | (vsew_value << 2) | (vlen_value);
       expr_end = str;
-      return;
+    }
+  else
+    {
+      my_getExpression (ep, str);
+      str = expr_end;
     }
 
-  my_getExpression (ep, str);
-  str = expr_end;
+  /* Report warning message if the vediv field is set, but the Zvediv
+     extension isn't enabled.  */
+  if (!riscv_multi_subset_supports (INSN_CLASS_V_AND_ZVEDIV)
+      && (ep->X_add_number & (OP_MASK_VEDIV << OP_SH_VEDIV)))
+    as_warn ("vediv is set but Zvediv extension isn't enabled");
 }
 
 /* Parse opcode name, could be an mnemonics or number.  */

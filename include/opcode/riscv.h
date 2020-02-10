@@ -370,6 +370,10 @@ enum riscv_insn_class
    INSN_CLASS_Q,
    INSN_CLASS_V,
    INSN_CLASS_V_AND_F,
+   INSN_CLASS_V_AND_ZVAMO,
+   INSN_CLASS_V_AND_ZVEDIV,
+   INSN_CLASS_V_AND_ZVLSSEG,
+   INSN_CLASS_V_AND_ZVQMAC,
   };
 
 /* This structure holds information for a particular instruction.  */
