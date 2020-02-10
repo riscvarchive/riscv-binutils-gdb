@@ -141,6 +141,16 @@ riscv_multi_subset_supports (enum riscv_insn_class insn_class)
     case INSN_CLASS_V: return riscv_subset_supports ("v");
     case INSN_CLASS_V_AND_F:
       return riscv_subset_supports ("v") && riscv_subset_supports ("f");
+    case INSN_CLASS_V_AND_ZVAMO:
+      return (riscv_subset_supports ("v")
+	      && riscv_subset_supports ("a")
+	      && riscv_subset_supports ("zvamo"));
+    case INSN_CLASS_V_AND_ZVEDIV:
+      return riscv_subset_supports ("v") && riscv_subset_supports ("zvediv");
+    case INSN_CLASS_V_AND_ZVLSSEG:
+      return riscv_subset_supports ("v") && riscv_subset_supports ("zvlsseg");
+    case INSN_CLASS_V_AND_ZVQMAC:
+      return riscv_subset_supports ("v") && riscv_subset_supports ("zvqmac");
 
     default:
       as_fatal ("Unreachable");
@@ -2391,6 +2401,11 @@ jump:
 		  if (!VALID_RVV_VC_IMM (imm_expr->X_add_number))
 		    as_bad (_("bad value for vsetvli immediate field, "
 			      "value must be 0..2047"));
+		  /* Report warning message if the vediv field is set, but the
+		     Zvediv extension isn't enabled.  */
+		  if (!riscv_multi_subset_supports (INSN_CLASS_V_AND_ZVEDIV)
+		      && (imm_expr->X_add_number & (0x3 << 5)))
+		    as_warn ("vediv is set but Zvediv extension isn't enabled");
 		  ip->insn_opcode
 		    |= ENCODE_RVV_VC_IMM (imm_expr->X_add_number);
 		  imm_expr->X_op = O_absent;
