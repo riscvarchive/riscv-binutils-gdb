@@ -267,3 +267,10 @@
 	csr pmpaddr13
 	csr pmpaddr14
 	csr pmpaddr15
+
+# rvv registers
+	csr vstart
+	csr vxsat
+	csr vxrm
+	csr vl
+	csr vtype
