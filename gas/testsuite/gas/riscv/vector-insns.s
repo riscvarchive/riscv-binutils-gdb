@@ -1899,9 +1899,3 @@
 	vdot.vv v4, v8, v12, v0.t
 	vdotu.vv v4, v8, v12, v0.t
 	vfdot.vv v4, v8, v12, v0.t
-
-	csrr a0, vstart
-	csrr a0, vxsat
-	csrr a0, vxrm
-	csrr a0, vl
-	csrr a0, vtype

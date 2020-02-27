@@ -1,4 +1,4 @@
-#as: -march=rv32if
+#as: -march=rv32ifv
 #objdump: -dr
 
 .*:[ 	]+file format .*
@@ -251,3 +251,8 @@ Disassembly of section .text:
 [ 	]+3c4:[ 	]+3bd02573[ 	]+csrr[ 	]+a0,pmpaddr13
 [ 	]+3c8:[ 	]+3be02573[ 	]+csrr[ 	]+a0,pmpaddr14
 [ 	]+3cc:[ 	]+3bf02573[ 	]+csrr[ 	]+a0,pmpaddr15
+[ 	]+3d0+:[ 	]+00802573[ 	]+csrr[ 	]+a0,vstart
+[ 	]+3d4+:[ 	]+00902573[ 	]+csrr[ 	]+a0,vxsat
+[ 	]+3d8+:[ 	]+00a02573[ 	]+csrr[ 	]+a0,vxrm
+[ 	]+3dc+:[ 	]+c2002573[ 	]+csrr[ 	]+a0,vl
+[ 	]+3e0+:[ 	]+c2102573[ 	]+csrr[ 	]+a0,vtype

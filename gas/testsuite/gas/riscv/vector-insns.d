@@ -1813,8 +1813,3 @@ Disassembly of section .text:
 [ 	]+[0-9a-f]+:[ 	]+e4860257[ 	]+vdot.vv[ 	]+v4,v8,v12,v0.t
 [ 	]+[0-9a-f]+:[ 	]+e0860257[ 	]+vdotu.vv[ 	]+v4,v8,v12,v0.t
 [ 	]+[0-9a-f]+:[ 	]+e4861257[ 	]+vfdot.vv[ 	]+v4,v8,v12,v0.t
-[ 	]+[0-9a-f]+:[ 	]+00802573[ 	]+csrr[ 	]+a0,vstart
-[ 	]+[0-9a-f]+:[ 	]+00902573[ 	]+csrr[ 	]+a0,vxsat
-[ 	]+[0-9a-f]+:[ 	]+00a02573[ 	]+csrr[ 	]+a0,vxrm
-[ 	]+[0-9a-f]+:[ 	]+c2002573[ 	]+csrr[ 	]+a0,vl
-[ 	]+[0-9a-f]+:[ 	]+c2102573[ 	]+csrr[ 	]+a0,vtype

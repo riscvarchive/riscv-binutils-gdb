@@ -497,6 +497,7 @@ enum riscv_csr_class
   CSR_CLASS_I,
   CSR_CLASS_I_32,	/* rv32 only */
   CSR_CLASS_F,		/* f-ext only */
+  CSR_CLASS_V,		/* v-ext only */
 };
 
 /* This structure holds all restricted conditions for a CSR.  */
@@ -540,6 +541,7 @@ riscv_csr_class_check (enum riscv_csr_class csr_class)
     {
     case CSR_CLASS_I: return riscv_subset_supports ("i");
     case CSR_CLASS_F: return riscv_subset_supports ("f");
+    case CSR_CLASS_V: return riscv_subset_supports ("v");
     case CSR_CLASS_I_32:
       return (xlen == 32 && riscv_subset_supports ("i"));
 
