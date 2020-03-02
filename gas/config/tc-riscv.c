@@ -1645,7 +1645,8 @@ my_getVsetvliExpression (expressionS *ep, char *str)
   if (vsew_found || vlen_found || vediv_found)
     {
       ep->X_op = O_constant;
-      ep->X_add_number = (vediv_value << 5) | (vsew_value << 2) | (vlen_value);
+      ep->X_add_number = (vediv_value << OP_SH_VEDIV)
+			 | (vsew_value << OP_SH_VSEW) | (vlen_value);
       expr_end = str;
     }
   else
