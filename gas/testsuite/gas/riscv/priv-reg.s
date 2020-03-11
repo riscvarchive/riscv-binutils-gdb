@@ -272,5 +272,6 @@
 	csr vstart
 	csr vxsat
 	csr vxrm
+	csr vcsr
 	csr vl
 	csr vtype

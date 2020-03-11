@@ -254,5 +254,6 @@ Disassembly of section .text:
 [ 	]+3d0+:[ 	]+00802573[ 	]+csrr[ 	]+a0,vstart
 [ 	]+3d4+:[ 	]+00902573[ 	]+csrr[ 	]+a0,vxsat
 [ 	]+3d8+:[ 	]+00a02573[ 	]+csrr[ 	]+a0,vxrm
-[ 	]+3dc+:[ 	]+c2002573[ 	]+csrr[ 	]+a0,vl
-[ 	]+3e0+:[ 	]+c2102573[ 	]+csrr[ 	]+a0,vtype
+[ 	]+3dc+:[ 	]+00f02573[ 	]+csrr[ 	]+a0,vcsr
+[ 	]+3e0+:[ 	]+c2002573[ 	]+csrr[ 	]+a0,vl
+[ 	]+3e4+:[ 	]+c2102573[ 	]+csrr[ 	]+a0,vtype
