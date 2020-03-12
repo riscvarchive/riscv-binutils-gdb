@@ -1,4 +1,5 @@
 .*: Assembler messages:
+.*Error: illegal operands `viota.m v2,v2'
 .*Error: illegal operands `viota.m v0,v2,v0.t'
 .*Error: illegal operands `vslideup.vx v2,v2,a4'
 .*Error: illegal operands `vslideup.vx v0,v2,a4,v0.t'
