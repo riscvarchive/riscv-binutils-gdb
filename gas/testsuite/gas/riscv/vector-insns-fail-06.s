@@ -7,7 +7,7 @@
 # Whole Vector Register Move
 
 	viota.m v0, v2		# OK
-	viota.m v2, v2		# OK
+	viota.m v2, v2		# vd overlap vs2
 	viota.m v0, v2, v0.t	# vd overlap vm
 
 	vslideup.vx v0, v2, a4		# OK

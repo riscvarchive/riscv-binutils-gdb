@@ -431,20 +431,6 @@ match_vd_neq_vs2_neq_vm (const struct riscv_opcode *op,
 }
 
 static bfd_boolean
-match_vd_neq_vm (const struct riscv_opcode *op,
-		 insn_t insn,
-		 bfd_boolean constraints)
-{
-  int vd = (insn & MASK_VD) >> OP_SH_VD;
-  int vm = (insn & MASK_VMASK) >> OP_SH_VMASK;
-
-  if (constraints && !vm && vm == vd)
-    return FALSE;
-
-  return match_opcode (op, insn, FALSE);
-}
-
-static bfd_boolean
 match_vmv_nf_rv (const struct riscv_opcode *op,
 		 insn_t insn,
 		 bfd_boolean constraints)
@@ -1782,7 +1768,7 @@ const struct riscv_opcode riscv_opcodes[] =
 {"vmsbf.m",    0, INSN_CLASS_V, "Vd,VtVm", MATCH_VMSBFM, MASK_VMSBFM, match_opcode, 0},
 {"vmsif.m",    0, INSN_CLASS_V, "Vd,VtVm", MATCH_VMSIFM, MASK_VMSIFM, match_opcode, 0},
 {"vmsof.m",    0, INSN_CLASS_V, "Vd,VtVm", MATCH_VMSOFM, MASK_VMSOFM, match_opcode, 0},
-{"viota.m",    0, INSN_CLASS_V, "Vd,VtVm", MATCH_VIOTAM, MASK_VIOTAM, match_vd_neq_vm, 0},
+{"viota.m",    0, INSN_CLASS_V, "Vd,VtVm", MATCH_VIOTAM, MASK_VIOTAM, match_vd_neq_vs2_neq_vm, 0},
 {"vid.v",      0, INSN_CLASS_V, "VdVm", MATCH_VIDV, MASK_VIDV, match_opcode, 0},
 
 {"vmv.x.s",    0, INSN_CLASS_V, "d,Vt", MATCH_VMVXS, MASK_VMVXS, match_opcode, 0},
