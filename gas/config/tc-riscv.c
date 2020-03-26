@@ -133,15 +133,22 @@ riscv_multi_subset_supports (enum riscv_insn_class insn_class)
     case INSN_CLASS_C: return riscv_subset_supports ("c");
     case INSN_CLASS_A: return riscv_subset_supports ("a");
     case INSN_CLASS_M: return riscv_subset_supports ("m");
+
     case INSN_CLASS_F: return riscv_subset_supports ("f");
+    case INSN_CLASS_F_AND_C:
+      return riscv_subset_supports ("f") && riscv_subset_supports ("c");
+    case INSN_CLASS_F_AND_ZFH:
+      return riscv_subset_supports ("f") && riscv_subset_supports ("zfh");
+
     case INSN_CLASS_D: return riscv_subset_supports ("d");
     case INSN_CLASS_D_AND_C:
       return riscv_subset_supports ("d") && riscv_subset_supports ("c");
-
-    case INSN_CLASS_F_AND_C:
-      return riscv_subset_supports ("f") && riscv_subset_supports ("c");
+    case INSN_CLASS_D_AND_ZFH:
+      return riscv_subset_supports ("d") && riscv_subset_supports ("zfh");
 
     case INSN_CLASS_Q: return riscv_subset_supports ("q");
+    case INSN_CLASS_Q_AND_ZFH:
+      return riscv_subset_supports ("q") && riscv_subset_supports ("zfh");
 
     case INSN_CLASS_V: return riscv_subset_supports ("v");
     case INSN_CLASS_V_AND_F:
@@ -1431,6 +1438,11 @@ macro (struct riscv_cl_insn *ip, expressionS *imm_expr,
 		  BFD_RELOC_RISCV_PCREL_HI20, BFD_RELOC_RISCV_PCREL_LO12_I);
       break;
 
+    case M_FLH:
+      pcrel_load (rd, rs1, imm_expr, "flh",
+		  BFD_RELOC_RISCV_PCREL_HI20, BFD_RELOC_RISCV_PCREL_LO12_I);
+      break;
+
     case M_FLW:
       pcrel_load (rd, rs1, imm_expr, "flw",
 		  BFD_RELOC_RISCV_PCREL_HI20, BFD_RELOC_RISCV_PCREL_LO12_I);
@@ -1458,6 +1470,11 @@ macro (struct riscv_cl_insn *ip, expressionS *imm_expr,
 
     case M_SD:
       pcrel_store (rs2, rs1, imm_expr, "sd",
+		   BFD_RELOC_RISCV_PCREL_HI20, BFD_RELOC_RISCV_PCREL_LO12_S);
+      break;
+
+    case M_FSH:
+      pcrel_store (rs2, rs1, imm_expr, "fsh",
 		   BFD_RELOC_RISCV_PCREL_HI20, BFD_RELOC_RISCV_PCREL_LO12_S);
       break;
 
