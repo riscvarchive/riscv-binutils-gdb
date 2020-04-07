@@ -1184,7 +1184,7 @@ vector_macro (struct riscv_cl_insn *ip)
 	{
 	  /* Unmasked.  */
 	  macro_build (NULL, "vmslt.vx", "Vd,Vt,sVm", vd, vs2, vs1, -1);
-	  macro_build (NULL, "vmnand.mm", "Vd,Vt,Vs", vd, vs2, vs1);
+	  macro_build (NULL, "vmnand.mm", "Vd,Vt,Vs", vd, vd, vd);
 	}
       else
 	{
@@ -1209,7 +1209,7 @@ vector_macro (struct riscv_cl_insn *ip)
 	{
 	  /* Unmasked.  */
 	  macro_build (NULL, "vmsltu.vx", "Vd,Vt,sVm", vd, vs2, vs1, -1);
-	  macro_build (NULL, "vmnand.mm", "Vd,Vt,Vs", vd, vs2, vs1);
+	  macro_build (NULL, "vmnand.mm", "Vd,Vt,Vs", vd, vd, vd);
 	}
       else
 	{
