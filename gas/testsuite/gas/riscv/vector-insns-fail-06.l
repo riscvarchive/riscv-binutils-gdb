@@ -7,6 +7,8 @@
 .*Error: illegal operands `vslideup.vi v0,v2,1,v0.t'
 .*Error: illegal operands `vslide1up.vx v2,v2,a4'
 .*Error: illegal operands `vslide1up.vx v0,v2,a4,v0.t'
+.*Error: illegal operands `vfslide1up.vf v2,v2,fa4'
+.*Error: illegal operands `vfslide1up.vf v0,v2,fa4,v0.t'
 .*Error: illegal operands `vrgather.vv v2,v2,v4'
 .*Error: illegal operands `vrgather.vv v4,v2,v4'
 .*Error: illegal operands `vrgather.vv v0,v2,v4,v0.t'

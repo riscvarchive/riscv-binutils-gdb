@@ -1184,6 +1184,11 @@
 	vslide1up.vx v4, v8, a1, v0.t
 	vslide1down.vx v4, v8, a1, v0.t
 
+	vfslide1up.vf v4, v8, fa1
+	vfslide1down.vf v4, v8, fa1
+	vfslide1up.vf v4, v8, fa1, v0.t
+	vfslide1down.vf v4, v8, fa1, v0.t
+
 	vrgather.vv v4, v8, v12
 	vrgather.vx v4, v8, a1
 	vrgather.vi v4, v8, 0

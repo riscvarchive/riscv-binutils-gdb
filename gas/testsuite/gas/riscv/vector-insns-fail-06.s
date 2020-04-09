@@ -25,6 +25,11 @@
 	vslide1up.vx v2, v2, a4		# vd overlap vs2
 	vslide1up.vx v0, v2, a4, v0.t	# vd overlap vm
 
+	vfslide1up.vf v0, v2, fa4	# OK
+	vfslide1up.vf v1, v2, fa4	# OK
+	vfslide1up.vf v2, v2, fa4	# vd overlap vs2
+	vfslide1up.vf v0, v2, fa4, v0.t	# vd overlap vm
+
 	vrgather.vv v0, v2, v4		# OK
 	vrgather.vv v1, v2, v4		# OK
 	vrgather.vv v2, v2, v4		# vd overlap vs2

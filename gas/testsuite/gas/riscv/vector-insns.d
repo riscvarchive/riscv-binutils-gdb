@@ -1101,6 +1101,10 @@ Disassembly of section .text:
 [ 	]+[0-9a-f]+:[ 	]+3e85e257[ 	]+vslide1down.vx[ 	]+v4,v8,a1
 [ 	]+[0-9a-f]+:[ 	]+3885e257[ 	]+vslide1up.vx[ 	]+v4,v8,a1,v0.t
 [ 	]+[0-9a-f]+:[ 	]+3c85e257[ 	]+vslide1down.vx[ 	]+v4,v8,a1,v0.t
+[ 	]+[0-9a-f]+:[ 	]+3a85d257[ 	]+vfslide1up.vf[ 	]+v4,v8,fa1
+[ 	]+[0-9a-f]+:[ 	]+3e85d257[ 	]+vfslide1down.vf[ 	]+v4,v8,fa1
+[ 	]+[0-9a-f]+:[ 	]+3885d257[ 	]+vfslide1up.vf[ 	]+v4,v8,fa1,v0.t
+[ 	]+[0-9a-f]+:[ 	]+3c85d257[ 	]+vfslide1down.vf[ 	]+v4,v8,fa1,v0.t
 [ 	]+[0-9a-f]+:[ 	]+32860257[ 	]+vrgather.vv[ 	]+v4,v8,v12
 [ 	]+[0-9a-f]+:[ 	]+3285c257[ 	]+vrgather.vx[ 	]+v4,v8,a1
 [ 	]+[0-9a-f]+:[ 	]+32803257[ 	]+vrgather.vi[ 	]+v4,v8,0
