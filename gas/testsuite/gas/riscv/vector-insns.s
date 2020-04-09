@@ -1063,32 +1063,44 @@
 
 	vfcvt.xu.f.v v4, v8
 	vfcvt.x.f.v v4, v8
+	vfcvt.rtz.xu.f.v v4, v8
+	vfcvt.rtz.x.f.v v4, v8
 	vfcvt.f.xu.v v4, v8
 	vfcvt.f.x.v v4, v8
 	vfcvt.xu.f.v v4, v8, v0.t
 	vfcvt.x.f.v v4, v8, v0.t
+	vfcvt.rtz.xu.f.v v4, v8, v0.t
+	vfcvt.rtz.x.f.v v4, v8, v0.t
 	vfcvt.f.xu.v v4, v8, v0.t
 	vfcvt.f.x.v v4, v8, v0.t
 
 	vfwcvt.xu.f.v v4, v8
 	vfwcvt.x.f.v v4, v8
+	vfwcvt.rtz.xu.f.v v4, v8
+	vfwcvt.rtz.x.f.v v4, v8
 	vfwcvt.f.xu.v v4, v8
 	vfwcvt.f.x.v v4, v8
 	vfwcvt.f.f.v v4, v8
 	vfwcvt.xu.f.v v4, v8, v0.t
 	vfwcvt.x.f.v v4, v8, v0.t
+	vfwcvt.rtz.xu.f.v v4, v8, v0.t
+	vfwcvt.rtz.x.f.v v4, v8, v0.t
 	vfwcvt.f.xu.v v4, v8, v0.t
 	vfwcvt.f.x.v v4, v8, v0.t
 	vfwcvt.f.f.v v4, v8, v0.t
 
 	vfncvt.xu.f.w v4, v8
 	vfncvt.x.f.w v4, v8
+	vfncvt.rtz.xu.f.w v4, v8
+	vfncvt.rtz.x.f.w v4, v8
 	vfncvt.f.xu.w v4, v8
 	vfncvt.f.x.w v4, v8
 	vfncvt.f.f.w v4, v8
 	vfncvt.rod.f.f.w v4, v8
 	vfncvt.xu.f.w v4, v8, v0.t
 	vfncvt.x.f.w v4, v8, v0.t
+	vfncvt.rtz.xu.f.w v4, v8, v0.t
+	vfncvt.rtz.x.f.w v4, v8, v0.t
 	vfncvt.f.xu.w v4, v8, v0.t
 	vfncvt.f.x.w v4, v8, v0.t
 	vfncvt.f.f.w v4, v8, v0.t

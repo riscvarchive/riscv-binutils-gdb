@@ -156,6 +156,18 @@
 	vfwcvt.x.f.v v2, v3		# vd overlap vs2
 	vfwcvt.x.f.v v0, v2, v0.t	# vd overlap vm
 
+	vfwcvt.rtz.xu.f.v v0, v2	# OK
+	vfwcvt.rtz.xu.f.v v1, v2	# vd should be multiple of 2
+	vfwcvt.rtz.xu.f.v v2, v2	# vd overlap vs2
+	vfwcvt.rtz.xu.f.v v2, v3	# vd overlap vs2
+	vfwcvt.rtz.xu.f.v v0, v2, v0.t	# vd overlap vm
+
+	vfwcvt.rtz.x.f.v v0, v2		# OK
+	vfwcvt.rtz.x.f.v v1, v2		# vd should be multiple of 2
+	vfwcvt.rtz.x.f.v v2, v2		# vd overlap vs2
+	vfwcvt.rtz.x.f.v v2, v3		# vd overlap vs2
+	vfwcvt.rtz.x.f.v v0, v2, v0.t	# vd overlap vm
+
 	vfwcvt.f.xu.v v0, v2		# OK
 	vfwcvt.f.xu.v v1, v2		# vd should be multiple of 2
 	vfwcvt.f.xu.v v2, v2		# vd overlap vs2

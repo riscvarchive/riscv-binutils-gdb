@@ -1095,12 +1095,16 @@ vs1
 00001 vfcvt.x.f.v
 00010 vfcvt.f.xu.v
 00011 vfcvt.f.x.v
+00110 vfcvt.rtz.xu.f.v
+00111 vfcvt.rtz.x.f.v
 
 01000 vfwcvt.xu.f.v
 01001 vfwcvt.x.f.v
 01010 vfwcvt.f.xu.v
 01011 vfwcvt.f.x.v
 01100 vfwcvt.f.f.v
+01110 vfwcvt.rtz.xu.f.v
+01111 vfwcvt.rtz.x.f.v
 
 10000 vfncvt.xu.f.w
 10001 vfncvt.x.f.w
@@ -1108,6 +1112,8 @@ vs1
 10011 vfncvt.f.x.w
 10100 vfncvt.f.f.w
 10101 vfncvt.rod.f.f.w
+10110 vfncvt.rtz.xu.f.v
+10111 vfncvt.rtz.x.f.v
 
 VFUNARY1
 vs1
@@ -1641,38 +1647,50 @@ funct6 VM  VS2  VS1/RS1/IMM funct3 VD   opcode
 #define MATCH_VFMVVF     0x5e005057
 #define MASK_VFMVVF      0xfff0707f
 
-#define MATCH_VFCVTXUFV  0x88001057
-#define MASK_VFCVTXUFV   0xfc0ff07f
-#define MATCH_VFCVTXFV   0x88009057
-#define MASK_VFCVTXFV    0xfc0ff07f
-#define MATCH_VFCVTFXUV  0x88011057
-#define MASK_VFCVTFXUV   0xfc0ff07f
-#define MATCH_VFCVTFXV   0x88019057
-#define MASK_VFCVTFXV    0xfc0ff07f
+#define MATCH_VFCVTXUFV    0x88001057
+#define MASK_VFCVTXUFV     0xfc0ff07f
+#define MATCH_VFCVTXFV     0x88009057
+#define MASK_VFCVTXFV      0xfc0ff07f
+#define MATCH_VFCVTRTZXUFV 0x88031057
+#define MASK_VFCVTRTZXUFV  0xfc0ff07f
+#define MATCH_VFCVTRTZXFV  0x88039057
+#define MASK_VFCVTRTZXFV   0xfc0ff07f
+#define MATCH_VFCVTFXUV    0x88011057
+#define MASK_VFCVTFXUV     0xfc0ff07f
+#define MATCH_VFCVTFXV     0x88019057
+#define MASK_VFCVTFXV      0xfc0ff07f
 
-#define MATCH_VFWCVTXUFV  0x88041057
-#define MASK_VFWCVTXUFV   0xfc0ff07f
-#define MATCH_VFWCVTXFV   0x88049057
-#define MASK_VFWCVTXFV    0xfc0ff07f
-#define MATCH_VFWCVTFXUV  0x88051057
-#define MASK_VFWCVTFXUV   0xfc0ff07f
-#define MATCH_VFWCVTFXV   0x88059057
-#define MASK_VFWCVTFXV    0xfc0ff07f
-#define MATCH_VFWCVTFFV   0x88061057
-#define MASK_VFWCVTFFV    0xfc0ff07f
+#define MATCH_VFWCVTXUFV    0x88041057
+#define MASK_VFWCVTXUFV     0xfc0ff07f
+#define MATCH_VFWCVTXFV     0x88049057
+#define MASK_VFWCVTXFV      0xfc0ff07f
+#define MATCH_VFWCVTRTZXUFV 0x88071057
+#define MASK_VFWCVTRTZXUFV  0xfc0ff07f
+#define MATCH_VFWCVTRTZXFV  0x88079057
+#define MASK_VFWCVTRTZXFV   0xfc0ff07f
+#define MATCH_VFWCVTFXUV    0x88051057
+#define MASK_VFWCVTFXUV     0xfc0ff07f
+#define MATCH_VFWCVTFXV     0x88059057
+#define MASK_VFWCVTFXV      0xfc0ff07f
+#define MATCH_VFWCVTFFV     0x88061057
+#define MASK_VFWCVTFFV      0xfc0ff07f
 
-#define MATCH_VFNCVTXUFW  0x88081057
-#define MASK_VFNCVTXUFW   0xfc0ff07f
-#define MATCH_VFNCVTXFW   0x88089057
-#define MASK_VFNCVTXFW    0xfc0ff07f
-#define MATCH_VFNCVTFXUW  0x88091057
-#define MASK_VFNCVTFXUW   0xfc0ff07f
-#define MATCH_VFNCVTFXW   0x88099057
-#define MASK_VFNCVTFXW    0xfc0ff07f
-#define MATCH_VFNCVTFFW   0x880a1057
-#define MASK_VFNCVTFFW    0xfc0ff07f
-#define MATCH_VFNCVTRFFW  0x880a9057
-#define MASK_VFNCVTRFFW   0xfc0ff07f
+#define MATCH_VFNCVTXUFW    0x88081057
+#define MASK_VFNCVTXUFW     0xfc0ff07f
+#define MATCH_VFNCVTXFW     0x88089057
+#define MASK_VFNCVTXFW      0xfc0ff07f
+#define MATCH_VFNCVTRTZXUFW 0x880b1057
+#define MASK_VFNCVTRTZXUFW  0xfc0ff07f
+#define MATCH_VFNCVTRTZXFW  0x880b9057
+#define MASK_VFNCVTRTZXFW   0xfc0ff07f
+#define MATCH_VFNCVTFXUW    0x88091057
+#define MASK_VFNCVTFXUW     0xfc0ff07f
+#define MATCH_VFNCVTFXW     0x88099057
+#define MASK_VFNCVTFXW      0xfc0ff07f
+#define MATCH_VFNCVTFFW     0x880a1057
+#define MASK_VFNCVTFFW      0xfc0ff07f
+#define MATCH_VFNCVTRODFFW  0x880a9057
+#define MASK_VFNCVTRODFFW   0xfc0ff07f
 
 #define MATCH_VREDSUMVV  0x00002057
 #define MASK_VREDSUMVV   0xfc00707f
