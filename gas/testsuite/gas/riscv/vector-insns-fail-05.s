@@ -90,6 +90,20 @@
 	vfncvt.x.f.w v4, v2		# OK
 	vfncvt.x.f.w v0, v2, v0.t	# We can't know the LMUL, so skip the vm checking
 
+	vfncvt.rtz.xu.f.w v0, v2	# OK
+	vfncvt.rtz.xu.f.w v2, v2	# vd overlap vs2
+	vfncvt.rtz.xu.f.w v2, v3	# vs2 should be multiple of 2
+	vfncvt.rtz.xu.f.w v3, v2	# vd overlap vs2
+	vfncvt.rtz.xu.f.w v4, v2	# OK
+	vfncvt.rtz.xu.f.w v0, v2, v0.t	# We can't know the LMUL, so skip the vm checking
+
+	vfncvt.rtz.x.f.w v0, v2		# OK
+	vfncvt.rtz.x.f.w v2, v2		# vd overlap vs2
+	vfncvt.rtz.x.f.w v2, v3		# vs2 should be multiple of 2
+	vfncvt.rtz.x.f.w v3, v2		# vd overlap vs2
+	vfncvt.rtz.x.f.w v4, v2		# OK
+	vfncvt.rtz.x.f.w v0, v2, v0.t	# We can't know the LMUL, so skip the vm checking
+
 	vfncvt.f.xu.w v0, v2		# OK
 	vfncvt.f.xu.w v2, v2		# vd overlap vs2
 	vfncvt.f.xu.w v2, v3		# vs2 should be multiple of 2
