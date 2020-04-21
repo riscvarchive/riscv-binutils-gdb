@@ -646,14 +646,6 @@
 	vmsgeu.vi v4, v8, 16, v0.t
 	vmsgeu.vi v4, v8, -15, v0.t
 
-	# Macros
-	vmsge.vx v4, v8, a1
-	vmsgeu.vx v4, v8, a1
-	vmsge.vx v8, v12, a2, v0.t
-	vmsgeu.vx v8, v12, a2, v0.t
-	vmsge.vx v4, v8, a1, v0.t, v12
-	vmsgeu.vx v4, v8, a1, v0.t, v12
-
 	vmseq.vv v4, v8, v12
 	vmseq.vx v4, v8, a1
 	vmseq.vi v4, v8, 15
