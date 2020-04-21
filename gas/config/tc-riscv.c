@@ -368,7 +368,7 @@ const char EXP_CHARS[] = "eE";
 /* Chars that mean this number is a floating point constant */
 /* As in 0f12.456 */
 /* or    0d1.2345e12 */
-const char FLT_CHARS[] = "rRsSfFdDxXpP";
+const char FLT_CHARS[] = "rRsSfFdDxXpPhH";
 
 /* Indicate we are already assemble any instructions or not.  */
 static bfd_boolean start_assemble = FALSE;
@@ -4212,6 +4212,7 @@ static const pseudo_typeS riscv_pseudo_table[] =
   {"sleb128", s_riscv_leb128, 1},
   {"insn", s_riscv_insn, 0},
   {"attribute", s_riscv_attribute, 0},
+  {"float16", float_cons, 'h'},
 
   { NULL, NULL, 0 },
 };
