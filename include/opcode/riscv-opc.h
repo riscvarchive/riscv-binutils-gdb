@@ -546,13 +546,13 @@ MOP load
 
 MOP store
 000 unit-stride		VSE, VS<nf>RV (nf = 1)
-001 reserved
+001 indexed-unordered	VSUXE
 010 strided		VSE
 011 indexed-ordered	VSXE
 100 reserved
 101 reserved
 110 reserved
-111 indexed-unordered	VSUXE
+111 reserved
 
 VM 0 masked
 VM 1 unmasked
@@ -598,7 +598,7 @@ xxx0 0011 0000 xxxx x000 xxxx x000 0111 VLB
 #define MASK_VLXEV     0xfc00707f
 #define MATCH_VSXEV    0x0c007027
 #define MASK_VSXEV     0xfc00707f
-#define MATCH_VSUXEV   0x1c007027
+#define MATCH_VSUXEV   0x04007027
 #define MASK_VSUXEV    0xfc00707f
 #define MATCH_VLEFFV  0x01007007
 #define MASK_VLEFFV   0xfdf0707f
