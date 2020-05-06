@@ -71,6 +71,16 @@ static const char * const riscv_vediv[4] =
   "d1", "d2", "d4", "d8"
 };
 
+static const char * const riscv_vta[2] =
+{
+  "tu", "ta"
+};
+
+static const char * const riscv_vma[2] =
+{
+  "mu", "ma"
+};
+
 #define RVC_JUMP_BITS 11
 #define RVC_JUMP_REACH ((1ULL << RVC_JUMP_BITS) * RISCV_JUMP_ALIGN)
 
@@ -309,6 +319,10 @@ static const char * const riscv_vediv[4] =
 #define OP_SH_VEDIV		8
 #define OP_MASK_VTYPE_RES	0x1
 #define OP_SH_VTYPE_RES		10
+#define OP_MASK_VTA		0x1
+#define OP_SH_VTA		6
+#define OP_MASK_VMA		0x1
+#define OP_SH_VMA		7
 
 #define OP_MASK_VWD		0x1
 #define OP_SH_VWD		26
