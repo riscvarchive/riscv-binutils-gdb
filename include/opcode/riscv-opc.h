@@ -538,23 +538,21 @@
 
 /* Temporary Load/store encoding info
 MOP load
-000 zero-extended unit-stride	VLxU, VLE, VL<nf>RV (nf = 1)
+000 unit-stride	VLE, VL<nf>RV (nf = 1)
 001 reserved
-010 zero-extended strided	VLSxU, VLSE
-011 zero-extended indexed	VLXxU, VLXE
-100 sign-extended unit-stride	VLx (x!=E)
-101 reserved
-110 sign-extended strided	VLSx (x!=E)
-111 sign-extended indexed	VLXx (x!=E)
+010 strided	VLSE
+011 indexed	VLXE
+1XX reserved
+
 MOP store
-000 unit-stride		VSx, VS<nf>RV (nf = 1)
+000 unit-stride		VSE, VS<nf>RV (nf = 1)
 001 reserved
-010 strided		VSSx
-011 indexed-ordered	VSXx
+010 strided		VSE
+011 indexed-ordered	VSXE
 100 reserved
 101 reserved
 110 reserved
-111 indexed-unordered	VSUXx
+111 indexed-unordered	VSUXE
 
 VM 0 masked
 VM 1 unmasked
@@ -578,105 +576,30 @@ WIDTH
 010	FxW
 011	FxD
 100	FxQ
-000	VxB
-101	VxH
-110	VxW
-111	VxE
+000	reserved
+101	reserved
+110	reserved
+111	VLxE/VSxE
 
 NF MOP VM LUMOP RS1 WIDTH VD opcode
 xxx 000 1 00000 xxxxx 000 xxxxx 0000111 VLB
 xxx0 0011 0000 xxxx x000 xxxx x000 0111 VLB
 */
 
-#define MATCH_VLBV  0x10000007
-#define MASK_VLBV   0xfdf0707f
-#define MATCH_VLHV  0x10005007
-#define MASK_VLHV   0xfdf0707f
-#define MATCH_VLWV  0x10006007
-#define MASK_VLWV   0xfdf0707f
-#define MATCH_VLBUV 0x00000007
-#define MASK_VLBUV  0xfdf0707f
-#define MATCH_VLHUV 0x00005007
-#define MASK_VLHUV  0xfdf0707f
-#define MATCH_VLWUV 0x00006007
-#define MASK_VLWUV  0xfdf0707f
 #define MATCH_VLEV  0x00007007
 #define MASK_VLEV   0xfdf0707f
-#define MATCH_VSBV  0x00000027
-#define MASK_VSBV   0xfdf0707f
-#define MATCH_VSHV  0x00005027
-#define MASK_VSHV   0xfdf0707f
-#define MATCH_VSWV  0x00006027
-#define MASK_VSWV   0xfdf0707f
 #define MATCH_VSEV  0x00007027
 #define MASK_VSEV   0xfdf0707f
-
-#define MATCH_VLSBV    0x18000007
-#define MASK_VLSBV     0xfc00707f
-#define MATCH_VLSHV    0x18005007
-#define MASK_VLSHV     0xfc00707f
-#define MATCH_VLSWV    0x18006007
-#define MASK_VLSWV     0xfc00707f
-#define MATCH_VLSBUV   0x08000007
-#define MASK_VLSBUV    0xfc00707f
-#define MATCH_VLSHUV   0x08005007
-#define MASK_VLSHUV    0xfc00707f
-#define MATCH_VLSWUV   0x08006007
-#define MASK_VLSWUV    0xfc00707f
 #define MATCH_VLSEV    0x08007007
 #define MASK_VLSEV     0xfc00707f
-#define MATCH_VSSBV    0x08000027
-#define MASK_VSSBV     0xfc00707f
-#define MATCH_VSSHV    0x08005027
-#define MASK_VSSHV     0xfc00707f
-#define MATCH_VSSWV    0x08006027
-#define MASK_VSSWV     0xfc00707f
 #define MATCH_VSSEV    0x08007027
 #define MASK_VSSEV     0xfc00707f
-
-#define MATCH_VLXBV    0x1c000007
-#define MASK_VLXBV     0xfc00707f
-#define MATCH_VLXHV    0x1c005007
-#define MASK_VLXHV     0xfc00707f
-#define MATCH_VLXWV    0x1c006007
-#define MASK_VLXWV     0xfc00707f
-#define MATCH_VLXBUV   0x0c000007
-#define MASK_VLXBUV    0xfc00707f
-#define MATCH_VLXHUV   0x0c005007
-#define MASK_VLXHUV    0xfc00707f
-#define MATCH_VLXWUV   0x0c006007
-#define MASK_VLXWUV    0xfc00707f
 #define MATCH_VLXEV    0x0c007007
 #define MASK_VLXEV     0xfc00707f
-#define MATCH_VSXBV    0x0c000027
-#define MASK_VSXBV     0xfc00707f
-#define MATCH_VSXHV    0x0c005027
-#define MASK_VSXHV     0xfc00707f
-#define MATCH_VSXWV    0x0c006027
-#define MASK_VSXWV     0xfc00707f
 #define MATCH_VSXEV    0x0c007027
 #define MASK_VSXEV     0xfc00707f
-#define MATCH_VSUXBV   0x1c000027
-#define MASK_VSUXBV    0xfc00707f
-#define MATCH_VSUXHV   0x1c005027
-#define MASK_VSUXHV    0xfc00707f
-#define MATCH_VSUXWV   0x1c006027
-#define MASK_VSUXWV    0xfc00707f
 #define MATCH_VSUXEV   0x1c007027
 #define MASK_VSUXEV    0xfc00707f
-
-#define MATCH_VLBFFV  0x11000007
-#define MASK_VLBFFV   0xfdf0707f
-#define MATCH_VLHFFV  0x11005007
-#define MASK_VLHFFV   0xfdf0707f
-#define MATCH_VLWFFV  0x11006007
-#define MASK_VLWFFV   0xfdf0707f
-#define MATCH_VLBUFFV 0x01000007
-#define MASK_VLBUFFV  0xfdf0707f
-#define MATCH_VLHUFFV 0x01005007
-#define MASK_VLHUFFV  0xfdf0707f
-#define MATCH_VLWUFFV 0x01006007
-#define MASK_VLWUFFV  0xfdf0707f
 #define MATCH_VLEFFV  0x01007007
 #define MASK_VLEFFV   0xfdf0707f
 
@@ -793,7 +716,7 @@ width
 010 AMO*.W
 011 AMO*.D
 100 AMO*.Q
-110 VAMO*W.V
+110 reserved
 111 VAMO*E.V
 
 amoop
@@ -813,40 +736,22 @@ amoop
    0000 1x1x xxxx xxxx x110 xxxx x010 1111
    1111 1010 0000 0000 0111 0000 0111 1111 */
 
-#define MATCH_VAMOADDWV   0x0000602f
-#define MASK_VAMOADDWV    0xf800707f
 #define MATCH_VAMOADDEV   0x0000702f
 #define MASK_VAMOADDEV    0xf800707f
-#define MATCH_VAMOSWAPWV  0x0800602f
-#define MASK_VAMOSWAPWV   0xf800707f
 #define MATCH_VAMOSWAPEV  0x0800702f
 #define MASK_VAMOSWAPEV   0xf800707f
-#define MATCH_VAMOXORWV   0x2000602f
-#define MASK_VAMOXORWV    0xf800707f
 #define MATCH_VAMOXOREV   0x2000702f
 #define MASK_VAMOXOREV    0xf800707f
-#define MATCH_VAMOANDWV   0x6000602f
-#define MASK_VAMOANDWV    0xf800707f
 #define MATCH_VAMOANDEV   0x6000702f
 #define MASK_VAMOANDEV    0xf800707f
-#define MATCH_VAMOORWV    0x4000602f
-#define MASK_VAMOORWV     0xf800707f
 #define MATCH_VAMOOREV    0x4000702f
 #define MASK_VAMOOREV     0xf800707f
-#define MATCH_VAMOMINWV   0x8000602f
-#define MASK_VAMOMINWV    0xf800707f
 #define MATCH_VAMOMINEV   0x8000702f
 #define MASK_VAMOMINEV    0xf800707f
-#define MATCH_VAMOMAXWV   0xa000602f
-#define MASK_VAMOMAXWV    0xf800707f
 #define MATCH_VAMOMAXEV   0xa000702f
 #define MASK_VAMOMAXEV    0xf800707f
-#define MATCH_VAMOMINUWV  0xc000602f
-#define MASK_VAMOMINUWV   0xf800707f
 #define MATCH_VAMOMINUEV  0xc000702f
 #define MASK_VAMOMINUEV   0xf800707f
-#define MATCH_VAMOMAXUWV  0xe000602f
-#define MASK_VAMOMAXUWV   0xf800707f
 #define MATCH_VAMOMAXUEV  0xe000702f
 #define MASK_VAMOMAXUEV   0xf800707f
 
