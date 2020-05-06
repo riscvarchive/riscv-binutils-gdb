@@ -5,6 +5,10 @@
 	vsetvli a0, a1, e256, m8, d8
 	vsetvli a0, a1, e512, m8, d8
 	vsetvli a0, a1, e1024, m8, d8
+	vsetvli a0, a1, e1024, m1, d8
+	vsetvli a0, a1, e1024, mf2, d8
+	vsetvli a0, a1, e512, mf4, d2
+	vsetvli a0, a1, e256, mf8, d4
 
 	vle.v v4, (a0)
 	vle.v v4, 0(a0)
