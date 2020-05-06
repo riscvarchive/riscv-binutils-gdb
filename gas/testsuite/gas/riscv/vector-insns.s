@@ -2017,6 +2017,19 @@
 	vwsub.wv v4, v8, v12, v0.t
 	vwsub.wx v4, v8, a1, v0.t
 
+	vzext.vf2 v4, v8
+	vzext.vf2 v4, v8, v0.t
+	vsext.vf2 v4, v8
+	vsext.vf2 v4, v8, v0.t
+	vzext.vf4 v4, v8
+	vzext.vf4 v4, v8, v0.t
+	vsext.vf4 v4, v8
+	vsext.vf4 v4, v8, v0.t
+	vzext.vf8 v4, v8
+	vzext.vf8 v4, v8, v0.t
+	vsext.vf8 v4, v8
+	vsext.vf8 v4, v8, v0.t
+
 	vadc.vvm v4, v8, v12, v0
 	vadc.vxm v4, v8, a1, v0
 	vadc.vim v4, v8, 15, v0
