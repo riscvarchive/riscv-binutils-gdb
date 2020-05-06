@@ -379,17 +379,17 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	    case 'c':
 	      {
 		int imm = EXTRACT_RVV_VC_IMM (l);
-		unsigned int imm_vlmul = EXTRACT_OPERAND (VLMUL, imm);
+		unsigned int imm_vlmul = EXTRACT_VLMUL (imm);
 		unsigned int imm_vsew = EXTRACT_OPERAND (VSEW, imm);
 		unsigned int imm_vediv = EXTRACT_OPERAND (VEDIV, imm);
 		unsigned int imm_vtype_res = EXTRACT_OPERAND (VTYPE_RES, imm);
 
 		if (imm_vsew < ARRAY_SIZE (riscv_vsew)
-		    && imm_vlmul < ARRAY_SIZE (riscv_vlen)
+		    && imm_vlmul < ARRAY_SIZE (riscv_vlmul)
 		    && imm_vediv < ARRAY_SIZE (riscv_vediv)
 		    && ! imm_vtype_res)
 		  print (info->stream, "%s,%s,%s", riscv_vsew[imm_vsew],
-			 riscv_vlen[imm_vlmul], riscv_vediv[imm_vediv]);
+			 riscv_vlmul[imm_vlmul], riscv_vediv[imm_vediv]);
 		else
 		  print (info->stream, "%d", imm);
 	      }
