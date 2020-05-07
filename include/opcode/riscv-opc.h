@@ -591,8 +591,8 @@ NF MEW MOP VM LUMOP/RS2 RS1 WIDTH VD opcode
 000 - 11 x xxxxx xxxxx --- xxxxx 0100111 VSXE<EEW>I
 000 - 01 x xxxxx xxxxx --- xxxxx 0100111 VSUXE<EEW>I
 000 - 00 x 10000 xxxxx --- xxxxx 0000111 VLE<EEW>FF
-000 0 00 1 01000 xxxxx 111 xxxxx 0000111 VL<nf>R, nf = 1
-000 0 00 1 01000 xxxxx 111 xxxxx 0100111 VS<nf>R, nf = 1
+000 0 00 1 01000 xxxxx 000 xxxxx 0000111 VL<nf>R, nf = 1
+000 0 00 1 01000 xxxxx 000 xxxxx 0100111 VS<nf>R, nf = 1
 
 xxx - 00 x 00000 xxxxx --- xxxxx 0000111 VLSEG<nf>E<EEW>
 xxx - 00 x 00000 xxxxx --- xxxxx 0100111 VSSEG<nf>E<EEW>
@@ -1555,9 +1555,9 @@ xxx - 00 x 10000 xxxxx --- xxxxx 0000111 VLSEG<nf>E<EEW>FF
 #define MATCH_VLSEG8E1024FFV  0xf1007007
 #define MASK_VLSEG8E1024FFV   0xfdf0707f
 
-#define MATCH_VL1RV  0x02807007
+#define MATCH_VL1RV  0x02800007
 #define MASK_VL1RV   0xfff0707f
-#define MATCH_VS1RV  0x02807027
+#define MATCH_VS1RV  0x02800027
 #define MASK_VS1RV   0xfff0707f
 
 /* Temporary AMO encoding info
