@@ -2636,6 +2636,7 @@
 
 	# Aliases
 	vmcpy.m v4, v8
+	vmmv.m v4, v8
 	vmclr.m v4
 	vmset.m v4
 	vmnot.m v4, v8
