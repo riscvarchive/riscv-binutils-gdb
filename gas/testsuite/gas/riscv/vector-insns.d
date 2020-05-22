@@ -2312,7 +2312,8 @@ Disassembly of section .text:
 [ 	]+[0-9a-f]+:[ 	]+c6861257[ 	]+vfwredsum.vs[ 	]+v4,v8,v12
 [ 	]+[0-9a-f]+:[ 	]+cc861257[ 	]+vfwredosum.vs[ 	]+v4,v8,v12,v0.t
 [ 	]+[0-9a-f]+:[ 	]+c4861257[ 	]+vfwredsum.vs[ 	]+v4,v8,v12,v0.t
-[ 	]+[0-9a-f]+:[ 	]+66842257[ 	]+vmcpy.m[ 	]+v4,v8
+[ 	]+[0-9a-f]+:[ 	]+66842257[ 	]+vmmv.m[ 	]+v4,v8
+[ 	]+[0-9a-f]+:[ 	]+66842257[ 	]+vmmv.m[ 	]+v4,v8
 [ 	]+[0-9a-f]+:[ 	]+6e422257[ 	]+vmclr.m[ 	]+v4
 [ 	]+[0-9a-f]+:[ 	]+7e422257[ 	]+vmset.m[ 	]+v4
 [ 	]+[0-9a-f]+:[ 	]+76842257[ 	]+vmnot.m[ 	]+v4,v8
