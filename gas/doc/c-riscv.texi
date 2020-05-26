@@ -327,6 +327,7 @@ with the @samp{.insn} pseudo directive:
 @end verbatim
 
 @item I type: .insn i opcode, func3, rd, rs1, simm12
+@itemx I type for loads: .insn i opcode, func3, rd, simm12(rs1)
 @verbatim
 +-------------+-----+-------+----+-------------+
 |      simm12 | rs1 | func3 | rd |      opcode |
@@ -334,7 +335,7 @@ with the @samp{.insn} pseudo directive:
 31            20    15      12   7             0
 @end verbatim
 
-@item S type: .insn s opcode, func3, rd, rs1, simm12
+@item S type: .insn s opcode, func3, rs2, simm12(rs1)
 @verbatim
 +--------------+-----+-----+-------+-------------+-------------+
 | simm12[11:5] | rs2 | rs1 | func3 | simm12[4:0] |      opcode |
@@ -342,10 +343,10 @@ with the @samp{.insn} pseudo directive:
 31             25    20    15      12            7             0
 @end verbatim
 
-@item SB type: .insn sb opcode, func3, rd, rs1, symbol
-@itemx SB type: .insn sb opcode, func3, rd, simm12(rs1)
-@itemx B type: .insn s opcode, func3, rd, rs1, symbol
-@itemx B type: .insn s opcode, func3, rd, simm12(rs1)
+@item SB type: .insn sb opcode, func3, rs1, rs2, symbol
+@itemx SB type: .insn sb opcode, func3, rs1, rs2, simm12
+@itemx B type: .insn b opcode, func3, rs1, rs2, symbol
+@itemx B type: .insn b opcode, func3, rs1, rs1, simm12
 @verbatim
 +------------+--------------+-----+-----+-------+-------------+-------------+--------+
 | simm12[12] | simm12[10:5] | rs2 | rs1 | func3 | simm12[4:1] | simm12[11]] | opcode |
