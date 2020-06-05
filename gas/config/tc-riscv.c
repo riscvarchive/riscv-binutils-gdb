@@ -142,17 +142,18 @@ riscv_multi_subset_supports (enum riscv_insn_class insn_class)
       return riscv_subset_supports ("f") && riscv_subset_supports ("c");
 
     case INSN_CLASS_Q: return riscv_subset_supports ("q");
+
     case INSN_CLASS_V: return riscv_subset_supports ("v");
     case INSN_CLASS_V_AND_F:
       return riscv_subset_supports ("v") && riscv_subset_supports ("f");
-    case INSN_CLASS_V_AND_ZVAMO:
-      return (riscv_subset_supports ("v")
-	      && riscv_subset_supports ("a")
-	      && riscv_subset_supports ("zvamo"));
+    case INSN_CLASS_V_OR_ZVAMO:
+      return (riscv_subset_supports ("a")
+	      && (riscv_subset_supports ("v")
+		  || riscv_subset_supports ("zvamo")));
     case INSN_CLASS_V_AND_ZVEDIV:
       return riscv_subset_supports ("v") && riscv_subset_supports ("zvediv");
-    case INSN_CLASS_V_AND_ZVLSSEG:
-      return riscv_subset_supports ("v") && riscv_subset_supports ("zvlsseg");
+    case INSN_CLASS_V_OR_ZVLSSEG:
+      return riscv_subset_supports ("v") || riscv_subset_supports ("zvlsseg");
     case INSN_CLASS_V_AND_ZVQMAC:
       return riscv_subset_supports ("v") && riscv_subset_supports ("zvqmac");
 
@@ -553,7 +554,10 @@ riscv_csr_class_check (enum riscv_csr_class csr_class)
     {
     case CSR_CLASS_I: return riscv_subset_supports ("i");
     case CSR_CLASS_F: return riscv_subset_supports ("f");
-    case CSR_CLASS_V: return riscv_subset_supports ("v");
+    case CSR_CLASS_V:
+      return (riscv_subset_supports ("v")
+	      || riscv_subset_supports ("zvamo")
+	      || riscv_subset_supports ("zvlsseg"));
     case CSR_CLASS_I_32:
       return (xlen == 32 && riscv_subset_supports ("i"));
 
