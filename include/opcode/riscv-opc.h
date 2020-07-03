@@ -611,8 +611,8 @@ NF MEW MOP VM LUMOP/RS2 RS1 WIDTH VD opcode
 000 - 11 x xxxxx xxxxx --- xxxxx 0100111 VSXE<EEW>I
 000 - 01 x xxxxx xxxxx --- xxxxx 0100111 VSUXE<EEW>I
 000 - 00 x 10000 xxxxx --- xxxxx 0000111 VLE<EEW>FF
-000 0 00 1 01000 xxxxx 000 xxxxx 0000111 VL<nf>R, nf = 1
-000 0 00 1 01000 xxxxx 000 xxxxx 0100111 VS<nf>R, nf = 1
+xxx 0 00 1 01000 xxxxx 000 xxxxx 0000111 VL<nf>R, nf = 1,2,4,8
+xxx 0 00 1 01000 xxxxx 000 xxxxx 0100111 VS<nf>R, nf = 1,2,4,8
 
 xxx - 00 x 00000 xxxxx --- xxxxx 0000111 VLSEG<nf>E<EEW>
 xxx - 00 x 00000 xxxxx --- xxxxx 0100111 VSSEG<nf>E<EEW>
@@ -1577,8 +1577,21 @@ xxx - 00 x 10000 xxxxx --- xxxxx 0000111 VLSEG<nf>E<EEW>FF
 
 #define MATCH_VL1RV  0x02800007
 #define MASK_VL1RV   0xfff0707f
+#define MATCH_VL2RV  0x22800007
+#define MASK_VL2RV   0xfff0707f
+#define MATCH_VL4RV  0x62800007
+#define MASK_VL4RV   0xfff0707f
+#define MATCH_VL8RV  0xe2800007
+#define MASK_VL8RV   0xfff0707f
+
 #define MATCH_VS1RV  0x02800027
 #define MASK_VS1RV   0xfff0707f
+#define MATCH_VS2RV  0x22800027
+#define MASK_VS2RV   0xfff0707f
+#define MATCH_VS4RV  0x62800027
+#define MASK_VS4RV   0xfff0707f
+#define MATCH_VS8RV  0xe2800027
+#define MASK_VS8RV   0xfff0707f
 
 /* Temporary AMO encoding info
 
