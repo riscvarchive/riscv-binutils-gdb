@@ -1644,8 +1644,21 @@
 
 	vl1r.v v3, (a0)
 	vl1r.v v3, 0(a0)
+	vl2r.v v2, (a0)
+	vl2r.v v2, 0(a0)
+	vl4r.v v4, (a0)
+	vl4r.v v4, 0(a0)
+	vl8r.v v8, (a0)
+	vl8r.v v8, 0(a0)
+
 	vs1r.v v3, (a1)
 	vs1r.v v3, 0(a1)
+	vs2r.v v2, (a1)
+	vs2r.v v2, 0(a1)
+	vs4r.v v4, (a1)
+	vs4r.v v4, 0(a1)
+	vs8r.v v8, (a1)
+	vs8r.v v8, 0(a1)
 
 	vamoaddei8.v v4, (a1), v8, v4
 	vamoaddei8.v x0, (a1), v8, v4
