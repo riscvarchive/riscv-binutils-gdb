@@ -2096,6 +2096,9 @@ funct6 VM  VS2  VS1/RS1/IMM funct3 VD   opcode
 #define MATCH_VSRAVI 0xa4003057
 #define MASK_VSRAVI  0xfc00707f
 
+#define MATCH_VNCVTXXV 0xb0004057
+#define MASK_VNCVTXXV  0xfc0ff07f
+
 #define MATCH_VNSRLWV  0xb0000057
 #define MASK_VNSRLWV   0xfc00707f
 #define MATCH_VNSRLWX  0xb0004057

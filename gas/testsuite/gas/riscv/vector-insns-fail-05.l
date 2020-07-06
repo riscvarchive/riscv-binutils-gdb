@@ -1,4 +1,7 @@
 .*: Assembler messages:
+.*Error: illegal operands `vncvt.x.x.v v2,v2'
+.*Error: illegal operands `vncvt.x.x.v v2,v3'
+.*Error: illegal operands `vncvt.x.x.v v3,v2'
 .*Error: illegal operands `vnsrl.wv v2,v2,v4'
 .*Error: illegal operands `vnsrl.wv v2,v3,v4'
 .*Error: illegal operands `vnsrl.wv v3,v2,v4'
