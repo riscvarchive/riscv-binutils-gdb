@@ -170,46 +170,6 @@
 	vsuxei64.v v4, 0(a0), v12
 	vsuxei64.v v4, (a0), v12, v0.t
 
-	vlxei128.v v4, (a0), v12
-	vlxei128.v v4, 0(a0), v12
-	vlxei128.v v4, (a0), v12, v0.t
-	vsxei128.v v4, (a0), v12
-	vsxei128.v v4, 0(a0), v12
-	vsxei128.v v4, (a0), v12, v0.t
-	vsuxei128.v v4, (a0), v12
-	vsuxei128.v v4, 0(a0), v12
-	vsuxei128.v v4, (a0), v12, v0.t
-
-	vlxei256.v v4, (a0), v12
-	vlxei256.v v4, 0(a0), v12
-	vlxei256.v v4, (a0), v12, v0.t
-	vsxei256.v v4, (a0), v12
-	vsxei256.v v4, 0(a0), v12
-	vsxei256.v v4, (a0), v12, v0.t
-	vsuxei256.v v4, (a0), v12
-	vsuxei256.v v4, 0(a0), v12
-	vsuxei256.v v4, (a0), v12, v0.t
-
-	vlxei512.v v4, (a0), v12
-	vlxei512.v v4, 0(a0), v12
-	vlxei512.v v4, (a0), v12, v0.t
-	vsxei512.v v4, (a0), v12
-	vsxei512.v v4, 0(a0), v12
-	vsxei512.v v4, (a0), v12, v0.t
-	vsuxei512.v v4, (a0), v12
-	vsuxei512.v v4, 0(a0), v12
-	vsuxei512.v v4, (a0), v12, v0.t
-
-	vlxei1024.v v4, (a0), v12
-	vlxei1024.v v4, 0(a0), v12
-	vlxei1024.v v4, (a0), v12, v0.t
-	vsxei1024.v v4, (a0), v12
-	vsxei1024.v v4, 0(a0), v12
-	vsxei1024.v v4, (a0), v12, v0.t
-	vsuxei1024.v v4, (a0), v12
-	vsuxei1024.v v4, 0(a0), v12
-	vsuxei1024.v v4, (a0), v12, v0.t
-
 	vle8ff.v v4, (a0)
 	vle8ff.v v4, 0(a0)
 	vle8ff.v v4, (a0), v0.t

@@ -607,9 +607,9 @@ NF MEW MOP VM LUMOP/RS2 RS1 WIDTH VD opcode
 000 - 00 x 00000 xxxxx --- xxxxx 0100111 VSE<EEW>
 000 - 10 x xxxxx xxxxx --- xxxxx 0000111 VLSE<EEW>
 000 - 10 x xxxxx xxxxx --- xxxxx 0100111 VSSE<EEW>
-000 - 11 x xxxxx xxxxx --- xxxxx 0000111 VLXE<EEW>I
-000 - 11 x xxxxx xxxxx --- xxxxx 0100111 VSXE<EEW>I
-000 - 01 x xxxxx xxxxx --- xxxxx 0100111 VSUXE<EEW>I
+000 0 11 x xxxxx xxxxx --- xxxxx 0000111 VLXE<EEW>I
+000 0 11 x xxxxx xxxxx --- xxxxx 0100111 VSXE<EEW>I
+000 0 01 x xxxxx xxxxx --- xxxxx 0100111 VSUXE<EEW>I
 000 - 00 x 10000 xxxxx --- xxxxx 0000111 VLE<EEW>FF
 xxx 0 00 1 01000 xxxxx 000 xxxxx 0000111 VL<nf>R, nf = 1,2,4,8
 xxx 0 00 1 01000 xxxxx 000 xxxxx 0100111 VS<nf>R, nf = 1,2,4,8
@@ -699,14 +699,6 @@ xxx - 00 x 10000 xxxxx --- xxxxx 0000111 VLSEG<nf>E<EEW>FF
 #define MASK_VLXEI32V    0xfc00707f
 #define MATCH_VLXEI64V   0x0c007007
 #define MASK_VLXEI64V    0xfc00707f
-#define MATCH_VLXEI128V  0x1c000007
-#define MASK_VLXEI128V   0xfc00707f
-#define MATCH_VLXEI256V  0x1c005007
-#define MASK_VLXEI256V   0xfc00707f
-#define MATCH_VLXEI512V  0x1c006007
-#define MASK_VLXEI512V   0xfc00707f
-#define MATCH_VLXEI1024V 0x1c007007
-#define MASK_VLXEI1024V  0xfc00707f
 
 #define MATCH_VSXEI8V    0x0c000027
 #define MASK_VSXEI8V     0xfc00707f
@@ -716,14 +708,6 @@ xxx - 00 x 10000 xxxxx --- xxxxx 0000111 VLSEG<nf>E<EEW>FF
 #define MASK_VSXEI32V    0xfc00707f
 #define MATCH_VSXEI64V   0x0c007027
 #define MASK_VSXEI64V    0xfc00707f
-#define MATCH_VSXEI128V  0x1c000027
-#define MASK_VSXEI128V   0xfc00707f
-#define MATCH_VSXEI256V  0x1c005027
-#define MASK_VSXEI256V   0xfc00707f
-#define MATCH_VSXEI512V  0x1c006027
-#define MASK_VSXEI512V   0xfc00707f
-#define MATCH_VSXEI1024V 0x1c007027
-#define MASK_VSXEI1024V  0xfc00707f
 
 #define MATCH_VSUXEI8V    0x04000027
 #define MASK_VSUXEI8V     0xfc00707f
@@ -733,14 +717,6 @@ xxx - 00 x 10000 xxxxx --- xxxxx 0000111 VLSEG<nf>E<EEW>FF
 #define MASK_VSUXEI32V    0xfc00707f
 #define MATCH_VSUXEI64V   0x04007027
 #define MASK_VSUXEI64V    0xfc00707f
-#define MATCH_VSUXEI128V  0x14000027
-#define MASK_VSUXEI128V   0xfc00707f
-#define MATCH_VSUXEI256V  0x14005027
-#define MASK_VSUXEI256V   0xfc00707f
-#define MATCH_VSUXEI512V  0x14006027
-#define MASK_VSUXEI512V   0xfc00707f
-#define MATCH_VSUXEI1024V 0x14007027
-#define MASK_VSUXEI1024V  0xfc00707f
 
 #define MATCH_VLE8FFV    0x01000007
 #define MASK_VLE8FFV     0xfdf0707f
