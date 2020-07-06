@@ -1,5 +1,11 @@
 # Narrowing Vector Arithmetic Instructions
 
+	vncvt.x.x.v v0, v2		# OK
+	vncvt.x.x.v v2, v2		# vd overlap vs2
+	vncvt.x.x.v v2, v3		# vs2 should be multiple of 2
+	vncvt.x.x.v v3, v2		# vd overlap vs2
+	vncvt.x.x.v v0, v2, v0.t	# We can't know the LMUL, so skip the vm checking
+
 	vnsrl.wv v0, v2, v4		# OK
 	vnsrl.wv v2, v2, v4		# vd overlap vs2
 	vnsrl.wv v2, v3, v4		# vs2 should be multiple of 2
