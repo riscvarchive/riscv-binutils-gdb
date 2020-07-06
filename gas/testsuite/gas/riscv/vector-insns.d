@@ -2168,6 +2168,12 @@ Disassembly of section .text:
 [ 	]+[0-9a-f]+:[ 	]+fc865257[ 	]+vfwnmsac.vf[ 	]+v4,fa2,v8,v0.t
 [ 	]+[0-9a-f]+:[ 	]+4e801257[ 	]+vfsqrt.v[ 	]+v4,v8
 [ 	]+[0-9a-f]+:[ 	]+4c801257[ 	]+vfsqrt.v[ 	]+v4,v8,v0.t
+[ 	]+[0-9a-f]+:[ 	]+4e821257[ 	]+vfrsqrte7.v[ 	]+v4,v8
+[ 	]+[0-9a-f]+:[ 	]+4c821257[ 	]+vfrsqrte7.v[ 	]+v4,v8,v0.t
+[ 	]+[0-9a-f]+:[ 	]+4e829257[ 	]+vfrece7.v[ 	]+v4,v8
+[ 	]+[0-9a-f]+:[ 	]+4c829257[ 	]+vfrece7.v[ 	]+v4,v8,v0.t
+[ 	]+[0-9a-f]+:[ 	]+4e881257[ 	]+vfclass.v[ 	]+v4,v8
+[ 	]+[0-9a-f]+:[ 	]+4c881257[ 	]+vfclass.v[ 	]+v4,v8,v0.t
 [ 	]+[0-9a-f]+:[ 	]+12861257[ 	]+vfmin.vv[ 	]+v4,v8,v12
 [ 	]+[0-9a-f]+:[ 	]+12865257[ 	]+vfmin.vf[ 	]+v4,v8,fa2
 [ 	]+[0-9a-f]+:[ 	]+1a861257[ 	]+vfmax.vv[ 	]+v4,v8,v12
@@ -2212,8 +2218,6 @@ Disassembly of section .text:
 [ 	]+[0-9a-f]+:[ 	]+64865257[ 	]+vmfle.vf[ 	]+v4,v8,fa2,v0.t
 [ 	]+[0-9a-f]+:[ 	]+74865257[ 	]+vmfgt.vf[ 	]+v4,v8,fa2,v0.t
 [ 	]+[0-9a-f]+:[ 	]+7c865257[ 	]+vmfge.vf[ 	]+v4,v8,fa2,v0.t
-[ 	]+[0-9a-f]+:[ 	]+4e881257[ 	]+vfclass.v[ 	]+v4,v8
-[ 	]+[0-9a-f]+:[ 	]+4c881257[ 	]+vfclass.v[ 	]+v4,v8,v0.t
 [ 	]+[0-9a-f]+:[ 	]+5c865257[ 	]+vfmerge.vfm[ 	]+v4,v8,fa2,v0
 [ 	]+[0-9a-f]+:[ 	]+5e05d257[ 	]+vfmv.v.f[ 	]+v4,fa1
 [ 	]+[0-9a-f]+:[ 	]+4a801257[ 	]+vfcvt.xu.f.v[ 	]+v4,v8

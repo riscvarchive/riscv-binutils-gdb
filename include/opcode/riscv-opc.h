@@ -1950,6 +1950,8 @@ vs1
 VFUNARY1
 vs1
 00000 vfsqrt.v
+00100 vfrsqrte7.v
+00101 vfrece7.v
 10000 vfclass.v
 
 31-26 25 24-20   19-15     14-12 11-7 6-0
@@ -2441,8 +2443,14 @@ funct6 VM  VS2  VS1/RS1/IMM funct3 VD   opcode
 #define MATCH_VFWNMSACVF 0xfc005057
 #define MASK_VFWNMSACVF  0xfc00707f
 
-#define MATCH_VFSQRTV 0x4c001057
-#define MASK_VFSQRTV  0xfc0ff07f
+#define MATCH_VFSQRTV    0x4c001057
+#define MASK_VFSQRTV     0xfc0ff07f
+#define MATCH_VFRSQRTE7V 0x4c021057
+#define MASK_VFRSQRTE7V  0xfc0ff07f
+#define MATCH_VFRECE7V   0x4c029057
+#define MASK_VFRECE7V    0xfc0ff07f
+#define MATCH_VFCLASSV   0x4c081057
+#define MASK_VFCLASSV    0xfc0ff07f
 
 #define MATCH_VFMINVV  0x10001057
 #define MASK_VFMINVV   0xfc00707f
@@ -2486,9 +2494,6 @@ funct6 VM  VS2  VS1/RS1/IMM funct3 VD   opcode
 #define MASK_VMFGTVF    0xfc00707f
 #define MATCH_VMFGEVF  0x7c005057
 #define MASK_VMFGEVF   0xfc00707f
-
-#define MATCH_VFCLASSV 0x4c081057
-#define MASK_VFCLASSV  0xfc0ff07f
 
 #define MATCH_VFMERGEVFM 0x5c005057
 #define MASK_VFMERGEVFM  0xfe00707f
