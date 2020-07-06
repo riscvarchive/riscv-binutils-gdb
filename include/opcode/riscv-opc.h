@@ -549,7 +549,7 @@
 #define MASK_C_SDSP  0xe003
 
 /* RVV */
-/* Version 1.0-draft-20200702.  */
+/* Version 1.0-draft-20200703.  */
 
 #define MATCH_VSETVL  0x80007057
 #define MASK_VSETVL   0xfe00707f
