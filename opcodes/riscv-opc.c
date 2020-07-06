@@ -1875,6 +1875,9 @@ const struct riscv_opcode riscv_opcodes[] =
 {"vfwnmsac.vf", 0, INSN_CLASS_V_AND_F, "Vd,S,VtVm", MATCH_VFWNMSACVF, MASK_VFWNMSACVF, match_widen_vd_neq_vs2_neq_vm, 0},
 
 {"vfsqrt.v",   0, INSN_CLASS_V_AND_F, "Vd,VtVm", MATCH_VFSQRTV, MASK_VFSQRTV, match_opcode, 0},
+{"vfrsqrte7.v",0, INSN_CLASS_V_AND_F, "Vd,VtVm", MATCH_VFRSQRTE7V, MASK_VFRSQRTE7V, match_opcode, 0},
+{"vfrece7.v",  0, INSN_CLASS_V_AND_F, "Vd,VtVm", MATCH_VFRECE7V, MASK_VFRECE7V, match_opcode, 0},
+{"vfclass.v",  0, INSN_CLASS_V_AND_F, "Vd,VtVm", MATCH_VFCLASSV, MASK_VFCLASSV, match_opcode, 0},
 
 {"vfmin.vv",   0, INSN_CLASS_V_AND_F, "Vd,Vt,VsVm", MATCH_VFMINVV, MASK_VFMINVV, match_opcode, 0},
 {"vfmin.vf",   0, INSN_CLASS_V_AND_F, "Vd,Vt,SVm", MATCH_VFMINVF, MASK_VFMINVF, match_opcode, 0},
@@ -1902,8 +1905,6 @@ const struct riscv_opcode riscv_opcodes[] =
 /* These aliases are for assembly but not disassembly.  */
 {"vmfgt.vv",    0, INSN_CLASS_V_AND_F, "Vd,Vs,VtVm", MATCH_VMFLTVV, MASK_VMFLTVV, match_opcode, INSN_ALIAS},
 {"vmfge.vv",   0, INSN_CLASS_V_AND_F, "Vd,Vs,VtVm", MATCH_VMFLEVV, MASK_VMFLEVV, match_opcode, INSN_ALIAS},
-
-{"vfclass.v",  0, INSN_CLASS_V_AND_F, "Vd,VtVm", MATCH_VFCLASSV, MASK_VFCLASSV, match_opcode, 0},
 
 {"vfmerge.vfm",0, INSN_CLASS_V_AND_F, "Vd,Vt,S,V0", MATCH_VFMERGEVFM, MASK_VFMERGEVFM, match_opcode, 0},
 {"vfmv.v.f",   0, INSN_CLASS_V_AND_F, "Vd,S", MATCH_VFMVVF, MASK_VFMVVF, match_opcode, 0 },
