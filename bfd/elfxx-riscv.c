@@ -1477,8 +1477,12 @@ riscv_parse_subset (riscv_parse_subset_t *rps,
     }
   else
     {
-      rps->error_handler ("-march=%s: ISA string must begin with rv32 or rv64",
-			  arch);
+      /* Arch string might be empty if merge failed, and the error already print
+	 in another side, this message also incorrect for such situation.   */
+      if (strlen (arch))
+	rps->error_handler (
+	  "-march=%s: ISA string must begin with rv32 or rv64",
+	  arch);
       return FALSE;
     }
 
