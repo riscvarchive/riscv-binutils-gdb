@@ -1313,17 +1313,25 @@ riscv_parse_prefixed_ext (riscv_parse_subset_t *rps,
       char *subset = xstrdup (p);
       char *q = subset;
       const char *end_of_version;
+      int default_major_version = 2;
+      int default_minor_version = 0;
 
       while (*++q != '\0' && *q != '_' && !ISDIGIT (*q))
 	;
+
+      if (strcmp(subset, "zfh") == 0)
+	{
+	  default_major_version = 0;
+	  default_minor_version = 1;
+	}
 
       end_of_version =
 	riscv_parsing_subset_version (
 	  rps,
 	  march,
 	  q, &major_version, &minor_version,
-	  /* default_major_version= */ 2,
-	  /* default_minor_version= */ 0,
+	  default_major_version,
+	  default_minor_version,
 	  /* std_ext_p= */FALSE);
 
       *q = '\0';
