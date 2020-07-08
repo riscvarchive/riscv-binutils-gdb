@@ -1,4 +1,4 @@
-#as: -march=rv32if -mpriv-spec=1.10
+#as: -march=rv32ifv -mpriv-spec=1.10
 #source: priv-reg.s
 #objdump: -dr -Mpriv-spec=1.10
 
@@ -246,6 +246,13 @@ Disassembly of section .text:
 [     	]+[0-9a-f]+:[  	]+00102573[    	]+frflags[     	]+a0
 [     	]+[0-9a-f]+:[  	]+00202573[    	]+frrm[        	]+a0
 [     	]+[0-9a-f]+:[  	]+00302573[    	]+frcsr[       	]+a0
+[     	]+[0-9a-f]+:[  	]+00802573[    	]+csrr[     	]+a0,vstart
+[     	]+[0-9a-f]+:[  	]+00902573[    	]+csrr[        	]+a0,vxsat
+[     	]+[0-9a-f]+:[  	]+00a02573[    	]+csrr[       	]+a0,vxrm
+[     	]+[0-9a-f]+:[  	]+00f02573[    	]+csrr[     	]+a0,vcsr
+[     	]+[0-9a-f]+:[  	]+c2002573[    	]+csrr[        	]+a0,vl
+[     	]+[0-9a-f]+:[  	]+c2102573[    	]+csrr[       	]+a0,vtype
+[     	]+[0-9a-f]+:[  	]+c2202573[    	]+csrr[       	]+a0,vlenb
 [     	]+[0-9a-f]+:[  	]+7b002573[    	]+csrr[        	]+a0,dcsr
 [     	]+[0-9a-f]+:[  	]+7b102573[    	]+csrr[        	]+a0,dpc
 [     	]+[0-9a-f]+:[  	]+7b202573[    	]+csrr[        	]+a0,dscratch0

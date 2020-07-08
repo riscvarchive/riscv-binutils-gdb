@@ -1,4 +1,4 @@
-#as: -march=rv32if -mpriv-spec=1.11
+#as: -march=rv32ifv -mpriv-spec=1.11
 #objdump: --dwarf=frames
 
 
@@ -250,6 +250,13 @@ Contents of the .* section:
   DW_CFA_offset_extended_sf: r4097 \(fflags\) at cfa\+4
   DW_CFA_offset_extended_sf: r4098 \(frm\) at cfa\+8
   DW_CFA_offset_extended_sf: r4099 \(fcsr\) at cfa\+12
+  DW_CFA_offset_extended_sf: r4104 \(vstart\) at cfa\+32
+  DW_CFA_offset_extended_sf: r4105 \(vxsat\) at cfa\+36
+  DW_CFA_offset_extended_sf: r4106 \(vxrm\) at cfa\+40
+  DW_CFA_offset_extended_sf: r4111 \(vcsr\) at cfa\+60
+  DW_CFA_offset_extended_sf: r7200 \(vl\) at cfa\+12416
+  DW_CFA_offset_extended_sf: r7201 \(vtype\) at cfa\+12420
+  DW_CFA_offset_extended_sf: r7202 \(vlenb\) at cfa\+12424
   DW_CFA_offset_extended_sf: r6064 \(dcsr\) at cfa\+7872
   DW_CFA_offset_extended_sf: r6065 \(dpc\) at cfa\+7876
   DW_CFA_offset_extended_sf: r6066 \(dscratch0\) at cfa\+7880

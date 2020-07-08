@@ -242,6 +242,13 @@ _start:
 	.cfi_offset fflags, 4
 	.cfi_offset frm, 8
 	.cfi_offset fcsr, 12
+	.cfi_offset vstart, 32
+	.cfi_offset vxsat, 36
+	.cfi_offset vxrm, 40
+	.cfi_offset vcsr, 60
+	.cfi_offset vl, 12416
+	.cfi_offset vtype, 12420
+	.cfi_offset vlenb, 12424
 	.cfi_offset dcsr, 7872
 	.cfi_offset dpc, 7876
 	.cfi_offset dscratch0, 7880

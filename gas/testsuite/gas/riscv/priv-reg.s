@@ -260,6 +260,15 @@
 	csr frm
 	csr fcsr
 
+	# Vector
+	csr vstart
+	csr vxsat
+	csr vxrm
+	csr vcsr
+	csr vl
+	csr vtype
+	csr vlenb
+
 	# Core debug
 	csr dcsr
 	csr dpc
