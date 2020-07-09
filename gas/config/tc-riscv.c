@@ -308,7 +308,8 @@ riscv_get_default_ext_version (const char *name,
         && ext->name
         && strcmp (ext->name, name) == 0)
     {
-      if (ext->isa_spec_class == default_isa_spec)
+      if (ext->isa_spec_class == ISA_SPEC_CLASS_NONE
+	  || ext->isa_spec_class == default_isa_spec)
        {
          *major_version = ext->major_version;
          *minor_version = ext->minor_version;
