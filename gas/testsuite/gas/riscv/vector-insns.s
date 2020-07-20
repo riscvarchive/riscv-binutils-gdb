@@ -2750,6 +2750,9 @@
 	vrgather.vi v4, v8, 0, v0.t
 	vrgather.vi v4, v8, 31, v0.t
 
+	vrgatherei16.vv v4, v8, v12
+	vrgatherei16.vv v4, v8, v12, v0.t
+
 	vcompress.vm v4, v8, v12
 
 	vmv1r.v v1, v2
