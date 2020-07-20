@@ -2417,6 +2417,8 @@ Disassembly of section .text:
 [ 	]+[0-9a-f]+:[ 	]+3085c257[ 	]+vrgather.vx[ 	]+v4,v8,a1,v0.t
 [ 	]+[0-9a-f]+:[ 	]+30803257[ 	]+vrgather.vi[ 	]+v4,v8,0,v0.t
 [ 	]+[0-9a-f]+:[ 	]+308fb257[ 	]+vrgather.vi[ 	]+v4,v8,31,v0.t
+[ 	]+[0-9a-f]+:[ 	]+3a860257[ 	]+vrgatherei16.vv[ 	]+v4,v8,v12
+[ 	]+[0-9a-f]+:[ 	]+38860257[ 	]+vrgatherei16.vv[ 	]+v4,v8,v12,v0.t
 [ 	]+[0-9a-f]+:[ 	]+5e862257[ 	]+vcompress.vm[ 	]+v4,v8,v12
 [ 	]+[0-9a-f]+:[ 	]+9e2030d7[ 	]+vmv1r.v[ 	]+v1,v2
 [ 	]+[0-9a-f]+:[ 	]+9e40b157[ 	]+vmv2r.v[ 	]+v2,v4

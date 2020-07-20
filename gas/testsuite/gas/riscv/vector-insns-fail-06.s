@@ -46,6 +46,12 @@
 	vrgather.vi v2, v2, 1		# vd overlap vs2
 	vrgather.vi v0, v2, 1, v0.t	# vd overlap vm
 
+	vrgatherei16.vv v0, v2, v4	# OK
+	vrgatherei16.vv v1, v2, v4	# OK
+	vrgatherei16.vv v2, v2, v4	# vd overlap vs2
+	vrgatherei16.vv v4, v2, v4	# vd overlap vs1
+	vrgatherei16.vv v0, v2, v4, v0.t# vd overlap vm
+
 	vcompress.vm v0, v2, v4		# OK
 	vcompress.vm v1, v2, v4		# OK
 	vcompress.vm v2, v2, v4		# vd overlap vs2
