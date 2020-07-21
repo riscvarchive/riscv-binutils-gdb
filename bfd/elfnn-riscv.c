@@ -554,6 +554,7 @@ riscv_elf_check_relocs (bfd *abfd, struct bfd_link_info *info,
 	  break;
 
 	case R_RISCV_GOT_HI20:
+	case R_RISCV_GOT_GPREL_HI20:
 	  if (!riscv_elf_record_got_reference (abfd, info, h, r_symndx)
 	      || !riscv_elf_record_tls_type (abfd, h, r_symndx, GOT_NORMAL))
 	    return FALSE;
@@ -581,6 +582,7 @@ riscv_elf_check_relocs (bfd *abfd, struct bfd_link_info *info,
 	case R_RISCV_RVC_BRANCH:
 	case R_RISCV_RVC_JUMP:
 	case R_RISCV_PCREL_HI20:
+	case R_RISCV_GPREL_HI20:
 	  /* In shared libraries, these relocs are known to bind locally.  */
 	  if (bfd_link_pic (info))
 	    break;
@@ -1322,9 +1324,11 @@ perform_relocation (const reloc_howto_type *howto,
   switch (ELFNN_R_TYPE (rel->r_info))
     {
     case R_RISCV_HI20:
+    case R_RISCV_GPREL_HI20:
     case R_RISCV_TPREL_HI20:
     case R_RISCV_PCREL_HI20:
     case R_RISCV_GOT_HI20:
+    case R_RISCV_GOT_GPREL_HI20:
     case R_RISCV_TLS_GOT_HI20:
     case R_RISCV_TLS_GD_HI20:
       if (ARCH_SIZE > 32 && !VALID_UTYPE_IMM (RISCV_CONST_HIGH_PART (value)))
@@ -1334,14 +1338,17 @@ perform_relocation (const reloc_howto_type *howto,
 
     case R_RISCV_LO12_I:
     case R_RISCV_GPREL_I:
+    case R_RISCV_GPREL_LO12_I:
     case R_RISCV_TPREL_LO12_I:
     case R_RISCV_TPREL_I:
     case R_RISCV_PCREL_LO12_I:
+    case R_RISCV_GOT_GPREL_LO12_I:
       value = ENCODE_ITYPE_IMM (value);
       break;
 
     case R_RISCV_LO12_S:
     case R_RISCV_GPREL_S:
+    case R_RISCV_GPREL_LO12_S:
     case R_RISCV_TPREL_LO12_S:
     case R_RISCV_TPREL_S:
     case R_RISCV_PCREL_LO12_S:
@@ -1414,6 +1421,7 @@ perform_relocation (const reloc_howto_type *howto,
     case R_RISCV_SET16:
     case R_RISCV_SET32:
     case R_RISCV_32_PCREL:
+    case R_RISCV_64_PCREL:
     case R_RISCV_TLS_DTPREL32:
     case R_RISCV_TLS_DTPREL64:
       break;
@@ -1736,6 +1744,12 @@ riscv_elf_relocate_section (bfd *output_bfd,
 	{
 	case R_RISCV_NONE:
 	case R_RISCV_RELAX:
+	case R_RISCV_GPREL_ADD:
+	case R_RISCV_GPREL_LOAD:
+	case R_RISCV_GPREL_STORE:
+	case R_RISCV_GOT_GPREL_ADD:
+	case R_RISCV_GOT_GPREL_LOAD:
+	case R_RISCV_GOT_GPREL_STORE:
 	case R_RISCV_TPREL_ADD:
 	case R_RISCV_COPY:
 	case R_RISCV_JUMP_SLOT:
@@ -1754,11 +1768,14 @@ riscv_elf_relocate_section (bfd *output_bfd,
 	case R_RISCV_SET16:
 	case R_RISCV_SET32:
 	case R_RISCV_32_PCREL:
+	case R_RISCV_64_PCREL:
 	case R_RISCV_DELETE:
 	  /* These require no special handling beyond perform_relocation.  */
 	  break;
 
 	case R_RISCV_GOT_HI20:
+	case R_RISCV_GOT_GPREL_HI20:
+	case R_RISCV_GOT_GPREL_LO12_I:
 	  if (h != NULL)
 	    {
 	      bfd_boolean dyn, pic;
@@ -1832,21 +1849,34 @@ riscv_elf_relocate_section (bfd *output_bfd,
 		  local_got_offsets[r_symndx] |= 1;
 		}
 	    }
+
 	  relocation = sec_addr (htab->elf.sgot) + off;
-	  absolute = riscv_zero_pcrel_hi_reloc (rel,
-						info,
-						pc,
-						relocation,
-						contents,
-						howto,
-						input_bfd);
-	  r_type = ELFNN_R_TYPE (rel->r_info);
-	  howto = riscv_elf_rtype_to_howto (input_bfd, r_type);
-	  if (howto == NULL)
-	    r = bfd_reloc_notsupported;
-	  else if (!riscv_record_pcrel_hi_reloc (&pcrel_relocs, pc,
-						 relocation, absolute))
-	    r = bfd_reloc_overflow;
+	  if (r_type == R_RISCV_GOT_HI20)
+	    {
+	      howto = riscv_elf_rtype_to_howto (input_bfd, r_type);
+	      if (howto == NULL)
+		r = bfd_reloc_notsupported;
+	      else {
+		absolute = riscv_zero_pcrel_hi_reloc (rel, info, pc,
+						      relocation, contents,
+						      howto, input_bfd);
+		if (!riscv_record_pcrel_hi_reloc (&pcrel_relocs, pc,
+						  relocation, absolute))
+		  r = bfd_reloc_overflow;
+	      }
+	    }
+	  else
+	    {
+	      bfd_vma gp = riscv_global_pointer_value (info);
+	      if (r_type == R_RISCV_GOT_GPREL_LO12_I
+		  || (r_type == R_RISCV_GOT_GPREL_HI20
+		      && (ARCH_SIZE < 64
+			  || VALID_UTYPE_IMM
+			         (RISCV_CONST_HIGH_PART (relocation - gp)))))
+		relocation -= gp;
+	      else
+		r = bfd_reloc_overflow;
+	    }
 	  break;
 
 	case R_RISCV_ADD8:
@@ -1925,25 +1955,47 @@ riscv_elf_relocate_section (bfd *output_bfd,
 	    r = bfd_reloc_overflow;
 	  break;
 
+	case R_RISCV_GPREL_HI20:
 	case R_RISCV_GPREL_I:
+	case R_RISCV_GPREL_LO12_I:
 	case R_RISCV_GPREL_S:
+	case R_RISCV_GPREL_LO12_S:
 	  {
 	    bfd_vma gp = riscv_global_pointer_value (info);
-	    bfd_boolean x0_base = VALID_ITYPE_IMM (relocation + rel->r_addend);
-	    if (x0_base || VALID_ITYPE_IMM (relocation + rel->r_addend - gp))
+
+	    bfd_boolean is_ok, is_gp;
+	    if (r_type == R_RISCV_GPREL_HI20)
 	      {
-		/* We can use x0 or gp as the base register.  */
-		bfd_vma insn = bfd_get_32 (input_bfd, contents + rel->r_offset);
-		insn &= ~(OP_MASK_RS1 << OP_SH_RS1);
-		if (!x0_base)
+		is_ok = ARCH_SIZE < 64
+		        || VALID_UTYPE_IMM (RISCV_CONST_HIGH_PART (relocation + rel->r_addend));
+		is_gp = ARCH_SIZE < 64
+		        || VALID_UTYPE_IMM (RISCV_CONST_HIGH_PART (relocation + rel->r_addend - gp));
+	      }
+	    else if (r_type == R_RISCV_GPREL_I || r_type == R_RISCV_GPREL_S)
+	      {
+		is_ok = VALID_ITYPE_IMM (relocation + rel->r_addend);
+		is_gp = VALID_ITYPE_IMM (relocation + rel->r_addend - gp);
+	      }
+	    else
+		is_ok = is_gp = TRUE;
+
+	    if (is_ok | is_gp)
+	      {
+		if (r_type == R_RISCV_GPREL_I || r_type == R_RISCV_GPREL_S)
 		  {
+		    /* We can use x0 or gp as the base register.  */
+		    bfd_vma insn = bfd_get_32 (input_bfd, contents + rel->r_offset);
+		    insn &= ~(OP_MASK_RS1 << OP_SH_RS1);
 		    rel->r_addend -= gp;
 		    insn |= X_GP << OP_SH_RS1;
+		    bfd_put_32 (input_bfd, insn, contents + rel->r_offset);
 		  }
-		bfd_put_32 (input_bfd, insn, contents + rel->r_offset);
+		else
+		  relocation -= gp;
 	      }
 	    else
 	      r = bfd_reloc_overflow;
+
 	    break;
 	  }
 
