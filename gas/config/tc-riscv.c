@@ -967,7 +967,19 @@ validate_riscv_insn (const struct riscv_opcode *opc, int length)
       case '[': break;
       case ']': break;
       case '0': break;
-      case '1': break;
+      case '1': /* relaxation operand.  */
+	switch (c = *p++)
+	  {
+	    case 'r': break;
+	    case 'i': break;
+	    case 's': break;
+	    default:
+	      as_bad (_("internal: bad RISC-V opcode"
+			" (unknown operand type `1%c'): %s %s"),
+		      c, opc->name, opc->args);
+	    return FALSE;
+	  }
+	break;
       case 'F': /* funct */
 	switch (c = *p++)
 	  {
@@ -1533,12 +1545,14 @@ macro (struct riscv_cl_insn *ip, expressionS *imm_expr,
 
 static const struct percent_op_match percent_op_utype[] =
 {
+  {"%hi", BFD_RELOC_RISCV_HI20},
   {"%tprel_hi", BFD_RELOC_RISCV_TPREL_HI20},
   {"%pcrel_hi", BFD_RELOC_RISCV_PCREL_HI20},
   {"%got_pcrel_hi", BFD_RELOC_RISCV_GOT_HI20},
   {"%tls_ie_pcrel_hi", BFD_RELOC_RISCV_TLS_GOT_HI20},
   {"%tls_gd_pcrel_hi", BFD_RELOC_RISCV_TLS_GD_HI20},
-  {"%hi", BFD_RELOC_RISCV_HI20},
+  {"%gprel_hi", BFD_RELOC_RISCV_GPREL_HI20},
+  {"%got_gprel_hi", BFD_RELOC_RISCV_GOT_GPREL_HI20},
   {0, 0}
 };
 
@@ -1547,6 +1561,8 @@ static const struct percent_op_match percent_op_itype[] =
   {"%lo", BFD_RELOC_RISCV_LO12_I},
   {"%tprel_lo", BFD_RELOC_RISCV_TPREL_LO12_I},
   {"%pcrel_lo", BFD_RELOC_RISCV_PCREL_LO12_I},
+  {"%gprel_lo", BFD_RELOC_RISCV_GPREL_LO12_I},
+  {"%got_gprel_lo", BFD_RELOC_RISCV_GOT_GPREL_LO12_I},
   {0, 0}
 };
 
@@ -1555,12 +1571,29 @@ static const struct percent_op_match percent_op_stype[] =
   {"%lo", BFD_RELOC_RISCV_LO12_S},
   {"%tprel_lo", BFD_RELOC_RISCV_TPREL_LO12_S},
   {"%pcrel_lo", BFD_RELOC_RISCV_PCREL_LO12_S},
+  {"%gprel_lo", BFD_RELOC_RISCV_GPREL_LO12_S},
   {0, 0}
 };
 
-static const struct percent_op_match percent_op_rtype[] =
+static const struct percent_op_match percent_op_relax_rtype[] =
 {
   {"%tprel_add", BFD_RELOC_RISCV_TPREL_ADD},
+  {"%gprel", BFD_RELOC_RISCV_GPREL_ADD},
+  {"%got_gprel", BFD_RELOC_RISCV_GOT_GPREL_ADD},
+  {0, 0}
+};
+
+static const struct percent_op_match percent_op_relax_itype[] =
+{
+  {"%gprel", BFD_RELOC_RISCV_GPREL_LOAD},
+  {"%got_gprel", BFD_RELOC_RISCV_GOT_GPREL_LOAD},
+  {0, 0}
+};
+
+static const struct percent_op_match percent_op_relax_stype[] =
+{
+  {"%gprel", BFD_RELOC_RISCV_GPREL_STORE},
+  {"%got_gprel", BFD_RELOC_RISCV_GOT_GPREL_STORE},
   {0, 0}
 };
 
@@ -2370,9 +2403,6 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 	      p = percent_op_itype;
 	      *imm_reloc = BFD_RELOC_RISCV_LO12_I;
 	      goto load_store;
-	    case '1': /* 4-operand add, must be %tprel_add.  */
-	      p = percent_op_rtype;
-	      goto alu_op;
 	    case '0': /* AMO "displacement," which must be zero.  */
 	      p = percent_op_null;
 	    load_store:
@@ -2387,7 +2417,6 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 		  normalize_constant_expr (imm_expr);
 		  if (imm_expr->X_op != O_constant
 		      || (*args == '0' && imm_expr->X_add_number != 0)
-		      || (*args == '1')
 		      || imm_expr->X_add_number >= (signed)RISCV_IMM_REACH/2
 		      || imm_expr->X_add_number < -(signed)RISCV_IMM_REACH/2)
 		    break;
@@ -2539,6 +2568,29 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 		break;
 	      s = expr_end;
 	      imm_expr->X_op = O_absent;
+	      continue;
+
+	    case '1': /* Relaxation operand.  */
+	      switch (*++args)
+		{
+		case 'r':
+		  p = percent_op_relax_rtype;
+		  break;
+		case 'i':
+		  p = percent_op_relax_itype;
+		  break;
+		case 's':
+		  p = percent_op_relax_stype;
+		  break;
+		default:
+		  as_bad (_("bad relaxation operand type '1%c'"), *args);
+		  break;
+		}
+	      /* Relaxation operand must start with prefixed `%`, and be
+		 recognized.  */
+	      if (!my_getSmallExpression (imm_expr, imm_reloc, s, p))
+		break;
+	      s = expr_end;
 	      continue;
 
 	    default:
@@ -3047,6 +3099,17 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
     case BFD_RELOC_RISCV_PCREL_HI20:
     case BFD_RELOC_RISCV_PCREL_LO12_S:
     case BFD_RELOC_RISCV_PCREL_LO12_I:
+    case BFD_RELOC_RISCV_GPREL_HI20:
+    case BFD_RELOC_RISCV_GPREL_LO12_S:
+    case BFD_RELOC_RISCV_GPREL_LO12_I:
+    case BFD_RELOC_RISCV_GPREL_ADD:
+    case BFD_RELOC_RISCV_GPREL_LOAD:
+    case BFD_RELOC_RISCV_GPREL_STORE:
+    case BFD_RELOC_RISCV_GOT_GPREL_HI20:
+    case BFD_RELOC_RISCV_GOT_GPREL_LO12_I:
+    case BFD_RELOC_RISCV_GOT_GPREL_ADD:
+    case BFD_RELOC_RISCV_GOT_GPREL_LOAD:
+    case BFD_RELOC_RISCV_GOT_GPREL_STORE:
       relaxable = riscv_opts.relax;
       break;
 
