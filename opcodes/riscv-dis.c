@@ -439,7 +439,7 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	    case 'c':
 	      {
 		int imm = EXTRACT_RVV_VC_IMM (l);
-		unsigned int imm_vlmul = EXTRACT_VLMUL (imm);
+		unsigned int imm_vlmul = EXTRACT_OPERAND (VLMUL, imm);
 		unsigned int imm_vsew = EXTRACT_OPERAND (VSEW, imm);
 		unsigned int imm_vediv = EXTRACT_OPERAND (VEDIV, imm);
 		unsigned int imm_vta = EXTRACT_OPERAND (VTA, imm);
