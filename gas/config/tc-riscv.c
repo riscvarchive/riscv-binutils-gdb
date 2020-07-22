@@ -1916,11 +1916,11 @@ my_getVsetvliExpression (expressionS *ep, char *str)
   if (vsew_found || vlmul_found || vediv_found || vta_found || vma_found)
     {
       ep->X_op = O_constant;
-      ep->X_add_number = (vediv_value << OP_SH_VEDIV)
+      ep->X_add_number = (vlmul_value << OP_SH_VLMUL)
 			 | (vsew_value << OP_SH_VSEW)
 			 | (vta_value << OP_SH_VTA)
-			 | (vma_value << OP_SH_VMA) ;
-      INSERT_VLMUL (ep->X_add_number, vlmul_value);
+			 | (vma_value << OP_SH_VMA)
+			 | (vediv_value << OP_SH_VEDIV);
       expr_end = str;
     }
   else

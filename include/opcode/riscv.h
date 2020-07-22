@@ -310,18 +310,18 @@ static const char * const riscv_vma[2] =
 #define OP_MASK_VFUNCT6		0x3f
 #define OP_SH_VFUNCT6		26
 
-#define OP_MASK_VLMUL		0x23
+#define OP_MASK_VLMUL		0x7
 #define OP_SH_VLMUL		0
 #define OP_MASK_VSEW		0x7
-#define OP_SH_VSEW		2
-#define OP_MASK_VEDIV		0x3
-#define OP_SH_VEDIV		8
-#define OP_MASK_VTYPE_RES	0x1
-#define OP_SH_VTYPE_RES		10
+#define OP_SH_VSEW		3
 #define OP_MASK_VTA		0x1
 #define OP_SH_VTA		6
 #define OP_MASK_VMA		0x1
 #define OP_SH_VMA		7
+#define OP_MASK_VEDIV		0x3
+#define OP_SH_VEDIV		8
+#define OP_MASK_VTYPE_RES	0x1
+#define OP_SH_VTYPE_RES 	10
 
 #define OP_MASK_VWD		0x1
 #define OP_SH_VWD		26
@@ -354,10 +354,6 @@ static const char * const riscv_vma[2] =
   (STRUCT) = (((STRUCT) & ~((insn_t)(MASK) << (SHIFT))) \
 	      | ((insn_t)((VALUE) & (MASK)) << (SHIFT)))
 
-#define INSERT_VLMUL(STRUCT, VALUE) \
-  INSERT_BITS (STRUCT, (VALUE & 0x3), (OP_MASK_VLMUL & 0x3), 0), \
-  INSERT_BITS (STRUCT, (((VALUE & 0x4) >> 2) <<5), (OP_MASK_VLMUL & 0x20), 0)
-
 /* Extract bits MASK << SHIFT from STRUCT and shift them right
    SHIFT places.  */
 #define EXTRACT_BITS(STRUCT, MASK, SHIFT) \
@@ -366,11 +362,6 @@ static const char * const riscv_vma[2] =
 /* Extract the operand given by FIELD from integer INSN.  */
 #define EXTRACT_OPERAND(FIELD, INSN) \
   EXTRACT_BITS ((INSN), OP_MASK_##FIELD, OP_SH_##FIELD)
-
-/* Extract the vlmul value from vsetvli instrucion.  */
-#define EXTRACT_VLMUL(INSN) \
-  (((EXTRACT_OPERAND (VLMUL, INSN) >> 5) << 2) \
-   | (EXTRACT_OPERAND (VLMUL, INSN) & 0x3))
 
 /* The maximal number of subset can be required. */
 #define MAX_SUBSET_NUM 4
