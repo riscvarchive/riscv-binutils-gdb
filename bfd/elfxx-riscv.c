@@ -1319,7 +1319,7 @@ riscv_parse_prefixed_ext (riscv_parse_subset_t *rps,
       while (*++q != '\0' && *q != '_' && !ISDIGIT (*q))
 	;
 
-      if (strcmp(subset, "zfh") == 0)
+      if (strncmp(subset, "zfh", strlen("zfh")) == 0)
 	{
 	  default_major_version = 0;
 	  default_minor_version = 1;
