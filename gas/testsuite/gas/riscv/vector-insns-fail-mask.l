@@ -1,6 +1,9 @@
 .*: Assembler messages:
+.*Error: illegal operands `vmsbf.m v4,v4'
 .*Error: illegal operands `vmsbf.m v0,v4,v0.t'
+.*Error: illegal operands `vmsif.m v4,v4'
 .*Error: illegal operands `vmsif.m v0,v4,v0.t'
+.*Error: illegal operands `vmsof.m v4,v4'
 .*Error: illegal operands `vmsof.m v0,v4,v0.t'
 .*Error: illegal operands `viota.m v4,v4'
 .*Error: illegal operands `viota.m v0,v4,v0.t'
