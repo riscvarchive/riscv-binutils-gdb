@@ -608,3 +608,41 @@
 	vlxseg8ei1024.v v0, (a0), v4, v0.t
 	vsxseg8ei1024.v v4, (a0), v4
 	vsxseg8ei1024.v v0, (a0), v4, v0.t
+
+# Vector Load/Store Whole Register Instructions
+
+	vl1r.v v31, (a0)		# OK
+
+	vl2r.v v31, (a0)		# vd must be aligned to 2
+	vl2re8.v v31, (a0)
+	vl2re16.v v31, (a0)
+	vl2re32.v v31, (a0)
+	vl2re64.v v31, (a0)
+	vl2re128.v v31, (a0)
+	vl2re256.v v31, (a0)
+	vl2re512.v v31, (a0)
+	vl2re1024.v v31, (a0)
+
+	vl4r.v v30, (a0)		# vd must be aligned to 4
+	vl4re8.v v30, (a0)
+	vl4re16.v v30, (a0)
+	vl4re32.v v30, (a0)
+	vl4re64.v v30, (a0)
+	vl4re128.v v30, (a0)
+	vl4re256.v v30, (a0)
+	vl4re512.v v30, (a0)
+	vl4re1024.v v30, (a0)
+
+	vl8r.v v26, (a0)		# vd must be aligned to 8
+	vl8re8.v v26, (a0)
+	vl8re16.v v26, (a0)
+	vl8re32.v v26, (a0)
+	vl8re64.v v26, (a0)
+	vl8re128.v v26, (a0)
+	vl8re256.v v26, (a0)
+	vl8re512.v v26, (a0)
+	vl8re1024.v v26, (a0)
+
+	vs2r.v v31, (a0)		# vs3 must be aligned to 2
+	vs4r.v v30, (a0)		# vs3 must be aligned to 4
+	vs8r.v v26, (a0)		# vs3 must be aligned to 8
