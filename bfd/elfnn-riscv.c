@@ -4266,7 +4266,8 @@ static bfd_boolean
 riscv_elf_object_p (bfd *abfd)
 {
   /* There are only two mach types in RISCV currently.  */
-  if (strcmp (abfd->xvec->name, "elf32-littleriscv") == 0)
+  if (strcmp (abfd->xvec->name, "elf32-littleriscv") == 0 ||
+      strcmp (abfd->xvec->name, "elf32-bigriscv") == 0)
     bfd_default_set_arch_mach (abfd, bfd_arch_riscv, bfd_mach_riscv32);
   else
     bfd_default_set_arch_mach (abfd, bfd_arch_riscv, bfd_mach_riscv64);
@@ -4285,6 +4286,8 @@ riscv_elf_obj_attrs_arg_type (int tag)
 
 #define TARGET_LITTLE_SYM		riscv_elfNN_vec
 #define TARGET_LITTLE_NAME		"elfNN-littleriscv"
+#define TARGET_BIG_SYM			riscv_elfNN_be_vec
+#define TARGET_BIG_NAME			"elfNN-bigriscv"
 
 #define elf_backend_reloc_type_class	     riscv_reloc_type_class
 
