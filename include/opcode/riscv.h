@@ -417,7 +417,7 @@ struct riscv_opcode
      checking is disable, then most of the function should check only the
      basic encoding for the instruction.  */
   int (*match_func) (const struct riscv_opcode *op, insn_t word,
-		     int constraints);
+		     int constraints, const char **error);
   /* For a macro, this is INSN_MACRO.  Otherwise, it is a collection
      of bits describing the instruction, notably any relevant hazard
      information.  */
