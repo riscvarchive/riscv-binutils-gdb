@@ -2187,6 +2187,8 @@ const struct riscv_ext_version riscv_ext_version_table[] =
 {"zicsr", ISA_SPEC_CLASS_20191213, 2, 0},
 {"zicsr", ISA_SPEC_CLASS_20190608, 2, 0},
 
+{"zfh",     ISA_SPEC_CLASS_NONE, 0, 1},
+
 {"zvamo",   ISA_SPEC_CLASS_NONE, 1, 0},
 {"zvlsseg", ISA_SPEC_CLASS_NONE, 1, 0},
 
