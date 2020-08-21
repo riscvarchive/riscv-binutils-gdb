@@ -63,6 +63,8 @@ enum
   RISCV_DWARF_REGNUM_X31 = 31,
   RISCV_DWARF_REGNUM_F0 = 32,
   RISCV_DWARF_REGNUM_F31 = 63,
+  RISCV_DWARF_REGNUM_CSR_BEGIN = 4096,
+  RISCV_DWARF_REGNUM_CSR_END = 8191,
 };
 
 /* RISC-V specific per-architecture information.  */
