@@ -1613,6 +1613,69 @@ riscv_resolve_pcrel_lo_relocs (riscv_pcrel_relocs *p)
   return TRUE;
 }
 
+/* We have to check both high and low instructions at the same time,
+   in case we have changed one of them, but another can not be changed.
+
+   Generally, we only need to handle the case for GPREL undefined weak
+   symbol.  The GOT_GPREL cases should always fine since gp is placed
+   nearly the whole data in the compact code model.  The nearly-zero
+   symbols for GPREL means the gp is also nealy zero, so we don't need
+   to handle it, too.  */
+
+static bfd_boolean
+riscv_zero_gprel_reloc (Elf_Internal_Rela *rel,
+			struct bfd_link_info *info,
+			bfd_vma gp,
+			bfd_vma addr,
+			bfd_byte *contents,
+			const reloc_howto_type *howto ATTRIBUTE_UNUSED,
+			bfd *input_bfd)
+{
+  int r_type = ELFNN_R_TYPE (rel->r_info);
+
+  /*  Keep the original pattern when
+      1. generating shared library or PIE.
+      2. the offset (addr - gp) is still in the range of gp for
+	 both high and low instructions.
+      3. RV64 toolchain, the symbol is placed at the high 32-bit
+	 of the 64-bit address, and far from gp.  So users still
+	 see the GP-relative relocation in the truncation message.  */
+  bfd_vma offset = addr + rel->r_addend - gp;
+  if (bfd_link_pic (info)
+      || VALID_UTYPE_IMM (RISCV_CONST_HIGH_PART (offset))
+      /* It's hard to check whether the low 12-bit of a 64-bit address
+	 if valid (signed-ext).  Beside, it should be enough that only
+	 check the high part.  */
+      || (ARCH_SIZE > 32
+	  && !VALID_UTYPE_IMM (RISCV_CONST_HIGH_PART (addr))))
+    return FALSE;
+
+  switch (r_type)
+    {
+    case R_RISCV_GPREL_HI20:
+      rel->r_info = ELFNN_R_INFO(ELFNN_R_SYM (rel->r_info), R_RISCV_HI20);
+      break;
+
+    case R_RISCV_GPREL_LO12_I:
+      rel->r_info = ELFNN_R_INFO(ELFNN_R_SYM (rel->r_info), R_RISCV_LO12_I);
+      break;
+
+    case R_RISCV_GPREL_LO12_S:
+      rel->r_info = ELFNN_R_INFO(ELFNN_R_SYM (rel->r_info), R_RISCV_LO12_S);
+      break;
+
+    case R_RISCV_GPREL_ADD:
+      rel->r_info = ELFNN_R_INFO(0, R_RISCV_NONE);
+      bfd_put_32 (input_bfd, RISCV_NOP, contents + rel->r_offset);
+      break;
+
+    default:
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
 /* Relocate a RISC-V ELF section.
 
    The RELOCATE_SECTION function is called by the new ELF backend linker
@@ -1660,6 +1723,7 @@ riscv_elf_relocate_section (bfd *output_bfd,
   Elf_Internal_Shdr *symtab_hdr = &elf_symtab_hdr (input_bfd);
   struct elf_link_hash_entry **sym_hashes = elf_sym_hashes (input_bfd);
   bfd_vma *local_got_offsets = elf_local_got_offsets (input_bfd);
+  bfd_vma gp = riscv_global_pointer_value (info);
   bfd_boolean absolute;
 
   if (!riscv_init_pcrel_relocs (&pcrel_relocs))
@@ -1744,7 +1808,6 @@ riscv_elf_relocate_section (bfd *output_bfd,
 	{
 	case R_RISCV_NONE:
 	case R_RISCV_RELAX:
-	case R_RISCV_GPREL_ADD:
 	case R_RISCV_GPREL_LOAD:
 	case R_RISCV_GPREL_STORE:
 	case R_RISCV_GOT_GPREL_ADD:
@@ -1851,32 +1914,23 @@ riscv_elf_relocate_section (bfd *output_bfd,
 	    }
 
 	  relocation = sec_addr (htab->elf.sgot) + off;
+
 	  if (r_type == R_RISCV_GOT_HI20)
 	    {
-	      howto = riscv_elf_rtype_to_howto (input_bfd, r_type);
-	      if (howto == NULL)
-		r = bfd_reloc_notsupported;
-	      else {
-		absolute = riscv_zero_pcrel_hi_reloc (rel, info, pc,
-						      relocation, contents,
-						      howto, input_bfd);
-		if (!riscv_record_pcrel_hi_reloc (&pcrel_relocs, pc,
-						  relocation, absolute))
-		  r = bfd_reloc_overflow;
-	      }
-	    }
-	  else
-	    {
-	      bfd_vma gp = riscv_global_pointer_value (info);
-	      if (r_type == R_RISCV_GOT_GPREL_LO12_I
-		  || (r_type == R_RISCV_GOT_GPREL_HI20
-		      && (ARCH_SIZE < 64
-			  || VALID_UTYPE_IMM
-			         (RISCV_CONST_HIGH_PART (relocation - gp)))))
-		relocation -= gp;
-	      else
+	      absolute = riscv_zero_pcrel_hi_reloc (rel, info, pc,
+						    relocation, contents,
+						    howto, input_bfd);
+	      if (!riscv_record_pcrel_hi_reloc (&pcrel_relocs, pc,
+						relocation, absolute))
 		r = bfd_reloc_overflow;
 	    }
+	  else
+	    relocation -= gp;
+
+	  r_type = ELFNN_R_TYPE (rel->r_info);
+	  howto = riscv_elf_rtype_to_howto (input_bfd, r_type);
+	  if (howto == NULL)
+	    r = bfd_reloc_notsupported;
 	  break;
 
 	case R_RISCV_ADD8:
@@ -1956,46 +2010,39 @@ riscv_elf_relocate_section (bfd *output_bfd,
 	  break;
 
 	case R_RISCV_GPREL_HI20:
-	case R_RISCV_GPREL_I:
 	case R_RISCV_GPREL_LO12_I:
-	case R_RISCV_GPREL_S:
 	case R_RISCV_GPREL_LO12_S:
+	  absolute = riscv_zero_gprel_reloc (rel, info, gp,
+					     relocation, contents,
+					     howto, input_bfd);
+	  if (!absolute)
+	    relocation -= gp;
+	  break;
+
+	case R_RISCV_GPREL_ADD:
+	  absolute = riscv_zero_gprel_reloc (rel, info, gp,
+					     relocation, contents,
+					     howto, input_bfd);
+	  continue;
+
+	case R_RISCV_GPREL_I:
+	case R_RISCV_GPREL_S:
 	  {
-	    bfd_vma gp = riscv_global_pointer_value (info);
-
-	    bfd_boolean is_ok, is_gp;
-	    if (r_type == R_RISCV_GPREL_HI20)
+	    bfd_boolean x0_base = VALID_ITYPE_IMM (relocation + rel->r_addend);
+	    if (x0_base || VALID_ITYPE_IMM (relocation + rel->r_addend - gp))
 	      {
-		is_ok = ARCH_SIZE < 64
-		        || VALID_UTYPE_IMM (RISCV_CONST_HIGH_PART (relocation + rel->r_addend));
-		is_gp = ARCH_SIZE < 64
-		        || VALID_UTYPE_IMM (RISCV_CONST_HIGH_PART (relocation + rel->r_addend - gp));
-	      }
-	    else if (r_type == R_RISCV_GPREL_I || r_type == R_RISCV_GPREL_S)
-	      {
-		is_ok = VALID_ITYPE_IMM (relocation + rel->r_addend);
-		is_gp = VALID_ITYPE_IMM (relocation + rel->r_addend - gp);
-	      }
-	    else
-		is_ok = is_gp = TRUE;
-
-	    if (is_ok | is_gp)
-	      {
-		if (r_type == R_RISCV_GPREL_I || r_type == R_RISCV_GPREL_S)
+		/* We can use x0 or gp as the base register.  */
+		bfd_vma insn = bfd_get_32 (input_bfd, contents + rel->r_offset);
+		insn &= ~(OP_MASK_RS1 << OP_SH_RS1);
+		if (!x0_base)
 		  {
-		    /* We can use x0 or gp as the base register.  */
-		    bfd_vma insn = bfd_get_32 (input_bfd, contents + rel->r_offset);
-		    insn &= ~(OP_MASK_RS1 << OP_SH_RS1);
 		    rel->r_addend -= gp;
 		    insn |= X_GP << OP_SH_RS1;
-		    bfd_put_32 (input_bfd, insn, contents + rel->r_offset);
 		  }
-		else
-		  relocation -= gp;
+		bfd_put_32 (input_bfd, insn, contents + rel->r_offset);
 	      }
 	    else
 	      r = bfd_reloc_overflow;
-
 	    break;
 	  }
 
