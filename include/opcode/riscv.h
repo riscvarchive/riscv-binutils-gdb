@@ -223,6 +223,9 @@ static const char * const riscv_pred_succ[16] =
 #define OP_MASK_RL		0x1
 #define OP_SH_RL		25
 
+#define OP_MASK_PSEUDO_GP       0x1f
+#define OP_SH_PSEUDO_GP         27
+
 #define OP_MASK_CUSTOM_IMM	0x7f
 #define OP_SH_CUSTOM_IMM	25
 #define OP_MASK_CSR		0xfff
@@ -476,6 +479,26 @@ enum
   M_CALL,
   M_J,
   M_LI,
+  M_LLA_GPREL,
+  M_LA_GOT_GPREL,
+  M_LB_GPREL,
+  M_LBU_GPREL,
+  M_LH_GPREL,
+  M_LHU_GPREL,
+  M_LW_GPREL,
+  M_LWU_GPREL,
+  M_LD_GPREL,
+  M_SB_GPREL,
+  M_SH_GPREL,
+  M_SW_GPREL,
+  M_SD_GPREL,
+  M_FLW_GPREL,
+  M_FLD_GPREL,
+  M_FLQ_GPREL,
+  M_FSW_GPREL,
+  M_FSD_GPREL,
+  M_FSQ_GPREL,
+
   M_NUM_MACROS
 };
 

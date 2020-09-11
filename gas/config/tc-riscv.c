@@ -178,6 +178,7 @@ struct riscv_set_options
   int relax; /* Emit relocs the linker is allowed to relax.  */
   int arch_attr; /* Emit arch attribute.  */
   int csr_check; /* Enable the CSR checking.  */
+  int compact; /* Generate compact code.  */
 };
 
 static struct riscv_set_options riscv_opts =
@@ -187,7 +188,8 @@ static struct riscv_set_options riscv_opts =
   0,	/* rve */
   1,	/* relax */
   DEFAULT_RISCV_ATTR, /* arch_attr */
-  0.	/* csr_check */
+  0,	/* csr_check */
+  0,	/* compact */
 };
 
 static void
@@ -942,6 +944,7 @@ validate_riscv_insn (const struct riscv_opcode *opc, int length)
       case '<': USE_BITS (OP_MASK_SHAMTW,	OP_SH_SHAMTW);	break;
       case '>':	USE_BITS (OP_MASK_SHAMT,	OP_SH_SHAMT);	break;
       case 'A': break;
+      case 'B': break;
       case 'D':	USE_BITS (OP_MASK_RD,		OP_SH_RD);	break;
       case 'Z':	USE_BITS (OP_MASK_RS1,		OP_SH_RS1);	break;
       case 'E':	USE_BITS (OP_MASK_CSR,		OP_SH_CSR);	break;
@@ -980,6 +983,7 @@ validate_riscv_insn (const struct riscv_opcode *opc, int length)
 	    return FALSE;
 	  }
 	break;
+      case 'g': break; /* optional pseudo gp  */
       case 'F': /* funct */
 	switch (c = *p++)
 	  {
@@ -1239,6 +1243,7 @@ macro_build (expressionS *ep, const char *name, const char *fmt, ...)
 	case 'j':
 	case 'u':
 	case 'q':
+	case '1': /* relaxation operand.  */
 	  gas_assert (ep != NULL);
 	  r = va_arg (args, int);
 	  continue;
@@ -1351,6 +1356,40 @@ pcrel_store (int srcreg, int tempreg, expressionS *ep, const char *lo_insn,
   pcrel_access (srcreg, tempreg, ep, lo_insn, "t,s,q", hi_reloc, lo_reloc);
 }
 
+static void
+gprel_access (int destreg, int tempreg, int gpreg, expressionS *ep,
+	      const char *lo_insn, const char *lo_pattern,
+	      bfd_reloc_code_real_type hi_reloc,
+	      bfd_reloc_code_real_type lo_reloc,
+	      bfd_reloc_code_real_type add_reloc)
+{
+  macro_build (ep, "lui", "d,u", tempreg, hi_reloc);
+  macro_build (ep, "add", "d,s,t,1", tempreg, tempreg, gpreg, add_reloc);
+  macro_build (ep, lo_insn, lo_pattern, destreg, tempreg, lo_reloc);
+}
+
+static void
+gprel_load (int destreg, int tempreg, int gpreg, expressionS *ep,
+	    const char *lo_insn,
+            bfd_reloc_code_real_type hi_reloc,
+	    bfd_reloc_code_real_type lo_reloc,
+	    bfd_reloc_code_real_type add_reloc)
+{
+  gprel_access (destreg, tempreg, gpreg, ep, lo_insn, "d,s,j",
+		hi_reloc, lo_reloc, add_reloc);
+}
+
+static void
+gprel_store (int srcreg, int tempreg, int gpreg, expressionS *ep,
+	     const char *lo_insn,
+             bfd_reloc_code_real_type hi_reloc,
+             bfd_reloc_code_real_type lo_reloc,
+	     bfd_reloc_code_real_type add_reloc)
+{
+  gprel_access (srcreg, tempreg, gpreg, ep, lo_insn, "t,s,q",
+		hi_reloc, lo_reloc, add_reloc);
+}
+
 /* PC-relative function call using AUIPC/JALR, relaxed to JAL.  */
 static void
 riscv_call (int destreg, int tempreg, expressionS *ep,
@@ -1417,6 +1456,7 @@ load_const (int reg, expressionS *ep)
 }
 
 /* Expand RISC-V assembly macros into one or more instructions.  */
+
 static void
 macro (struct riscv_cl_insn *ip, expressionS *imm_expr,
        bfd_reloc_code_real_type *imm_reloc)
@@ -1424,6 +1464,7 @@ macro (struct riscv_cl_insn *ip, expressionS *imm_expr,
   int rd = (ip->insn_opcode >> OP_SH_RD) & OP_MASK_RD;
   int rs1 = (ip->insn_opcode >> OP_SH_RS1) & OP_MASK_RS1;
   int rs2 = (ip->insn_opcode >> OP_SH_RS2) & OP_MASK_RS2;
+  int gp = (ip->insn_opcode >> OP_SH_PSEUDO_GP) & OP_MASK_PSEUDO_GP;
   int mask = ip->insn_mo->mask;
 
   switch (mask)
@@ -1442,95 +1483,233 @@ macro (struct riscv_cl_insn *ip, expressionS *imm_expr,
 	load_const (rd, imm_expr);
       else if (riscv_opts.pic && mask == M_LA) /* Global PIC symbol */
 	pcrel_load (rd, rd, imm_expr, LOAD_ADDRESS_INSN,
-		    BFD_RELOC_RISCV_GOT_HI20, BFD_RELOC_RISCV_PCREL_LO12_I);
+		    BFD_RELOC_RISCV_GOT_HI20,
+		    BFD_RELOC_RISCV_PCREL_LO12_I);
       else /* Local PIC symbol, or any non-PIC symbol */
 	pcrel_load (rd, rd, imm_expr, "addi",
-		    BFD_RELOC_RISCV_PCREL_HI20, BFD_RELOC_RISCV_PCREL_LO12_I);
+		    BFD_RELOC_RISCV_PCREL_HI20,
+		    BFD_RELOC_RISCV_PCREL_LO12_I);
+      break;
+
+    case M_LLA_GPREL: /* Local compact symbol */
+      gprel_load (rd, rd, gp, imm_expr, "addi",
+		  BFD_RELOC_RISCV_GPREL_HI20,
+		  BFD_RELOC_RISCV_GPREL_LO12_I,
+		  BFD_RELOC_RISCV_GPREL_ADD);
+      break;
+
+    case M_LA_GOT_GPREL: /* Global compact symbol */
+      gprel_load (rd, rd, gp, imm_expr, LOAD_ADDRESS_INSN,
+		  BFD_RELOC_RISCV_GOT_GPREL_HI20,
+		  BFD_RELOC_RISCV_GOT_GPREL_LO12_I,
+		  BFD_RELOC_RISCV_GOT_GPREL_ADD);
       break;
 
     case M_LA_TLS_GD:
       pcrel_load (rd, rd, imm_expr, "addi",
-		  BFD_RELOC_RISCV_TLS_GD_HI20, BFD_RELOC_RISCV_PCREL_LO12_I);
+		  BFD_RELOC_RISCV_TLS_GD_HI20,
+		  BFD_RELOC_RISCV_PCREL_LO12_I);
       break;
 
     case M_LA_TLS_IE:
       pcrel_load (rd, rd, imm_expr, LOAD_ADDRESS_INSN,
-		  BFD_RELOC_RISCV_TLS_GOT_HI20, BFD_RELOC_RISCV_PCREL_LO12_I);
+		  BFD_RELOC_RISCV_TLS_GOT_HI20,
+		  BFD_RELOC_RISCV_PCREL_LO12_I);
       break;
 
     case M_LB:
       pcrel_load (rd, rd, imm_expr, "lb",
-		  BFD_RELOC_RISCV_PCREL_HI20, BFD_RELOC_RISCV_PCREL_LO12_I);
+		  BFD_RELOC_RISCV_PCREL_HI20,
+		  BFD_RELOC_RISCV_PCREL_LO12_I);
+      break;
+
+    case M_LB_GPREL:
+      gprel_load (rd, rd, gp, imm_expr, "lb",
+		  BFD_RELOC_RISCV_GPREL_HI20,
+		  BFD_RELOC_RISCV_GPREL_LO12_I,
+		  BFD_RELOC_RISCV_GPREL_ADD);
       break;
 
     case M_LBU:
       pcrel_load (rd, rd, imm_expr, "lbu",
-		  BFD_RELOC_RISCV_PCREL_HI20, BFD_RELOC_RISCV_PCREL_LO12_I);
+		  BFD_RELOC_RISCV_PCREL_HI20,
+		  BFD_RELOC_RISCV_PCREL_LO12_I);
+      break;
+
+    case M_LBU_GPREL:
+      gprel_load (rd, rd, gp, imm_expr, "lbu",
+		  BFD_RELOC_RISCV_GPREL_HI20,
+		  BFD_RELOC_RISCV_GPREL_LO12_I,
+		  BFD_RELOC_RISCV_GPREL_ADD);
       break;
 
     case M_LH:
       pcrel_load (rd, rd, imm_expr, "lh",
-		  BFD_RELOC_RISCV_PCREL_HI20, BFD_RELOC_RISCV_PCREL_LO12_I);
+		  BFD_RELOC_RISCV_PCREL_HI20,
+		  BFD_RELOC_RISCV_PCREL_LO12_I);
+      break;
+
+    case M_LH_GPREL:
+      gprel_load (rd, rd, gp, imm_expr, "lh",
+		  BFD_RELOC_RISCV_GPREL_HI20,
+		  BFD_RELOC_RISCV_GPREL_LO12_I,
+		  BFD_RELOC_RISCV_GPREL_ADD);
       break;
 
     case M_LHU:
       pcrel_load (rd, rd, imm_expr, "lhu",
-		  BFD_RELOC_RISCV_PCREL_HI20, BFD_RELOC_RISCV_PCREL_LO12_I);
+		  BFD_RELOC_RISCV_PCREL_HI20,
+		  BFD_RELOC_RISCV_PCREL_LO12_I);
+      break;
+
+    case M_LHU_GPREL:
+      gprel_load (rd, rd, gp, imm_expr, "lhu",
+		  BFD_RELOC_RISCV_GPREL_HI20,
+		  BFD_RELOC_RISCV_GPREL_LO12_I,
+		  BFD_RELOC_RISCV_GPREL_ADD);
       break;
 
     case M_LW:
       pcrel_load (rd, rd, imm_expr, "lw",
-		  BFD_RELOC_RISCV_PCREL_HI20, BFD_RELOC_RISCV_PCREL_LO12_I);
+		  BFD_RELOC_RISCV_PCREL_HI20,
+		  BFD_RELOC_RISCV_PCREL_LO12_I);
+      break;
+
+    case M_LW_GPREL:
+      gprel_load (rd, rd, gp, imm_expr, "lw",
+		  BFD_RELOC_RISCV_GPREL_HI20,
+		  BFD_RELOC_RISCV_GPREL_LO12_I,
+		  BFD_RELOC_RISCV_GPREL_ADD);
       break;
 
     case M_LWU:
       pcrel_load (rd, rd, imm_expr, "lwu",
-		  BFD_RELOC_RISCV_PCREL_HI20, BFD_RELOC_RISCV_PCREL_LO12_I);
+		  BFD_RELOC_RISCV_PCREL_HI20,
+		  BFD_RELOC_RISCV_PCREL_LO12_I);
+      break;
+
+    case M_LWU_GPREL:
+      gprel_load (rd, rd, gp, imm_expr, "lwu",
+		  BFD_RELOC_RISCV_GPREL_HI20,
+		  BFD_RELOC_RISCV_GPREL_LO12_I,
+		  BFD_RELOC_RISCV_GPREL_ADD);
       break;
 
     case M_LD:
       pcrel_load (rd, rd, imm_expr, "ld",
-		  BFD_RELOC_RISCV_PCREL_HI20, BFD_RELOC_RISCV_PCREL_LO12_I);
+		  BFD_RELOC_RISCV_PCREL_HI20,
+		  BFD_RELOC_RISCV_PCREL_LO12_I);
+      break;
+
+    case M_LD_GPREL:
+      gprel_load (rd, rd, gp, imm_expr, "ld",
+		  BFD_RELOC_RISCV_GPREL_HI20,
+		  BFD_RELOC_RISCV_GPREL_LO12_I,
+		  BFD_RELOC_RISCV_GPREL_ADD);
       break;
 
     case M_FLW:
       pcrel_load (rd, rs1, imm_expr, "flw",
-		  BFD_RELOC_RISCV_PCREL_HI20, BFD_RELOC_RISCV_PCREL_LO12_I);
+		  BFD_RELOC_RISCV_PCREL_HI20,
+		  BFD_RELOC_RISCV_PCREL_LO12_I);
+      break;
+
+    case M_FLW_GPREL:
+      gprel_load (rd, rs1, gp, imm_expr, "flw",
+		  BFD_RELOC_RISCV_GPREL_HI20,
+		  BFD_RELOC_RISCV_GPREL_LO12_I,
+		  BFD_RELOC_RISCV_GPREL_ADD);
       break;
 
     case M_FLD:
       pcrel_load (rd, rs1, imm_expr, "fld",
-		  BFD_RELOC_RISCV_PCREL_HI20, BFD_RELOC_RISCV_PCREL_LO12_I);
+		  BFD_RELOC_RISCV_PCREL_HI20,
+		  BFD_RELOC_RISCV_PCREL_LO12_I);
+      break;
+
+    case M_FLD_GPREL:
+      gprel_load (rd, rs1, gp, imm_expr, "fld",
+		  BFD_RELOC_RISCV_GPREL_HI20,
+		  BFD_RELOC_RISCV_GPREL_LO12_I,
+		  BFD_RELOC_RISCV_GPREL_ADD);
       break;
 
     case M_SB:
       pcrel_store (rs2, rs1, imm_expr, "sb",
-		   BFD_RELOC_RISCV_PCREL_HI20, BFD_RELOC_RISCV_PCREL_LO12_S);
+		   BFD_RELOC_RISCV_PCREL_HI20,
+		   BFD_RELOC_RISCV_PCREL_LO12_S);
+      break;
+
+    case M_SB_GPREL:
+      gprel_store (rs2, rs1, gp, imm_expr, "sb",
+		   BFD_RELOC_RISCV_GPREL_HI20,
+		   BFD_RELOC_RISCV_GPREL_LO12_S,
+		   BFD_RELOC_RISCV_GPREL_ADD);
       break;
 
     case M_SH:
       pcrel_store (rs2, rs1, imm_expr, "sh",
-		   BFD_RELOC_RISCV_PCREL_HI20, BFD_RELOC_RISCV_PCREL_LO12_S);
+		   BFD_RELOC_RISCV_PCREL_HI20,
+		   BFD_RELOC_RISCV_PCREL_LO12_S);
+      break;
+
+    case M_SH_GPREL:
+      gprel_store (rs2, rs1, gp, imm_expr, "sh",
+		   BFD_RELOC_RISCV_GPREL_HI20,
+		   BFD_RELOC_RISCV_GPREL_LO12_S,
+		   BFD_RELOC_RISCV_GPREL_ADD);
       break;
 
     case M_SW:
       pcrel_store (rs2, rs1, imm_expr, "sw",
-		   BFD_RELOC_RISCV_PCREL_HI20, BFD_RELOC_RISCV_PCREL_LO12_S);
+		   BFD_RELOC_RISCV_PCREL_HI20,
+		   BFD_RELOC_RISCV_PCREL_LO12_S);
+      break;
+
+    case M_SW_GPREL:
+      gprel_store (rs2, rs1, gp, imm_expr, "sw",
+		   BFD_RELOC_RISCV_GPREL_HI20,
+		   BFD_RELOC_RISCV_GPREL_LO12_S,
+		   BFD_RELOC_RISCV_GPREL_ADD);
       break;
 
     case M_SD:
       pcrel_store (rs2, rs1, imm_expr, "sd",
-		   BFD_RELOC_RISCV_PCREL_HI20, BFD_RELOC_RISCV_PCREL_LO12_S);
+		   BFD_RELOC_RISCV_PCREL_HI20,
+		   BFD_RELOC_RISCV_PCREL_LO12_S);
+      break;
+
+    case M_SD_GPREL:
+      gprel_store (rs2, rs1, gp, imm_expr, "sd",
+		   BFD_RELOC_RISCV_GPREL_HI20,
+		   BFD_RELOC_RISCV_GPREL_LO12_S,
+		   BFD_RELOC_RISCV_GPREL_ADD);
       break;
 
     case M_FSW:
       pcrel_store (rs2, rs1, imm_expr, "fsw",
-		   BFD_RELOC_RISCV_PCREL_HI20, BFD_RELOC_RISCV_PCREL_LO12_S);
+		   BFD_RELOC_RISCV_PCREL_HI20,
+		   BFD_RELOC_RISCV_PCREL_LO12_S);
+      break;
+
+    case M_FSW_GPREL:
+      gprel_store (rs2, rs1, gp, imm_expr, "fsw",
+		   BFD_RELOC_RISCV_GPREL_HI20,
+		   BFD_RELOC_RISCV_GPREL_LO12_S,
+		   BFD_RELOC_RISCV_GPREL_ADD);
       break;
 
     case M_FSD:
       pcrel_store (rs2, rs1, imm_expr, "fsd",
-		   BFD_RELOC_RISCV_PCREL_HI20, BFD_RELOC_RISCV_PCREL_LO12_S);
+		   BFD_RELOC_RISCV_PCREL_HI20,
+		   BFD_RELOC_RISCV_PCREL_LO12_S);
+      break;
+
+    case M_FSD_GPREL:
+      gprel_store (rs2, rs1, gp, imm_expr, "fsd",
+		   BFD_RELOC_RISCV_GPREL_HI20,
+		   BFD_RELOC_RISCV_GPREL_LO12_S,
+		   BFD_RELOC_RISCV_GPREL_ADD);
       break;
 
     case M_CALL:
@@ -2593,6 +2772,22 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 	      s = expr_end;
 	      continue;
 
+	    case 'g': /* Optional pseudo gp.  */
+	      if (*s == '\0')
+		{
+		  /* Use gp directly.  */
+		  INSERT_OPERAND (PSEUDO_GP, *ip, 3);
+		  continue;
+		}
+	      else if (*s == ','
+		       && s++
+		       && reg_lookup (&s, RCLASS_GPR, &regno))
+		{
+		  INSERT_OPERAND (PSEUDO_GP, *ip, regno);
+		  continue;
+		}
+	      break;
+
 	    default:
 	      as_fatal (_("internal error: bad argument type %c"), *args);
 	    }
@@ -3220,6 +3415,10 @@ s_riscv_option (int x ATTRIBUTE_UNUSED)
     riscv_opts.csr_check = TRUE;
   else if (strcmp (name, "no-csr-check") == 0)
     riscv_opts.csr_check = FALSE;
+  else if (strcmp (name, "compact") == 0)
+    riscv_opts.compact = TRUE;
+  else if (strcmp (name, "nocompact") == 0)
+    riscv_opts.compact = FALSE;
   else if (strcmp (name, "push") == 0)
     {
       struct riscv_option_stack *s;

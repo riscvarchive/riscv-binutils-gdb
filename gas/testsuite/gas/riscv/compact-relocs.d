@@ -33,6 +33,8 @@ Disassembly of section .text:
 [ 	]+[0-9a-f]+:[ 	]+R_RISCV_GPREL_LO12_I[ 	]+foo
 [ 	]+[0-9a-f]+:[ 	]+00055503[ 	]+lhu[ 	]+a0,0\(a0\)
 [ 	]+[0-9a-f]+:[ 	]+R_RISCV_GPREL_LO12_I[ 	]+foo
+[ 	]+[0-9a-f]+:[ 	]+00056503[ 	]+lwu[ 	]+a0,0\(a0\)
+[ 	]+[0-9a-f]+:[ 	]+R_RISCV_GPREL_LO12_I[ 	]+foo
 [ 	]+[0-9a-f]+:[ 	]+0005a507[ 	]+flw[ 	]+fa0,0\(a1\)
 [ 	]+[0-9a-f]+:[ 	]+R_RISCV_GPREL_LO12_I[ 	]+foo
 [ 	]+[0-9a-f]+:[ 	]+0005b507[ 	]+fld[ 	]+fa0,0\(a1\)
@@ -67,6 +69,8 @@ Disassembly of section .text:
 [ 	]+[0-9a-f]+:[ 	]+R_RISCV_GOT_GPREL_LO12_I[ 	]+foo
 [ 	]+[0-9a-f]+:[ 	]+00055503[ 	]+lhu[ 	]+a0,0\(a0\)
 [ 	]+[0-9a-f]+:[ 	]+R_RISCV_GOT_GPREL_LO12_I[ 	]+foo
+[ 	]+[0-9a-f]+:[ 	]+00056503[ 	]+lwu[ 	]+a0,0\(a0\)
+[ 	]+[0-9a-f]+:[ 	]+R_RISCV_GOT_GPREL_LO12_I[ 	]+foo
 [ 	]+[0-9a-f]+:[ 	]+0005a507[ 	]+flw[ 	]+fa0,0\(a1\)
 [ 	]+[0-9a-f]+:[ 	]+R_RISCV_GOT_GPREL_LO12_I[ 	]+foo
 [ 	]+[0-9a-f]+:[ 	]+0005b507[ 	]+fld[ 	]+fa0,0\(a1\)
@@ -85,6 +89,8 @@ Disassembly of section .text:
 [ 	]+[0-9a-f]+:[ 	]+0005c503[ 	]+lbu[ 	]+a0,0\(a1\)
 [ 	]+[0-9a-f]+:[ 	]+R_RISCV_GPREL_LOAD[ 	]+foo
 [ 	]+[0-9a-f]+:[ 	]+0005d503[ 	]+lhu[ 	]+a0,0\(a1\)
+[ 	]+[0-9a-f]+:[ 	]+R_RISCV_GPREL_LOAD[ 	]+foo
+[ 	]+[0-9a-f]+:[ 	]+0005e503[ 	]+lwu[ 	]+a0,0\(a1\)
 [ 	]+[0-9a-f]+:[ 	]+R_RISCV_GPREL_LOAD[ 	]+foo
 [ 	]+[0-9a-f]+:[ 	]+0005a507[ 	]+flw[ 	]+fa0,0\(a1\)
 [ 	]+[0-9a-f]+:[ 	]+R_RISCV_GPREL_LOAD[ 	]+foo
@@ -119,6 +125,8 @@ Disassembly of section .text:
 [ 	]+[0-9a-f]+:[ 	]+0005c503[ 	]+lbu[ 	]+a0,0\(a1\)
 [ 	]+[0-9a-f]+:[ 	]+R_RISCV_GOT_GPREL_LOAD[ 	]+foo
 [ 	]+[0-9a-f]+:[ 	]+0005d503[ 	]+lhu[ 	]+a0,0\(a1\)
+[ 	]+[0-9a-f]+:[ 	]+R_RISCV_GOT_GPREL_LOAD[ 	]+foo
+[ 	]+[0-9a-f]+:[ 	]+0005e503[ 	]+lwu[ 	]+a0,0\(a1\)
 [ 	]+[0-9a-f]+:[ 	]+R_RISCV_GOT_GPREL_LOAD[ 	]+foo
 [ 	]+[0-9a-f]+:[ 	]+0005a507[ 	]+flw[ 	]+fa0,0\(a1\)
 [ 	]+[0-9a-f]+:[ 	]+R_RISCV_GOT_GPREL_LOAD[ 	]+foo
