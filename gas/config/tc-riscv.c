@@ -3146,11 +3146,25 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
 	  fixP->fx_subsy = NULL;
 	  break;
 	}
-      /* Fall through.  */
+      goto reloc_diff;
+
     case BFD_RELOC_64:
+      if (fixP->fx_addsy && fixP->fx_subsy
+	  && (sub_segment = S_GET_SEGMENT (fixP->fx_subsy))
+	  && strcmp (sub_segment->name, ".eh_frame") == 0
+	  && S_GET_VALUE (fixP->fx_subsy)
+	     == fixP->fx_frag->fr_address + fixP->fx_where)
+	{
+	  fixP->fx_r_type = BFD_RELOC_RISCV_64_PCREL;
+	  fixP->fx_subsy = NULL;
+	  break;
+	}
+      goto reloc_diff;
+
     case BFD_RELOC_16:
     case BFD_RELOC_8:
     case BFD_RELOC_RISCV_CFA:
+reloc_diff:
       if (fixP->fx_addsy && fixP->fx_subsy)
 	{
 	  fixP->fx_next = xmemdup (fixP, sizeof (*fixP), sizeof (*fixP));
@@ -3775,7 +3789,19 @@ RISC-V options:\n\
 "));
 }
 
+/* Define the frame addr size to 8 bytes for compact code model.  */
+
+int
+riscv_dwarf2_addr_size (void)
+{
+  if (riscv_opts.compact)
+    return 8;
+  else
+    return 4;
+}
+
 /* Standard calling conventions leave the CFA at SP on entry.  */
+
 void
 riscv_cfi_frame_initial_instructions (void)
 {

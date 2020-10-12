@@ -103,6 +103,10 @@ extern void riscv_pop_insert (void);
 
 #define TARGET_USE_CFIPOP 1
 
+extern int riscv_dwarf2_addr_size (void);
+#define DWARF2_ADDR_SIZE(bfd) riscv_dwarf2_addr_size ()
+#define DWARF2_FDE_RELOC_SIZE riscv_dwarf2_addr_size ()
+
 #define tc_cfi_frame_initial_instructions riscv_cfi_frame_initial_instructions
 extern void riscv_cfi_frame_initial_instructions (void);
 
