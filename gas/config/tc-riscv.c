@@ -1364,7 +1364,10 @@ gprel_access (int destreg, int tempreg, int gpreg, expressionS *ep,
 	      bfd_reloc_code_real_type add_reloc)
 {
   macro_build (ep, "lui", "d,u", tempreg, hi_reloc);
-  macro_build (ep, "add", "d,s,t,1", tempreg, tempreg, gpreg, add_reloc);
+  if (add_reloc != BFD_RELOC_UNUSED)
+    macro_build (ep, "add", "d,s,t,1", tempreg, tempreg, gpreg, add_reloc);
+  else
+    macro_build (NULL, "add", "d,s,t", tempreg, tempreg, gpreg);
   macro_build (ep, lo_insn, lo_pattern, destreg, tempreg, lo_reloc);
 }
 
@@ -1506,15 +1509,27 @@ macro (struct riscv_cl_insn *ip, expressionS *imm_expr,
       break;
 
     case M_LA_TLS_GD:
-      pcrel_load (rd, rd, imm_expr, "addi",
-		  BFD_RELOC_RISCV_TLS_GD_HI20,
-		  BFD_RELOC_RISCV_PCREL_LO12_I);
+      if (riscv_opts.compact)
+	gprel_load (rd, rd, gp, imm_expr, "addi",
+		    BFD_RELOC_RISCV_TLS_GD_GPREL_HI20,
+		    BFD_RELOC_RISCV_TLS_GD_GPREL_LO12_I,
+		    BFD_RELOC_UNUSED);
+      else
+	pcrel_load (rd, rd, imm_expr, "addi",
+		    BFD_RELOC_RISCV_TLS_GD_HI20,
+		    BFD_RELOC_RISCV_PCREL_LO12_I);
       break;
 
     case M_LA_TLS_IE:
-      pcrel_load (rd, rd, imm_expr, LOAD_ADDRESS_INSN,
-		  BFD_RELOC_RISCV_TLS_GOT_HI20,
-		  BFD_RELOC_RISCV_PCREL_LO12_I);
+      if (riscv_opts.compact)
+	gprel_load (rd, rd, gp, imm_expr, LOAD_ADDRESS_INSN,
+		    BFD_RELOC_RISCV_TLS_GOT_GPREL_HI20,
+		    BFD_RELOC_RISCV_TLS_GOT_GPREL_LO12_I,
+		    BFD_RELOC_UNUSED);
+      else
+	pcrel_load (rd, rd, imm_expr, LOAD_ADDRESS_INSN,
+		    BFD_RELOC_RISCV_TLS_GOT_HI20,
+		    BFD_RELOC_RISCV_PCREL_LO12_I);
       break;
 
     case M_LB:
@@ -3147,7 +3162,11 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
       /* Fall through.  */
 
     case BFD_RELOC_RISCV_TLS_GOT_HI20:
+    case BFD_RELOC_RISCV_TLS_GOT_GPREL_HI20:
+    case BFD_RELOC_RISCV_TLS_GOT_GPREL_LO12_I:
     case BFD_RELOC_RISCV_TLS_GD_HI20:
+    case BFD_RELOC_RISCV_TLS_GD_GPREL_HI20:
+    case BFD_RELOC_RISCV_TLS_GD_GPREL_LO12_I:
     case BFD_RELOC_RISCV_TLS_DTPREL32:
     case BFD_RELOC_RISCV_TLS_DTPREL64:
       if (fixP->fx_addsy != NULL)

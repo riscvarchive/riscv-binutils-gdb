@@ -1029,6 +1029,62 @@ static reloc_howto_type howto_table[] =
 	 0,				/* src_mask */
 	 0,				/* dst_mask */
 	 FALSE),			/* pcrel_offset */
+  /* High 20 bits of 32-bit GP-relative TLS IE GOT reference.  */
+  HOWTO (R_RISCV_TLS_GOT_GPREL_HI20,	/* type */
+	 0,				/* rightshift */
+	 2,				/* size */
+	 32,				/* bitsize */
+	 FALSE,				/* pc_relative */
+	 0,				/* bitpos */
+	 complain_overflow_dont,	/* complain_on_overflow */
+	 bfd_elf_generic_reloc,		/* special_function */
+	 "R_RISCV_TLS_GOT_GPREL_HI20",	/* name */
+	 FALSE,				/* partial_inplace */
+	 0,				/* src_mask */
+	 ENCODE_UTYPE_IMM (-1U),	/* dst_mask */
+	 FALSE),			/* pcrel_offset */
+  /* Low 12 bits of a 32-bit GP-relative TLS IE GOT reference.  */
+  HOWTO (R_RISCV_TLS_GOT_GPREL_LO12_I,	/* type */
+	 0,				/* rightshift */
+	 2,				/* size */
+	 32,				/* bitsize */
+	 FALSE,				/* pc_relative */
+	 0,				/* bitpos */
+	 complain_overflow_dont,	/* complain_on_overflow */
+	 bfd_elf_generic_reloc,		/* special_function */
+	 "R_RISCV_TLS_GOT_GPREL_LO12_I",/* name */
+	 FALSE,				/* partial_inplace */
+	 0,				/* src_mask */
+	 ENCODE_ITYPE_IMM (-1U),	/* dst_mask */
+	 FALSE),			/* pcrel_offset */
+  /* High 20 bits of 32-bit GP-relative TLS GD GOT reference.  */
+  HOWTO (R_RISCV_TLS_GD_GPREL_HI20,	/* type */
+	 0,				/* rightshift */
+	 2,				/* size */
+	 32,				/* bitsize */
+	 FALSE,				/* pc_relative */
+	 0,				/* bitpos */
+	 complain_overflow_dont,	/* complain_on_overflow */
+	 bfd_elf_generic_reloc,		/* special_function */
+	 "R_RISCV_TLS_GD_GPREL_HI20",	/* name */
+	 FALSE,				/* partial_inplace */
+	 0,				/* src_mask */
+	 ENCODE_UTYPE_IMM (-1U),	/* dst_mask */
+	 FALSE),			/* pcrel_offset */
+  /* Low 12 bits of a 32-bit GP-relative TLS GD GOT reference.  */
+  HOWTO (R_RISCV_TLS_GD_GPREL_LO12_I,	/* type */
+	 0,				/* rightshift */
+	 2,				/* size */
+	 32,				/* bitsize */
+	 FALSE,				/* pc_relative */
+	 0,				/* bitpos */
+	 complain_overflow_dont,	/* complain_on_overflow */
+	 bfd_elf_generic_reloc,		/* special_function */
+	 "R_RISCV_TLS_GD_GPREL_LO12_I",	/* name */
+	 FALSE,				/* partial_inplace */
+	 0,				/* src_mask */
+	 ENCODE_ITYPE_IMM (-1U),	/* dst_mask */
+	 FALSE),			/* pcrel_offset */
 };
 
 /* A mapping from BFD reloc types to RISC-V ELF reloc types.  */
@@ -1102,7 +1158,11 @@ static const struct elf_reloc_map riscv_reloc_map[] =
   { BFD_RELOC_RISCV_GOT_GPREL_LO12_I, R_RISCV_GOT_GPREL_LO12_I },
   { BFD_RELOC_RISCV_GOT_GPREL_ADD, R_RISCV_GOT_GPREL_ADD },
   { BFD_RELOC_RISCV_GOT_GPREL_LOAD, R_RISCV_GOT_GPREL_LOAD },
-  { BFD_RELOC_RISCV_GOT_GPREL_STORE, R_RISCV_GOT_GPREL_STORE }
+  { BFD_RELOC_RISCV_GOT_GPREL_STORE, R_RISCV_GOT_GPREL_STORE },
+  { BFD_RELOC_RISCV_TLS_GOT_GPREL_HI20, R_RISCV_TLS_GOT_GPREL_HI20 },
+  { BFD_RELOC_RISCV_TLS_GOT_GPREL_LO12_I, R_RISCV_TLS_GOT_GPREL_LO12_I },
+  { BFD_RELOC_RISCV_TLS_GD_GPREL_HI20, R_RISCV_TLS_GD_GPREL_HI20 },
+  { BFD_RELOC_RISCV_TLS_GD_GPREL_LO12_I, R_RISCV_TLS_GD_GPREL_LO12_I },
 };
 
 /* Given a BFD reloc type, return a howto structure.  */

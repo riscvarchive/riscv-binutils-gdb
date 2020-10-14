@@ -540,12 +540,14 @@ riscv_elf_check_relocs (bfd *abfd, struct bfd_link_info *info,
       switch (r_type)
 	{
 	case R_RISCV_TLS_GD_HI20:
+	case R_RISCV_TLS_GD_GPREL_HI20:
 	  if (!riscv_elf_record_got_reference (abfd, info, h, r_symndx)
 	      || !riscv_elf_record_tls_type (abfd, h, r_symndx, GOT_TLS_GD))
 	    return FALSE;
 	  break;
 
 	case R_RISCV_TLS_GOT_HI20:
+	case R_RISCV_TLS_GOT_GPREL_HI20:
 	  if (bfd_link_pic (info))
 	    info->flags |= DF_STATIC_TLS;
 	  if (!riscv_elf_record_got_reference (abfd, info, h, r_symndx)
@@ -1330,7 +1332,9 @@ perform_relocation (const reloc_howto_type *howto,
     case R_RISCV_GOT_HI20:
     case R_RISCV_GOT_GPREL_HI20:
     case R_RISCV_TLS_GOT_HI20:
+    case R_RISCV_TLS_GOT_GPREL_HI20:
     case R_RISCV_TLS_GD_HI20:
+    case R_RISCV_TLS_GD_GPREL_HI20:
       if (ARCH_SIZE > 32 && !VALID_UTYPE_IMM (RISCV_CONST_HIGH_PART (value)))
 	return bfd_reloc_overflow;
       value = ENCODE_UTYPE_IMM (RISCV_CONST_HIGH_PART (value));
@@ -1343,6 +1347,8 @@ perform_relocation (const reloc_howto_type *howto,
     case R_RISCV_TPREL_I:
     case R_RISCV_PCREL_LO12_I:
     case R_RISCV_GOT_GPREL_LO12_I:
+    case R_RISCV_TLS_GOT_GPREL_LO12_I:
+    case R_RISCV_TLS_GD_GPREL_LO12_I:
       value = ENCODE_ITYPE_IMM (value);
       break;
 
@@ -2150,10 +2156,14 @@ riscv_elf_relocate_section (bfd *output_bfd,
 	  break;
 
 	case R_RISCV_TLS_GOT_HI20:
+	case R_RISCV_TLS_GOT_GPREL_HI20:
+	case R_RISCV_TLS_GOT_GPREL_LO12_I:
 	  is_ie = TRUE;
 	  /* Fall through.  */
 
 	case R_RISCV_TLS_GD_HI20:
+	case R_RISCV_TLS_GD_GPREL_HI20:
+	case R_RISCV_TLS_GD_GPREL_LO12_I:
 	  if (h != NULL)
 	    {
 	      off = h->got.offset;
@@ -2271,8 +2281,13 @@ riscv_elf_relocate_section (bfd *output_bfd,
 
 	  BFD_ASSERT (off < (bfd_vma) -2);
 	  relocation = sec_addr (htab->elf.sgot) + off + (is_ie ? ie_off : 0);
-	  if (!riscv_record_pcrel_hi_reloc (&pcrel_relocs, pc,
-					    relocation, FALSE))
+	  if (r_type == R_RISCV_TLS_GOT_GPREL_HI20
+	      || r_type == R_RISCV_TLS_GOT_GPREL_LO12_I
+	      || r_type == R_RISCV_TLS_GD_GPREL_HI20
+	      || r_type == R_RISCV_TLS_GD_GPREL_LO12_I)
+	    relocation -= gp;
+	  else if (!riscv_record_pcrel_hi_reloc (&pcrel_relocs, pc,
+						 relocation, FALSE))
 	    r = bfd_reloc_overflow;
 	  unresolved_reloc = FALSE;
 	  break;

@@ -284,8 +284,8 @@ const struct riscv_opcode riscv_opcodes[] =
 {"add",         0, INSN_CLASS_I,   "d,s,j",  MATCH_ADDI, MASK_ADDI, match_opcode, INSN_ALIAS },
 {"la",          0, INSN_CLASS_I,   "d,B",  0,    (int) M_LA,  match_never, INSN_MACRO },
 {"lla",         0, INSN_CLASS_I,   "d,B",  0,    (int) M_LLA,  match_never, INSN_MACRO },
-{"la.tls.gd",   0, INSN_CLASS_I,   "d,A",  0,    (int) M_LA_TLS_GD,  match_never, INSN_MACRO },
-{"la.tls.ie",   0, INSN_CLASS_I,   "d,A",  0,    (int) M_LA_TLS_IE,  match_never, INSN_MACRO },
+{"la.tls.gd",   0, INSN_CLASS_I,   "d,Ag", 0,    (int) M_LA_TLS_GD,  match_never, INSN_MACRO },
+{"la.tls.ie",   0, INSN_CLASS_I,   "d,Ag", 0,    (int) M_LA_TLS_IE,  match_never, INSN_MACRO },
 {"la.got.gprel",0, INSN_CLASS_I,   "d,Ag", 0,    (int) M_LA_GOT_GPREL,  match_never, INSN_MACRO },
 {"lla.gprel",   0, INSN_CLASS_I,   "d,Ag", 0,    (int) M_LLA_GPREL,  match_never, INSN_MACRO },
 {"neg",         0, INSN_CLASS_I,   "d,t",  MATCH_SUB, MASK_SUB | MASK_RS1, match_opcode, INSN_ALIAS }, /* sub 0 */
