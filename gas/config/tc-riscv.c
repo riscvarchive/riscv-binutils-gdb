@@ -2750,6 +2750,26 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 	      continue;
 
 	    case '1': /* Relaxation operand.  */
+	      /* The current RISC-V assembler creates the fixup (relocation)
+		 according to the parsed expression, and only one expression
+		 is used for an instruction.  Both imm field and the relaxation
+		 operand are parsed by the my_getSmallExpression for load/store.
+		 Therefore, the expression of imm would be change after parsing
+		 the relaxation operand.  We have to handle the expression of
+		 imm right now, not wait until md_apply_fix.
+
+		 If the type of imm expression is O_constant, then we can
+		 encode the exp->X_add_number to the ip->insn_opcode here.
+		 Therefore, we can continue to parse the relaxation operand
+		 and use the same expression.  Besides, we should already ensure
+		 the imm value is valid before, so just encode it here.
+
+		 If the type of imm expression is O_symbol or others, then
+		 we probably need to report the error here, since it is hard
+		 to represent two symbols by only one expression and relocation.  */
+
+	      gas_assert (imm_expr->X_op == O_constant
+			  || imm_expr->X_op == O_absent);
 	      switch (*++args)
 		{
 		case 'r':
@@ -2757,9 +2777,13 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 		  break;
 		case 'i':
 		  p = percent_op_relax_itype;
+		  if (imm_expr->X_op == O_constant)
+		    ip->insn_opcode |= ENCODE_ITYPE_IMM (imm_expr->X_add_number);
 		  break;
 		case 's':
 		  p = percent_op_relax_stype;
+		  if (imm_expr->X_op == O_constant)
+		    ip->insn_opcode |= ENCODE_STYPE_IMM (imm_expr->X_add_number);
 		  break;
 		default:
 		  as_bad (_("bad relaxation operand type '1%c'"), *args);
@@ -3091,10 +3115,14 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
     case BFD_RELOC_RISCV_HI20:
     case BFD_RELOC_RISCV_LO12_I:
     case BFD_RELOC_RISCV_LO12_S:
-      bfd_putl32 (riscv_apply_const_reloc (fixP->fx_r_type, *valP)
-		  | bfd_getl32 (buf), buf);
+      /* Only encode the addend when the symbol is NULL.  Otherwise, let
+	 linker relocate it according to the relocation.  */
       if (fixP->fx_addsy == NULL)
-	fixP->fx_done = TRUE;
+	{
+	  bfd_putl32 (riscv_apply_const_reloc (fixP->fx_r_type, *valP)
+		      | bfd_getl32 (buf), buf);
+	  fixP->fx_done = TRUE;
+	}
       relaxable = TRUE;
       break;
 
