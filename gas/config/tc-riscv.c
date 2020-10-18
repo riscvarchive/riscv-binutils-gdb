@@ -3465,14 +3465,14 @@ md_convert_frag_branch (fragS *fragp)
       insn = bfd_getl32 (buf);
       insn ^= MATCH_BEQ ^ MATCH_BNE;
       insn |= ENCODE_SBTYPE_IMM (8);
-      md_number_to_chars ((char *) buf, insn, 4);
+      bfd_putl32 (insn, buf);
       buf += 4;
 
     jump:
       /* Jump to the target.  */
       fixp = fix_new_exp (fragp, buf - (bfd_byte *)fragp->fr_literal,
 			  4, &exp, FALSE, BFD_RELOC_RISCV_JMP);
-      md_number_to_chars ((char *) buf, MATCH_JAL, 4);
+      bfd_putl32 (MATCH_JAL, buf);
       buf += 4;
       break;
 
