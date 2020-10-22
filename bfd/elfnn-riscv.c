@@ -3651,7 +3651,7 @@ _bfd_riscv_get_max_alignment (asection *sec)
   return (bfd_vma) 1 << max_alignment_power;
 }
 
-/* Relax non-PIC global variable references.  */
+/* Relax non-PIC global variable and compact GP-relative references.  */
 
 static bfd_boolean
 _bfd_riscv_relax_lui (bfd *abfd,
@@ -3696,6 +3696,11 @@ _bfd_riscv_relax_lui (bfd *abfd,
       unsigned sym = ELFNN_R_SYM (rel->r_info);
       switch (ELFNN_R_TYPE (rel->r_info))
 	{
+	case R_RISCV_GPREL_LO12_I:
+	  if (undefined_weak)
+	    rel->r_info = ELFNN_R_INFO (sym, R_RISCV_LO12_I);
+	  /* Fall through.  */
+
 	case R_RISCV_LO12_I:
 	  if (undefined_weak)
 	    {
@@ -3707,6 +3712,11 @@ _bfd_riscv_relax_lui (bfd *abfd,
 	  else
 	    rel->r_info = ELFNN_R_INFO (sym, R_RISCV_GPREL_I);
 	  return TRUE;
+
+	case R_RISCV_GPREL_LO12_S:
+	  if (undefined_weak)
+	    rel->r_info = ELFNN_R_INFO (sym, R_RISCV_LO12_S);
+	  /* Fall through.  */
 
 	case R_RISCV_LO12_S:
 	  if (undefined_weak)
@@ -3721,6 +3731,8 @@ _bfd_riscv_relax_lui (bfd *abfd,
 	  return TRUE;
 
 	case R_RISCV_HI20:
+	case R_RISCV_GPREL_HI20:
+	case R_RISCV_GPREL_ADD:
 	  /* We can delete the unnecessary LUI and reloc.  */
 	  rel->r_info = ELFNN_R_INFO (0, R_RISCV_NONE);
 	  *again = TRUE;
@@ -4117,6 +4129,12 @@ _bfd_riscv_relax_section (bfd *abfd, asection *sec,
 		   || type == R_RISCV_TPREL_LO12_I
 		   || type == R_RISCV_TPREL_LO12_S)
 	    relax_func = _bfd_riscv_relax_tls_le;
+	  else if (!bfd_link_pic(info)
+		   && (type == R_RISCV_GPREL_HI20
+		       || type == R_RISCV_GPREL_ADD
+		       || type == R_RISCV_GPREL_LO12_I
+		       || type == R_RISCV_GPREL_LO12_S))
+	    relax_func = _bfd_riscv_relax_lui;
 	  else
 	    continue;
 
