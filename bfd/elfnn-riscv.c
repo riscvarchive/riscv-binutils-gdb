@@ -3651,7 +3651,8 @@ _bfd_riscv_get_max_alignment (asection *sec)
   return (bfd_vma) 1 << max_alignment_power;
 }
 
-/* Relax non-PIC global variable and compact GP-relative references.  */
+/* Relax non-PIC global variable, compact GP-relative and GOT GP-relative
+   references.  */
 
 static bfd_boolean
 _bfd_riscv_relax_lui (bfd *abfd,
@@ -3730,9 +3731,27 @@ _bfd_riscv_relax_lui (bfd *abfd,
 	    rel->r_info = ELFNN_R_INFO (sym, R_RISCV_GPREL_S);
 	  return TRUE;
 
+	case R_RISCV_GOT_GPREL_LO12_I:
+	  {
+	    /* Change the RS1 to GP.  */
+	    bfd_vma insn = bfd_get_32 (abfd, contents + rel->r_offset);
+	    insn &= ~(OP_MASK_RS1 << OP_SH_RS1);
+	    insn |= X_GP << OP_SH_RS1;
+	    bfd_put_32 (abfd, insn, contents + rel->r_offset);
+	    /* Maybe we can add an internel reloc, R_RISCV_GOT_GPREL_I.  */
+	  }
+	  break;
+
+	case R_RISCV_GOT_GPREL_LOAD:
+	case R_RISCV_GOT_GPREL_STORE:
+	  rel->r_info = ELFNN_R_INFO (0, R_RISCV_NONE);
+	  break;
+
 	case R_RISCV_HI20:
 	case R_RISCV_GPREL_HI20:
 	case R_RISCV_GPREL_ADD:
+	case R_RISCV_GOT_GPREL_HI20:
+	case R_RISCV_GOT_GPREL_ADD:
 	  /* We can delete the unnecessary LUI and reloc.  */
 	  rel->r_info = ELFNN_R_INFO (0, R_RISCV_NONE);
 	  *again = TRUE;
@@ -4065,7 +4084,7 @@ _bfd_riscv_relax_section (bfd *abfd, asection *sec,
   Elf_Internal_Rela *relocs;
   bfd_boolean ret = FALSE;
   unsigned int i;
-  bfd_vma max_alignment, reserve_size = 0;
+  bfd_vma max_alignment;
   riscv_pcgp_relocs pcgp_relocs;
 
   *again = FALSE;
@@ -4109,6 +4128,8 @@ _bfd_riscv_relax_section (bfd *abfd, asection *sec,
       bfd_vma symval;
       char symtype;
       bfd_boolean undefined_weak = FALSE;
+      bfd_boolean compact_got = FALSE;
+      bfd_vma reserve_size = 0;
 
       relax_func = NULL;
       if (info->relax_pass == 0)
@@ -4135,6 +4156,16 @@ _bfd_riscv_relax_section (bfd *abfd, asection *sec,
 		       || type == R_RISCV_GPREL_LO12_I
 		       || type == R_RISCV_GPREL_LO12_S))
 	    relax_func = _bfd_riscv_relax_lui;
+	  else if (!bfd_link_pic(info)
+		   && (type == R_RISCV_GOT_GPREL_HI20
+		       || type == R_RISCV_GOT_GPREL_ADD
+		       || type == R_RISCV_GOT_GPREL_LO12_I
+		       || type == R_RISCV_GOT_GPREL_LOAD
+		       || type == R_RISCV_GOT_GPREL_STORE))
+	    {
+	      relax_func = _bfd_riscv_relax_lui;
+	      compact_got = TRUE;
+	    }
 	  else
 	    continue;
 
@@ -4176,8 +4207,6 @@ _bfd_riscv_relax_section (bfd *abfd, asection *sec,
 	  /* A local symbol.  */
 	  Elf_Internal_Sym *isym = ((Elf_Internal_Sym *) symtab_hdr->contents
 				    + ELFNN_R_SYM (rel->r_info));
-	  reserve_size = (isym->st_size - rel->r_addend) > isym->st_size
-	    ? 0 : isym->st_size - rel->r_addend;
 
 	  if (isym->st_shndx == SHN_UNDEF)
 	    sym_sec = sec, symval = rel->r_offset;
@@ -4195,7 +4224,32 @@ _bfd_riscv_relax_section (bfd *abfd, asection *sec,
 #endif
 	      symval = isym->st_value;
 	    }
+	  symval += rel->r_addend;
+
 	  symtype = ELF_ST_TYPE (isym->st_info);
+
+	  /* Reserve the remainning size of array.  */
+	  reserve_size = (isym->st_size - rel->r_addend) > isym->st_size
+			 ? 0 : isym->st_size - rel->r_addend;
+
+	  if (compact_got)
+	    {
+	      bfd_vma *local_got_offsets = elf_local_got_offsets (abfd);
+	      unsigned long r_symndx = ELFNN_R_SYM (rel->r_info);
+
+	      if (local_got_offsets != NULL
+		  && local_got_offsets[r_symndx] != MINUS_ONE)
+		{
+		  sym_sec = htab->elf.sgot;
+		  symval = local_got_offsets[r_symndx];
+		  /* Don't need to consider the reserve_size for GOT.  */
+		  reserve_size = 0;
+		}
+	      else
+		/* We have not supported the GOT_GPREL to GPREL, so just skip
+		   it for now.  */
+		continue;
+	    }
 	}
       else
 	{
@@ -4209,9 +4263,40 @@ _bfd_riscv_relax_section (bfd *abfd, asection *sec,
 		 || h->root.type == bfd_link_hash_warning)
 	    h = (struct elf_link_hash_entry *) h->root.u.i.link;
 
-	  if (h->root.type == bfd_link_hash_undefweak
-	      && (relax_func == _bfd_riscv_relax_lui
-		  || relax_func == _bfd_riscv_relax_pc))
+	  symtype = h->type;
+
+	  /* Reserve the remainning size of array.  */
+	  reserve_size = (h->size - rel->r_addend) > h->size ?
+			 0 : h->size - rel->r_addend;
+
+	  if (compact_got)
+	    {
+	      if (h->got.offset != MINUS_ONE)
+		{
+		  sym_sec = htab->elf.sgot;
+		  symval = h->got.offset;
+		  /* Don't need to consider the reserve_size for GOT.  */
+		  reserve_size = 0;
+		}
+	      else
+		/* We have not supported the GOT_GPREL to GPREL, so just skip
+		   it for now.  */
+		continue;
+	    }
+	  else if (bfd_link_pic (info)
+		   && h->plt.offset != MINUS_ONE
+		   && relax_func == _bfd_riscv_relax_call)
+	    {
+	      /* This line has to match the check in riscv_elf_relocate_section
+		 in the R_RISCV_CALL[_PLT] case.  */
+	      sym_sec = htab->elf.splt;
+	      symval = h->plt.offset;
+	      /* Don't need to consider the reserve_size for PLT.  */
+	      reserve_size = 0;
+	    }
+	  else if (h->root.type == bfd_link_hash_undefweak
+		   && (relax_func == _bfd_riscv_relax_lui
+		       || relax_func == _bfd_riscv_relax_pc))
 	    {
 	      /* For the lui and auipc relaxations, since the symbol
 		 value of an undefined weak symbol is always be zero,
@@ -4226,36 +4311,20 @@ _bfd_riscv_relax_section (bfd *abfd, asection *sec,
 		 libraries can not happen currently.  Once we support the
 		 auipc relaxations when creating shared libraries, then we will
 		 need the more rigorous checking for this optimization.  */
-	      undefined_weak = TRUE;
-	    }
-
-	  /* This line has to match the check in riscv_elf_relocate_section
-	     in the R_RISCV_CALL[_PLT] case.  */
-	  if (bfd_link_pic (info) && h->plt.offset != MINUS_ONE)
-	    {
-	      sym_sec = htab->elf.splt;
-	      symval = h->plt.offset;
-	    }
-	  else if (undefined_weak)
-	    {
-	      symval = 0;
 	      sym_sec = bfd_und_section_ptr;
+	      symval = 0;
+	      undefined_weak = TRUE;
 	    }
 	  else if ((h->root.type == bfd_link_hash_defined
 		    || h->root.type == bfd_link_hash_defweak)
 		   && h->root.u.def.section != NULL
 		   && h->root.u.def.section->output_section != NULL)
 	    {
-	      symval = h->root.u.def.value;
 	      sym_sec = h->root.u.def.section;
+	      symval = h->root.u.def.value + rel->r_addend;
 	    }
 	  else
 	    continue;
-
-	  if (h->type != STT_FUNC)
-	    reserve_size =
-	      (h->size - rel->r_addend) > h->size ? 0 : h->size - rel->r_addend;
-	  symtype = h->type;
 	}
 
       if (sym_sec->sec_info_type == SEC_INFO_TYPE_MERGE
@@ -4287,8 +4356,6 @@ _bfd_riscv_relax_section (bfd *abfd, asection *sec,
 	   if (symtype != STT_SECTION)
 	     symval += rel->r_addend;
 	}
-      else
-	symval += rel->r_addend;
 
       symval += sec_addr (sym_sec);
 
