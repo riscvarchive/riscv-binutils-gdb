@@ -16,7 +16,7 @@ SECTIONS {
 		*(.data*)
 	} >ram
 
-	PROVIDE( __global_pointer$ = . );
+	__global_pointer$ = .;
 
 	.got : {
 		*(.got*)

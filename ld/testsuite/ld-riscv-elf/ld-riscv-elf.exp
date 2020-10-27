@@ -28,6 +28,8 @@ if [istarget "riscv*-*-*"] {
     run_dump_test "pcrel-lo-addend-2"
     run_dump_test "code-model-medlow-01"
     run_dump_test "code-model-medlow-02"
+    run_dump_test "code-model-medlow-weakref-01"
+    run_dump_test "code-model-medlow-weakref-02"
     run_dump_test "code-model-medany-01"
     run_dump_test "code-model-medany-02"
     run_dump_test "code-model-medany-weakref-01"
