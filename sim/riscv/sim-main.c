@@ -225,8 +225,8 @@ execute_d (SIM_CPU *cpu, unsigned_word iw, const struct riscv_opcode *op)
 		  frd_name, frs1_name, frs2_name, frs3_name);
       sim_fpu_64to (&sfc, cpu->fpregs[rs3].v[0]);
       sim_fpu_mul (&sft2, &sfa, &sfb);
-      sim_fpu_add (&sft, &sfc, &sft2);
-      sim_fpu_neg (&sft, &sft);
+      sim_fpu_neg (&sft2, &sft2);
+      sim_fpu_sub (&sft, &sft2, &sfc);
       sim_fpu_round_64 (&sft, rounding, sim_fpu_denorm_default);
       sim_fpu_to64 (&cpu->fpregs[rd].v[0], &sft);
       goto done;
@@ -235,8 +235,8 @@ execute_d (SIM_CPU *cpu, unsigned_word iw, const struct riscv_opcode *op)
 		  frd_name, frs1_name, frs2_name, frs3_name);
       sim_fpu_64to (&sfc, cpu->fpregs[rs3].v[0]);
       sim_fpu_mul (&sft2, &sfa, &sfb);
-      sim_fpu_sub (&sft, &sft2, &sfc);
-      sim_fpu_neg (&sft, &sft);
+      sim_fpu_neg (&sft2, &sft2);
+      sim_fpu_add (&sft, &sft2, &sfc);
       sim_fpu_round_64 (&sft, rounding, sim_fpu_denorm_default);
       sim_fpu_to64 (&cpu->fpregs[rd].v[0], &sft);
       goto done;
@@ -539,8 +539,8 @@ execute_f (SIM_CPU *cpu, unsigned_word iw, const struct riscv_opcode *op)
 		  frd_name, frs1_name, frs2_name, frs3_name);
       sim_fpu_32to (&sfc, cpu->fpregs[rs3].w[0]);
       sim_fpu_mul (&sft2, &sfa, &sfb);
-      sim_fpu_add (&sft, &sfc, &sft2);
-      sim_fpu_neg (&sft, &sft);
+      sim_fpu_neg (&sft2, &sft2);
+      sim_fpu_sub (&sft, &sft2, &sfc);
       sim_fpu_round_32 (&sft, rounding, sim_fpu_denorm_default);
       sim_fpu_to32 (&cpu->fpregs[rd].w[0], &sft);
       goto done;
@@ -549,8 +549,8 @@ execute_f (SIM_CPU *cpu, unsigned_word iw, const struct riscv_opcode *op)
 		  frd_name, frs1_name, frs2_name, frs3_name);
       sim_fpu_32to (&sfc, cpu->fpregs[rs3].w[0]);
       sim_fpu_mul (&sft2, &sfa, &sfb);
-      sim_fpu_sub (&sft, &sft2, &sfc);
-      sim_fpu_neg (&sft, &sft);
+      sim_fpu_neg (&sft2, &sft2);
+      sim_fpu_add (&sft, &sft2, &sfc);
       sim_fpu_round_32 (&sft, rounding, sim_fpu_denorm_default);
       sim_fpu_to32 (&cpu->fpregs[rd].w[0], &sft);
       goto done;
