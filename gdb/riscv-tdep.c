@@ -1126,6 +1126,10 @@ public:
       LR,
       SC,
 
+      /* instruction opcodes with zeros/ones indicating  that the scan might
+	 be executed on a unimplemented memory */
+      INVALID,
+
       /* Other instructions are not interesting during the prologue scan, and
 	 are ignored.  */
       OTHER
@@ -1415,6 +1419,8 @@ riscv_insn::decode (struct gdbarch *gdbarch, CORE_ADDR pc)
 	decode_r_type_insn (SC, ival);
       else if (is_sc_d_insn (ival))
 	decode_r_type_insn (SC, ival);
+      else if ((0xffffffff == ival) ||  (0x00000000 == ival))
+	m_opcode = INVALID;
       else
 	/* None of the other fields are valid in this case.  */
 	m_opcode = OTHER;
@@ -1483,6 +1489,8 @@ riscv_insn::decode (struct gdbarch *gdbarch, CORE_ADDR pc)
 	decode_cb_type_insn (BEQ, ival);
       else if (is_c_bnez_insn (ival))
 	decode_cb_type_insn (BNE, ival);
+      else if ((0xffff == ival) ||  (0x0000 == ival))
+	m_opcode = INVALID;
       else
 	/* None of the other fields of INSN are valid in this case.  */
 	m_opcode = OTHER;
@@ -1630,6 +1638,17 @@ riscv_scan_prologue (struct gdbarch *gdbarch,
           gdb_assert (insn.rs1 () < RISCV_NUM_INTEGER_REGS);
           gdb_assert (insn.rs2 () < RISCV_NUM_INTEGER_REGS);
           regs[insn.rd ()] = pv_add (regs[insn.rs1 ()], regs[insn.rs2 ()]);
+        }
+      else if (insn.opcode () == riscv_insn::INVALID)
+        {
+          /* Reached invalid instruction, possibly in an uninitialized memory 
+             region, do not scan any further instructions. */
+          if (riscv_debug_unwinder)
+            fprintf_unfiltered (gdb_stdlog, 
+					"Reached to an illegal instruction at %s, aborting scan\n",
+					core_addr_to_string (cur_pc));
+          end_prologue_addr = cur_pc;
+          break;
         }
       else
 	{
