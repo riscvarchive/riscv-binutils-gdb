@@ -122,3 +122,9 @@ riscv_get_priv_spec_class_from_numbers (unsigned int,
 
 extern const char *
 riscv_get_priv_spec_name (enum riscv_priv_spec_class);
+
+extern void bfd_elf32_riscv_set_options
+  (bfd *, struct bfd_link_info *, bfd_boolean);
+
+extern void bfd_elf64_riscv_set_options
+  (bfd *, struct bfd_link_info *, bfd_boolean);

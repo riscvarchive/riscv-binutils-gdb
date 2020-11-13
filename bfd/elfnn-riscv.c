@@ -126,6 +126,47 @@ struct riscv_elf_link_hash_table
   (elf_hash_table_id ((struct elf_link_hash_table *) ((p)->hash)) \
   == RISCV_ELF_DATA ? ((struct riscv_elf_link_hash_table *) ((p)->hash)) : NULL)
 
+/* Generate the compact PLT header.  */
+static bfd_boolean compact_plt = FALSE;
+
+/* Set according to the linker target options.  */
+
+void
+bfd_elfNN_riscv_set_options (struct bfd *output_bfd ATTRIBUTE_UNUSED,
+			     struct bfd_link_info *info ATTRIBUTE_UNUSED,
+			     bfd_boolean option_compact_plt)
+{
+  compact_plt = option_compact_plt;
+}
+
+/* Check whether the compact PLT is used in this object.  Tools need this
+   to dump the correct PLT header contents.  */
+
+static long
+elfNN_riscv_get_synthetic_symtab (bfd *abfd,
+				  long symcount,
+				  asymbol **syms,
+				  long dynsymcount,
+				  asymbol **dynsyms,
+				  asymbol **ret)
+{
+  asection *plt;
+  bfd_byte *plt_content;
+
+  plt = bfd_get_section_by_name (abfd, ".plt");
+  if (plt != NULL
+      && plt->size != 0
+      && bfd_malloc_and_get_section (abfd, plt, &plt_content))
+    {
+      bfd_vma insn = bfd_get_32 (abfd, plt_content);
+      if (insn == RISCV_RTYPE (SUB, X_T1, X_T1, X_T3))
+	compact_plt = TRUE;
+    }
+
+  return _bfd_elf_get_synthetic_symtab (abfd, symcount, syms,
+                                        dynsymcount, dynsyms, ret);
+}
+
 static bfd_boolean
 riscv_info_to_howto_rela (bfd *abfd,
 			  arelent *cache_ptr,
@@ -149,12 +190,15 @@ riscv_elf_append_rela (bfd *abfd, asection *s, Elf_Internal_Rela *rel)
 /* PLT/GOT stuff.  */
 
 #define PLT_HEADER_INSNS 8
+
+#define COMPACT_PLT_HEADER_INSNS 6
+#define COMPACT_PLT_STUB_INSNS 7
+#define COMPACT_PLT_STUB_DATA_SIZE 16
+
 #define PLT_ENTRY_INSNS 4
-#define PLT_HEADER_SIZE (PLT_HEADER_INSNS * 4)
 #define PLT_ENTRY_SIZE (PLT_ENTRY_INSNS * 4)
 
 #define GOT_ENTRY_SIZE RISCV_ELF_WORD_BYTES
-
 #define GOTPLT_HEADER_SIZE (2 * GOT_ENTRY_SIZE)
 
 #define sec_addr(sec) ((sec)->output_section->vma + (sec)->output_offset)
@@ -166,21 +210,89 @@ riscv_elf_got_plt_val (bfd_vma plt_index, struct bfd_link_info *info)
 	 + GOTPLT_HEADER_SIZE + (plt_index * GOT_ENTRY_SIZE);
 }
 
+static bfd_vma
+riscv_elf_plt_header_size (void)
+{
+  if (compact_plt)
+    return (COMPACT_PLT_HEADER_INSNS + COMPACT_PLT_STUB_INSNS) * 4
+	   + COMPACT_PLT_STUB_DATA_SIZE;
+  else
+    return PLT_HEADER_INSNS * 4;
+}
+
 #if ARCH_SIZE == 32
 # define MATCH_LREG MATCH_LW
 #else
 # define MATCH_LREG MATCH_LD
 #endif
 
+/* plt_header:
+   auipc  t2, %hi(.got.plt)
+   sub    t1, t1, t3
+   l[w|d] t3, %lo(.got.plt)(t2)		# t3 = _dl_runtime_resolve, .got.plt[0]
+   addi   t1, t1, -44			# &.plt[i] - &.plt[0], hdr_size + 12 = 44
+   addi   t0, t2, %lo(.got.plt)		# &.got.plt
+   srli   t1, t1, log2(n)		# n = sizeof(.plt[i]) / sizeof(.got.plt[i])
+					# t1 = &.got.plt[i] - &.got.plt[2]
+   l[w|d] t0, sizeof(.got.plt[i])(t0)	# t0 = link map, .got.plt[1]
+   jr	    t3  */
+
+static uint32_t riscv_plt_header[] =
+{
+  RISCV_UTYPE (AUIPC, X_T2, 0),		/* gotplt_offset_high  */
+  RISCV_RTYPE (SUB, X_T1, X_T1, X_T3),
+  RISCV_ITYPE (LREG, X_T3, X_T2, 0),	/* gotplt_offset_low  */
+  RISCV_ITYPE (ADDI, X_T1, X_T1, 0),	/* -(hdr_size + 12)  */
+  RISCV_ITYPE (ADDI, X_T0, X_T2, 0),	/* gotplt_offset_low  */
+  RISCV_ITYPE (SRLI, X_T1, X_T1, 4 - RISCV_ELF_LOG_WORD_BYTES),
+  RISCV_ITYPE (LREG, X_T0, X_T0, RISCV_ELF_WORD_BYTES),
+  RISCV_ITYPE (JALR, 0, X_T3, 0)
+};
+
+/* compact_plt_header:
+   sub	t1, t1, t3
+   ld	t3, 0(t2)	# t3 = _dl_runtime_resolve, .got.plt[0]
+   addi	t1, t1, -80	# &.plt[i] - &.plt[0], hdr_size + 12 = 80
+   srli	t1, t1, log2(n)	# n = sizeof(.plt[i]) / sizeof(.got.plt[i])
+			# t1 = &.got.plt[i] - &.got.plt[2]
+   ld	t0, 8(t2)	# t0 = link map, .got.plt[1]
+   jr	t3
+
+   compact_stub:
+   auipc t0, %hi_pcrel(compact_stub_data)
+   addi	t0, t0, %lo_pcrel(compact_stub)
+   ld	t2, 0(t0)	# offset between .got.plt and compact_stub_data
+   add	t2, t0, t2	# t2 = &.got.plt
+   add	t0, t2, t3	# t0 = &.got.plt[i]
+   ld	t3, 0(t0)	# t3 = address of .plt header/resolved function
+   jr	t3
+
+   compact_stub_data:
+   .quad	&.got.plt - .,0  */
+
+static uint32_t riscv_compact_plt_header[] =
+{
+  RISCV_RTYPE (SUB, X_T1, X_T1, X_T3),
+  RISCV_ITYPE (LREG, X_T3, X_T2, 0),
+  RISCV_ITYPE (ADDI, X_T1, X_T1, 0),	/* -(hdr_size + 12)  */
+  RISCV_ITYPE (SRLI, X_T1, X_T1, 4 - RISCV_ELF_LOG_WORD_BYTES),
+  RISCV_ITYPE (LREG, X_T0, X_T2, RISCV_ELF_WORD_BYTES),
+  RISCV_ITYPE (JALR, 0, X_T3, 0),
+  RISCV_UTYPE (AUIPC, X_T0, 0),		/* compact_stub_data_high  */
+  RISCV_ITYPE (ADDI, X_T0, X_T0, 0),	/* compact_stub_data_low  */
+  RISCV_ITYPE (LREG, X_T2, X_T0, 0),
+  RISCV_RTYPE (ADD, X_T2, X_T0, X_T2),
+  RISCV_RTYPE (ADD, X_T0, X_T2, X_T3),
+  RISCV_ITYPE (LREG, X_T3, X_T0, 0),
+  RISCV_ITYPE (JALR, 0, X_T3, 0),
+};
+
 /* Generate a PLT header.  */
 
 static bfd_boolean
-riscv_make_plt_header (bfd *output_bfd, bfd_vma gotplt_addr, bfd_vma addr,
-		       uint32_t *entry)
+riscv_make_plt_header (bfd *output_bfd, bfd_vma gotplt_addr, bfd_vma plt_addr,
+		       uint32_t **entry, int *insns)
 {
-  bfd_vma gotplt_offset_high = RISCV_PCREL_HIGH_PART (gotplt_addr, addr);
-  bfd_vma gotplt_offset_low = RISCV_PCREL_LOW_PART (gotplt_addr, addr);
-
   /* RVE has no t3 register, so this won't work, and is not supported.  */
   if (elf_elfheader (output_bfd)->e_flags & EF_RISCV_RVE)
     {
@@ -189,32 +301,70 @@ riscv_make_plt_header (bfd *output_bfd, bfd_vma gotplt_addr, bfd_vma addr,
       return FALSE;
     }
 
-  /* auipc  t2, %hi(.got.plt)
-     sub    t1, t1, t3		     # shifted .got.plt offset + hdr size + 12
-     l[w|d] t3, %lo(.got.plt)(t2)    # _dl_runtime_resolve
-     addi   t1, t1, -(hdr size + 12) # shifted .got.plt offset
-     addi   t0, t2, %lo(.got.plt)    # &.got.plt
-     srli   t1, t1, log2(16/PTRSIZE) # .got.plt offset
-     l[w|d] t0, PTRSIZE(t0)	     # link map
-     jr	    t3 */
+  if (compact_plt)
+    {
+      bfd_vma pc = plt_addr + COMPACT_PLT_HEADER_INSNS * 4;
+      bfd_vma target = pc + COMPACT_PLT_STUB_INSNS * 4;
+      bfd_vma compact_stub_data_high = RISCV_PCREL_HIGH_PART (target, pc);
+      bfd_vma compact_stub_data_low = RISCV_PCREL_LOW_PART (target, pc);
+      bfd_vma shift = -(riscv_elf_plt_header_size () + 12);
 
-  entry[0] = RISCV_UTYPE (AUIPC, X_T2, gotplt_offset_high);
-  entry[1] = RISCV_RTYPE (SUB, X_T1, X_T1, X_T3);
-  entry[2] = RISCV_ITYPE (LREG, X_T3, X_T2, gotplt_offset_low);
-  entry[3] = RISCV_ITYPE (ADDI, X_T1, X_T1, -(PLT_HEADER_SIZE + 12));
-  entry[4] = RISCV_ITYPE (ADDI, X_T0, X_T2, gotplt_offset_low);
-  entry[5] = RISCV_ITYPE (SRLI, X_T1, X_T1, 4 - RISCV_ELF_LOG_WORD_BYTES);
-  entry[6] = RISCV_ITYPE (LREG, X_T0, X_T0, RISCV_ELF_WORD_BYTES);
-  entry[7] = RISCV_ITYPE (JALR, 0, X_T3, 0);
+      /* Check the overflow.  */
+      if (!VALID_UTYPE_IMM (compact_stub_data_high)
+	  || !VALID_ITYPE_IMM (compact_stub_data_low)
+	  || !VALID_ITYPE_IMM (shift))
+	{
+	  (*_bfd_error_handler)
+	    (_("%pB: overflow when relocating the compact .plt header"),
+	     output_bfd);
+	  bfd_set_error (bfd_error_bad_value);
+	  return FALSE;
+	}
 
+      /* Relocate the plt section.  */
+      riscv_compact_plt_header[2] |= ENCODE_ITYPE_IMM (shift);
+      riscv_compact_plt_header[6] |= ENCODE_UTYPE_IMM (compact_stub_data_high);
+      riscv_compact_plt_header[7] |= ENCODE_ITYPE_IMM (compact_stub_data_low);
+
+      *entry = riscv_compact_plt_header;
+      *insns = COMPACT_PLT_HEADER_INSNS + COMPACT_PLT_STUB_INSNS;
+    }
+  else
+    {
+      bfd_vma pc = plt_addr;	/* The pc of auipc  */
+      bfd_vma gotplt_offset_high = RISCV_PCREL_HIGH_PART (gotplt_addr, pc);
+      bfd_vma gotplt_offset_low = RISCV_PCREL_LOW_PART (gotplt_addr, pc);
+      bfd_vma shift = -(riscv_elf_plt_header_size () + 12);
+
+      /* Check the overflow.  */
+      if (!VALID_UTYPE_IMM (gotplt_offset_high)
+	  || !VALID_ITYPE_IMM (gotplt_offset_low)
+	  || !VALID_ITYPE_IMM (shift))
+	{
+	  (*_bfd_error_handler)
+	    (_("%pB: overflow when relocating the .plt header"),
+	     output_bfd);
+	  bfd_set_error (bfd_error_bad_value);
+	  return FALSE;
+	}
+
+      /* Relocate the plt section.  */
+      riscv_plt_header[0] |= ENCODE_UTYPE_IMM (gotplt_offset_high);
+      riscv_plt_header[2] |= ENCODE_ITYPE_IMM (gotplt_offset_low);
+      riscv_plt_header[3] |= ENCODE_ITYPE_IMM (shift);
+      riscv_plt_header[4] |= ENCODE_ITYPE_IMM (gotplt_offset_low);
+
+      *entry = riscv_plt_header;
+      *insns = PLT_HEADER_INSNS;
+    }
   return TRUE;
 }
 
 /* Generate a PLT entry.  */
 
 static bfd_boolean
-riscv_make_plt_entry (bfd *output_bfd, bfd_vma got, bfd_vma addr,
-		      uint32_t *entry)
+riscv_make_plt_entry (bfd *output_bfd, bfd_vma got, bfd_vma got_offset,
+		      bfd_vma plt, bfd_vma plt_offset, uint32_t *entry)
 {
   /* RVE has no t3 register, so this won't work, and is not supported.  */
   if (elf_elfheader (output_bfd)->e_flags & EF_RISCV_RVE)
@@ -224,15 +374,75 @@ riscv_make_plt_entry (bfd *output_bfd, bfd_vma got, bfd_vma addr,
       return FALSE;
     }
 
-  /* auipc  t3, %hi(.got.plt entry)
-     l[w|d] t3, %lo(.got.plt entry)(t3)
-     jalr   t1, t3
-     nop */
+  if (compact_plt)
+    {
+      /* lui	t3, %hi(offset)
+	 addi	t3, t3, %lo(offset)	# t3 = offset between .got.plt and .got.plt entry
+	 jal	t1, compact_stub	# t1 = address of nop
+	 nop  */
 
-  entry[0] = RISCV_UTYPE (AUIPC, X_T3, RISCV_PCREL_HIGH_PART (got, addr));
-  entry[1] = RISCV_ITYPE (LREG,  X_T3, X_T3, RISCV_PCREL_LOW_PART (got, addr));
-  entry[2] = RISCV_ITYPE (JALR, X_T1, X_T3, 0);
-  entry[3] = RISCV_NOP;
+      bfd_vma addr = got_offset - got;
+      bfd_vma offset = plt + COMPACT_PLT_HEADER_INSNS * 4
+		       - (plt + plt_offset + 8);
+
+      /* Check the overflow.  */
+      if (!VALID_UTYPE_IMM (RISCV_CONST_HIGH_PART (addr))
+	  || !VALID_ITYPE_IMM (addr))
+	{
+	  (*_bfd_error_handler)
+	    (_("%pB: overflow when relocating the compact .plt entry, "
+	       "offset between .got.plt and .got.plt entry outside the "
+	       "32-bit range"),
+	     output_bfd);
+	  bfd_set_error (bfd_error_bad_value);
+	  return FALSE;
+	}
+
+      if (!VALID_ITYPE_IMM (offset))
+	{
+	  (*_bfd_error_handler)
+	    (_("%pB: overflow when relocating the compact .plt entry, "
+	       "offset between compact stub and jal outside the "
+	       "JAL range"),
+	     output_bfd);
+	  bfd_set_error (bfd_error_bad_value);
+	  return FALSE;
+	}
+
+      entry[0] = RISCV_UTYPE (LUI, X_T3, RISCV_CONST_HIGH_PART (addr));
+      entry[1] = RISCV_ITYPE (ADDI, X_T3, X_T3, addr);
+      entry[2] = RISCV_UJTYPE (JAL, X_T1, offset);
+      entry[3] = RISCV_NOP;
+    }
+  else
+    {
+      bfd_vma addr = plt + plt_offset;
+      bfd_vma offset_high = RISCV_PCREL_HIGH_PART (got_offset, addr);
+      bfd_vma offset_low = RISCV_PCREL_LOW_PART (got_offset, addr);
+
+      /* auipc  t3, %hi(.got.plt entry)
+	 l[w|d] t3, %lo(.got.plt entry)(t3)
+	 jalr   t1, t3	# t1 = address of nop
+	 nop  */
+
+      /* Check the overflow.  */
+      if (!VALID_UTYPE_IMM (offset_high)
+	  || !VALID_ITYPE_IMM (offset_low))
+	{
+	  (*_bfd_error_handler)
+	    (_("%pB: overflow when relocating the .plt entry, "
+	       "offset between .got.plt and .plt entry outside "
+	       "the PCREL range"),
+	     output_bfd);
+	  bfd_set_error (bfd_error_bad_value);
+	  return FALSE;
+	}
+
+      entry[0] = RISCV_UTYPE (AUIPC, X_T3, offset_high);
+      entry[1] = RISCV_ITYPE (LREG, X_T3, X_T3, offset_low);
+      entry[2] = RISCV_ITYPE (JALR, X_T1, X_T3, 0);
+      entry[3] = RISCV_NOP;
+    }
 
   return TRUE;
 }
@@ -399,6 +609,15 @@ riscv_elf_create_dynamic_sections (bfd *dynobj,
   if (!htab->elf.splt || !htab->elf.srelplt || !htab->elf.sdynbss
       || (!bfd_link_pic (info) && (!htab->elf.srelbss || !htab->sdyntdata)))
     abort ();
+
+  if (htab->elf.splt && compact_plt)
+    {
+      /* Add the symbol at the compact plt stub.  */
+      struct elf_link_hash_entry *h =
+	_bfd_elf_define_linkage_sym (dynobj, info, htab->elf.splt,
+				     "_compact_plt_stub");
+      h->root.u.def.value = COMPACT_PLT_HEADER_INSNS * 4;
+    }
 
   return TRUE;
 }
@@ -924,7 +1143,7 @@ allocate_dynrelocs (struct elf_link_hash_entry *h, void *inf)
 	  asection *s = htab->elf.splt;
 
 	  if (s->size == 0)
-	    s->size = PLT_HEADER_SIZE;
+	    s->size = riscv_elf_plt_header_size ();
 
 	  h->plt.offset = s->size;
 
@@ -2425,7 +2644,8 @@ riscv_elf_finish_dynamic_symbol (bfd *output_bfd,
       header_address = sec_addr (htab->elf.splt);
 
       /* Calculate the index of the entry.  */
-      plt_idx = (h->plt.offset - PLT_HEADER_SIZE) / PLT_ENTRY_SIZE;
+      plt_idx = (h->plt.offset - riscv_elf_plt_header_size ())
+		 / PLT_ENTRY_SIZE;
 
       /* Calculate the address of the .got.plt entry.  */
       got_address = riscv_elf_got_plt_val (plt_idx, info);
@@ -2434,8 +2654,9 @@ riscv_elf_finish_dynamic_symbol (bfd *output_bfd,
       loc = htab->elf.splt->contents + h->plt.offset;
 
       /* Fill in the PLT entry itself.  */
-      if (! riscv_make_plt_entry (output_bfd, got_address,
-				  header_address + h->plt.offset,
+      if (! riscv_make_plt_entry (output_bfd,
+				  sec_addr (htab->elf.sgotplt), got_address,
+				  header_address, h->plt.offset,
 				  plt_entry))
 	return FALSE;
 
@@ -2621,16 +2842,26 @@ riscv_elf_finish_dynamic_sections (bfd *output_bfd,
       /* Fill in the head and tail entries in the procedure linkage table.  */
       if (splt->size > 0)
 	{
-	  int i;
-	  uint32_t plt_header[PLT_HEADER_INSNS];
+	  int i, insns;
+	  uint32_t *plt_header;
 	  ret = riscv_make_plt_header (output_bfd,
 				       sec_addr (htab->elf.sgotplt),
-				       sec_addr (splt), plt_header);
+				       sec_addr (splt),
+				       &plt_header,
+				       &insns);
 	  if (!ret)
 	    return ret;
 
-	  for (i = 0; i < PLT_HEADER_INSNS; i++)
+	  for (i = 0; i < insns; i++)
 	    bfd_put_32 (output_bfd, plt_header[i], splt->contents + 4*i);
+
+	  if (compact_plt)
+	    {
+	      bfd_vma offset = sec_addr (htab->elf.sgotplt)
+			       - sec_addr (splt)
+			       - insns * 4;
+	      bfd_put_64 (output_bfd, offset, splt->contents + insns * 4);
+	    }
 
 	  elf_section_data (splt->output_section)->this_hdr.sh_entsize
 	    = PLT_ENTRY_SIZE;
@@ -2685,7 +2916,7 @@ static bfd_vma
 riscv_elf_plt_sym_val (bfd_vma i, const asection *plt,
 		       const arelent *rel ATTRIBUTE_UNUSED)
 {
-  return plt->vma + PLT_HEADER_SIZE + i * PLT_ENTRY_SIZE;
+  return plt->vma + riscv_elf_plt_header_size () + i * PLT_ENTRY_SIZE;
 }
 
 static enum elf_reloc_type_class
@@ -4647,6 +4878,7 @@ riscv_elf_obj_attrs_arg_type (int tag)
 #define elf_info_to_howto		     riscv_info_to_howto_rela
 #define bfd_elfNN_bfd_relax_section	     _bfd_riscv_relax_section
 #define bfd_elfNN_mkobject		     elfNN_riscv_mkobject
+#define bfd_elfNN_get_synthetic_symtab	     elfNN_riscv_get_synthetic_symtab
 
 #define elf_backend_init_index_section	     _bfd_elf_init_1_index_section
 

@@ -25,6 +25,8 @@ fragment <<EOF
 #include "elf/riscv.h"
 #include "elfxx-riscv.h"
 
+static bfd_boolean compact_plt = FALSE;
+
 static void
 riscv_elf_before_allocation (void)
 {
@@ -82,9 +84,48 @@ riscv_create_output_section_statements (void)
 	       " whilst linking %s binaries\n"), "RISC-V");
       return;
     }
+
+  bfd_elf${ELFSIZE}_riscv_set_options (link_info.output_bfd,
+				       &link_info,
+				       compact_plt);
 }
 
 EOF
+
+# Define some shell vars to insert bits of code into the standard elf
+# parse_args and list_options functions.
+#
+PARSE_AND_LIST_PROLOGUE='
+enum
+  {
+    OPTION_COMPACT_PLT = 301,
+    OPTION_NO_COMPACT_PLT
+  };
+'
+
+PARSE_AND_LIST_LONGOPTS='
+  { "compact-plt", no_argument, NULL, OPTION_COMPACT_PLT },
+  { "no-compact-plt", no_argument, NULL, OPTION_NO_COMPACT_PLT },
+'
+
+PARSE_AND_LIST_OPTIONS='
+  fprintf (file, _("\
+  --compact-plt           Generate compact .plt section\n"
+		  ));
+  fprintf (file, _("\
+  --no-compact-plt        Generate medlow/medany .plt section\n"
+		  ));
+'
+
+PARSE_AND_LIST_ARGS_CASES='
+    case OPTION_COMPACT_PLT:
+      compact_plt = TRUE;
+      break;
+
+    case OPTION_NO_COMPACT_PLT:
+      compact_plt = FALSE;
+      break;
+'
 
 LDEMUL_BEFORE_ALLOCATION=riscv_elf_before_allocation
 LDEMUL_AFTER_ALLOCATION=gld${EMULATION_NAME}_after_allocation
