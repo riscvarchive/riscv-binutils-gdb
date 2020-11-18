@@ -27,6 +27,9 @@
 
 #include "config.h"
 
+/* elf-bfd.h requires string.h for strncmp.  */
+#include <string.h>
+
 #include "libiberty.h"
 #include "bfd.h"
 #include "elf-bfd.h"
