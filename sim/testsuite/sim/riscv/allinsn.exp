@@ -1,6 +1,6 @@
 # mcore simulator testsuite
 
-if [istarget riscv-*] {
+if [istarget riscv*-*] {
     # all machines
     set all_machs "riscv"
 

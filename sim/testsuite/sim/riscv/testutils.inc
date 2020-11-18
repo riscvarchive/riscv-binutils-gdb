@@ -3,6 +3,7 @@
 	li a0, \nr
 	# The exit utility function.
 	li a7, 93;
+	ecall
 	.endm
 
 # MACRO: pass
