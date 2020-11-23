@@ -118,6 +118,9 @@
 
 # Vector Floating-Point Sign-Injection Instructions
 
+	vfneg.v v4, v4			# OK
+	vfneg.v v0, v4, v0.t		# vd overlap vm
+
 	vfsgnj.vv v4, v4, v8		# OK
 	vfsgnj.vv v8, v4, v8		# OK
 	vfsgnj.vv v0, v4, v8, v0.t	# vd overlap vm

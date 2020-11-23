@@ -1999,6 +1999,9 @@
 	vamomaxuei64.v v4, 0(a1), v8, v4, v0.t
 	vamomaxuei64.v x0, 0(a1), v8, v4, v0.t
 
+	vneg.v v4, v8
+	vneg.v v4, v8, v0.t
+
 	vadd.vv v4, v8, v12
 	vadd.vx v4, v8, a1
 	vadd.vi v4, v8, 15
@@ -2556,6 +2559,9 @@
 	vfmin.vf v4, v8, fa2, v0.t
 	vfmax.vv v4, v8, v12, v0.t
 	vfmax.vf v4, v8, fa2, v0.t
+
+	vfneg.v v4, v8
+	vfneg.v v4, v8, v0.t
 
 	vfsgnj.vv v4, v8, v12
 	vfsgnj.vf v4, v8, fa2

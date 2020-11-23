@@ -1,4 +1,5 @@
 .*: Assembler messages:
+.*Error: illegal operands vd cannot overlap vm `vneg.v v0,v4,v0.t'
 .*Error: illegal operands vd cannot overlap vm `vadd.vv v0,v4,v8,v0.t'
 .*Error: illegal operands vd cannot overlap vm `vadd.vx v0,v4,a1,v0.t'
 .*Error: illegal operands vd cannot overlap vm `vadd.vi v0,v4,15,v0.t'
