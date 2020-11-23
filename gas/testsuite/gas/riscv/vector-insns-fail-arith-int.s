@@ -1,5 +1,8 @@
 # Vector Single-Width Integer Add and Subtract
 
+	vneg.v v4, v4			# OK
+	vneg.v v0, v4, v0.t		# vd overlap vm
+
 	vadd.vv v4, v4, v8		# OK
 	vadd.vv v8, v4, v8		# OK
 	vadd.vv v0, v4, v8, v0.t	# vd overlap vm
