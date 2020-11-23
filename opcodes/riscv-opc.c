@@ -1140,15 +1140,30 @@ const struct riscv_ext_version riscv_ext_version_table[] =
 {"p", ISA_SPEC_CLASS_20190608, 0, 2},
 {"p", ISA_SPEC_CLASS_2P2,      0, 1},
 
-{"v", ISA_SPEC_CLASS_20191213, 0, 7},
-{"v", ISA_SPEC_CLASS_20190608, 0, 7},
-{"v", ISA_SPEC_CLASS_2P2,      0, 7},
+{"v", ISA_SPEC_CLASS_NONE,     1, 0},
 
 {"n", ISA_SPEC_CLASS_20190608, 1, 1},
 {"n", ISA_SPEC_CLASS_2P2,      1, 1},
 
 {"zicsr", ISA_SPEC_CLASS_20191213, 2, 0},
 {"zicsr", ISA_SPEC_CLASS_20190608, 2, 0},
+
+{"zvamo",   ISA_SPEC_CLASS_NONE, 1, 0},
+{"zvediv",  ISA_SPEC_CLASS_NONE, 1, 0},
+{"zvlsseg", ISA_SPEC_CLASS_NONE, 1, 0},
+{"zvqmac",  ISA_SPEC_CLASS_NONE, 1, 0},
+
+{"b",     ISA_SPEC_CLASS_NONE, 0, 92},
+{"zbb",   ISA_SPEC_CLASS_NONE, 0, 92},
+{"zbs",   ISA_SPEC_CLASS_NONE, 0, 92},
+{"zba",   ISA_SPEC_CLASS_NONE, 0, 92},
+{"zbp",   ISA_SPEC_CLASS_NONE, 0, 92},
+{"zbe",   ISA_SPEC_CLASS_NONE, 0, 92},
+{"zbf",   ISA_SPEC_CLASS_NONE, 0, 92},
+{"zbc",   ISA_SPEC_CLASS_NONE, 0, 92},
+{"zbr",   ISA_SPEC_CLASS_NONE, 0, 92},
+{"zbm",   ISA_SPEC_CLASS_NONE, 0, 92},
+{"zbt",   ISA_SPEC_CLASS_NONE, 0, 92},
 
 /* Terminate the list.  */
 {NULL, 0, 0, 0}

@@ -1425,7 +1425,8 @@ riscv_parse_prefixed_ext (riscv_parse_subset_t *rps,
 
 static const char * const riscv_std_z_ext_strtab[] =
   {
-    "zicsr", NULL
+    "zicsr", 
+    "zbb", "zbs", "zba", "zbp", "zbe", "zbf", "zbc", "zbr", "zbm", "zbt", NULL
   };
 
 /* Same as `riscv_std_z_ext_strtab', but for S-class extensions.  */
