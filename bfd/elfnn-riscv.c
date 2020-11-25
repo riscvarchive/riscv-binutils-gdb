@@ -122,12 +122,12 @@ struct riscv_elf_link_hash_table
 
 
 /* Instruction access functions. */
-#define riscv_get_insn(bits, abfd, ptr)		\
+#define riscv_get_insn(bits, ptr)		\
   ((bits) == 16 ? bfd_getl16 (ptr)		\
    : (bits) == 32 ? bfd_getl32 (ptr)		\
    : (bits) == 64 ? bfd_getl64 (ptr)		\
    : (abort (), (bfd_vma) - 1))
-#define riscv_put_insn(bits, abfd, val, ptr)	\
+#define riscv_put_insn(bits, val, ptr)		\
   ((bits) == 16 ? bfd_putl16 (val, ptr)		\
    : (bits) == 32 ? bfd_putl32 (val, ptr)	\
    : (bits) == 64 ? bfd_putl64 (val, ptr)	\
@@ -1396,10 +1396,10 @@ perform_relocation (const reloc_howto_type *howto,
 	  /* Linker relaxation can convert an address equal to or greater than
 	     0x800 to slightly below 0x800.  C.LUI does not accept zero as a
 	     valid immediate.  We can fix this by converting it to a C.LI.  */
-	  bfd_vma insn = riscv_get_insn (howto->bitsize, input_bfd,
+	  bfd_vma insn = riscv_get_insn (howto->bitsize,
 					 contents + rel->r_offset);
 	  insn = (insn & ~MATCH_C_LUI) | MATCH_C_LI;
-	  riscv_put_insn (howto->bitsize, input_bfd, insn, contents + rel->r_offset);
+	  riscv_put_insn (howto->bitsize, insn, contents + rel->r_offset);
 	  value = ENCODE_RVC_IMM (0);
 	}
       else if (!VALID_RVC_LUI_IMM (RISCV_CONST_HIGH_PART (value)))
@@ -1438,13 +1438,13 @@ perform_relocation (const reloc_howto_type *howto,
   bfd_vma word;
   if (howto->bitsize > 8 && howto->dst_mask != 0 &&
       howto->dst_mask != ((bfd_vma)0 - 1))
-    word = riscv_get_insn (howto->bitsize, input_bfd, contents + rel->r_offset);
+    word = riscv_get_insn (howto->bitsize, contents + rel->r_offset);
   else
     word = bfd_get (howto->bitsize, input_bfd, contents + rel->r_offset);
   word = (word & ~howto->dst_mask) | (value & howto->dst_mask);
   if (howto->bitsize > 8 && howto->dst_mask != 0 &&
       howto->dst_mask != ((bfd_vma)0 - 1))
-    riscv_put_insn (howto->bitsize, input_bfd, word, contents + rel->r_offset);
+    riscv_put_insn (howto->bitsize, word, contents + rel->r_offset);
   else
     bfd_put (howto->bitsize, input_bfd, word, contents + rel->r_offset);
 
@@ -1524,7 +1524,7 @@ riscv_zero_pcrel_hi_reloc (Elf_Internal_Rela *rel,
 			   bfd_vma addr,
 			   bfd_byte *contents,
 			   const reloc_howto_type *howto,
-			   bfd *input_bfd)
+			   bfd *input_bfd ATTRIBUTE_UNUSED)
 {
   /* We may need to reference low addreses in PC-relative modes even when the
    * PC is far away from these addresses.  For example, undefweak references
@@ -1550,9 +1550,9 @@ riscv_zero_pcrel_hi_reloc (Elf_Internal_Rela *rel,
 
   rel->r_info = ELFNN_R_INFO(addr, R_RISCV_HI20);
 
-  bfd_vma insn = riscv_get_insn(howto->bitsize, input_bfd, contents + rel->r_offset);
+  bfd_vma insn = riscv_get_insn(howto->bitsize, contents + rel->r_offset);
   insn = (insn & ~MASK_AUIPC) | MATCH_LUI;
-  riscv_put_insn(howto->bitsize, input_bfd, insn, contents + rel->r_offset);
+  riscv_put_insn(howto->bitsize, insn, contents + rel->r_offset);
   return TRUE;
 }
 
@@ -3531,7 +3531,7 @@ _bfd_riscv_relax_call (bfd *abfd, asection *sec, asection *sym_sec,
   /* Replace the R_RISCV_CALL reloc.  */
   rel->r_info = ELFNN_R_INFO (ELFNN_R_SYM (rel->r_info), r_type);
   /* Replace the AUIPC.  */
-  riscv_put_insn (8 * len, abfd, auipc, contents + rel->r_offset);
+  riscv_put_insn (8 * len, auipc, contents + rel->r_offset);
 
   /* Delete unnecessary JALR.  */
   *again = TRUE;
