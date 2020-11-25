@@ -158,6 +158,17 @@ riscv_elf_append_rela (bfd *abfd, asection *s, Elf_Internal_Rela *rel)
   bed->s->swap_reloca_out (abfd, rel, loc);
 }
 
+/* Return true if a relocation is modifying an instruction. */
+
+static bfd_boolean
+riscv_is_insn_reloc (const reloc_howto_type *howto)
+{
+  /* Heuristic: A multibyte destination with a nontrivial mask
+     is an instruction */
+  return howto->bitsize > 8 && howto->dst_mask != 0 &&
+    ~(howto->dst_mask | (((bfd_vma)0 - 1) << howto->bitsize)) != 0;
+}
+
 /* PLT/GOT stuff.  */
 
 #define PLT_HEADER_INSNS 8
@@ -1436,14 +1447,12 @@ perform_relocation (const reloc_howto_type *howto,
     }
 
   bfd_vma word;
-  if (howto->bitsize > 8 && howto->dst_mask != 0 &&
-      howto->dst_mask != ((bfd_vma)0 - 1))
+  if (riscv_is_insn_reloc (howto))
     word = riscv_get_insn (howto->bitsize, contents + rel->r_offset);
   else
     word = bfd_get (howto->bitsize, input_bfd, contents + rel->r_offset);
   word = (word & ~howto->dst_mask) | (value & howto->dst_mask);
-  if (howto->bitsize > 8 && howto->dst_mask != 0 &&
-      howto->dst_mask != ((bfd_vma)0 - 1))
+  if (riscv_is_insn_reloc (howto))
     riscv_put_insn (howto->bitsize, word, contents + rel->r_offset);
   else
     bfd_put (howto->bitsize, input_bfd, word, contents + rel->r_offset);
