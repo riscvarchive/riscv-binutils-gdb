@@ -2551,8 +2551,8 @@
 	vsra.vi v4, v8, 31, v0.t
 
 	# Aliases
-	vncvt.x.x.v v4, v8
-	vncvt.x.x.v v4, v8, v0.t
+	vncvt.x.x.w v4, v8
+	vncvt.x.x.w v4, v8, v0.t
 
 	vnsrl.wv v4, v8, v12
 	vnsrl.wx v4, v8, a1

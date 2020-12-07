@@ -2210,8 +2210,8 @@ Disassembly of section .text:
 [ 	]+[0-9a-f]+:[ 	]+a485c257[ 	]+vsra.vx[ 	]+v4,v8,a1,v0.t
 [ 	]+[0-9a-f]+:[ 	]+a480b257[ 	]+vsra.vi[ 	]+v4,v8,1,v0.t
 [ 	]+[0-9a-f]+:[ 	]+a48fb257[ 	]+vsra.vi[ 	]+v4,v8,31,v0.t
-[ 	]+[0-9a-f]+:[ 	]+b2804257[ 	]+vncvt.x.x.v[ 	]+v4,v8
-[ 	]+[0-9a-f]+:[ 	]+b0804257[ 	]+vncvt.x.x.v[ 	]+v4,v8,v0.t
+[ 	]+[0-9a-f]+:[ 	]+b2804257[ 	]+vncvt.x.x.w[ 	]+v4,v8
+[ 	]+[0-9a-f]+:[ 	]+b0804257[ 	]+vncvt.x.x.w[ 	]+v4,v8,v0.t
 [ 	]+[0-9a-f]+:[ 	]+b2860257[ 	]+vnsrl.wv[ 	]+v4,v8,v12
 [ 	]+[0-9a-f]+:[ 	]+b285c257[ 	]+vnsrl.wx[ 	]+v4,v8,a1
 [ 	]+[0-9a-f]+:[ 	]+b280b257[ 	]+vnsrl.wi[ 	]+v4,v8,1
