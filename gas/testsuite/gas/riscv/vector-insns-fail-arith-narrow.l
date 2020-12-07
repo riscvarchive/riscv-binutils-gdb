@@ -1,8 +1,8 @@
 .*: Assembler messages:
-.*Error: illegal operands vd cannot overlap vs2 `vncvt.x.x.v v2,v2'
-.*Error: illegal operands vd must be multiple of 2 `vncvt.x.x.v v2,v3'
-.*Error: illegal operands vd cannot overlap vs2 `vncvt.x.x.v v3,v2'
-.*Error: illegal operands vd cannot overlap vm `vncvt.x.x.v v0,v2,v0.t'
+.*Error: illegal operands vd cannot overlap vs2 `vncvt.x.x.w v2,v2'
+.*Error: illegal operands vd must be multiple of 2 `vncvt.x.x.w v2,v3'
+.*Error: illegal operands vd cannot overlap vs2 `vncvt.x.x.w v3,v2'
+.*Error: illegal operands vd cannot overlap vm `vncvt.x.x.w v0,v2,v0.t'
 .*Error: illegal operands vd cannot overlap vs2 `vnsrl.wv v2,v2,v4'
 .*Error: illegal operands vd must be multiple of 2 `vnsrl.wv v2,v3,v4'
 .*Error: illegal operands vd cannot overlap vs2 `vnsrl.wv v3,v2,v4'

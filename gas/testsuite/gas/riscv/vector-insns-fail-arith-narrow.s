@@ -1,10 +1,10 @@
 # Vector Narrowing Integer Right Shift Instructions
 
-	# vncvt.x.x.v vd,vs,vm = vnsrl.wx vd,vs,x0,vm
-	vncvt.x.x.v v2, v2		# vd overlap vs2
-	vncvt.x.x.v v2, v3		# vs2 should be multiple of 2
-	vncvt.x.x.v v3, v2		# vd overlap vs2
-	vncvt.x.x.v v0, v2, v0.t	# vd overlap vm
+	# vncvt.x.x.w vd,vs,vm = vnsrl.wx vd,vs,x0,vm
+	vncvt.x.x.w v2, v2		# vd overlap vs2
+	vncvt.x.x.w v2, v3		# vs2 should be multiple of 2
+	vncvt.x.x.w v3, v2		# vd overlap vs2
+	vncvt.x.x.w v0, v2, v0.t	# vd overlap vm
 
 	vnsrl.wv v2, v2, v4		# vd overlap vs2
 	vnsrl.wv v2, v3, v4		# vs2 should be multiple of 2
