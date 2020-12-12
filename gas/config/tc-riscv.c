@@ -269,6 +269,10 @@ riscv_multi_subset_supports (enum riscv_insn_class insn_class)
       return riscv_subset_supports ("b") || riscv_subset_supports ("zbb")
 	|| riscv_subset_supports ("zbp");
 
+    case INSN_CLASS_B_OR_ZBF_OR_ZBP:
+      return riscv_subset_supports ("b") || riscv_subset_supports ("zbf")
+	|| riscv_subset_supports ("zbp");
+
     default:
       as_fatal ("Unreachable");
       return FALSE;
