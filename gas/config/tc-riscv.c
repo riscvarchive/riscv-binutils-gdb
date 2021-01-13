@@ -108,8 +108,8 @@ riscv_set_default_isa_spec (const char *s)
   enum riscv_isa_spec_class class;
   if (!riscv_get_isa_spec_class (s, &class))
     {
-      as_bad ("Unknown default ISA spec `%s' set by "
-             "-misa-spec or --with-isa-spec", s);
+      as_bad ("unknown default ISA spec `%s' set by "
+	      "-misa-spec or --with-isa-spec", s);
       return 0;
     }
   else
@@ -136,8 +136,8 @@ riscv_set_default_priv_spec (const char *s)
 
   if (s != NULL)
     {
-      as_bad (_("Unknown default privilege spec `%s' set by "
-               "-mpriv-spec or --with-priv-spec"), s);
+      as_bad (_("unknown default privileged spec `%s' set by "
+		"-mpriv-spec or --with-priv-spec"), s);
       return 0;
     }
 
@@ -160,8 +160,8 @@ riscv_set_default_priv_spec (const char *s)
     }
 
   /* Still can not find the privileged spec class.  */
-  as_bad (_("Unknown default privilege spec `%d.%d.%d' set by "
-           "privilege attributes"),  major, minor, revision);
+  as_bad (_("unknown default privileged spec `%d.%d.%d' set by "
+	    "privileged elf attributes"), major, minor, revision);
   return 0;
 }
 
@@ -242,7 +242,7 @@ riscv_multi_subset_supports (enum riscv_insn_class insn_class)
       return riscv_subset_supports ("zihintpause");
 
     default:
-      as_fatal ("Unreachable");
+      as_fatal ("internal: unreachable");
       return FALSE;
     }
 }
@@ -260,7 +260,7 @@ init_ext_version_hash (const struct riscv_ext_version *table)
     {
       const char *name = table[i].name;
       if (str_hash_insert (hash, name, &table[i], 0) != NULL)
-	as_fatal (_("duplicate %s"), name);
+	as_fatal (_("internal: duplicate %s"), name);
 
       i++;
       while (table[i].name
@@ -612,7 +612,7 @@ init_opcode_names_hash (void)
 
   for (opcode = &opcode_name_list[0]; opcode->name != NULL; ++opcode)
     if (str_hash_insert (opcode_names_hash, opcode->name, opcode, 0) != NULL)
-      as_fatal (_("duplicate %s"), opcode->name);
+      as_fatal (_("internal: duplicate %s"), opcode->name);
 }
 
 /* Find `s` is a valid opcode name or not, return the opcode name info
@@ -670,7 +670,7 @@ hash_reg_name (enum reg_class class, const char *name, unsigned n)
 {
   void *hash = ENCODE_REG_HASH (class, n);
   if (str_hash_insert (reg_names_hash, name, hash, 0) != NULL)
-    as_fatal (_("duplicate %s"), name);
+    as_fatal (_("internal: duplicate %s"), name);
 }
 
 static void
@@ -763,7 +763,7 @@ riscv_csr_address (const char *csr_name,
     }
 
   if (riscv_opts.csr_check && !result)
-    as_warn (_("Invalid CSR `%s' for the current ISA"), csr_name);
+    as_warn (_("invalid CSR `%s' for the current ISA"), csr_name);
 
   while (entry != NULL)
     {
@@ -784,7 +784,7 @@ riscv_csr_address (const char *csr_name,
       const char *priv_name = riscv_get_priv_spec_name (default_priv_spec);
 
       if (priv_name != NULL)
-	as_warn (_("Invalid CSR `%s' for the privilege spec `%s'"),
+	as_warn (_("invalid CSR `%s' for the privileged spec `%s'"),
 		 csr_name, priv_name);
     }
 
@@ -943,14 +943,15 @@ validate_riscv_insn (const struct riscv_opcode *opc, int length)
 		case '3': USE_BITS (OP_MASK_CFUNCT3, OP_SH_CFUNCT3); break;
 		case '2': USE_BITS (OP_MASK_CFUNCT2, OP_SH_CFUNCT2); break;
 		default:
-		  as_bad (_("internal: bad RISC-V opcode"
-			    " (unknown operand type `CF%c'): %s %s"),
+		  as_bad (_("internal: bad RISC-V opcode "
+			    "(unknown operand type `CF%c'): %s %s"),
 			  c, opc->name, opc->args);
 		  return FALSE;
 	      }
 	    break;
 	  default:
-	    as_bad (_("internal: bad RISC-V opcode (unknown operand type `C%c'): %s %s"),
+	    as_bad (_("internal: bad RISC-V opcode "
+		      "(unknown operand type `C%c'): %s %s"),
 		    c, opc->name, opc->args);
 	    return FALSE;
 	  }
@@ -995,8 +996,8 @@ validate_riscv_insn (const struct riscv_opcode *opc, int length)
 	    case '3': USE_BITS (OP_MASK_FUNCT3, OP_SH_FUNCT3); break;
 	    case '2': USE_BITS (OP_MASK_FUNCT2, OP_SH_FUNCT2); break;
 	    default:
-	      as_bad (_("internal: bad RISC-V opcode"
-			" (unknown operand type `F%c'): %s %s"),
+	      as_bad (_("internal: bad RISC-V opcode "
+			"(unknown operand type `F%c'): %s %s"),
 		      c, opc->name, opc->args);
 	    return FALSE;
 	  }
@@ -1007,8 +1008,8 @@ validate_riscv_insn (const struct riscv_opcode *opc, int length)
 	    case '4': USE_BITS (OP_MASK_OP, OP_SH_OP); break;
 	    case '2': USE_BITS (OP_MASK_OP2, OP_SH_OP2); break;
 	    default:
-	      as_bad (_("internal: bad RISC-V opcode"
-			" (unknown operand type `F%c'): %s %s"),
+	      as_bad (_("internal: bad RISC-V opcode "
+			"(unknown operand type `F%c'): %s %s"),
 		      c, opc->name, opc->args);
 	     return FALSE;
 	  }
@@ -1022,7 +1023,8 @@ validate_riscv_insn (const struct riscv_opcode *opc, int length)
 #undef USE_BITS
   if (used_bits != required_bits)
     {
-      as_bad (_("internal: bad RISC-V opcode (bits 0x%lx undefined): %s %s"),
+      as_bad (_("internal: bad RISC-V opcode "
+		"(bits 0x%lx undefined): %s %s"),
 	      ~(unsigned long)(used_bits & required_bits),
 	      opc->name, opc->args);
       return FALSE;
@@ -1050,7 +1052,7 @@ init_opcode_hash (const struct riscv_opcode *opcodes,
     {
       const char *name = opcodes[i].name;
       if (str_hash_insert (hash, name, &opcodes[i], 0) != NULL)
-	as_fatal (_("duplicate %s"), name);
+	as_fatal (_("internal: duplicate %s"), name);
 
       do
 	{
@@ -1061,7 +1063,8 @@ init_opcode_hash (const struct riscv_opcode *opcodes,
 	      else
 		length = 0; /* Let assembler determine the length.  */
 	      if (!validate_riscv_insn (&opcodes[i], length))
-		as_fatal (_("Broken assembler.  No assembly attempted."));
+		as_fatal (_("internal: broken assembler.  "
+			    "No assembly attempted"));
 	    }
 	  else
 	    gas_assert (!insn_directive_p);
@@ -1082,7 +1085,7 @@ md_begin (void)
   unsigned long mach = xlen == 64 ? bfd_mach_riscv64 : bfd_mach_riscv32;
 
   if (! bfd_set_arch_mach (stdoutput, bfd_arch_riscv, mach))
-    as_warn (_("Could not set architecture and machine"));
+    as_warn (_("could not set architecture and machine"));
 
   op_hash = init_opcode_hash (riscv_opcodes, FALSE);
   insn_type_hash = init_opcode_hash (riscv_insn_types, TRUE);
@@ -1171,7 +1174,8 @@ append_insn (struct riscv_cl_insn *ip, expressionS *address_expr,
 	{
 	  howto = bfd_reloc_type_lookup (stdoutput, reloc_type);
 	  if (howto == NULL)
-	    as_bad (_("Unsupported RISC-V relocation number %d"), reloc_type);
+	    as_bad (_("internal: usupported RISC-V relocation number %d"),
+		    reloc_type);
 
 	  ip->fixp = fix_new_exp (ip->frag, ip->where,
 				  bfd_get_reloc_size (howto),
@@ -1256,7 +1260,7 @@ macro_build (expressionS *ep, const char *name, const char *fmt, ...)
 	case ',':
 	  continue;
 	default:
-	  as_fatal (_("internal error: invalid macro"));
+	  as_fatal (_("internal: invalid macro"));
 	}
       break;
     }
@@ -1281,7 +1285,7 @@ md_assemblef (const char *format, ...)
   r = vasprintf (&buf, format, ap);
 
   if (r < 0)
-    as_fatal (_("internal error: vasprintf failed"));
+    as_fatal (_("internal: vasprintf failed"));
 
   md_assemble (buf);
   free(buf);
@@ -1316,7 +1320,7 @@ check_absolute_expr (struct riscv_cl_insn *ip, expressionS *ex,
     as_bad (_("unknown CSR `%s'"),
 	    S_GET_NAME (ex->X_add_symbol));
   else if (ex->X_op != O_constant)
-    as_bad (_("Instruction %s requires absolute expression"),
+    as_bad (_("instruction %s requires absolute expression"),
 	    ip->insn_mo->name);
   normalize_constant_expr (ex);
 }
@@ -1583,7 +1587,7 @@ macro (struct riscv_cl_insn *ip, expressionS *imm_expr,
       break;
 
     default:
-      as_bad (_("Macro %s not implemented"), ip->insn_mo->name);
+      as_bad (_("internal: macro %s not implemented"), ip->insn_mo->name);
       break;
     }
 }
@@ -1650,8 +1654,8 @@ parse_relocation (char **str, bfd_reloc_code_real_type *reloc,
 	if (*reloc != BFD_RELOC_UNUSED
 	    && !bfd_reloc_type_lookup (stdoutput, *reloc))
 	  {
-	    as_bad ("relocation %s isn't supported by the current ABI",
-		    percent_op->str);
+	    as_bad ("internal: relocation %s isn't supported by the "
+		    "current ABI", percent_op->str);
 	    *reloc = BFD_RELOC_UNUSED;
 	  }
 	return TRUE;
@@ -1926,7 +1930,7 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 			 report the detailed warning message here.  */
 		      if (save_c)
 			*(argsStart - 1) = save_c;
-		      as_warn (_("Read-only CSR is written `%s'"), str);
+		      as_warn (_("read-only CSR is written `%s'"), str);
 		      insn_with_csr = FALSE;
 		    }
 		}
@@ -2166,8 +2170,8 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 			    || imm_expr->X_add_number < 0
 			    || imm_expr->X_add_number >= 64)
 			  {
-			    as_bad (_("bad value for funct6 field, "
-				      "value must be 0...64"));
+			    as_bad (_("bad value for compressed funct6 "
+				      "field, value must be 0...64"));
 			    break;
 			  }
 
@@ -2181,8 +2185,8 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 			    || imm_expr->X_add_number < 0
 			    || imm_expr->X_add_number >= 16)
 			  {
-			    as_bad (_("bad value for funct4 field, "
-				      "value must be 0...15"));
+			    as_bad (_("bad value for compressed funct4 "
+				      "field, value must be 0...15"));
 			    break;
 			  }
 
@@ -2196,8 +2200,8 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 			    || imm_expr->X_add_number < 0
 			    || imm_expr->X_add_number >= 8)
 			  {
-			    as_bad (_("bad value for funct3 field, "
-				      "value must be 0...7"));
+			    as_bad (_("bad value for compressed funct3 "
+				      "field, value must be 0...7"));
 			    break;
 			  }
 			INSERT_OPERAND (CFUNCT3, *ip, imm_expr->X_add_number);
@@ -2210,8 +2214,8 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 			    || imm_expr->X_add_number < 0
 			    || imm_expr->X_add_number >= 4)
 			  {
-			    as_bad (_("bad value for funct2 field, "
-				      "value must be 0...3"));
+			    as_bad (_("bad value for compressed funct2 "
+				      "field, value must be 0...3"));
 			    break;
 			  }
 			INSERT_OPERAND (CFUNCT2, *ip, imm_expr->X_add_number);
@@ -2219,14 +2223,14 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 			s = expr_end;
 			continue;
 		      default:
-			as_bad (_("bad compressed FUNCT field"
-				  " specifier 'CF%c'\n"),
-				*args);
+			as_bad (_("internal: unknown compressed funct "
+				  "field specifier `CF%c'"), *args);
 		    }
 		  break;
 
 		default:
-		  as_bad (_("bad RVC field specifier 'C%c'\n"), *args);
+		  as_bad (_("internal: unknown compressed field "
+			    "specifier `C%c'"), *args);
 		}
 	      break;
 
@@ -2249,7 +2253,7 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 	      my_getExpression (imm_expr, s);
 	      check_absolute_expr (ip, imm_expr, FALSE);
 	      if ((unsigned long) imm_expr->X_add_number > 31)
-		as_bad (_("Improper shift amount (%lu)"),
+		as_bad (_("improper shift amount (%lu)"),
 			(unsigned long) imm_expr->X_add_number);
 	      INSERT_OPERAND (SHAMTW, *ip, imm_expr->X_add_number);
 	      imm_expr->X_op = O_absent;
@@ -2260,7 +2264,7 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 	      my_getExpression (imm_expr, s);
 	      check_absolute_expr (ip, imm_expr, FALSE);
 	      if ((unsigned long) imm_expr->X_add_number >= xlen)
-		as_bad (_("Improper shift amount (%lu)"),
+		as_bad (_("improper shift amount (%lu)"),
 			(unsigned long) imm_expr->X_add_number);
 	      INSERT_OPERAND (SHAMT, *ip, imm_expr->X_add_number);
 	      imm_expr->X_op = O_absent;
@@ -2271,7 +2275,7 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 	      my_getExpression (imm_expr, s);
 	      check_absolute_expr (ip, imm_expr, FALSE);
 	      if ((unsigned long) imm_expr->X_add_number > 31)
-		as_bad (_("Improper CSRxI immediate (%lu)"),
+		as_bad (_("improper CSRxI immediate (%lu)"),
 			(unsigned long) imm_expr->X_add_number);
 	      INSERT_OPERAND (RS1, *ip, imm_expr->X_add_number);
 	      imm_expr->X_op = O_absent;
@@ -2288,7 +2292,7 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 		  my_getExpression (imm_expr, s);
 		  check_absolute_expr (ip, imm_expr, TRUE);
 		  if ((unsigned long) imm_expr->X_add_number > 0xfff)
-		    as_bad (_("Improper CSR address (%lu)"),
+		    as_bad (_("improper CSR address (%lu)"),
 			    (unsigned long) imm_expr->X_add_number);
 		  INSERT_OPERAND (CSR, *ip, imm_expr->X_add_number);
 		  imm_expr->X_op = O_absent;
@@ -2530,7 +2534,8 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 		  s = expr_end;
 		  continue;
 		default:
-		  as_bad (_("bad Opcode field specifier 'O%c'\n"), *args);
+		  as_bad (_("internal: unknown opcode field "
+			    "specifier `O%c'"), *args);
 		}
 	      break;
 
@@ -2584,7 +2589,8 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 		  continue;
 
 		default:
-		  as_bad (_("bad FUNCT field specifier 'F%c'\n"), *args);
+		  as_bad (_("internal: unknown funct field "
+			    "specifier `F%c'\n"), *args);
 		}
 	      break;
 
@@ -2598,7 +2604,7 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 	      continue;
 
 	    default:
-	      as_fatal (_("internal error: bad argument type %c"), *args);
+	      as_fatal (_("internal: unknown argument type `%c'"), *args);
 	    }
 	  break;
 	}
@@ -2992,7 +2998,7 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
 		      fixP->fx_next->fx_r_type = BFD_RELOC_RISCV_SUB6;
 		    }
 		  else
-		    as_fatal (_("internal error: bad CFA value #%d"), subtype);
+		    as_fatal (_("internal: bad CFA value #%d"), subtype);
 		  break;
 		}
 	      break;
@@ -3073,7 +3079,7 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
     default:
       /* We ignore generic BFD relocations we don't know about.  */
       if (bfd_reloc_type_lookup (stdoutput, fixP->fx_r_type) != NULL)
-	as_fatal (_("internal error: bad relocation #%d"), fixP->fx_r_type);
+	as_fatal (_("internal: bad relocation #%d"), fixP->fx_r_type);
     }
 
   if (fixP->fx_subsy != NULL)
@@ -3197,7 +3203,7 @@ s_riscv_option (int x ATTRIBUTE_UNUSED)
     }
   else
     {
-      as_warn (_("Unrecognized .option directive: %s\n"), name);
+      as_warn (_("unrecognized .option directive: %s\n"), name);
     }
   *input_line_pointer = ch;
   demand_empty_rest_of_line ();
@@ -3217,7 +3223,7 @@ s_dtprel (int bytes)
 
   if (ex.X_op != O_symbol)
     {
-      as_bad (_("Unsupported use of %s"), (bytes == 8
+      as_bad (_("unsupported use of %s"), (bytes == 8
 					   ? ".dtpreldword"
 					   : ".dtprelword"));
       ignore_rest_of_line ();
@@ -3658,7 +3664,7 @@ riscv_write_out_attrs (void)
        number = (number * 10) + (*p - '0');
       else
        {
-         as_bad (_("internal: bad RISC-V priv spec string (%s)"), priv_str);
+         as_bad (_("internal: bad RISC-V privileged spec (%s)"), priv_str);
          return;
        }
     }
@@ -3742,7 +3748,8 @@ s_riscv_attribute (int ignored ATTRIBUTE_UNUSED)
       if (!start_assemble)
 	riscv_set_arch (attr[Tag_RISCV_arch].s);
       else
-	as_fatal (_(".attribute arch must set before any instructions"));
+	as_fatal (_("architecture elf attributes must set before "
+		    "any instructions"));
 
       if (old_xlen != xlen)
 	{
@@ -3751,7 +3758,7 @@ s_riscv_attribute (int ignored ATTRIBUTE_UNUSED)
 	  bfd_find_target (riscv_target_format (), stdoutput);
 
 	  if (! bfd_set_arch_mach (stdoutput, bfd_arch_riscv, mach))
-	    as_warn (_("Could not set architecture and machine"));
+	    as_warn (_("could not set architecture and machine"));
 	}
       break;
 
@@ -3759,7 +3766,8 @@ s_riscv_attribute (int ignored ATTRIBUTE_UNUSED)
     case Tag_RISCV_priv_spec_minor:
     case Tag_RISCV_priv_spec_revision:
       if (start_assemble)
-       as_fatal (_(".attribute priv spec must set before any instructions"));
+       as_fatal (_("privileged elf attributes must set before "
+		   "any instructions"));
       break;
 
     default:
