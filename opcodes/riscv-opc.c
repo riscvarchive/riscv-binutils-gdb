@@ -2177,8 +2177,10 @@ const struct riscv_opcode riscv_opcodes[] =
 {"vfwnmsac.vf", 0, INSN_CLASS_V_AND_F, "Vd,S,VtVm", MATCH_VFWNMSACVF, MASK_VFWNMSACVF, match_widen_vd_neq_vs2_neq_vm, 0},
 
 {"vfsqrt.v",   0, INSN_CLASS_V_AND_F, "Vd,VtVm", MATCH_VFSQRTV, MASK_VFSQRTV, match_vd_neq_vm, 0},
-{"vfrsqrte7.v",0, INSN_CLASS_V_AND_F, "Vd,VtVm", MATCH_VFRSQRTE7V, MASK_VFRSQRTE7V, match_vd_neq_vm, 0},
-{"vfrece7.v",  0, INSN_CLASS_V_AND_F, "Vd,VtVm", MATCH_VFRECE7V, MASK_VFRECE7V, match_vd_neq_vm, 0},
+{"vfrsqrt7.v", 0, INSN_CLASS_V_AND_F, "Vd,VtVm", MATCH_VFRSQRT7V, MASK_VFRSQRT7V, match_vd_neq_vm, 0},
+{"vfrsqrte7.v",0, INSN_CLASS_V_AND_F, "Vd,VtVm", MATCH_VFRSQRT7V, MASK_VFRSQRT7V, match_vd_neq_vm, 0},
+{"vfrec7.v",   0, INSN_CLASS_V_AND_F, "Vd,VtVm", MATCH_VFREC7V, MASK_VFREC7V, match_vd_neq_vm, 0},
+{"vfrece7.v",  0, INSN_CLASS_V_AND_F, "Vd,VtVm", MATCH_VFREC7V, MASK_VFREC7V, match_vd_neq_vm, 0},
 {"vfclass.v",  0, INSN_CLASS_V_AND_F, "Vd,VtVm", MATCH_VFCLASSV, MASK_VFCLASSV, match_vd_neq_vm, 0},
 
 {"vfmin.vv",   0, INSN_CLASS_V_AND_F, "Vd,Vt,VsVm", MATCH_VFMINVV, MASK_VFMINVV, match_vd_neq_vm, 0},

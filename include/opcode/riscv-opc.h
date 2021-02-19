@@ -2749,10 +2749,10 @@ funct6 VM  VS2  VS1/RS1/IMM funct3 VD   opcode
 
 #define MATCH_VFSQRTV    0x4c001057
 #define MASK_VFSQRTV     0xfc0ff07f
-#define MATCH_VFRSQRTE7V 0x4c021057
-#define MASK_VFRSQRTE7V  0xfc0ff07f
-#define MATCH_VFRECE7V   0x4c029057
-#define MASK_VFRECE7V    0xfc0ff07f
+#define MATCH_VFRSQRT7V  0x4c021057
+#define MASK_VFRSQRT7V   0xfc0ff07f
+#define MATCH_VFREC7V    0x4c029057
+#define MASK_VFREC7V     0xfc0ff07f
 #define MATCH_VFCLASSV   0x4c081057
 #define MASK_VFCLASSV    0xfc0ff07f
 
