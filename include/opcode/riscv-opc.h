@@ -557,6 +557,7 @@
 #define MASK_VSETVLI  0x8000707f
 
 /* Temporary Load/store encoding info
+
 MOP load
 00 unit-stride		LE<EEW>, VLE<EEW>FF, VL<nf>RE<EEW> (nf = 1, 2, 4, 8)
 01 indexed-unordered	VLUXEI<EEW>
@@ -573,59 +574,63 @@ VM 0 masked
 VM 1 unmasked
 
 LUMOP
-00000 unit-stride
-00xxx reserved, x!=0
-01000 unit-stride, whole registers
-01xxx reserved, x!=0
+00000 unit-stride load
+01000 unit-stride, whole registers load
+01011 unit-stride, mask load, EEW = 1
 10000 unit-stride first-fault
-1xxxx reserved, x!=0
+xxxxx other encodings reserved, x != 0
 
 SUMOP
-00000 unit-stride
-00xxx reserved, x!=0
-01000 unit-stride, whole registers
-01xxx reserved, x!=0
-1xxxx reserved
+00000 unit-stride store
+01000 unit-stride, whole registers store
+01011 unit-stride, mask store, EEW = 1
+0xxxx other encodings reserved, x != 0
 
-EEW =
+`-` means EEW =
 MEW WIDTH
-- ---
-x 001	FLH/FSH
-x 010	FLW/FSW
-x 011	FLD/FSW
-x 100	FLQ/FSQ
-0 000	VLxE8/VSxE8, VLxEI8/VSxEI8, VL<nf>RE8, VS<nf>R
-0 101	VLxE16/VSxE16, VLxEI16/VSxEI16, VL<nf>RE16
-0 110	VLxE32/VSxE32, VLxEI32/VSxEI32, VL<nf>RE32
-0 111	VLxE64/VSxE64, VLxEI64/VSxEI64, VL<nf>RE64
-1 000	VLxE128/VSxE128, VL<nf>RE128
-1 101	VLxE256/VSxE256, VL<nf>RE256
-1 110	VLxE512/VSxE512, VL<nf>RE512
-1 111	VLxE1024/VSxE1024, VL<nf>RE1024
+x   001   FLH/FSH
+x   010   FLW/FSW
+x   011   FLD/FSW
+x   100   FLQ/FSQ
+0   000   VLxE8/VSxE8, VLxEI8/VSxEI8, VL<nf>RE8, VS<nf>R
+0   101   VLxE16/VSxE16, VLxEI16/VSxEI16, VL<nf>RE16
+0   110   VLxE32/VSxE32, VLxEI32/VSxEI32, VL<nf>RE32
+0   111   VLxE64/VSxE64, VLxEI64/VSxEI64, VL<nf>RE64
+1   000   VLxE128/VSxE128, VL<nf>RE128
+1   101   VLxE256/VSxE256, VL<nf>RE256
+1   110   VLxE512/VSxE512, VL<nf>RE512
+1   111   VLxE1024/VSxE1024, VL<nf>RE1024
 
-NF MEW MOP VM LUMOP/RS2 RS1 WIDTH VD opcode
-000 - 00 x 00000 xxxxx --- xxxxx 0000111 VLE<EEW>
-000 - 00 x 00000 xxxxx --- xxxxx 0100111 VSE<EEW>
-000 - 10 x xxxxx xxxxx --- xxxxx 0000111 VLSE<EEW>
-000 - 10 x xxxxx xxxxx --- xxxxx 0100111 VSSE<EEW>
-000 0 11 x xxxxx xxxxx --- xxxxx 0000111 VLOXE<EEW>I
-000 0 11 x xxxxx xxxxx --- xxxxx 0100111 VSOXE<EEW>I
-000 0 01 x xxxxx xxxxx --- xxxxx 0000111 VLUXE<EEW>I
-000 0 01 x xxxxx xxxxx --- xxxxx 0100111 VSUXE<EEW>I
-000 - 00 x 10000 xxxxx --- xxxxx 0000111 VLE<EEW>FF
-xxx - 00 1 01000 xxxxx --- xxxxx 0000111 VL<nf>RE<EEW>, nf = 1,2,4,8
-xxx 0 00 1 01000 xxxxx 000 xxxxx 0100111 VS<nf>R, nf = 1,2,4,8
+NF  MEW MOP VM LUMOP/RS2 RS1   WIDTH VD    opcode
+000 -   00  x  00000     xxxxx ---   xxxxx 0000111 VLE<EEW>
+000 -   00  x  00000     xxxxx ---   xxxxx 0100111 VSE<EEW>
+000 -   00  1  01011     xxxxx ---   xxxxx 0000111 VLE, EEW = 1
+000 -   00  1  01011     xxxxx ---   xxxxx 0100111 VSE, EEW = 1
+000 -   10  x  xxxxx     xxxxx ---   xxxxx 0000111 VLSE<EEW>
+000 -   10  x  xxxxx     xxxxx ---   xxxxx 0100111 VSSE<EEW>
+000 0   11  x  xxxxx     xxxxx ---   xxxxx 0000111 VLOXE<EEW>I
+000 0   11  x  xxxxx     xxxxx ---   xxxxx 0100111 VSOXE<EEW>I
+000 0   01  x  xxxxx     xxxxx ---   xxxxx 0000111 VLUXE<EEW>I
+000 0   01  x  xxxxx     xxxxx ---   xxxxx 0100111 VSUXE<EEW>I
+000 -   00  x  10000     xxxxx ---   xxxxx 0000111 VLE<EEW>FF
+xxx -   00  1  01000     xxxxx ---   xxxxx 0000111 VL<nf>RE<EEW>, nf = 1,2,4,8
+xxx 0   00  1  01000     xxxxx 000   xxxxx 0100111 VS<nf>R, nf = 1,2,4,8
 
-xxx - 00 x 00000 xxxxx --- xxxxx 0000111 VLSEG<nf>E<EEW>
-xxx - 00 x 00000 xxxxx --- xxxxx 0100111 VSSEG<nf>E<EEW>
-xxx - 10 x 00000 xxxxx --- xxxxx 0000111 VLSSEG<nf>E<EEW>
-xxx - 10 x 00000 xxxxx --- xxxxx 0100111 VSSSEG<nf>E<EEW>
-xxx - 11 x 00000 xxxxx --- xxxxx 0000111 VLOXSEG<nf>E<EEW>I
-xxx - 11 x 00000 xxxxx --- xxxxx 0100111 VSOXSEG<nf>E<EEW>I
-xxx - 01 x 00000 xxxxx --- xxxxx 0000111 VLUXSEG<nf>E<EEW>I
-xxx - 01 x 00000 xxxxx --- xxxxx 0100111 VSUXSEG<nf>E<EEW>I
-xxx - 00 x 10000 xxxxx --- xxxxx 0000111 VLSEG<nf>E<EEW>FF
+xxx -   00  x  00000     xxxxx ---   xxxxx 0000111 VLSEG<nf>E<EEW>
+xxx -   00  x  00000     xxxxx ---   xxxxx 0100111 VSSEG<nf>E<EEW>
+xxx -   10  x  00000     xxxxx ---   xxxxx 0000111 VLSSEG<nf>E<EEW>
+xxx -   10  x  00000     xxxxx ---   xxxxx 0100111 VSSSEG<nf>E<EEW>
+xxx -   11  x  00000     xxxxx ---   xxxxx 0000111 VLOXSEG<nf>E<EEW>I
+xxx -   11  x  00000     xxxxx ---   xxxxx 0100111 VSOXSEG<nf>E<EEW>I
+xxx -   01  x  00000     xxxxx ---   xxxxx 0000111 VLUXSEG<nf>E<EEW>I
+xxx -   01  x  00000     xxxxx ---   xxxxx 0100111 VSUXSEG<nf>E<EEW>I
+xxx -   00  x  10000     xxxxx ---   xxxxx 0000111 VLSEG<nf>E<EEW>FF
 */
+
+#define MATCH_VLE1V    0x02b00007
+#define MASK_VLE1V     0xfff0707f
+#define MATCH_VSE1V    0x02b00027
+#define MASK_VSE1V     0xfff0707f
 
 #define MATCH_VLE8V    0x00000007
 #define MASK_VLE8V     0xfdf0707f
