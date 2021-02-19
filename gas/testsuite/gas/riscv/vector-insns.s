@@ -2950,8 +2950,12 @@
 	vfsqrt.v v4, v8, v0.t
 	vfrsqrte7.v v4, v8
 	vfrsqrte7.v v4, v8, v0.t
+	vfrsqrt7.v v4, v8
+	vfrsqrt7.v v4, v8, v0.t
 	vfrece7.v v4, v8
 	vfrece7.v v4, v8, v0.t
+	vfrec7.v v4, v8
+	vfrec7.v v4, v8, v0.t
 	vfclass.v v4, v8
 	vfclass.v v4, v8, v0.t
 
