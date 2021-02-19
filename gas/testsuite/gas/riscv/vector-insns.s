@@ -18,6 +18,11 @@
 	vsetvli a0, a1, e256, m2, ta,mu, d4
 	vsetvli a0, a1, e256, m2, tu,mu, d4
 
+	vle1.v v4, (a0)
+	vle1.v v4, 0(a0)
+	vse1.v v4, (a0)
+	vse1.v v4, 0(a0)
+
 	vle8.v v4, (a0)
 	vle8.v v4, 0(a0)
 	vle8.v v4, (a0), v0.t

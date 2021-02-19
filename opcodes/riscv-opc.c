@@ -1206,6 +1206,9 @@ const struct riscv_opcode riscv_opcodes[] =
 {"vsetvl",     0, INSN_CLASS_V,  "d,s,t", MATCH_VSETVL, MASK_VSETVL, match_opcode, 0},
 {"vsetvli",    0, INSN_CLASS_V,  "d,s,Vc", MATCH_VSETVLI, MASK_VSETVLI, match_opcode, 0},
 
+{"vle1.v",     0, INSN_CLASS_V,  "Vd,0(s)", MATCH_VLE1V, MASK_VLE1V, match_opcode, INSN_DREF },
+{"vse1.v",     0, INSN_CLASS_V,  "Vd,0(s)", MATCH_VSE1V, MASK_VSE1V, match_opcode, INSN_DREF },
+
 {"vle8.v",     0, INSN_CLASS_V,  "Vd,0(s)Vm", MATCH_VLE8V, MASK_VLE8V, match_vd_neq_vm, INSN_DREF },
 {"vle16.v",    0, INSN_CLASS_V,  "Vd,0(s)Vm", MATCH_VLE16V, MASK_VLE16V, match_vd_neq_vm, INSN_DREF },
 {"vle32.v",    0, INSN_CLASS_V,  "Vd,0(s)Vm", MATCH_VLE32V, MASK_VLE32V, match_vd_neq_vm, INSN_DREF },
