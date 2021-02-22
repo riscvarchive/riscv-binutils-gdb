@@ -8,23 +8,11 @@
 	vle32ff.v v0, (a0), v0.t
 	vle64.v v0, (a0), v0.t
 	vle64ff.v v0, (a0), v0.t
-	vle128.v v0, (a0), v0.t
-	vle128ff.v v0, (a0), v0.t
-	vle256.v v0, (a0), v0.t
-	vle256ff.v v0, (a0), v0.t
-	vle512.v v0, (a0), v0.t
-	vle512ff.v v0, (a0), v0.t
-	vle1024.v v0, (a0), v0.t
-	vle1024ff.v v0, (a0), v0.t
 
 	vse8.v v0, (a0), v0.t		# vd overlap vm
 	vse16.v v0, (a0), v0.t
 	vse32.v v0, (a0), v0.t
 	vse64.v v0, (a0), v0.t
-	vse128.v v0, (a0), v0.t
-	vse256.v v0, (a0), v0.t
-	vse512.v v0, (a0), v0.t
-	vse1024.v v0, (a0), v0.t
 
 # Vector Strided Loads and Stores
 
@@ -32,19 +20,11 @@
 	vlse16.v v0, (a0), a1, v0.t
 	vlse32.v v0, (a0), a1, v0.t
 	vlse64.v v0, (a0), a1, v0.t
-	vlse128.v v0, (a0), a1, v0.t
-	vlse256.v v0, (a0), a1, v0.t
-	vlse512.v v0, (a0), a1, v0.t
-	vlse1024.v v0, (a0), a1, v0.t
 
 	vsse8.v v0, (a0), a1, v0.t
 	vsse16.v v0, (a0), a1, v0.t
 	vsse32.v v0, (a0), a1, v0.t
 	vsse64.v v0, (a0), a1, v0.t
-	vsse128.v v0, (a0), a1, v0.t
-	vsse256.v v0, (a0), a1, v0.t
-	vsse512.v v0, (a0), a1, v0.t
-	vsse1024.v v0, (a0), a1, v0.t
 
 # Vector Ordered Indexed Loads and Stores
 
@@ -176,94 +156,6 @@
 	vsseg8e64.v v0, (a0), v0.t
 	vlseg8e64ff.v v0, (a0), v0.t
 
-	vlseg2e128.v v0, (a0), v0.t
-	vsseg2e128.v v0, (a0), v0.t
-	vlseg2e128ff.v v0, (a0), v0.t
-	vlseg3e128.v v0, (a0), v0.t
-	vsseg3e128.v v0, (a0), v0.t
-	vlseg3e128ff.v v0, (a0), v0.t
-	vlseg4e128.v v0, (a0), v0.t
-	vsseg4e128.v v0, (a0), v0.t
-	vlseg4e128ff.v v0, (a0), v0.t
-	vlseg5e128.v v0, (a0), v0.t
-	vsseg5e128.v v0, (a0), v0.t
-	vlseg5e128ff.v v0, (a0), v0.t
-	vlseg6e128.v v0, (a0), v0.t
-	vsseg6e128.v v0, (a0), v0.t
-	vlseg6e128ff.v v0, (a0), v0.t
-	vlseg7e128.v v0, (a0), v0.t
-	vsseg7e128.v v0, (a0), v0.t
-	vlseg7e128ff.v v0, (a0), v0.t
-	vlseg8e128.v v0, (a0), v0.t
-	vsseg8e128.v v0, (a0), v0.t
-	vlseg8e128ff.v v0, (a0), v0.t
-
-	vlseg2e256.v v0, (a0), v0.t
-	vsseg2e256.v v0, (a0), v0.t
-	vlseg2e256ff.v v0, (a0), v0.t
-	vlseg3e256.v v0, (a0), v0.t
-	vsseg3e256.v v0, (a0), v0.t
-	vlseg3e256ff.v v0, (a0), v0.t
-	vlseg4e256.v v0, (a0), v0.t
-	vsseg4e256.v v0, (a0), v0.t
-	vlseg4e256ff.v v0, (a0), v0.t
-	vlseg5e256.v v0, (a0), v0.t
-	vsseg5e256.v v0, (a0), v0.t
-	vlseg5e256ff.v v0, (a0), v0.t
-	vlseg6e256.v v0, (a0), v0.t
-	vsseg6e256.v v0, (a0), v0.t
-	vlseg6e256ff.v v0, (a0), v0.t
-	vlseg7e256.v v0, (a0), v0.t
-	vsseg7e256.v v0, (a0), v0.t
-	vlseg7e256ff.v v0, (a0), v0.t
-	vlseg8e256.v v0, (a0), v0.t
-	vsseg8e256.v v0, (a0), v0.t
-	vlseg8e256ff.v v0, (a0), v0.t
-
-	vlseg2e512.v v0, (a0), v0.t
-	vsseg2e512.v v0, (a0), v0.t
-	vlseg2e512ff.v v0, (a0), v0.t
-	vlseg3e512.v v0, (a0), v0.t
-	vsseg3e512.v v0, (a0), v0.t
-	vlseg3e512ff.v v0, (a0), v0.t
-	vlseg4e512.v v0, (a0), v0.t
-	vsseg4e512.v v0, (a0), v0.t
-	vlseg4e512ff.v v0, (a0), v0.t
-	vlseg5e512.v v0, (a0), v0.t
-	vsseg5e512.v v0, (a0), v0.t
-	vlseg5e512ff.v v0, (a0), v0.t
-	vlseg6e512.v v0, (a0), v0.t
-	vsseg6e512.v v0, (a0), v0.t
-	vlseg6e512ff.v v0, (a0), v0.t
-	vlseg7e512.v v0, (a0), v0.t
-	vsseg7e512.v v0, (a0), v0.t
-	vlseg7e512ff.v v0, (a0), v0.t
-	vlseg8e512.v v0, (a0), v0.t
-	vsseg8e512.v v0, (a0), v0.t
-	vlseg8e512ff.v v0, (a0), v0.t
-
-	vlseg2e1024.v v0, (a0), v0.t
-	vsseg2e1024.v v0, (a0), v0.t
-	vlseg2e1024ff.v v0, (a0), v0.t
-	vlseg3e1024.v v0, (a0), v0.t
-	vsseg3e1024.v v0, (a0), v0.t
-	vlseg3e1024ff.v v0, (a0), v0.t
-	vlseg4e1024.v v0, (a0), v0.t
-	vsseg4e1024.v v0, (a0), v0.t
-	vlseg4e1024ff.v v0, (a0), v0.t
-	vlseg5e1024.v v0, (a0), v0.t
-	vsseg5e1024.v v0, (a0), v0.t
-	vlseg5e1024ff.v v0, (a0), v0.t
-	vlseg6e1024.v v0, (a0), v0.t
-	vsseg6e1024.v v0, (a0), v0.t
-	vlseg6e1024ff.v v0, (a0), v0.t
-	vlseg7e1024.v v0, (a0), v0.t
-	vsseg7e1024.v v0, (a0), v0.t
-	vlseg7e1024ff.v v0, (a0), v0.t
-	vlseg8e1024.v v0, (a0), v0.t
-	vsseg8e1024.v v0, (a0), v0.t
-	vlseg8e1024ff.v v0, (a0), v0.t
-
 # Vector Strided Segment Loads and Stores
 
 	vlsseg2e8.v v0, (a0), a1, v0.t		# vd overlap vm
@@ -325,66 +217,6 @@
 	vssseg7e64.v v0, (a0), a1, v0.t
 	vlsseg8e64.v v0, (a0), a1, v0.t
 	vssseg8e64.v v0, (a0), a1, v0.t
-
-	vlsseg2e128.v v0, (a0), a1, v0.t
-	vssseg2e128.v v0, (a0), a1, v0.t
-	vlsseg3e128.v v0, (a0), a1, v0.t
-	vssseg3e128.v v0, (a0), a1, v0.t
-	vlsseg4e128.v v0, (a0), a1, v0.t
-	vssseg4e128.v v0, (a0), a1, v0.t
-	vlsseg5e128.v v0, (a0), a1, v0.t
-	vssseg5e128.v v0, (a0), a1, v0.t
-	vlsseg6e128.v v0, (a0), a1, v0.t
-	vssseg6e128.v v0, (a0), a1, v0.t
-	vlsseg7e128.v v0, (a0), a1, v0.t
-	vssseg7e128.v v0, (a0), a1, v0.t
-	vlsseg8e128.v v0, (a0), a1, v0.t
-	vssseg8e128.v v0, (a0), a1, v0.t
-
-	vlsseg2e256.v v0, (a0), a1, v0.t
-	vssseg2e256.v v0, (a0), a1, v0.t
-	vlsseg3e256.v v0, (a0), a1, v0.t
-	vssseg3e256.v v0, (a0), a1, v0.t
-	vlsseg4e256.v v0, (a0), a1, v0.t
-	vssseg4e256.v v0, (a0), a1, v0.t
-	vlsseg5e256.v v0, (a0), a1, v0.t
-	vssseg5e256.v v0, (a0), a1, v0.t
-	vlsseg6e256.v v0, (a0), a1, v0.t
-	vssseg6e256.v v0, (a0), a1, v0.t
-	vlsseg7e256.v v0, (a0), a1, v0.t
-	vssseg7e256.v v0, (a0), a1, v0.t
-	vlsseg8e256.v v0, (a0), a1, v0.t
-	vssseg8e256.v v0, (a0), a1, v0.t
-
-	vlsseg2e512.v v0, (a0), a1, v0.t
-	vssseg2e512.v v0, (a0), a1, v0.t
-	vlsseg3e512.v v0, (a0), a1, v0.t
-	vssseg3e512.v v0, (a0), a1, v0.t
-	vlsseg4e512.v v0, (a0), a1, v0.t
-	vssseg4e512.v v0, (a0), a1, v0.t
-	vlsseg5e512.v v0, (a0), a1, v0.t
-	vssseg5e512.v v0, (a0), a1, v0.t
-	vlsseg6e512.v v0, (a0), a1, v0.t
-	vssseg6e512.v v0, (a0), a1, v0.t
-	vlsseg7e512.v v0, (a0), a1, v0.t
-	vssseg7e512.v v0, (a0), a1, v0.t
-	vlsseg8e512.v v0, (a0), a1, v0.t
-	vssseg8e512.v v0, (a0), a1, v0.t
-
-	vlsseg2e1024.v v0, (a0), a1, v0.t
-	vssseg2e1024.v v0, (a0), a1, v0.t
-	vlsseg3e1024.v v0, (a0), a1, v0.t
-	vssseg3e1024.v v0, (a0), a1, v0.t
-	vlsseg4e1024.v v0, (a0), a1, v0.t
-	vssseg4e1024.v v0, (a0), a1, v0.t
-	vlsseg5e1024.v v0, (a0), a1, v0.t
-	vssseg5e1024.v v0, (a0), a1, v0.t
-	vlsseg6e1024.v v0, (a0), a1, v0.t
-	vssseg6e1024.v v0, (a0), a1, v0.t
-	vlsseg7e1024.v v0, (a0), a1, v0.t
-	vssseg7e1024.v v0, (a0), a1, v0.t
-	vlsseg8e1024.v v0, (a0), a1, v0.t
-	vssseg8e1024.v v0, (a0), a1, v0.t
 
 # Vector Ordered Indexed Segment Loads and Stores
 
@@ -504,122 +336,6 @@
 	vsoxseg8ei64.v v4, (a0), v4
 	vsoxseg8ei64.v v0, (a0), v4, v0.t
 
-	vloxseg2ei128.v v4, (a0), v4
-	vloxseg2ei128.v v0, (a0), v4, v0.t
-	vsoxseg2ei128.v v4, (a0), v4
-	vsoxseg2ei128.v v0, (a0), v4, v0.t
-	vloxseg3ei128.v v4, (a0), v4
-	vloxseg3ei128.v v0, (a0), v4, v0.t
-	vsoxseg3ei128.v v4, (a0), v4
-	vsoxseg3ei128.v v0, (a0), v4, v0.t
-	vloxseg4ei128.v v4, (a0), v4
-	vloxseg4ei128.v v0, (a0), v4, v0.t
-	vsoxseg4ei128.v v4, (a0), v4
-	vsoxseg4ei128.v v0, (a0), v4, v0.t
-	vloxseg5ei128.v v4, (a0), v4
-	vloxseg5ei128.v v0, (a0), v4, v0.t
-	vsoxseg5ei128.v v4, (a0), v4
-	vsoxseg5ei128.v v0, (a0), v4, v0.t
-	vloxseg6ei128.v v4, (a0), v4
-	vloxseg6ei128.v v0, (a0), v4, v0.t
-	vsoxseg6ei128.v v4, (a0), v4
-	vsoxseg6ei128.v v0, (a0), v4, v0.t
-	vloxseg7ei128.v v4, (a0), v4
-	vloxseg7ei128.v v0, (a0), v4, v0.t
-	vsoxseg7ei128.v v4, (a0), v4
-	vsoxseg7ei128.v v0, (a0), v4, v0.t
-	vloxseg8ei128.v v4, (a0), v4
-	vloxseg8ei128.v v0, (a0), v4, v0.t
-	vsoxseg8ei128.v v4, (a0), v4
-	vsoxseg8ei128.v v0, (a0), v4, v0.t
-
-	vloxseg2ei256.v v4, (a0), v4
-	vloxseg2ei256.v v0, (a0), v4, v0.t
-	vsoxseg2ei256.v v4, (a0), v4
-	vsoxseg2ei256.v v0, (a0), v4, v0.t
-	vloxseg3ei256.v v4, (a0), v4
-	vloxseg3ei256.v v0, (a0), v4, v0.t
-	vsoxseg3ei256.v v4, (a0), v4
-	vsoxseg3ei256.v v0, (a0), v4, v0.t
-	vloxseg4ei256.v v4, (a0), v4
-	vloxseg4ei256.v v0, (a0), v4, v0.t
-	vsoxseg4ei256.v v4, (a0), v4
-	vsoxseg4ei256.v v0, (a0), v4, v0.t
-	vloxseg5ei256.v v4, (a0), v4
-	vloxseg5ei256.v v0, (a0), v4, v0.t
-	vsoxseg5ei256.v v4, (a0), v4
-	vsoxseg5ei256.v v0, (a0), v4, v0.t
-	vloxseg6ei256.v v4, (a0), v4
-	vloxseg6ei256.v v0, (a0), v4, v0.t
-	vsoxseg6ei256.v v4, (a0), v4
-	vsoxseg6ei256.v v0, (a0), v4, v0.t
-	vloxseg7ei256.v v4, (a0), v4
-	vloxseg7ei256.v v0, (a0), v4, v0.t
-	vsoxseg7ei256.v v4, (a0), v4
-	vsoxseg7ei256.v v0, (a0), v4, v0.t
-	vloxseg8ei256.v v4, (a0), v4
-	vloxseg8ei256.v v0, (a0), v4, v0.t
-	vsoxseg8ei256.v v4, (a0), v4
-	vsoxseg8ei256.v v0, (a0), v4, v0.t
-
-	vloxseg2ei512.v v4, (a0), v4
-	vloxseg2ei512.v v0, (a0), v4, v0.t
-	vsoxseg2ei512.v v4, (a0), v4
-	vsoxseg2ei512.v v0, (a0), v4, v0.t
-	vloxseg3ei512.v v4, (a0), v4
-	vloxseg3ei512.v v0, (a0), v4, v0.t
-	vsoxseg3ei512.v v4, (a0), v4
-	vsoxseg3ei512.v v0, (a0), v4, v0.t
-	vloxseg4ei512.v v4, (a0), v4
-	vloxseg4ei512.v v0, (a0), v4, v0.t
-	vsoxseg4ei512.v v4, (a0), v4
-	vsoxseg4ei512.v v0, (a0), v4, v0.t
-	vloxseg5ei512.v v4, (a0), v4
-	vloxseg5ei512.v v0, (a0), v4, v0.t
-	vsoxseg5ei512.v v4, (a0), v4
-	vsoxseg5ei512.v v0, (a0), v4, v0.t
-	vloxseg6ei512.v v4, (a0), v4
-	vloxseg6ei512.v v0, (a0), v4, v0.t
-	vsoxseg6ei512.v v4, (a0), v4
-	vsoxseg6ei512.v v0, (a0), v4, v0.t
-	vloxseg7ei512.v v4, (a0), v4
-	vloxseg7ei512.v v0, (a0), v4, v0.t
-	vsoxseg7ei512.v v4, (a0), v4
-	vsoxseg7ei512.v v0, (a0), v4, v0.t
-	vloxseg8ei512.v v4, (a0), v4
-	vloxseg8ei512.v v0, (a0), v4, v0.t
-	vsoxseg8ei512.v v4, (a0), v4
-	vsoxseg8ei512.v v0, (a0), v4, v0.t
-
-	vloxseg2ei1024.v v4, (a0), v4
-	vloxseg2ei1024.v v0, (a0), v4, v0.t
-	vsoxseg2ei1024.v v4, (a0), v4
-	vsoxseg2ei1024.v v0, (a0), v4, v0.t
-	vloxseg3ei1024.v v4, (a0), v4
-	vloxseg3ei1024.v v0, (a0), v4, v0.t
-	vsoxseg3ei1024.v v4, (a0), v4
-	vsoxseg3ei1024.v v0, (a0), v4, v0.t
-	vloxseg4ei1024.v v4, (a0), v4
-	vloxseg4ei1024.v v0, (a0), v4, v0.t
-	vsoxseg4ei1024.v v4, (a0), v4
-	vsoxseg4ei1024.v v0, (a0), v4, v0.t
-	vloxseg5ei1024.v v4, (a0), v4
-	vloxseg5ei1024.v v0, (a0), v4, v0.t
-	vsoxseg5ei1024.v v4, (a0), v4
-	vsoxseg5ei1024.v v0, (a0), v4, v0.t
-	vloxseg6ei1024.v v4, (a0), v4
-	vloxseg6ei1024.v v0, (a0), v4, v0.t
-	vsoxseg6ei1024.v v4, (a0), v4
-	vsoxseg6ei1024.v v0, (a0), v4, v0.t
-	vloxseg7ei1024.v v4, (a0), v4
-	vloxseg7ei1024.v v0, (a0), v4, v0.t
-	vsoxseg7ei1024.v v4, (a0), v4
-	vsoxseg7ei1024.v v0, (a0), v4, v0.t
-	vloxseg8ei1024.v v4, (a0), v4
-	vloxseg8ei1024.v v0, (a0), v4, v0.t
-	vsoxseg8ei1024.v v4, (a0), v4
-	vsoxseg8ei1024.v v0, (a0), v4, v0.t
-
 # Vector Unordered Indexed Segment Loads and Stores
 
 	vluxseg2ei8.v v4, (a0), v4		# vd overlap vs2
@@ -738,122 +454,6 @@
 	vsuxseg8ei64.v v4, (a0), v4
 	vsuxseg8ei64.v v0, (a0), v4, v0.t
 
-	vluxseg2ei128.v v4, (a0), v4
-	vluxseg2ei128.v v0, (a0), v4, v0.t
-	vsuxseg2ei128.v v4, (a0), v4
-	vsuxseg2ei128.v v0, (a0), v4, v0.t
-	vluxseg3ei128.v v4, (a0), v4
-	vluxseg3ei128.v v0, (a0), v4, v0.t
-	vsuxseg3ei128.v v4, (a0), v4
-	vsuxseg3ei128.v v0, (a0), v4, v0.t
-	vluxseg4ei128.v v4, (a0), v4
-	vluxseg4ei128.v v0, (a0), v4, v0.t
-	vsuxseg4ei128.v v4, (a0), v4
-	vsuxseg4ei128.v v0, (a0), v4, v0.t
-	vluxseg5ei128.v v4, (a0), v4
-	vluxseg5ei128.v v0, (a0), v4, v0.t
-	vsuxseg5ei128.v v4, (a0), v4
-	vsuxseg5ei128.v v0, (a0), v4, v0.t
-	vluxseg6ei128.v v4, (a0), v4
-	vluxseg6ei128.v v0, (a0), v4, v0.t
-	vsuxseg6ei128.v v4, (a0), v4
-	vsuxseg6ei128.v v0, (a0), v4, v0.t
-	vluxseg7ei128.v v4, (a0), v4
-	vluxseg7ei128.v v0, (a0), v4, v0.t
-	vsuxseg7ei128.v v4, (a0), v4
-	vsuxseg7ei128.v v0, (a0), v4, v0.t
-	vluxseg8ei128.v v4, (a0), v4
-	vluxseg8ei128.v v0, (a0), v4, v0.t
-	vsuxseg8ei128.v v4, (a0), v4
-	vsuxseg8ei128.v v0, (a0), v4, v0.t
-
-	vluxseg2ei256.v v4, (a0), v4
-	vluxseg2ei256.v v0, (a0), v4, v0.t
-	vsuxseg2ei256.v v4, (a0), v4
-	vsuxseg2ei256.v v0, (a0), v4, v0.t
-	vluxseg3ei256.v v4, (a0), v4
-	vluxseg3ei256.v v0, (a0), v4, v0.t
-	vsuxseg3ei256.v v4, (a0), v4
-	vsuxseg3ei256.v v0, (a0), v4, v0.t
-	vluxseg4ei256.v v4, (a0), v4
-	vluxseg4ei256.v v0, (a0), v4, v0.t
-	vsuxseg4ei256.v v4, (a0), v4
-	vsuxseg4ei256.v v0, (a0), v4, v0.t
-	vluxseg5ei256.v v4, (a0), v4
-	vluxseg5ei256.v v0, (a0), v4, v0.t
-	vsuxseg5ei256.v v4, (a0), v4
-	vsuxseg5ei256.v v0, (a0), v4, v0.t
-	vluxseg6ei256.v v4, (a0), v4
-	vluxseg6ei256.v v0, (a0), v4, v0.t
-	vsuxseg6ei256.v v4, (a0), v4
-	vsuxseg6ei256.v v0, (a0), v4, v0.t
-	vluxseg7ei256.v v4, (a0), v4
-	vluxseg7ei256.v v0, (a0), v4, v0.t
-	vsuxseg7ei256.v v4, (a0), v4
-	vsuxseg7ei256.v v0, (a0), v4, v0.t
-	vluxseg8ei256.v v4, (a0), v4
-	vluxseg8ei256.v v0, (a0), v4, v0.t
-	vsuxseg8ei256.v v4, (a0), v4
-	vsuxseg8ei256.v v0, (a0), v4, v0.t
-
-	vluxseg2ei512.v v4, (a0), v4
-	vluxseg2ei512.v v0, (a0), v4, v0.t
-	vsuxseg2ei512.v v4, (a0), v4
-	vsuxseg2ei512.v v0, (a0), v4, v0.t
-	vluxseg3ei512.v v4, (a0), v4
-	vluxseg3ei512.v v0, (a0), v4, v0.t
-	vsuxseg3ei512.v v4, (a0), v4
-	vsuxseg3ei512.v v0, (a0), v4, v0.t
-	vluxseg4ei512.v v4, (a0), v4
-	vluxseg4ei512.v v0, (a0), v4, v0.t
-	vsuxseg4ei512.v v4, (a0), v4
-	vsuxseg4ei512.v v0, (a0), v4, v0.t
-	vluxseg5ei512.v v4, (a0), v4
-	vluxseg5ei512.v v0, (a0), v4, v0.t
-	vsuxseg5ei512.v v4, (a0), v4
-	vsuxseg5ei512.v v0, (a0), v4, v0.t
-	vluxseg6ei512.v v4, (a0), v4
-	vluxseg6ei512.v v0, (a0), v4, v0.t
-	vsuxseg6ei512.v v4, (a0), v4
-	vsuxseg6ei512.v v0, (a0), v4, v0.t
-	vluxseg7ei512.v v4, (a0), v4
-	vluxseg7ei512.v v0, (a0), v4, v0.t
-	vsuxseg7ei512.v v4, (a0), v4
-	vsuxseg7ei512.v v0, (a0), v4, v0.t
-	vluxseg8ei512.v v4, (a0), v4
-	vluxseg8ei512.v v0, (a0), v4, v0.t
-	vsuxseg8ei512.v v4, (a0), v4
-	vsuxseg8ei512.v v0, (a0), v4, v0.t
-
-	vluxseg2ei1024.v v4, (a0), v4
-	vluxseg2ei1024.v v0, (a0), v4, v0.t
-	vsuxseg2ei1024.v v4, (a0), v4
-	vsuxseg2ei1024.v v0, (a0), v4, v0.t
-	vluxseg3ei1024.v v4, (a0), v4
-	vluxseg3ei1024.v v0, (a0), v4, v0.t
-	vsuxseg3ei1024.v v4, (a0), v4
-	vsuxseg3ei1024.v v0, (a0), v4, v0.t
-	vluxseg4ei1024.v v4, (a0), v4
-	vluxseg4ei1024.v v0, (a0), v4, v0.t
-	vsuxseg4ei1024.v v4, (a0), v4
-	vsuxseg4ei1024.v v0, (a0), v4, v0.t
-	vluxseg5ei1024.v v4, (a0), v4
-	vluxseg5ei1024.v v0, (a0), v4, v0.t
-	vsuxseg5ei1024.v v4, (a0), v4
-	vsuxseg5ei1024.v v0, (a0), v4, v0.t
-	vluxseg6ei1024.v v4, (a0), v4
-	vluxseg6ei1024.v v0, (a0), v4, v0.t
-	vsuxseg6ei1024.v v4, (a0), v4
-	vsuxseg6ei1024.v v0, (a0), v4, v0.t
-	vluxseg7ei1024.v v4, (a0), v4
-	vluxseg7ei1024.v v0, (a0), v4, v0.t
-	vsuxseg7ei1024.v v4, (a0), v4
-	vsuxseg7ei1024.v v0, (a0), v4, v0.t
-	vluxseg8ei1024.v v4, (a0), v4
-	vluxseg8ei1024.v v0, (a0), v4, v0.t
-	vsuxseg8ei1024.v v4, (a0), v4
-	vsuxseg8ei1024.v v0, (a0), v4, v0.t
-
 # Vector Load/Store Whole Register Instructions
 
 	vl1r.v v31, (a0)		# OK
@@ -863,30 +463,18 @@
 	vl2re16.v v31, (a0)
 	vl2re32.v v31, (a0)
 	vl2re64.v v31, (a0)
-	vl2re128.v v31, (a0)
-	vl2re256.v v31, (a0)
-	vl2re512.v v31, (a0)
-	vl2re1024.v v31, (a0)
 
 	vl4r.v v30, (a0)		# vd must be aligned to 4
 	vl4re8.v v30, (a0)
 	vl4re16.v v30, (a0)
 	vl4re32.v v30, (a0)
 	vl4re64.v v30, (a0)
-	vl4re128.v v30, (a0)
-	vl4re256.v v30, (a0)
-	vl4re512.v v30, (a0)
-	vl4re1024.v v30, (a0)
 
 	vl8r.v v26, (a0)		# vd must be aligned to 8
 	vl8re8.v v26, (a0)
 	vl8re16.v v26, (a0)
 	vl8re32.v v26, (a0)
 	vl8re64.v v26, (a0)
-	vl8re128.v v26, (a0)
-	vl8re256.v v26, (a0)
-	vl8re512.v v26, (a0)
-	vl8re1024.v v26, (a0)
 
 	vs2r.v v31, (a0)		# vs3 must be aligned to 2
 	vs4r.v v30, (a0)		# vs3 must be aligned to 4
