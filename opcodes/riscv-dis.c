@@ -443,20 +443,18 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 				      : EXTRACT_RVV_VC_IMM (l);
 		unsigned int imm_vlmul = EXTRACT_OPERAND (VLMUL, imm);
 		unsigned int imm_vsew = EXTRACT_OPERAND (VSEW, imm);
-		unsigned int imm_vediv = EXTRACT_OPERAND (VEDIV, imm);
 		unsigned int imm_vta = EXTRACT_OPERAND (VTA, imm);
 		unsigned int imm_vma = EXTRACT_OPERAND (VMA, imm);
 		unsigned int imm_vtype_res = EXTRACT_OPERAND (VTYPE_RES, imm);
 
 		if (imm_vsew < ARRAY_SIZE (riscv_vsew)
 		    && imm_vlmul < ARRAY_SIZE (riscv_vlmul)
-		    && imm_vediv < ARRAY_SIZE (riscv_vediv)
 		    && imm_vta < ARRAY_SIZE (riscv_vta)
 		    && imm_vma < ARRAY_SIZE (riscv_vma)
 		    && ! imm_vtype_res)
-		  print (info->stream, "%s,%s,%s,%s,%s", riscv_vsew[imm_vsew],
+		  print (info->stream, "%s,%s,%s,%s", riscv_vsew[imm_vsew],
 			 riscv_vlmul[imm_vlmul], riscv_vta[imm_vta],
-			 riscv_vma[imm_vma], riscv_vediv[imm_vediv]);
+			 riscv_vma[imm_vma]);
 		else
 		  print (info->stream, "%d", imm);
 	      }

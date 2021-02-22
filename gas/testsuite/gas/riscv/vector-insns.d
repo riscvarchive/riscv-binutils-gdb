@@ -1,4 +1,4 @@
-#as: -march=rv32iafv_zvediv_zvqmac
+#as: -march=rv32iafv
 #objdump: -dr
 
 .*:[ 	]+file format .*
@@ -8,42 +8,42 @@ Disassembly of section .text:
 
 0+000 <.text>:
 [ 	]+[0-9a-f]+:[ 	]+80c5f557[ 	]+vsetvl[ 	]+a0,a1,a2
-[ 	]+[0-9a-f]+:[ 	]+0005f557[ 	]+vsetvli[ 	]+a0,a1,e8,m1,tu,mu,d1
+[ 	]+[0-9a-f]+:[ 	]+0005f557[ 	]+vsetvli[ 	]+a0,a1,e8,m1,tu,mu
 [ 	]+[0-9a-f]+:[ 	]+7ff5f557[ 	]+vsetvli[ 	]+a0,a1,2047
-[ 	]+[0-9a-f]+:[ 	]+2095f557[ 	]+vsetvli[ 	]+a0,a1,e16,m2,tu,mu,d4
-[ 	]+[0-9a-f]+:[ 	]+32b5f557[ 	]+vsetvli[ 	]+a0,a1,e256,m8,tu,mu,d8
-[ 	]+[0-9a-f]+:[ 	]+3335f557[ 	]+vsetvli[ 	]+a0,a1,e512,m8,tu,mu,d8
-[ 	]+[0-9a-f]+:[ 	]+33b5f557[ 	]+vsetvli[ 	]+a0,a1,e1024,m8,tu,mu,d8
-[ 	]+[0-9a-f]+:[ 	]+3385f557[ 	]+vsetvli[ 	]+a0,a1,e1024,m1,tu,mu,d8
-[ 	]+[0-9a-f]+:[ 	]+33f5f557[ 	]+vsetvli[ 	]+a0,a1,e1024,mf2,tu,mu,d8
-[ 	]+[0-9a-f]+:[ 	]+1365f557[ 	]+vsetvli[ 	]+a0,a1,e512,mf4,tu,mu,d2
-[ 	]+[0-9a-f]+:[ 	]+22d5f557[ 	]+vsetvli[ 	]+a0,a1,e256,mf8,tu,mu,d4
-[ 	]+[0-9a-f]+:[ 	]+2695f557[ 	]+vsetvli[ 	]+a0,a1,e256,m2,ta,mu,d4
-[ 	]+[0-9a-f]+:[ 	]+2a95f557[ 	]+vsetvli[ 	]+a0,a1,e256,m2,tu,ma,d4
-[ 	]+[0-9a-f]+:[ 	]+2295f557[ 	]+vsetvli[ 	]+a0,a1,e256,m2,tu,mu,d4
-[ 	]+[0-9a-f]+:[ 	]+2295f557[ 	]+vsetvli[ 	]+a0,a1,e256,m2,tu,mu,d4
-[ 	]+[0-9a-f]+:[ 	]+2e95f557[ 	]+vsetvli[ 	]+a0,a1,e256,m2,ta,ma,d4
-[ 	]+[0-9a-f]+:[ 	]+2a95f557[ 	]+vsetvli[ 	]+a0,a1,e256,m2,tu,ma,d4
-[ 	]+[0-9a-f]+:[ 	]+2695f557[ 	]+vsetvli[ 	]+a0,a1,e256,m2,ta,mu,d4
-[ 	]+[0-9a-f]+:[ 	]+2295f557[ 	]+vsetvli[ 	]+a0,a1,e256,m2,tu,mu,d4
-[ 	]+[0-9a-f]+:[ 	]+c005f557[ 	]+vsetivli[ 	]+a0,11,e8,m1,tu,mu,d1
-[ 	]+[0-9a-f]+:[ 	]+fff5f557[ 	]+vsetivli[ 	]+a0,11,e1024,mf2,ta,ma,d8
-[ 	]+[0-9a-f]+:[ 	]+e095f557[ 	]+vsetivli[ 	]+a0,11,e16,m2,tu,mu,d4
-[ 	]+[0-9a-f]+:[ 	]+f2b5f557[ 	]+vsetivli[ 	]+a0,11,e256,m8,tu,mu,d8
-[ 	]+[0-9a-f]+:[ 	]+f335f557[ 	]+vsetivli[ 	]+a0,11,e512,m8,tu,mu,d8
-[ 	]+[0-9a-f]+:[ 	]+f3b5f557[ 	]+vsetivli[ 	]+a0,11,e1024,m8,tu,mu,d8
-[ 	]+[0-9a-f]+:[ 	]+f385f557[ 	]+vsetivli[ 	]+a0,11,e1024,m1,tu,mu,d8
-[ 	]+[0-9a-f]+:[ 	]+f3f5f557[ 	]+vsetivli[ 	]+a0,11,e1024,mf2,tu,mu,d8
-[ 	]+[0-9a-f]+:[ 	]+d365f557[ 	]+vsetivli[ 	]+a0,11,e512,mf4,tu,mu,d2
-[ 	]+[0-9a-f]+:[ 	]+e2d5f557[ 	]+vsetivli[ 	]+a0,11,e256,mf8,tu,mu,d4
-[ 	]+[0-9a-f]+:[ 	]+e695f557[ 	]+vsetivli[ 	]+a0,11,e256,m2,ta,mu,d4
-[ 	]+[0-9a-f]+:[ 	]+ea95f557[ 	]+vsetivli[ 	]+a0,11,e256,m2,tu,ma,d4
-[ 	]+[0-9a-f]+:[ 	]+e295f557[ 	]+vsetivli[ 	]+a0,11,e256,m2,tu,mu,d4
-[ 	]+[0-9a-f]+:[ 	]+e295f557[ 	]+vsetivli[ 	]+a0,11,e256,m2,tu,mu,d4
-[ 	]+[0-9a-f]+:[ 	]+ee95f557[ 	]+vsetivli[ 	]+a0,11,e256,m2,ta,ma,d4
-[ 	]+[0-9a-f]+:[ 	]+ea95f557[ 	]+vsetivli[ 	]+a0,11,e256,m2,tu,ma,d4
-[ 	]+[0-9a-f]+:[ 	]+e695f557[ 	]+vsetivli[ 	]+a0,11,e256,m2,ta,mu,d4
-[ 	]+[0-9a-f]+:[ 	]+e295f557[ 	]+vsetivli[ 	]+a0,11,e256,m2,tu,mu,d4
+[ 	]+[0-9a-f]+:[ 	]+0095f557[ 	]+vsetvli[ 	]+a0,a1,e16,m2,tu,mu
+[ 	]+[0-9a-f]+:[ 	]+02b5f557[ 	]+vsetvli[ 	]+a0,a1,e256,m8,tu,mu
+[ 	]+[0-9a-f]+:[ 	]+0335f557[ 	]+vsetvli[ 	]+a0,a1,e512,m8,tu,mu
+[ 	]+[0-9a-f]+:[ 	]+03b5f557[ 	]+vsetvli[ 	]+a0,a1,e1024,m8,tu,mu
+[ 	]+[0-9a-f]+:[ 	]+0385f557[ 	]+vsetvli[ 	]+a0,a1,e1024,m1,tu,mu
+[ 	]+[0-9a-f]+:[ 	]+03f5f557[ 	]+vsetvli[ 	]+a0,a1,e1024,mf2,tu,mu
+[ 	]+[0-9a-f]+:[ 	]+0365f557[ 	]+vsetvli[ 	]+a0,a1,e512,mf4,tu,mu
+[ 	]+[0-9a-f]+:[ 	]+02d5f557[ 	]+vsetvli[ 	]+a0,a1,e256,mf8,tu,mu
+[ 	]+[0-9a-f]+:[ 	]+0695f557[ 	]+vsetvli[ 	]+a0,a1,e256,m2,ta,mu
+[ 	]+[0-9a-f]+:[ 	]+0a95f557[ 	]+vsetvli[ 	]+a0,a1,e256,m2,tu,ma
+[ 	]+[0-9a-f]+:[ 	]+0295f557[ 	]+vsetvli[ 	]+a0,a1,e256,m2,tu,mu
+[ 	]+[0-9a-f]+:[ 	]+0295f557[ 	]+vsetvli[ 	]+a0,a1,e256,m2,tu,mu
+[ 	]+[0-9a-f]+:[ 	]+0e95f557[ 	]+vsetvli[ 	]+a0,a1,e256,m2,ta,ma
+[ 	]+[0-9a-f]+:[ 	]+0a95f557[ 	]+vsetvli[ 	]+a0,a1,e256,m2,tu,ma
+[ 	]+[0-9a-f]+:[ 	]+0695f557[ 	]+vsetvli[ 	]+a0,a1,e256,m2,ta,mu
+[ 	]+[0-9a-f]+:[ 	]+0295f557[ 	]+vsetvli[ 	]+a0,a1,e256,m2,tu,mu
+[ 	]+[0-9a-f]+:[ 	]+c005f557[ 	]+vsetivli[ 	]+a0,11,e8,m1,tu,mu
+[ 	]+[0-9a-f]+:[ 	]+fff5f557[ 	]+vsetivli[ 	]+a0,11,e1024,mf2,ta,ma
+[ 	]+[0-9a-f]+:[ 	]+c095f557[ 	]+vsetivli[ 	]+a0,11,e16,m2,tu,mu
+[ 	]+[0-9a-f]+:[ 	]+c2b5f557[ 	]+vsetivli[ 	]+a0,11,e256,m8,tu,mu
+[ 	]+[0-9a-f]+:[ 	]+c335f557[ 	]+vsetivli[ 	]+a0,11,e512,m8,tu,mu
+[ 	]+[0-9a-f]+:[ 	]+c3b5f557[ 	]+vsetivli[ 	]+a0,11,e1024,m8,tu,mu
+[ 	]+[0-9a-f]+:[ 	]+c385f557[ 	]+vsetivli[ 	]+a0,11,e1024,m1,tu,mu
+[ 	]+[0-9a-f]+:[ 	]+c3f5f557[ 	]+vsetivli[ 	]+a0,11,e1024,mf2,tu,mu
+[ 	]+[0-9a-f]+:[ 	]+c365f557[ 	]+vsetivli[ 	]+a0,11,e512,mf4,tu,mu
+[ 	]+[0-9a-f]+:[ 	]+c2d5f557[ 	]+vsetivli[ 	]+a0,11,e256,mf8,tu,mu
+[ 	]+[0-9a-f]+:[ 	]+c695f557[ 	]+vsetivli[ 	]+a0,11,e256,m2,ta,mu
+[ 	]+[0-9a-f]+:[ 	]+ca95f557[ 	]+vsetivli[ 	]+a0,11,e256,m2,tu,ma
+[ 	]+[0-9a-f]+:[ 	]+c295f557[ 	]+vsetivli[ 	]+a0,11,e256,m2,tu,mu
+[ 	]+[0-9a-f]+:[ 	]+c295f557[ 	]+vsetivli[ 	]+a0,11,e256,m2,tu,mu
+[ 	]+[0-9a-f]+:[ 	]+ce95f557[ 	]+vsetivli[ 	]+a0,11,e256,m2,ta,ma
+[ 	]+[0-9a-f]+:[ 	]+ca95f557[ 	]+vsetivli[ 	]+a0,11,e256,m2,tu,ma
+[ 	]+[0-9a-f]+:[ 	]+c695f557[ 	]+vsetivli[ 	]+a0,11,e256,m2,ta,mu
+[ 	]+[0-9a-f]+:[ 	]+c295f557[ 	]+vsetivli[ 	]+a0,11,e256,m2,tu,mu
 [ 	]+[0-9a-f]+:[ 	]+02b50207[ 	]+vle1.v[ 	]+v4,\(a0\)
 [ 	]+[0-9a-f]+:[ 	]+02b50207[ 	]+vle1.v[ 	]+v4,\(a0\)
 [ 	]+[0-9a-f]+:[ 	]+02b50227[ 	]+vse1.v[ 	]+v4,\(a0\)
@@ -1552,20 +1552,6 @@ Disassembly of section .text:
 [ 	]+[0-9a-f]+:[ 	]+fc85e257[ 	]+vwmaccsu.vx[ 	]+v4,a1,v8,v0.t
 [ 	]+[0-9a-f]+:[ 	]+fa85e257[ 	]+vwmaccus.vx[ 	]+v4,a1,v8
 [ 	]+[0-9a-f]+:[ 	]+f885e257[ 	]+vwmaccus.vx[ 	]+v4,a1,v8,v0.t
-[ 	]+[0-9a-f]+:[ 	]+f2860257[ 	]+vqmaccu.vv[ 	]+v4,v12,v8
-[ 	]+[0-9a-f]+:[ 	]+f285c257[ 	]+vqmaccu.vx[ 	]+v4,a1,v8
-[ 	]+[0-9a-f]+:[ 	]+f0860257[ 	]+vqmaccu.vv[ 	]+v4,v12,v8,v0.t
-[ 	]+[0-9a-f]+:[ 	]+f085c257[ 	]+vqmaccu.vx[ 	]+v4,a1,v8,v0.t
-[ 	]+[0-9a-f]+:[ 	]+f6860257[ 	]+vqmacc.vv[ 	]+v4,v12,v8
-[ 	]+[0-9a-f]+:[ 	]+f685c257[ 	]+vqmacc.vx[ 	]+v4,a1,v8
-[ 	]+[0-9a-f]+:[ 	]+f4860257[ 	]+vqmacc.vv[ 	]+v4,v12,v8,v0.t
-[ 	]+[0-9a-f]+:[ 	]+f485c257[ 	]+vqmacc.vx[ 	]+v4,a1,v8,v0.t
-[ 	]+[0-9a-f]+:[ 	]+fe860257[ 	]+vqmaccsu.vv[ 	]+v4,v12,v8
-[ 	]+[0-9a-f]+:[ 	]+fe85c257[ 	]+vqmaccsu.vx[ 	]+v4,a1,v8
-[ 	]+[0-9a-f]+:[ 	]+fc860257[ 	]+vqmaccsu.vv[ 	]+v4,v12,v8,v0.t
-[ 	]+[0-9a-f]+:[ 	]+fc85c257[ 	]+vqmaccsu.vx[ 	]+v4,a1,v8,v0.t
-[ 	]+[0-9a-f]+:[ 	]+fa85c257[ 	]+vqmaccus.vx[ 	]+v4,a1,v8
-[ 	]+[0-9a-f]+:[ 	]+f885c257[ 	]+vqmaccus.vx[ 	]+v4,a1,v8,v0.t
 [ 	]+[0-9a-f]+:[ 	]+82862257[ 	]+vdivu.vv[ 	]+v4,v8,v12
 [ 	]+[0-9a-f]+:[ 	]+8285e257[ 	]+vdivu.vx[ 	]+v4,v8,a1
 [ 	]+[0-9a-f]+:[ 	]+80862257[ 	]+vdivu.vv[ 	]+v4,v8,v12,v0.t
@@ -1954,9 +1940,3 @@ Disassembly of section .text:
 [ 	]+[0-9a-f]+:[ 	]+9e40b157[ 	]+vmv2r.v[ 	]+v2,v4
 [ 	]+[0-9a-f]+:[ 	]+9e81b257[ 	]+vmv4r.v[ 	]+v4,v8
 [ 	]+[0-9a-f]+:[ 	]+9e83b057[ 	]+vmv8r.v[ 	]+v0,v8
-[ 	]+[0-9a-f]+:[ 	]+e6860257[ 	]+vdot.vv[ 	]+v4,v8,v12
-[ 	]+[0-9a-f]+:[ 	]+e2860257[ 	]+vdotu.vv[ 	]+v4,v8,v12
-[ 	]+[0-9a-f]+:[ 	]+e6861257[ 	]+vfdot.vv[ 	]+v4,v8,v12
-[ 	]+[0-9a-f]+:[ 	]+e4860257[ 	]+vdot.vv[ 	]+v4,v8,v12,v0.t
-[ 	]+[0-9a-f]+:[ 	]+e0860257[ 	]+vdotu.vv[ 	]+v4,v8,v12,v0.t
-[ 	]+[0-9a-f]+:[ 	]+e4861257[ 	]+vfdot.vv[ 	]+v4,v8,v12,v0.t

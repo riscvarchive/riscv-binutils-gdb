@@ -64,12 +64,6 @@ static const char * const riscv_vlmul[8] =
   "m1", "m2", "m4", "m8", 0, "mf8", "mf4", "mf2"
 };
 
-/* List of vsetvli vediv constants.  */
-static const char * const riscv_vediv[4] =
-{
-  "d1", "d2", "d4", "d8"
-};
-
 static const char * const riscv_vta[2] =
 {
   "tu", "ta"
@@ -323,8 +317,6 @@ static const char * const riscv_vma[2] =
 #define OP_SH_VTA		6
 #define OP_MASK_VMA		0x1
 #define OP_SH_VMA		7
-#define OP_MASK_VEDIV		0x3
-#define OP_SH_VEDIV		8
 #define OP_MASK_VTYPE_RES	0x1
 #define OP_SH_VTYPE_RES 	10
 
@@ -389,9 +381,7 @@ enum riscv_insn_class
    INSN_CLASS_V,
    INSN_CLASS_V_AND_F,
    INSN_CLASS_V_OR_ZVAMO,
-   INSN_CLASS_V_AND_ZVEDIV,
    INSN_CLASS_V_OR_ZVLSSEG,
-   INSN_CLASS_V_AND_ZVQMAC,
   };
 
 /* This structure holds information for a particular instruction.  */

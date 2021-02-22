@@ -1,40 +1,40 @@
 	vsetvl a0, a1, a2
 	vsetvli a0, a1, 0
 	vsetvli a0, a1, 0x7ff
-	vsetvli a0, a1, e16,m2,d4
-	vsetvli a0, a1, e256, m8, d8
-	vsetvli a0, a1, e512, m8, d8
-	vsetvli a0, a1, e1024, m8, d8
-	vsetvli a0, a1, e1024, m1, d8
-	vsetvli a0, a1, e1024, mf2, d8
-	vsetvli a0, a1, e512, mf4, d2
-	vsetvli a0, a1, e256, mf8, d4
-	vsetvli a0, a1, e256, m2, ta, d4
-	vsetvli a0, a1, e256, m2, ma, d4
-	vsetvli a0, a1, e256, m2, tu, d4
-	vsetvli a0, a1, e256, m2, mu, d4
-	vsetvli a0, a1, e256, m2, ta,ma, d4
-	vsetvli a0, a1, e256, m2, tu,ma, d4
-	vsetvli a0, a1, e256, m2, ta,mu, d4
-	vsetvli a0, a1, e256, m2, tu,mu, d4
+	vsetvli a0, a1, e16, m2
+	vsetvli a0, a1, e256, m8
+	vsetvli a0, a1, e512, m8
+	vsetvli a0, a1, e1024, m8
+	vsetvli a0, a1, e1024, m1
+	vsetvli a0, a1, e1024, mf2
+	vsetvli a0, a1, e512, mf4
+	vsetvli a0, a1, e256, mf8
+	vsetvli a0, a1, e256, m2, ta
+	vsetvli a0, a1, e256, m2, ma
+	vsetvli a0, a1, e256, m2, tu
+	vsetvli a0, a1, e256, m2, mu
+	vsetvli a0, a1, e256, m2, ta, ma
+	vsetvli a0, a1, e256, m2, tu, ma
+	vsetvli a0, a1, e256, m2, ta, mu
+	vsetvli a0, a1, e256, m2, tu, mu
 	vsetivli a0, 0xb, 0
 	vsetivli a0, 0xb, 0x3ff
-	vsetivli a0, 0xb, e16,m2,d4
-	vsetivli a0, 0xb, e256, m8, d8
-	vsetivli a0, 0xb, e512, m8, d8
-	vsetivli a0, 0xb, e1024, m8, d8
-	vsetivli a0, 0xb, e1024, m1, d8
-	vsetivli a0, 0xb, e1024, mf2, d8
-	vsetivli a0, 0xb, e512, mf4, d2
-	vsetivli a0, 0xb, e256, mf8, d4
-	vsetivli a0, 0xb, e256, m2, ta, d4
-	vsetivli a0, 0xb, e256, m2, ma, d4
-	vsetivli a0, 0xb, e256, m2, tu, d4
-	vsetivli a0, 0xb, e256, m2, mu, d4
-	vsetivli a0, 0xb, e256, m2, ta,ma, d4
-	vsetivli a0, 0xb, e256, m2, tu,ma, d4
-	vsetivli a0, 0xb, e256, m2, ta,mu, d4
-	vsetivli a0, 0xb, e256, m2, tu,mu, d4
+	vsetivli a0, 0xb, e16, m2
+	vsetivli a0, 0xb, e256, m8
+	vsetivli a0, 0xb, e512, m8
+	vsetivli a0, 0xb, e1024, m8
+	vsetivli a0, 0xb, e1024, m1
+	vsetivli a0, 0xb, e1024, mf2
+	vsetivli a0, 0xb, e512, mf4
+	vsetivli a0, 0xb, e256, mf8
+	vsetivli a0, 0xb, e256, m2, ta
+	vsetivli a0, 0xb, e256, m2, ma
+	vsetivli a0, 0xb, e256, m2, tu
+	vsetivli a0, 0xb, e256, m2, mu
+	vsetivli a0, 0xb, e256, m2, ta, ma
+	vsetivli a0, 0xb, e256, m2, tu, ma
+	vsetivli a0, 0xb, e256, m2, ta, mu
+	vsetivli a0, 0xb, e256, m2, tu, mu
 
 	vle1.v v4, (a0)
 	vle1.v v4, 0(a0)
@@ -1752,21 +1752,6 @@
 	vwmaccus.vx v4, a1, v8
 	vwmaccus.vx v4, a1, v8, v0.t
 
-	vqmaccu.vv v4, v12, v8
-	vqmaccu.vx v4, a1, v8
-	vqmaccu.vv v4, v12, v8, v0.t
-	vqmaccu.vx v4, a1, v8, v0.t
-	vqmacc.vv v4, v12, v8
-	vqmacc.vx v4, a1, v8
-	vqmacc.vv v4, v12, v8, v0.t
-	vqmacc.vx v4, a1, v8, v0.t
-	vqmaccsu.vv v4, v12, v8
-	vqmaccsu.vx v4, a1, v8
-	vqmaccsu.vv v4, v12, v8, v0.t
-	vqmaccsu.vx v4, a1, v8, v0.t
-	vqmaccus.vx v4, a1, v8
-	vqmaccus.vx v4, a1, v8, v0.t
-
 	vdivu.vv v4, v8, v12
 	vdivu.vx v4, v8, a1
 	vdivu.vv v4, v8, v12, v0.t
@@ -2196,10 +2181,3 @@
 	vmv2r.v v2, v4
 	vmv4r.v v4, v8
 	vmv8r.v v0, v8
-
-	vdot.vv v4, v8, v12
-	vdotu.vv v4, v8, v12
-	vfdot.vv v4, v8, v12
-	vdot.vv v4, v8, v12, v0.t
-	vdotu.vv v4, v8, v12, v0.t
-	vfdot.vv v4, v8, v12, v0.t

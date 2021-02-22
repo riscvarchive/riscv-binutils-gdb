@@ -122,8 +122,8 @@ Disassembly of section .text:
 [^:]+:[ 	]+00d655d7[ 	]+vfadd.vf[ 	]+v11,v13,fa2,v0.t
 [^:]+:[ 	]+38d665d7[ 	]+vslide1up.vx[ 	]+v11,v13,a2,v0.t
 [^:]+:[ 	]+3cd665d7[ 	]+vslide1down.vx[ 	]+v11,v13,a2,v0.t
-[^:]+:[ 	]+00d675d7[ 	]+vsetvli[ 	]+a1,a2,e16,mf8,tu,mu,d1
-[^:]+:[ 	]+00d675d7[ 	]+vsetvli[ 	]+a1,a2,e16,mf8,tu,mu,d1
+[^:]+:[ 	]+00d675d7[ 	]+vsetvli[ 	]+a1,a2,e16,mf8,tu,mu
+[^:]+:[ 	]+00d675d7[ 	]+vsetvli[ 	]+a1,a2,e16,mf8,tu,mu
 [^:]+:[ 	]+00d035d7[ 	]+vadd.vi[ 	]+v11,v13,0,v0.t
 [^:]+:[ 	]+00d0b5d7[ 	]+vadd.vi[ 	]+v11,v13,1,v0.t
 [^:]+:[ 	]+00d7b5d7[ 	]+vadd.vi[ 	]+v11,v13,15,v0.t

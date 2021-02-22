@@ -244,12 +244,8 @@ riscv_multi_subset_supports (enum riscv_insn_class insn_class)
       return (riscv_subset_supports ("a")
 	      && (riscv_subset_supports ("v")
 		  || riscv_subset_supports ("zvamo")));
-    case INSN_CLASS_V_AND_ZVEDIV:
-      return riscv_subset_supports ("v") && riscv_subset_supports ("zvediv");
     case INSN_CLASS_V_OR_ZVLSSEG:
       return riscv_subset_supports ("v") || riscv_subset_supports ("zvlsseg");
-    case INSN_CLASS_V_AND_ZVQMAC:
-      return riscv_subset_supports ("v") && riscv_subset_supports ("zvqmac");
 
     default:
       as_fatal ("Unreachable");
@@ -1869,9 +1865,9 @@ my_getSmallExpression (expressionS *ep, bfd_reloc_code_real_type *reloc,
 static void
 my_getVsetvliExpression (expressionS *ep, char *str)
 {
-  unsigned int vsew_value = 0, vlmul_value = 0, vediv_value = 0;
+  unsigned int vsew_value = 0, vlmul_value = 0;
   unsigned int vta_value = 0, vma_value = 0;
-  bfd_boolean vsew_found = FALSE, vlmul_found = FALSE, vediv_found = FALSE;
+  bfd_boolean vsew_found = FALSE, vlmul_found = FALSE;
   bfd_boolean vta_found = FALSE, vma_found = FALSE;
 
   if (arg_lookup (&str, riscv_vsew, ARRAY_SIZE (riscv_vsew), &vsew_value))
@@ -1906,23 +1902,14 @@ my_getVsetvliExpression (expressionS *ep, char *str)
 	as_bad (_("multiple vma constants"));
       vma_found = TRUE;
     }
-  if (arg_lookup (&str, riscv_vediv, ARRAY_SIZE (riscv_vediv), &vediv_value))
-    {
-      if (*str == ',')
-	++str;
-      if (vediv_found)
-	as_bad (_("multiple vediv constants"));
-      vediv_found = TRUE;
-    }
 
-  if (vsew_found || vlmul_found || vediv_found || vta_found || vma_found)
+  if (vsew_found || vlmul_found || vta_found || vma_found)
     {
       ep->X_op = O_constant;
       ep->X_add_number = (vlmul_value << OP_SH_VLMUL)
 			 | (vsew_value << OP_SH_VSEW)
 			 | (vta_value << OP_SH_VTA)
-			 | (vma_value << OP_SH_VMA)
-			 | (vediv_value << OP_SH_VEDIV);
+			 | (vma_value << OP_SH_VMA);
       expr_end = str;
     }
   else
@@ -1930,12 +1917,6 @@ my_getVsetvliExpression (expressionS *ep, char *str)
       my_getExpression (ep, str);
       str = expr_end;
     }
-
-  /* Report warning message if the vediv field is set, but the Zvediv
-     extension isn't enabled.  */
-  if (!riscv_multi_subset_supports (INSN_CLASS_V_AND_ZVEDIV)
-      && (ep->X_add_number & (OP_MASK_VEDIV << OP_SH_VEDIV)))
-    as_warn ("vediv is set but Zvediv extension isn't enabled");
 }
 
 /* Parse opcode name, could be an mnemonics or number.  */

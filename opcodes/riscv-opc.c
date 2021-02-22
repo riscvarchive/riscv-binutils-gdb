@@ -409,57 +409,6 @@ match_widen_vd_neq_vm (const struct riscv_opcode *op,
 }
 
 static int
-match_quad_vd_neq_vs1_neq_vs2_neq_vm (const struct riscv_opcode *op,
-				      insn_t insn,
-				      int constraints,
-				      const char **error)
-{
-  int vd = (insn & MASK_VD) >> OP_SH_VD;
-  int vs1 = (insn & MASK_VS1) >> OP_SH_VS1;
-  int vs2 = (insn & MASK_VS2) >> OP_SH_VS2;
-  int vm = (insn & MASK_VMASK) >> OP_SH_VMASK;
-
-  if (!constraints || error == NULL)
-    return match_opcode (op, insn, 0, NULL);
-
-  if ((vd % 4) != 0)
-    *error = "illegal operands vd must be multiple of 4";
-  else if (vs1 >= vd && vs1 <= (vd + 3))
-    *error = "illegal operands vd cannot overlap vs1";
-  else if (vs2 >= vd && vs2 <= (vd + 3))
-    *error = "illegal operands vd cannot overlap vs2";
-  else if (!vm && vm >= vd && vm <= (vd + 3))
-    *error = "illegal operands vd cannot overlap vm";
-  else
-    return match_opcode (op, insn, 0, NULL);
-  return 0;
-}
-
-static int
-match_quad_vd_neq_vs2_neq_vm (const struct riscv_opcode *op,
-			      insn_t insn,
-			      int constraints,
-			      const char **error)
-{
-  int vd = (insn & MASK_VD) >> OP_SH_VD;
-  int vs2 = (insn & MASK_VS2) >> OP_SH_VS2;
-  int vm = (insn & MASK_VMASK) >> OP_SH_VMASK;
-
-  if (!constraints || error == NULL)
-    return match_opcode (op, insn, 0, NULL);
-
-  if ((vd % 4) != 0)
-    *error = "illegal operands vd must be multiple of 4";
-  else if (vs2 >= vd && vs2 <= (vd + 3))
-    *error = "illegal operands vd cannot overlap vs2";
-  else if (!vm && vm >= vd && vm <= (vd + 3))
-    *error = "illegal operands vd cannot overlap vm";
-  else
-    return match_opcode (op, insn, 0, NULL);
-  return 0;
-}
-
-static int
 match_narrow_vd_neq_vs2_neq_vm (const struct riscv_opcode *op,
 				insn_t insn,
 				int constraints,
@@ -1760,14 +1709,6 @@ const struct riscv_opcode riscv_opcodes[] =
 {"vwmaccsu.vx", 0, INSN_CLASS_V,  "Vd,s,VtVm", MATCH_VWMACCSUVX, MASK_VWMACCSUVX, match_widen_vd_neq_vs2_neq_vm, 0},
 {"vwmaccus.vx", 0, INSN_CLASS_V,  "Vd,s,VtVm", MATCH_VWMACCUSVX, MASK_VWMACCUSVX, match_widen_vd_neq_vs2_neq_vm, 0},
 
-{"vqmaccu.vv",  0, INSN_CLASS_V_AND_ZVQMAC,  "Vd,Vs,VtVm", MATCH_VQMACCUVV, MASK_VQMACCUVV, match_quad_vd_neq_vs1_neq_vs2_neq_vm, 0},
-{"vqmaccu.vx",  0, INSN_CLASS_V_AND_ZVQMAC,  "Vd,s,VtVm",  MATCH_VQMACCUVX, MASK_VQMACCUVX, match_quad_vd_neq_vs2_neq_vm, 0},
-{"vqmacc.vv",   0, INSN_CLASS_V_AND_ZVQMAC,  "Vd,Vs,VtVm", MATCH_VQMACCVV, MASK_VQMACCVV, match_quad_vd_neq_vs1_neq_vs2_neq_vm, 0},
-{"vqmacc.vx",   0, INSN_CLASS_V_AND_ZVQMAC,  "Vd,s,VtVm",  MATCH_VQMACCVX, MASK_VQMACCVX, match_quad_vd_neq_vs2_neq_vm, 0},
-{"vqmaccsu.vv", 0, INSN_CLASS_V_AND_ZVQMAC,  "Vd,Vs,VtVm", MATCH_VQMACCSUVV, MASK_VQMACCSUVV, match_quad_vd_neq_vs1_neq_vs2_neq_vm, 0},
-{"vqmaccsu.vx", 0, INSN_CLASS_V_AND_ZVQMAC,  "Vd,s,VtVm",  MATCH_VQMACCSUVX, MASK_VQMACCSUVX, match_quad_vd_neq_vs2_neq_vm, 0},
-{"vqmaccus.vx", 0, INSN_CLASS_V_AND_ZVQMAC,  "Vd,s,VtVm",  MATCH_VQMACCUSVX, MASK_VQMACCUSVX, match_quad_vd_neq_vs2_neq_vm, 0},
-
 {"vdivu.vv",   0, INSN_CLASS_V,  "Vd,Vt,VsVm", MATCH_VDIVUVV, MASK_VDIVUVV, match_vd_neq_vm, 0 },
 {"vdivu.vx",   0, INSN_CLASS_V,  "Vd,Vt,sVm", MATCH_VDIVUVX, MASK_VDIVUVX, match_vd_neq_vm, 0 },
 {"vdiv.vv",    0, INSN_CLASS_V,  "Vd,Vt,VsVm", MATCH_VDIVVV, MASK_VDIVVV, match_vd_neq_vm, 0 },
@@ -2005,10 +1946,6 @@ const struct riscv_opcode riscv_opcodes[] =
 {"vmv2r.v",    0, INSN_CLASS_V, "Vd,Vt", MATCH_VMV2RV, MASK_VMV2RV, match_vmv_nf_rv, 0},
 {"vmv4r.v",    0, INSN_CLASS_V, "Vd,Vt", MATCH_VMV4RV, MASK_VMV4RV, match_vmv_nf_rv, 0},
 {"vmv8r.v",    0, INSN_CLASS_V, "Vd,Vt", MATCH_VMV8RV, MASK_VMV8RV, match_vmv_nf_rv, 0},
-
-{"vdot.vv",    0, INSN_CLASS_V,  "Vd,Vt,VsVm", MATCH_VDOTVV, MASK_VDOTVV, match_opcode, 0},
-{"vdotu.vv",   0, INSN_CLASS_V,  "Vd,Vt,VsVm", MATCH_VDOTUVV, MASK_VDOTUVV, match_opcode, 0},
-{"vfdot.vv",   0, INSN_CLASS_V,  "Vd,Vt,VsVm", MATCH_VFDOTVV, MASK_VFDOTVV, match_opcode, 0},
 /* END RVV */
 
 /* Terminate the list.  */
@@ -2185,9 +2122,7 @@ const struct riscv_ext_version riscv_ext_version_table[] =
 {"zicsr", ISA_SPEC_CLASS_20190608, 2, 0},
 
 {"zvamo",   ISA_SPEC_CLASS_NONE, 1, 0},
-{"zvediv",  ISA_SPEC_CLASS_NONE, 1, 0},
 {"zvlsseg", ISA_SPEC_CLASS_NONE, 1, 0},
-{"zvqmac",  ISA_SPEC_CLASS_NONE, 1, 0},
 
 /* Terminate the list.  */
 {NULL, 0, 0, 0}
