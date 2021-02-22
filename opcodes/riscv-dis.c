@@ -436,9 +436,11 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	      print (info->stream, "%s", riscv_vecr_names[0]);
 	      break;
 
+	    case 'b':
 	    case 'c':
 	      {
-		int imm = EXTRACT_RVV_VC_IMM (l);
+		int imm = (*d == 'b') ? EXTRACT_RVV_VB_IMM (l)
+				      : EXTRACT_RVV_VC_IMM (l);
 		unsigned int imm_vlmul = EXTRACT_OPERAND (VLMUL, imm);
 		unsigned int imm_vsew = EXTRACT_OPERAND (VSEW, imm);
 		unsigned int imm_vediv = EXTRACT_OPERAND (VEDIV, imm);

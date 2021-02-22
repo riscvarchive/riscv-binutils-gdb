@@ -551,10 +551,22 @@
 /* RVV */
 /* Version 1.0-draft-20200703.  */
 
-#define MATCH_VSETVL  0x80007057
-#define MASK_VSETVL   0xfe00707f
-#define MATCH_VSETVLI 0x00007057
-#define MASK_VSETVLI  0x8000707f
+/* Temporary configuration-setting encoding info
+
+`-` means zimm
+
+31 30 zimm  RS2   RS1/uimm funct3 RD    opcode
+1  0  00000 xxxxx xxxxx    111    xxxxx 1010111 vsetvl
+1  1  ----- ----- xxxxx    111    xxxxx 1010111 vsetivli
+0  -  ----- ----- xxxxx    111    xxxxx 1010111 vsetvli
+*/
+
+#define MATCH_VSETVL   0x80007057
+#define MASK_VSETVL    0xfe00707f
+#define MATCH_VSETIVLI 0xc0007057
+#define MASK_VSETIVLI  0xc000707f
+#define MATCH_VSETVLI  0x00007057
+#define MASK_VSETVLI   0x8000707f
 
 /* Temporary Load/store encoding info
 

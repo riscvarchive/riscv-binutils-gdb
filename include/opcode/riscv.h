@@ -133,6 +133,8 @@ static const char * const riscv_vma[2] =
   (RV_X(x, 15, 5))
 #define EXTRACT_RVV_OFFSET(x) \
   (RV_X(x, 29, 3))
+#define EXTRACT_RVV_VB_IMM(x) \
+  (RV_X(x, 20, 10))
 #define EXTRACT_RVV_VC_IMM(x) \
   (RV_X(x, 20, 11))
 
@@ -174,6 +176,8 @@ static const char * const riscv_vma[2] =
   ((RV_X(x, 1, 2) << 3) | (RV_X(x, 3, 2) << 10) | (RV_X(x, 5, 1) << 2) | (RV_X(x, 6, 2) << 5) | (RV_X(x, 8, 1) << 12))
 #define ENCODE_RVC_J_IMM(x) \
   ((RV_X(x, 1, 3) << 3) | (RV_X(x, 4, 1) << 11) | (RV_X(x, 5, 1) << 2) | (RV_X(x, 6, 1) << 7) | (RV_X(x, 7, 1) << 6) | (RV_X(x, 8, 2) << 9) | (RV_X(x, 10, 1) << 8) | (RV_X(x, 11, 1) << 12))
+#define ENCODE_RVV_VB_IMM(x) \
+  (RV_X(x, 0, 10) << 20)
 #define ENCODE_RVV_VC_IMM(x) \
   (RV_X(x, 0, 11) << 20)
 
@@ -196,6 +200,7 @@ static const char * const riscv_vma[2] =
 #define VALID_RVC_SDSP_IMM(x) (EXTRACT_RVC_SDSP_IMM(ENCODE_RVC_SDSP_IMM(x)) == (x))
 #define VALID_RVC_B_IMM(x) (EXTRACT_RVC_B_IMM(ENCODE_RVC_B_IMM(x)) == (x))
 #define VALID_RVC_J_IMM(x) (EXTRACT_RVC_J_IMM(ENCODE_RVC_J_IMM(x)) == (x))
+#define VALID_RVV_VB_IMM(x) (EXTRACT_RVV_VB_IMM(ENCODE_RVV_VB_IMM(x)) == (x))
 #define VALID_RVV_VC_IMM(x) (EXTRACT_RVV_VC_IMM(ENCODE_RVV_VC_IMM(x)) == (x))
 
 #define RISCV_RTYPE(insn, rd, rs1, rs2) \
