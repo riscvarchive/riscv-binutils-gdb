@@ -1036,6 +1036,7 @@ validate_riscv_insn (const struct riscv_opcode *opc, int length)
 		    USE_BITS (OP_MASK_VS1, OP_SH_VS1);
 		    USE_BITS (OP_MASK_VS2, OP_SH_VS2); break;
 	  case '0': break;
+	  case 'b': used_bits |= ENCODE_RVV_VB_IMM (-1U); break;
 	  case 'c': used_bits |= ENCODE_RVV_VC_IMM (-1U); break;
 	  case 'i':
 	  case 'j':
@@ -2873,6 +2874,18 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 		  if (reg_lookup (&s, RCLASS_VECR, &regno) && regno == 0)
 		    continue;
 		  break;
+
+		case 'b': /* vtypei for vsetivli */
+		  my_getVsetvliExpression (imm_expr, s);
+		  check_absolute_expr (ip, imm_expr, FALSE);
+		  if (!VALID_RVV_VB_IMM (imm_expr->X_add_number))
+		    as_bad (_("bad value for vsetivli immediate field, "
+			      "value must be 0..1023"));
+		  ip->insn_opcode
+		    |= ENCODE_RVV_VB_IMM (imm_expr->X_add_number);
+		  imm_expr->X_op = O_absent;
+		  s = expr_end;
+		  continue;
 
 		case 'c': /* vtypei for vsetvli */
 		  my_getVsetvliExpression (imm_expr, s);

@@ -1203,8 +1203,9 @@ const struct riscv_opcode riscv_opcodes[] =
 {"wfi",        0, INSN_CLASS_I,   "",     MATCH_WFI, MASK_WFI, match_opcode, 0 },
 
 /* RVV */
-{"vsetvl",     0, INSN_CLASS_V,  "d,s,t", MATCH_VSETVL, MASK_VSETVL, match_opcode, 0},
+{"vsetvl",     0, INSN_CLASS_V,  "d,s,t",  MATCH_VSETVL, MASK_VSETVL, match_opcode, 0},
 {"vsetvli",    0, INSN_CLASS_V,  "d,s,Vc", MATCH_VSETVLI, MASK_VSETVLI, match_opcode, 0},
+{"vsetivli",   0, INSN_CLASS_V,  "d,Z,Vb", MATCH_VSETIVLI, MASK_VSETIVLI, match_opcode, 0},
 
 {"vle1.v",     0, INSN_CLASS_V,  "Vd,0(s)", MATCH_VLE1V, MASK_VLE1V, match_opcode, INSN_DREF },
 {"vse1.v",     0, INSN_CLASS_V,  "Vd,0(s)", MATCH_VSE1V, MASK_VSE1V, match_opcode, INSN_DREF },
