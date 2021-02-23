@@ -549,7 +549,7 @@
 #define MASK_C_SDSP  0xe003
 
 /* RVV */
-/* Version 1.0-draft-20200703.  */
+/* Version 0.10.  */
 
 /* Temporary configuration-setting encoding info
 
