@@ -3,4 +3,4 @@
 #source: empty.s
 Attribute Section: riscv
 File Attributes
-  Tag_RISCV_arch: ".*_v0p10_zvamo0p10_zvlsseg0p10"
+  Tag_RISCV_arch: ".*_v1p0_zvamo1p0_zvlsseg1p0"
