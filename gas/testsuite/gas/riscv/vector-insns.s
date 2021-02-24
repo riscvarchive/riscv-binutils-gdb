@@ -1978,6 +1978,8 @@
 
 	vfneg.v v4, v8
 	vfneg.v v4, v8, v0.t
+	vfabs.v v4, v8
+	vfabs.v v4, v8, v0.t
 
 	vfsgnj.vv v4, v8, v12
 	vfsgnj.vf v4, v8, fa2
