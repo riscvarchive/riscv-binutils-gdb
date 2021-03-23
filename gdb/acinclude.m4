@@ -362,6 +362,7 @@ AC_DEFUN([GDB_AC_CHECK_BFD], [
   AC_CACHE_CHECK([$1], [$2],
   [AC_TRY_LINK(
   [#include <stdlib.h>
+  #include <string.h>
   #include "bfd.h"
   #include "$4"
   ],

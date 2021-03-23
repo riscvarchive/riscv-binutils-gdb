@@ -1,3 +1,8 @@
+2020-11-28  Alex Richardson  <Alexander.Richardson@cl.cam.ac.uk>
+
+	* acincludde.m4 (GDB_AC_CHECK_BFD): Include string.h in the test
+	program.
+
 2020-10-24  Joel Brobecker  <brobecker@adacore.com>
 
 	* version.in: Set GDB version number to 10.1.
