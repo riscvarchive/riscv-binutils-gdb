@@ -361,22 +361,16 @@ riscv_multi_subset_supports (enum riscv_insn_class insn_class)
       return riscv_subset_supports ("zbs");
     case INSN_CLASS_ZBT:
       return riscv_subset_supports ("zbt");
-    case INSN_CLASS_ZBB_OR_INSN_CLASS_ZBP:
+    case INSN_CLASS_ZBB_OR_ZBP:
       return (riscv_subset_supports ("zbb") || riscv_subset_supports ("zbp"));
-    case INSN_CLASS_ZBS_OR_INSN_CLASS_ZBE:
+    case INSN_CLASS_ZBS_OR_ZBE:
       return (riscv_subset_supports ("zbs") || riscv_subset_supports ("zbe"));
-    case INSN_CLASS_ZBP_OR_INSN_CLASS_ZBM:
+    case INSN_CLASS_ZBP_OR_ZBM:
       return (riscv_subset_supports ("zbp") || riscv_subset_supports ("zbm"));
-    case INSN_CLASS_ZBP_OR_INSN_CLASS_ZBE_OR_INSN_CLASS_ZBF:
-      return (riscv_subset_supports ("zbp")
-	    || riscv_subset_supports ("zbe")
-	    || riscv_subset_supports ("zbf"));
-    case INSN_CLASS_ZBP_OR_INSN_CLASS_ZBE_OR_INSN_CLASS_ZBF_OR_INSN_CLASS_ZBM:
-      return (riscv_subset_supports ("zbp")
-            || riscv_subset_supports ("zbe")
-            || riscv_subset_supports ("zbf")
-	    || riscv_subset_supports ("zbm"));
-
+    case INSN_CLASS_ZBP_OR_ZBE_OR_ZBF:
+      return (riscv_subset_supports ("zbp") || riscv_subset_supports ("zbe") || riscv_subset_supports ("zbf"));
+    case INSN_CLASS_ZBP_OR_ZBE_OR_ZBF_OR_ZBM:
+      return (riscv_subset_supports ("zbp") || riscv_subset_supports ("zbe") || riscv_subset_supports ("zbf") || riscv_subset_supports ("zbm"));
     default:
       as_fatal ("internal: unreachable");
       return FALSE;
