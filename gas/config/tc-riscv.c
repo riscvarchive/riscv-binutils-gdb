@@ -142,6 +142,13 @@ static const struct riscv_ext_version ext_version_table[] =
   {"zbb",   ISA_SPEC_CLASS_DRAFT, 0, 93},
   {"zba",   ISA_SPEC_CLASS_DRAFT, 0, 93},
   {"zbc",   ISA_SPEC_CLASS_DRAFT, 0, 93},
+  {"zbe",   ISA_SPEC_CLASS_DRAFT, 0, 93},
+  {"zbf",   ISA_SPEC_CLASS_DRAFT, 0, 93},
+  {"zbm",   ISA_SPEC_CLASS_DRAFT, 0, 93},
+  {"zbp",   ISA_SPEC_CLASS_DRAFT, 0, 93},
+  {"zbr",   ISA_SPEC_CLASS_DRAFT, 0, 93},
+  {"zbs",   ISA_SPEC_CLASS_DRAFT, 0, 93},
+  {"zbt",   ISA_SPEC_CLASS_DRAFT, 0, 93},
 
   /* Terminate the list.  */
   {NULL, 0, 0, 0}
@@ -340,6 +347,35 @@ riscv_multi_subset_supports (enum riscv_insn_class insn_class)
       return riscv_subset_supports ("zba");
     case INSN_CLASS_ZBC:
       return riscv_subset_supports ("zbc");
+    case INSN_CLASS_ZBE:
+      return riscv_subset_supports ("zbe");
+    case INSN_CLASS_ZBF:
+      return riscv_subset_supports ("zbf");
+    case INSN_CLASS_ZBM:
+      return riscv_subset_supports ("zbm");
+    case INSN_CLASS_ZBP:
+      return riscv_subset_supports ("zbp");
+    case INSN_CLASS_ZBR:
+      return riscv_subset_supports ("zbr");
+    case INSN_CLASS_ZBS:
+      return riscv_subset_supports ("zbs");
+    case INSN_CLASS_ZBT:
+      return riscv_subset_supports ("zbt");
+    case INSN_CLASS_ZBB_OR_INSN_CLASS_ZBP:
+      return (riscv_subset_supports ("zbb") || riscv_subset_supports ("zbp"));
+    case INSN_CLASS_ZBS_OR_INSN_CLASS_ZBE:
+      return (riscv_subset_supports ("zbs") || riscv_subset_supports ("zbe"));
+    case INSN_CLASS_ZBP_OR_INSN_CLASS_ZBM:
+      return (riscv_subset_supports ("zbp") || riscv_subset_supports ("zbm"));
+    case INSN_CLASS_ZBP_OR_INSN_CLASS_ZBE_OR_INSN_CLASS_ZBF:
+      return (riscv_subset_supports ("zbp")
+	    || riscv_subset_supports ("zbe")
+	    || riscv_subset_supports ("zbf"));
+    case INSN_CLASS_ZBP_OR_INSN_CLASS_ZBE_OR_INSN_CLASS_ZBF_OR_INSN_CLASS_ZBM:
+      return (riscv_subset_supports ("zbp")
+            || riscv_subset_supports ("zbe")
+            || riscv_subset_supports ("zbf")
+	    || riscv_subset_supports ("zbm"));
 
     default:
       as_fatal ("internal: unreachable");
