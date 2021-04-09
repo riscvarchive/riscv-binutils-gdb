@@ -139,6 +139,7 @@ static const struct riscv_ext_version ext_version_table[] =
 
   {"zihintpause", ISA_SPEC_CLASS_DRAFT, 1, 0},
 
+  {"b",   ISA_SPEC_CLASS_DRAFT, 0, 93},
   {"zbb",   ISA_SPEC_CLASS_DRAFT, 0, 93},
   {"zba",   ISA_SPEC_CLASS_DRAFT, 0, 93},
   {"zbc",   ISA_SPEC_CLASS_DRAFT, 0, 93},
