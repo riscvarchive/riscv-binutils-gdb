@@ -1336,7 +1336,7 @@ riscv_parse_std_ext (riscv_parse_subset_t *rps,
 					  &minor_version, TRUE);
 	riscv_parse_add_subset (rps, "e",
 				major_version,
-				minor_version, false);
+				minor_version, FALSE);
 	if (*rps->xlen > 32)
 	  {
 	    rps->error_handler
@@ -1349,11 +1349,11 @@ riscv_parse_std_ext (riscv_parse_subset_t *rps,
       case 'g':
 	p = riscv_parsing_subset_version (rps, march, ++p,
 					  &major_version,
-					  &minor_version, true);
+					  &minor_version, TRUE);
 	/* Expand g to imafd.  */
 	riscv_parse_add_subset (rps, "i",
-				major_version,
-				minor_version, FALSE);
+				RISCV_UNKNOWN_VERSION,
+				RISCV_UNKNOWN_VERSION, FALSE);
 	for ( ; *std_exts != 'q'; std_exts++)
 	  {
 	    subset[0] = *std_exts;
@@ -1364,7 +1364,7 @@ riscv_parse_std_ext (riscv_parse_subset_t *rps,
 	/* Add g as an implicit extension.  */
 	riscv_parse_add_subset (rps, "g",
 				RISCV_UNKNOWN_VERSION,
-				RISCV_UNKNOWN_VERSION, true);
+				RISCV_UNKNOWN_VERSION, TRUE);
 	break;
 
       default:
@@ -1700,7 +1700,7 @@ riscv_parse_add_implicit_subsets (riscv_parse_subset_t *rps)
   if (riscv_lookup_subset (rps->subset_list, "e", &subset))
     riscv_parse_add_subset (rps, "i",
 			    RISCV_UNKNOWN_VERSION,
-			    RISCV_UNKNOWN_VERSION, true);
+			    RISCV_UNKNOWN_VERSION, TRUE);
 
   /* Add the zicsr and zifencei only when the i's version less than 2.1.  */
   if (riscv_lookup_subset (rps->subset_list, "i", &subset)
