@@ -1,4 +1,4 @@
-#as: -march=rv64i_zba_zbb_zbc
+#as: -march=rv64i_zba_zbb_zbc_zbe_zbf_zbm_zbp_zbr_zbs_zbt
 #source: b-ext-64.s
 #objdump: -d
 
