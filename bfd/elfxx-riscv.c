@@ -1456,10 +1456,8 @@ typedef struct riscv_parse_config
 
    Arguments:
      `rps`: Hooks and status for parsing extensions.
-     `march`: Full architecture string.
-     `p`: Curent parsing position.
-     `config`: What class and predicate function to use for the
-     extension.  */
+     `march`: Full ISA string.
+     `p`: Curent parsing position.  */
 
 static const char *
 riscv_parse_prefixed_ext (riscv_parse_subset_t *rps,
@@ -1508,9 +1506,8 @@ riscv_parse_prefixed_ext (riscv_parse_subset_t *rps,
 
       /* Check that the prefix extension is known.
 	 For 'x', anything goes but it cannot simply be 'x'.
-	 For 's', it must be known from a list and cannot simply be 's'.
-	 For 'h', it must be known from a list and cannot simply be 'h'.
-	 For 'z', it must be known from a list and cannot simply be 'z'.  */
+	 For other prefixed extensions, it must be known from a list
+	 and cannot simply be the prefixed name.  */
 
       /* Check that the extension name is well-formed.  */
       if (!config->ext_valid_p (subset))
