@@ -1,4 +1,4 @@
-#as: -march=rv64i_zba_zbb_zbc_zbe_zbf_zbm_zbp_zbr_zbs_zbt
+#as: -march=rv32i_zba_zbb_zbc_zbe_zbf_zbm_zbp_zbr_zbs_zbt
 #source: b-ext.s
 #objdump: -d
 
@@ -33,3 +33,42 @@ Disassembly of section .text:
 [ 	]+58:[ 	]+0ac59533[ 	]+clmul[ 	]+a0,a1,a2
 [ 	]+5c:[ 	]+0ac5b533[ 	]+clmulh[ 	]+a0,a1,a2
 [ 	]+60:[ 	]+0ac5a533[ 	]+clmulr[ 	]+a0,a1,a2
+[ 	]+64:[ 	]+08c5c533[ 	]+pack[ 	]+a0,a1,a2
+[ 	]+68:[ 	]+48c5c533[ 	]+packu[ 	]+a0,a1,a2
+[ 	]+6c:[ 	]+08c5f533[ 	]+packh[ 	]+a0,a1,a2
+[ 	]+70:[ 	]+68c5d533[ 	]+grev[ 	]+a0,a1,a2
+[ 	]+74:[ 	]+6825d513[ 	]+grevi[ 	]+a0,a1,0x2
+[ 	]+78:[ 	]+28c5d533[ 	]+gorc[ 	]+a0,a1,a2
+[ 	]+7c:[ 	]+2825d513[ 	]+gorci[ 	]+a0,a1,0x2
+[ 	]+80:[ 	]+08c59533[ 	]+shfl[ 	]+a0,a1,a2
+[ 	]+84:[ 	]+08259513[ 	]+shfli[ 	]+a0,a1,0x2
+[ 	]+88:[ 	]+08c5d533[ 	]+unshfl[ 	]+a0,a1,a2
+[ 	]+8c:[ 	]+0825d513[ 	]+unshfli[ 	]+a0,a1,0x2
+[ 	]+90:[ 	]+28c5a533[ 	]+xperm.n[ 	]+a0,a1,a2
+[ 	]+94:[ 	]+28c5c533[ 	]+xperm.b[ 	]+a0,a1,a2
+[ 	]+98:[ 	]+28c5e533[ 	]+xperm.h[ 	]+a0,a1,a2
+[ 	]+9c:[ 	]+28c59533[ 	]+bset[ 	]+a0,a1,a2
+[ 	]+a0:[ 	]+48c59533[ 	]+bclr[ 	]+a0,a1,a2
+[ 	]+a4:[ 	]+68c59533[ 	]+binv[ 	]+a0,a1,a2
+[ 	]+a8:[ 	]+48c5d533[ 	]+bext[ 	]+a0,a1,a2
+[ 	]+ac:[ 	]+48c5e533[ 	]+bdep[ 	]+a0,a1,a2
+[ 	]+b0:[ 	]+28259513[ 	]+bseti[ 	]+a0,a1,0x2
+[ 	]+b4:[ 	]+48259513[ 	]+bclri[ 	]+a0,a1,0x2
+[ 	]+b8:[ 	]+68259513[ 	]+binvi[ 	]+a0,a1,0x2
+[ 	]+bc:[ 	]+4825d513[ 	]+bexti[ 	]+a0,a1,0x2
+[ 	]+c0:[ 	]+20c59533[ 	]+slo[ 	]+a0,a1,a2
+[ 	]+c4:[ 	]+20c5d533[ 	]+sro[ 	]+a0,a1,a2
+[ 	]+c8:[ 	]+20259513[ 	]+sloi[ 	]+a0,a1,0x2
+[ 	]+cc:[ 	]+2025d513[ 	]+sroi[ 	]+a0,a1,0x2
+[ 	]+d0:[ 	]+48c5f533[ 	]+bfp[ 	]+a0,a1,a2
+[ 	]+d4:[ 	]+61051513[ 	]+crc32.b[ 	]+a0,a0
+[ 	]+d8:[ 	]+61151513[ 	]+crc32.h[ 	]+a0,a0
+[ 	]+dc:[ 	]+61251513[ 	]+crc32.w[ 	]+a0,a0
+[ 	]+e0:[ 	]+61851513[ 	]+crc32c.b[ 	]+a0,a0
+[ 	]+e4:[ 	]+61951513[ 	]+crc32c.h[ 	]+a0,a0
+[ 	]+e8:[ 	]+61a51513[ 	]+crc32c.w[ 	]+a0,a0
+[ 	]+ec:[ 	]+6ec59533[ 	]+cmix[ 	]+a0,a1,a2,a3
+[ 	]+f0:[ 	]+6ec5d533[ 	]+cmov[ 	]+a0,a1,a2,a3
+[ 	]+f4:[ 	]+6cc59533[ 	]+fsl[ 	]+a0,a1,a2,a3
+[ 	]+f8:[ 	]+6cc5d533[ 	]+fsr[ 	]+a0,a1,a2,a3
+[ 	]+fc:[ 	]+6c25d513[ 	]+fsri[ 	]+a0,a1,0x2,a3

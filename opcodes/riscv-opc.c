@@ -879,7 +879,7 @@ const struct riscv_opcode riscv_opcodes[] =
 {"sroiw",     64, INSN_CLASS_ZBS,  "d,s,<",    MATCH_SROIW, MASK_SROIW, match_opcode, 0 },
 
 {"bfp",        0, INSN_CLASS_ZBF,  "d,s,t",    MATCH_BFP, MASK_BFP, match_opcode, 0 },
-{"bfpw",      64, INSN_CLASS_ZBF,  "d,s,>",    MATCH_BFPW, MASK_BFPW, match_opcode, 0 },
+{"bfpw",      64, INSN_CLASS_ZBF,  "d,s,<",    MATCH_BFPW, MASK_BFPW, match_opcode, 0 },
 
 {"bmator",    64, INSN_CLASS_ZBM,  "d,s,t",    MATCH_BMATOR, MASK_BMATOR, match_opcode, 0 },
 {"bmatxor",   64, INSN_CLASS_ZBM,  "d,s,t",    MATCH_BMATXOR, MASK_BMATXOR, match_opcode, 0 },
