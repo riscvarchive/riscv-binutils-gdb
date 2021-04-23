@@ -164,6 +164,29 @@ maybe_print_address (struct riscv_private_data *pd, int base_reg, int offset)
     pd->print_addr = offset;
 }
 
+#define RVP_MAX_KEYWORD_LEN 32
+
+static bfd_boolean
+parse_rvp_field (const char **str, char name[RVP_MAX_KEYWORD_LEN])
+{
+  char *p = name;
+  const char *str_t;
+
+  str_t = *str;
+  str_t--;
+  while (isalnum (*str_t) || *str_t == '.' || *str_t == '_')
+    *p++ = *str_t++;
+  *p = '\0';
+
+  if (strncmp (name, "nds_", 4) == 0)
+    {
+      *str = str_t;
+      return TRUE;
+    }
+  else
+    return FALSE;
+}
+
 /* Print insn arguments for 32/64-bit code.  */
 
 static void
@@ -297,6 +320,10 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 		     riscv_rm, ARRAY_SIZE (riscv_rm));
 	  break;
 
+	case 'l':
+	  print (info->stream, "%d", (int)EXTRACT_ITYPE_IMM6L (l));
+	  break;
+
 	case 'P':
 	  arg_print (info, EXTRACT_OPERAND (PRED, l),
 		     riscv_pred_succ, ARRAY_SIZE (riscv_pred_succ));
@@ -305,6 +332,39 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	case 'Q':
 	  arg_print (info, EXTRACT_OPERAND (SUCC, l),
 		     riscv_pred_succ, ARRAY_SIZE (riscv_pred_succ));
+	  break;
+	
+	case 'n':
+	  {
+	    d++;
+	    char field_name[RVP_MAX_KEYWORD_LEN];
+	    if (parse_rvp_field (&d, field_name))
+	      {
+		if (strcmp (field_name, "nds_rc") == 0)
+		  print (info->stream, "%s",
+			 riscv_gpr_names[EXTRACT_OPERAND (RC, l)]);
+		else if (strcmp (field_name, "nds_rdp") == 0)
+		  print (info->stream, "%s", riscv_gpr_names[rd]);
+		else if (strcmp (field_name, "nds_rsp") == 0)
+		  print (info->stream, "%s", riscv_gpr_names[rs1]);
+		else if (strcmp (field_name, "nds_rtp") == 0)
+		  print (info->stream, "%s",
+			 riscv_gpr_names[EXTRACT_OPERAND (RS2, l)]);
+		else if (strcmp (field_name, "nds_i3u") == 0)
+		  print (info->stream, "%d", (int)EXTRACT_PTYPE_IMM3U (l));
+		else if (strcmp (field_name, "nds_i4u") == 0)
+		  print (info->stream, "%d", (int)EXTRACT_PTYPE_IMM4U (l));
+		else if (strcmp (field_name, "nds_i5u") == 0)
+		  print (info->stream, "%d", (int)EXTRACT_PTYPE_IMM5U (l));
+		else if (strcmp (field_name, "nds_i6u") == 0)
+		  print (info->stream, "%d", (int)EXTRACT_PTYPE_IMM6U (l));
+		else
+		  print (info->stream,
+			 _("# internal error, undefined nds v5 field (%s)"),
+			 field_name);
+	      }
+	    d--;
+	  }
 	  break;
 
 	case 'o':
