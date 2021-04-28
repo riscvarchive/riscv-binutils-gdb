@@ -261,6 +261,13 @@ static const char * const riscv_pred_succ[16] =
 #define OP_MASK_CFUNCT2		0x3
 #define OP_SH_CFUNCT2		5
 
+/* RVK fields. */
+
+#define OP_SH_BS        30
+#define OP_MASK_BS      3
+#define OP_SH_RCON      20
+#define OP_MASK_RCON    0xf
+
 /* ABI names for selected x-registers.  */
 
 #define X_RA 1
@@ -301,7 +308,7 @@ static const char * const riscv_pred_succ[16] =
 
 /* All RISC-V instructions belong to at least one of these classes.  */
 enum riscv_insn_class
-{
+{  
   INSN_CLASS_NONE,
 
   INSN_CLASS_I,
@@ -319,6 +326,14 @@ enum riscv_insn_class
   INSN_CLASS_ZBA,
   INSN_CLASS_ZBB,
   INSN_CLASS_ZBC,
+  INSN_CLASS_ZKG,
+  INSN_CLASS_ZKB,
+  INSN_CLASS_ZKR,
+  INSN_CLASS_ZKNE,
+  INSN_CLASS_ZKND,
+  INSN_CLASS_ZKNH,
+  INSN_CLASS_ZKSED,
+  INSN_CLASS_ZKSH,
 };
 
 /* This structure holds information for a particular instruction.  */

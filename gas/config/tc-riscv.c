@@ -143,6 +143,18 @@ static const struct riscv_ext_version ext_version_table[] =
   {"zba",   ISA_SPEC_CLASS_DRAFT, 0, 93},
   {"zbc",   ISA_SPEC_CLASS_DRAFT, 0, 93},
 
+  {"k",   ISA_SPEC_CLASS_DRAFT, 0, 90},
+  {"zkg",   ISA_SPEC_CLASS_DRAFT, 0, 90},
+  {"zkb",   ISA_SPEC_CLASS_DRAFT, 0, 90},
+  {"zkr",   ISA_SPEC_CLASS_DRAFT, 0, 90},
+  {"zkn",   ISA_SPEC_CLASS_DRAFT, 0, 90},
+  {"zkne",  ISA_SPEC_CLASS_DRAFT, 0, 90},
+  {"zknd",  ISA_SPEC_CLASS_DRAFT, 0, 90},
+  {"zknh",  ISA_SPEC_CLASS_DRAFT, 0, 90},
+  {"zks",   ISA_SPEC_CLASS_DRAFT, 0, 90},
+  {"zksed", ISA_SPEC_CLASS_DRAFT, 0, 90},
+  {"zksh",  ISA_SPEC_CLASS_DRAFT, 0, 90},
+
   /* Terminate the list.  */
   {NULL, 0, 0, 0}
 };
@@ -340,6 +352,23 @@ riscv_multi_subset_supports (enum riscv_insn_class insn_class)
       return riscv_subset_supports ("zba");
     case INSN_CLASS_ZBC:
       return riscv_subset_supports ("zbc");
+    
+    case INSN_CLASS_ZKG:
+      return riscv_subset_supports ("zkg");
+    case INSN_CLASS_ZKR:
+      return riscv_subset_supports ("zkr");
+    case INSN_CLASS_ZKB:
+      return riscv_subset_supports ("zkb");
+    case INSN_CLASS_ZKNE:
+      return riscv_subset_supports ("zkne");
+    case INSN_CLASS_ZKND:
+      return riscv_subset_supports ("zknd");
+    case INSN_CLASS_ZKNH:
+      return riscv_subset_supports ("zknh");
+    case INSN_CLASS_ZKSED:
+      return riscv_subset_supports ("zksed");
+    case INSN_CLASS_ZKSH:
+      return riscv_subset_supports ("zksh");
 
     default:
       as_fatal ("internal: unreachable");
@@ -1068,6 +1097,8 @@ validate_riscv_insn (const struct riscv_opcode *opc, int length)
       case 'I': break; /* Macro operand, must be constant.  */
       case 'D': /* RD, floating point.  */
       case 'd': USE_BITS (OP_MASK_RD, OP_SH_RD); break;
+      case 'y': USE_BITS (OP_MASK_BS,	OP_SH_BS); break;
+      case 'Y': USE_BITS (OP_MASK_RCON, OP_SH_RCON); break;
       case 'Z': /* RS1, CSR number.  */
       case 'S': /* RS1, floating point.  */
       case 's': USE_BITS (OP_MASK_RS1, OP_SH_RS1); break;
@@ -2693,6 +2724,28 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 			    "specifier `F%c'\n"), *args);
 		}
 	      break;
+            
+	    case 'y':        /* bs immediate */
+	            my_getExpression (imm_expr, s);
+	            check_absolute_expr (ip, imm_expr, FALSE);
+	            if ((unsigned long)imm_expr->X_add_number > 3)
+		            as_bad(_("Improper bs immediate (%lu)"),
+		                    (unsigned long) imm_expr->X_add_number);
+	            INSERT_OPERAND(BS, *ip, imm_expr->X_add_number);
+	            imm_expr->X_op = O_absent;
+	            s = expr_end;
+	            continue;
+            
+	    case 'Y':        /* rcon immediate */
+	            my_getExpression (imm_expr, s);
+	            check_absolute_expr (ip, imm_expr, FALSE);
+	            if ((unsigned long)imm_expr->X_add_number > 10)
+		          as_bad(_("Improper rcon immediate (%lu)"),
+		                  (unsigned long) imm_expr->X_add_number);
+	            INSERT_OPERAND(RCON, *ip, imm_expr->X_add_number);
+	            imm_expr->X_op = O_absent;
+	            s = expr_end;
+	            continue;
 
 	    case 'z':
 	      if (my_getSmallExpression (imm_expr, imm_reloc, s, p)

@@ -341,6 +341,10 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	    pd->hi_addr[rd] = EXTRACT_CITYPE_LUI_IMM (l);
 	  print (info->stream, "%s", riscv_gpr_names[rd]);
 	  break;
+	
+	case 'y':
+	  print (info->stream, "0x%x", (int)EXTRACT_OPERAND (BS, l));
+	  break;
 
 	case 'z':
 	  print (info->stream, "%s", riscv_gpr_names[0]);
@@ -406,6 +410,10 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	      print (info->stream, "0x%x", csr);
 	    break;
 	  }
+
+	case 'Y':
+	  print (info->stream, "0x%x", (int)EXTRACT_OPERAND (RCON, l));
+	  break;
 
 	case 'Z':
 	  print (info->stream, "%d", rs1);
