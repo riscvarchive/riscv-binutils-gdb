@@ -1159,7 +1159,6 @@ static bfd_boolean
 riscv_ext_dont_care_version (const char *subset)
 {
   if (strcmp (subset, "g") == 0
-      || strcmp (subset, "k") == 0
       || strcmp (subset, "zicsr") == 0
       || strcmp (subset, "zifencei") == 0)
     return TRUE;

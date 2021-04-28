@@ -308,7 +308,7 @@ static const char * const riscv_pred_succ[16] =
 
 /* All RISC-V instructions belong to at least one of these classes.  */
 enum riscv_insn_class
-{  
+{
   INSN_CLASS_NONE,
 
   INSN_CLASS_I,
