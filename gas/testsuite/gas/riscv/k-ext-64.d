@@ -8,8 +8,8 @@
 Disassembly of section .text:
 
 0+000 <target>:
-[ 	]+.*:[ 	]+.*[ 	]+csrr[ 	]+a0,0xf15
-[ 	]+.*:[ 	]+.*[ 	]+csrr[ 	]+a0,0x7a9
+[ 	]+.*:[ 	]+.*[ 	]+csrr[ 	]+a0,mentropy
+[ 	]+.*:[ 	]+.*[ 	]+csrr[ 	]+a0,mnoise
 [ 	]+.*:[ 	]+.*[ 	]+sm3p0[ 	]+a0,a0
 [ 	]+.*:[ 	]+.*[ 	]+sm3p1[ 	]+a0,a0
 [ 	]+.*:[ 	]+.*[ 	]+sm4ed[ 	]+a0,a1,0x2
