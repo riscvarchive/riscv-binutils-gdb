@@ -96,6 +96,7 @@ Disassembly of section .text:
 [     	]+[0-9a-f]+:[  	]+f1202573[    	]+csrr[        	]+a0,marchid
 [     	]+[0-9a-f]+:[  	]+f1302573[    	]+csrr[        	]+a0,mimpid
 [     	]+[0-9a-f]+:[  	]+f1402573[    	]+csrr[        	]+a0,mhartid
+[     	]+[0-9a-f]+:[  	]+f1502573[    	]+csrr[        	]+a0,mentropy
 [     	]+[0-9a-f]+:[  	]+30002573[    	]+csrr[        	]+a0,mstatus
 [     	]+[0-9a-f]+:[  	]+30102573[    	]+csrr[        	]+a0,misa
 [     	]+[0-9a-f]+:[  	]+30202573[    	]+csrr[        	]+a0,medeleg
