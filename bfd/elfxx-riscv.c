@@ -1764,62 +1764,62 @@ riscv_parse_add_implicit_subsets (riscv_parse_subset_t *rps)
   else if ((riscv_lookup_subset (rps->subset_list, "k", &subset)))
     {
       riscv_parse_add_subset (rps, "zkg",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
+			      RISCV_UNKNOWN_VERSION,
+			      RISCV_UNKNOWN_VERSION, TRUE);
       riscv_parse_add_subset (rps, "zkb",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
+			      RISCV_UNKNOWN_VERSION,
+			      RISCV_UNKNOWN_VERSION, TRUE);
       riscv_parse_add_subset (rps, "zkr",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
+			    RISCV_UNKNOWN_VERSION,
+			    RISCV_UNKNOWN_VERSION, TRUE);
       riscv_parse_add_subset (rps, "zkne",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
+			    RISCV_UNKNOWN_VERSION,
+			    RISCV_UNKNOWN_VERSION, TRUE);
       riscv_parse_add_subset (rps, "zknd",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
+			    RISCV_UNKNOWN_VERSION,
+			    RISCV_UNKNOWN_VERSION, TRUE);
       riscv_parse_add_subset (rps, "zknh",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
+			    RISCV_UNKNOWN_VERSION,
+			    RISCV_UNKNOWN_VERSION, TRUE);
       riscv_parse_add_subset (rps, "zksed",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
+			    RISCV_UNKNOWN_VERSION,
+			    RISCV_UNKNOWN_VERSION, TRUE);
       riscv_parse_add_subset (rps, "zksh",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
+			    RISCV_UNKNOWN_VERSION,
+			    RISCV_UNKNOWN_VERSION, TRUE);
       }
   else if ((riscv_lookup_subset (rps->subset_list, "zkn", &subset)))
     {
       riscv_parse_add_subset (rps, "zkg",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
+			    RISCV_UNKNOWN_VERSION,
+			    RISCV_UNKNOWN_VERSION, TRUE);
       riscv_parse_add_subset (rps, "zkb",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
+			    RISCV_UNKNOWN_VERSION,
+			    RISCV_UNKNOWN_VERSION, TRUE);
       riscv_parse_add_subset (rps, "zkne",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
+			    RISCV_UNKNOWN_VERSION,
+			    RISCV_UNKNOWN_VERSION, TRUE);
       riscv_parse_add_subset (rps, "zknd",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
+			    RISCV_UNKNOWN_VERSION,
+			    RISCV_UNKNOWN_VERSION, TRUE);
       riscv_parse_add_subset (rps, "zknh",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
+			    RISCV_UNKNOWN_VERSION,
+			    RISCV_UNKNOWN_VERSION, TRUE);
     }                                                                        
   else if ((riscv_lookup_subset (rps->subset_list, "zks", &subset)))
     {
       riscv_parse_add_subset (rps, "zkg",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
+			    RISCV_UNKNOWN_VERSION,
+			    RISCV_UNKNOWN_VERSION, TRUE);
       riscv_parse_add_subset (rps, "zkb",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
+			    RISCV_UNKNOWN_VERSION,
+			    RISCV_UNKNOWN_VERSION, TRUE);
       riscv_parse_add_subset (rps, "zksed",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
+			    RISCV_UNKNOWN_VERSION,
+			    RISCV_UNKNOWN_VERSION, TRUE);
       riscv_parse_add_subset (rps, "zksh",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
+			    RISCV_UNKNOWN_VERSION,
+			    RISCV_UNKNOWN_VERSION, TRUE);
     }                        
 
   if ((riscv_lookup_subset (rps->subset_list, "g", &subset)))

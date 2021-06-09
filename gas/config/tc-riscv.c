@@ -143,15 +143,12 @@ static const struct riscv_ext_version ext_version_table[] =
   {"zba",   ISA_SPEC_CLASS_DRAFT, 0, 93},
   {"zbc",   ISA_SPEC_CLASS_DRAFT, 0, 93},
 
-  {"k",   ISA_SPEC_CLASS_DRAFT, 0, 90},
   {"zkg",   ISA_SPEC_CLASS_DRAFT, 0, 90},
   {"zkb",   ISA_SPEC_CLASS_DRAFT, 0, 90},
   {"zkr",   ISA_SPEC_CLASS_DRAFT, 0, 90},
-  {"zkn",   ISA_SPEC_CLASS_DRAFT, 0, 90},
   {"zkne",  ISA_SPEC_CLASS_DRAFT, 0, 90},
   {"zknd",  ISA_SPEC_CLASS_DRAFT, 0, 90},
   {"zknh",  ISA_SPEC_CLASS_DRAFT, 0, 90},
-  {"zks",   ISA_SPEC_CLASS_DRAFT, 0, 90},
   {"zksed", ISA_SPEC_CLASS_DRAFT, 0, 90},
   {"zksh",  ISA_SPEC_CLASS_DRAFT, 0, 90},
 
@@ -2726,26 +2723,26 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 	      break;
             
 	    case 'y':        /* bs immediate */
-	            my_getExpression (imm_expr, s);
-	            check_absolute_expr (ip, imm_expr, FALSE);
-	            if ((unsigned long)imm_expr->X_add_number > 3)
-		            as_bad(_("Improper bs immediate (%lu)"),
-		                    (unsigned long) imm_expr->X_add_number);
-	            INSERT_OPERAND(BS, *ip, imm_expr->X_add_number);
-	            imm_expr->X_op = O_absent;
-	            s = expr_end;
-	            continue;
+	      my_getExpression (imm_expr, s);
+	      check_absolute_expr (ip, imm_expr, FALSE);
+	      if ((unsigned long)imm_expr->X_add_number > 3)
+		      as_bad(_("Improper bs immediate (%lu)"),
+		        (unsigned long) imm_expr->X_add_number);
+	      INSERT_OPERAND(BS, *ip, imm_expr->X_add_number);
+	      imm_expr->X_op = O_absent;
+	      s = expr_end;
+	      continue;
             
 	    case 'Y':        /* rcon immediate */
-	            my_getExpression (imm_expr, s);
-	            check_absolute_expr (ip, imm_expr, FALSE);
-	            if ((unsigned long)imm_expr->X_add_number > 10)
-		          as_bad(_("Improper rcon immediate (%lu)"),
-		                  (unsigned long) imm_expr->X_add_number);
-	            INSERT_OPERAND(RCON, *ip, imm_expr->X_add_number);
-	            imm_expr->X_op = O_absent;
-	            s = expr_end;
-	            continue;
+	      my_getExpression (imm_expr, s);
+	      check_absolute_expr (ip, imm_expr, FALSE);
+	      if ((unsigned long)imm_expr->X_add_number > 10)
+		      as_bad(_("Improper rcon immediate (%lu)"),
+		        (unsigned long) imm_expr->X_add_number);
+	      INSERT_OPERAND(RCON, *ip, imm_expr->X_add_number);
+	      imm_expr->X_op = O_absent;
+	      s = expr_end;
+	      continue;
 
 	    case 'z':
 	      if (my_getSmallExpression (imm_expr, imm_reloc, s, p)

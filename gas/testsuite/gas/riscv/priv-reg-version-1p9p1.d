@@ -258,6 +258,7 @@ Disassembly of section .text:
 [     	]+[0-9a-f]+:[  	]+7a402573[    	]+csrr[        	]+a0,tinfo
 [     	]+[0-9a-f]+:[  	]+7a502573[    	]+csrr[        	]+a0,tcontrol
 [     	]+[0-9a-f]+:[  	]+7a802573[    	]+csrr[        	]+a0,mcontext
+[     	]+[0-9a-f]+:[  	]+7a902573[    	]+csrr[        	]+a0,mnoise
 [     	]+[0-9a-f]+:[  	]+7aa02573[    	]+csrr[        	]+a0,scontext
 [     	]+[0-9a-f]+:[  	]+7a102573[    	]+csrr[        	]+a0,tdata1
 [     	]+[0-9a-f]+:[  	]+7a102573[    	]+csrr[        	]+a0,tdata1
