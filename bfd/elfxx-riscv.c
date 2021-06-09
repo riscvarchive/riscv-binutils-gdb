@@ -1598,7 +1598,8 @@ riscv_parse_prefixed_ext (riscv_parse_subset_t *rps,
 
 static const char * const riscv_std_z_ext_strtab[] =
 {
-  "zicsr", "zifencei", "zihintpause", "zba", "zbb", "zbc", "zbe", "zbf", "zbm", "zbp", "zbr", "zbs", "zbt", NULL
+  "zicsr", "zifencei", "zihintpause", "zba", "zbb", "zbc",
+  "zbe", "zbf", "zbm", "zbp", "zbr", "zbs", "zbt", NULL
 };
 
 static const char * const riscv_std_s_ext_strtab[] =
@@ -1769,40 +1770,6 @@ riscv_parse_add_implicit_subsets (riscv_parse_subset_t *rps)
       riscv_parse_add_subset (rps, "zifencei",
 			      RISCV_UNKNOWN_VERSION,
 			      RISCV_UNKNOWN_VERSION, TRUE);
-    }
-
-  if ((riscv_lookup_subset (rps->subset_list, "b", &subset)))
-    {
-      riscv_parse_add_subset (rps, "zba",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
-      riscv_parse_add_subset (rps, "zbb",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
-      riscv_parse_add_subset (rps, "zbc",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
-      riscv_parse_add_subset (rps, "zbe",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
-      riscv_parse_add_subset (rps, "zbf",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
-      riscv_parse_add_subset (rps, "zbm",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
-      riscv_parse_add_subset (rps, "zbp",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
-      riscv_parse_add_subset (rps, "zbr",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
-      riscv_parse_add_subset (rps, "zbs",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
-      riscv_parse_add_subset (rps, "zbt",
-                              RISCV_UNKNOWN_VERSION,
-                              RISCV_UNKNOWN_VERSION, TRUE);
     }
 }
 
