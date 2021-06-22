@@ -1,4 +1,4 @@
-#as: -march=rv64i_zkb_zknd_zkne_zknh_zkr_zksed_zksh
+#as: -march=rv64i_zbkb_zbkc_zbkx_zknd_zkne_zknh_zkr_zksed_zksh_zkt
 #source: k-ext-64.s
 #objdump: -d
 

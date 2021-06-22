@@ -1598,8 +1598,9 @@ riscv_parse_prefixed_ext (riscv_parse_subset_t *rps,
 
 static const char * const riscv_std_z_ext_strtab[] =
 {
-  "zicsr", "zifencei", "zihintpause", "zba", "zbb", "zbc", "zkb", "zkg", 
-  "zkn", "zkne", "zknd", "zknh", "zkr", "zks", "zksed", "zksh", NULL
+  "zicsr", "zifencei", "zihintpause", "zba", "zbb", "zbc", "zbkb", "zbkc",
+  "zbkx", "zkn", "zknd", "zkne", "zknh", "zkr", "zks", "zksed", "zksh", "zkt",
+  NULL
 };
 
 static const char * const riscv_std_s_ext_strtab[] =

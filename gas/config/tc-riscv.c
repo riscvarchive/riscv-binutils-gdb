@@ -143,14 +143,16 @@ static const struct riscv_ext_version ext_version_table[] =
   {"zba",   ISA_SPEC_CLASS_DRAFT, 0, 93},
   {"zbc",   ISA_SPEC_CLASS_DRAFT, 0, 93},
 
-  {"zkg",   ISA_SPEC_CLASS_DRAFT, 0, 90},
-  {"zkb",   ISA_SPEC_CLASS_DRAFT, 0, 90},
-  {"zkr",   ISA_SPEC_CLASS_DRAFT, 0, 90},
-  {"zkne",  ISA_SPEC_CLASS_DRAFT, 0, 90},
-  {"zknd",  ISA_SPEC_CLASS_DRAFT, 0, 90},
-  {"zknh",  ISA_SPEC_CLASS_DRAFT, 0, 90},
-  {"zksed", ISA_SPEC_CLASS_DRAFT, 0, 90},
-  {"zksh",  ISA_SPEC_CLASS_DRAFT, 0, 90},
+  {"zbkb",  ISA_SPEC_CLASS_DRAFT, 0, 92},
+  {"zbkc",  ISA_SPEC_CLASS_DRAFT, 0, 92},
+  {"zbkx",  ISA_SPEC_CLASS_DRAFT, 0, 92},
+  {"zknd",  ISA_SPEC_CLASS_DRAFT, 0, 92},
+  {"zkne",  ISA_SPEC_CLASS_DRAFT, 0, 92},
+  {"zknh",  ISA_SPEC_CLASS_DRAFT, 0, 92},
+  {"zkr",   ISA_SPEC_CLASS_DRAFT, 0, 92},
+  {"zksed", ISA_SPEC_CLASS_DRAFT, 0, 92},
+  {"zksh",  ISA_SPEC_CLASS_DRAFT, 0, 92},
+  {"zkt",   ISA_SPEC_CLASS_DRAFT, 0, 92},
 
   /* Terminate the list.  */
   {NULL, 0, 0, 0}
@@ -349,19 +351,21 @@ riscv_multi_subset_supports (enum riscv_insn_class insn_class)
       return riscv_subset_supports ("zba");
     case INSN_CLASS_ZBC:
       return riscv_subset_supports ("zbc");
-    
-    case INSN_CLASS_ZKG:
-      return riscv_subset_supports ("zkg");
-    case INSN_CLASS_ZKR:
-      return riscv_subset_supports ("zkr");
-    case INSN_CLASS_ZKB:
-      return riscv_subset_supports ("zkb");
+
+    case INSN_CLASS_ZBKB:
+      return riscv_subset_supports ("zbkb");
+    case INSN_CLASS_ZBKC:
+      return riscv_subset_supports ("zbkc");
+    case INSN_CLASS_ZBKX:
+      return riscv_subset_supports ("zbkx");
     case INSN_CLASS_ZKNE:
       return riscv_subset_supports ("zkne");
     case INSN_CLASS_ZKND:
       return riscv_subset_supports ("zknd");
     case INSN_CLASS_ZKNH:
       return riscv_subset_supports ("zknh");
+    case INSN_CLASS_ZKR:
+      return riscv_subset_supports ("zkr");
     case INSN_CLASS_ZKSED:
       return riscv_subset_supports ("zksed");
     case INSN_CLASS_ZKSH:
