@@ -373,6 +373,9 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	  break;
 
 	case 'r':
+	  print (info->stream, "%s", riscv_gpr_names[EXTRACT_OPERAND (RS3, l)]);
+      break;
+
 	case 'R':
 	  print (info->stream, "%s", riscv_fpr_names[EXTRACT_OPERAND (RS3, l)]);
 	  break;
