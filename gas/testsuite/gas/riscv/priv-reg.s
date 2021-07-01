@@ -93,12 +93,12 @@
 
 	csr satp		# Added in 1.10
 
+	csr sentropy		# Added in crypoto spec 0.93
+
 	csr mvendorid
 	csr marchid
 	csr mimpid
 	csr mhartid
-	csr mentropy
-
 	csr mstatus
 	csr misa		# 0xf10 in 1.9, but changed to 0x301 since 1.9.1.
 	csr medeleg

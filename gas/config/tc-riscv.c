@@ -143,16 +143,16 @@ static const struct riscv_ext_version ext_version_table[] =
   {"zba",   ISA_SPEC_CLASS_DRAFT, 0, 93},
   {"zbc",   ISA_SPEC_CLASS_DRAFT, 0, 93},
 
-  {"zbkb",  ISA_SPEC_CLASS_DRAFT, 0, 92},
-  {"zbkc",  ISA_SPEC_CLASS_DRAFT, 0, 92},
-  {"zbkx",  ISA_SPEC_CLASS_DRAFT, 0, 92},
-  {"zknd",  ISA_SPEC_CLASS_DRAFT, 0, 92},
-  {"zkne",  ISA_SPEC_CLASS_DRAFT, 0, 92},
-  {"zknh",  ISA_SPEC_CLASS_DRAFT, 0, 92},
-  {"zkr",   ISA_SPEC_CLASS_DRAFT, 0, 92},
-  {"zksed", ISA_SPEC_CLASS_DRAFT, 0, 92},
-  {"zksh",  ISA_SPEC_CLASS_DRAFT, 0, 92},
-  {"zkt",   ISA_SPEC_CLASS_DRAFT, 0, 92},
+  {"zbkb",  ISA_SPEC_CLASS_DRAFT, 0, 93},
+  {"zbkc",  ISA_SPEC_CLASS_DRAFT, 0, 93},
+  {"zbkx",  ISA_SPEC_CLASS_DRAFT, 0, 93},
+  {"zknd",  ISA_SPEC_CLASS_DRAFT, 0, 93},
+  {"zkne",  ISA_SPEC_CLASS_DRAFT, 0, 93},
+  {"zknh",  ISA_SPEC_CLASS_DRAFT, 0, 93},
+  {"zkr",   ISA_SPEC_CLASS_DRAFT, 0, 93},
+  {"zksed", ISA_SPEC_CLASS_DRAFT, 0, 93},
+  {"zksh",  ISA_SPEC_CLASS_DRAFT, 0, 93},
+  {"zkt",   ISA_SPEC_CLASS_DRAFT, 0, 93},
 
   /* Terminate the list.  */
   {NULL, 0, 0, 0}
@@ -1099,7 +1099,7 @@ validate_riscv_insn (const struct riscv_opcode *opc, int length)
       case 'D': /* RD, floating point.  */
       case 'd': USE_BITS (OP_MASK_RD, OP_SH_RD); break;
       case 'y': USE_BITS (OP_MASK_BS,	OP_SH_BS); break;
-      case 'Y': USE_BITS (OP_MASK_RCON, OP_SH_RCON); break;
+      case 'Y': USE_BITS (OP_MASK_RNUM, OP_SH_RNUM); break;
       case 'Z': /* RS1, CSR number.  */
       case 'S': /* RS1, floating point.  */
       case 's': USE_BITS (OP_MASK_RS1, OP_SH_RS1); break;
@@ -2741,9 +2741,9 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 	      my_getExpression (imm_expr, s);
 	      check_absolute_expr (ip, imm_expr, FALSE);
 	      if ((unsigned long)imm_expr->X_add_number > 10)
-		      as_bad(_("Improper rcon immediate (%lu)"),
+		      as_bad(_("Improper rnum immediate (%lu)"),
 		        (unsigned long) imm_expr->X_add_number);
-	      INSERT_OPERAND(RCON, *ip, imm_expr->X_add_number);
+	      INSERT_OPERAND(RNUM, *ip, imm_expr->X_add_number);
 	      imm_expr->X_op = O_absent;
 	      s = expr_end;
 	      continue;

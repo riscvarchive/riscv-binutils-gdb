@@ -265,8 +265,8 @@ static const char * const riscv_pred_succ[16] =
 
 #define OP_SH_BS        30
 #define OP_MASK_BS      3
-#define OP_SH_RCON      20
-#define OP_MASK_RCON    0xf
+#define OP_SH_RNUM      20
+#define OP_MASK_RNUM    0xf
 
 /* ABI names for selected x-registers.  */
 

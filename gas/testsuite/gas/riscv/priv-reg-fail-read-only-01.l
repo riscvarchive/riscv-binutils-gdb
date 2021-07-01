@@ -68,4 +68,5 @@
 .*Warning: read-only CSR is written `csrw marchid,a1'
 .*Warning: read-only CSR is written `csrw mimpid,a1'
 .*Warning: read-only CSR is written `csrw mhartid,a1'
+.*Warning: read-only CSR is written `csrw sentropy,a1'
 #...

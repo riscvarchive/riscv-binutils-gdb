@@ -97,6 +97,8 @@
 
 	csr satp                # Added in 1.10
 
+	csr sentropy            # Added in crypoto spec 0.93
+
 	csr mvendorid
 	csr marchid
 	csr mimpid
