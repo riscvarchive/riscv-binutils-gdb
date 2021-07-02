@@ -412,7 +412,7 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	  }
 
 	case 'Y':
-	  print (info->stream, "0x%x", (int)EXTRACT_OPERAND (RCON, l));
+	  print (info->stream, "0x%x", (int)EXTRACT_OPERAND (RNUM, l));
 	  break;
 
 	case 'Z':
