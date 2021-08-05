@@ -143,16 +143,16 @@ static const struct riscv_ext_version ext_version_table[] =
   {"zba",   ISA_SPEC_CLASS_DRAFT, 0, 93},
   {"zbc",   ISA_SPEC_CLASS_DRAFT, 0, 93},
 
-  {"zbkb",  ISA_SPEC_CLASS_DRAFT, 0, 93},
-  {"zbkc",  ISA_SPEC_CLASS_DRAFT, 0, 93},
-  {"zbkx",  ISA_SPEC_CLASS_DRAFT, 0, 93},
-  {"zknd",  ISA_SPEC_CLASS_DRAFT, 0, 93},
-  {"zkne",  ISA_SPEC_CLASS_DRAFT, 0, 93},
-  {"zknh",  ISA_SPEC_CLASS_DRAFT, 0, 93},
-  {"zkr",   ISA_SPEC_CLASS_DRAFT, 0, 93},
-  {"zksed", ISA_SPEC_CLASS_DRAFT, 0, 93},
-  {"zksh",  ISA_SPEC_CLASS_DRAFT, 0, 93},
-  {"zkt",   ISA_SPEC_CLASS_DRAFT, 0, 93},
+  {"zbkb",  ISA_SPEC_CLASS_DRAFT, 0, 94},
+  {"zbkc",  ISA_SPEC_CLASS_DRAFT, 0, 94},
+  {"zbkx",  ISA_SPEC_CLASS_DRAFT, 0, 94},
+  {"zknd",  ISA_SPEC_CLASS_DRAFT, 0, 94},
+  {"zkne",  ISA_SPEC_CLASS_DRAFT, 0, 94},
+  {"zknh",  ISA_SPEC_CLASS_DRAFT, 0, 94},
+  {"zkr",   ISA_SPEC_CLASS_DRAFT, 0, 94},
+  {"zksed", ISA_SPEC_CLASS_DRAFT, 0, 94},
+  {"zksh",  ISA_SPEC_CLASS_DRAFT, 0, 94},
+  {"zkt",   ISA_SPEC_CLASS_DRAFT, 0, 94},
 
   /* Terminate the list.  */
   {NULL, 0, 0, 0}
