@@ -298,6 +298,7 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	    print (info->stream, "0");
 	  break;
 
+	case 'g':
 	case 'b':
 	case 's':
 	  if ((l & MASK_JALR) == MATCH_JALR)

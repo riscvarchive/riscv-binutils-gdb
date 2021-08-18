@@ -1106,6 +1106,7 @@ validate_riscv_insn (const struct riscv_opcode *opc, int length)
       case 'Z': /* RS1, CSR number.  */
       case 'S': /* RS1, floating point.  */
       case 's': USE_BITS (OP_MASK_RS1, OP_SH_RS1); break;
+      case 'g': /* RS1 and RS2 are the same.  */
       case 'U': /* RS1 and RS2 are the same, floating point.  */
 	USE_BITS (OP_MASK_RS1, OP_SH_RS1);
 	/* Fall through.  */
@@ -2586,6 +2587,7 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 
 	    case 'd': /* Destination register.  */
 	    case 's': /* Source register.  */
+	    case 'g': /* RS1 and RS2. */
 	    case 't': /* Target register.  */
 	    case 'r': /* RS3 */
 	      if (reg_lookup (&s, RCLASS_GPR, &regno))
@@ -2604,6 +2606,9 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 		    case 'd':
 		      INSERT_OPERAND (RD, *ip, regno);
 		      break;
+		    case 'g':
+		      INSERT_OPERAND (RS1, *ip, regno);
+		      /* Fall through.  */
 		    case 't':
 		      INSERT_OPERAND (RS2, *ip, regno);
 		      break;
