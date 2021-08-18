@@ -82,9 +82,128 @@ const char * const riscv_fpr_names_abi[NFPR] =
 #define MASK_RL (OP_MASK_RL << OP_SH_RL)
 #define MASK_AQRL (MASK_AQ | MASK_RL)
 #define MASK_SHAMT (OP_MASK_SHAMT << OP_SH_SHAMT)
-#define MATCH_SHAMT_REV8_32 (0b11000 << OP_SH_SHAMT)
-#define MATCH_SHAMT_REV8_64 (0b111000 << OP_SH_SHAMT)
-#define MATCH_SHAMT_ORC_B (0b00111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV_32     (0b11111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV_64     (0b111111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV_P_32   (0b00001 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV_P_64   (0b000001 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV_N_32   (0b00011 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV_N_64   (0b000011 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV_B_32   (0b00111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV_B_64   (0b000111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV_H_32   (0b01111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV_H_64   (0b001111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV_W_64   (0b011111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV2_32    (0b11110 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV2_64    (0b111110 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV2_N_32  (0b00010 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV2_N_64  (0b000010 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV2_B_32  (0b00110 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV2_B_64  (0b000110 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV2_H_32  (0b01110 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV2_H_64  (0b001110 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV2_W_64  (0b011110 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV4_32    (0b11100 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV4_64    (0b111100 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV4_B_32  (0b00100 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV4_B_64  (0b000100 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV4_H_32  (0b01100 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV4_H_64  (0b001100 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV4_W_64  (0b011100 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV8_32    (0b11000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV8_64    (0b111000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV8_H_32  (0b01000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV8_H_64  (0b001000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV8_W_64  (0b011000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV16_32   (0b10000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV16_64   (0b110000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV16_W_64 (0b010000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV32_64   (0b100000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP_32     (0b1111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP_64     (0b11111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP_N_32   (0b0001 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP_N_64   (0b00001 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP_B_32   (0b0011 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP_B_64   (0b00011 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP_H_32   (0b0111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP_H_64   (0b00111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP_W_64   (0b01111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP2_32    (0b1110 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP2_64    (0b11110 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP2_B_32  (0b0010 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP2_B_64  (0b00010 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP2_H_32  (0b0110 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP2_H_64  (0b00110 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP2_W_64  (0b01110 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP4_32    (0b1100 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP4_64    (0b11100 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP4_H_32  (0b0100 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP4_H_64  (0b00100 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP4_W_64  (0b01100 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP8_32    (0b1000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP8_64    (0b11000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP8_W_64  (0b01000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ZIP16_64   (0b10000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP_32     (0b1111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP_64     (0b11111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP_N_32   (0b0001 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP_N_64   (0b00001 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP_B_32   (0b0011 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP_B_64   (0b00011 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP_H_32   (0b0111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP_H_64   (0b00111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP_W_64   (0b01111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP2_32    (0b1110 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP2_64    (0b11110 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP2_B_32  (0b0010 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP2_B_64  (0b00010 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP2_H_32  (0b0110 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP2_H_64  (0b00110 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP2_W_64  (0b01110 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP4_32    (0b1100 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP4_64    (0b11100 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP4_H_32  (0b0100 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP4_H_64  (0b00100 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP4_W_64  (0b01100 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP8_32    (0b1000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP8_64    (0b11000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP8_W_64  (0b01000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_UNZIP16_64   (0b10000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC_32     (0b11111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC_64     (0b111111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC_P_32   (0b00001 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC_P_64   (0b000001 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC_N_32   (0b00011 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC_N_64   (0b000011 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC_B_32   (0b00111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC_B_64   (0b000111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC_H_32   (0b01111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC_H_64   (0b001111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC_W_64   (0b011111 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC2_32    (0b11110 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC2_64    (0b111110 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC2_N_32  (0b00010 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC2_N_64  (0b000010 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC2_B_32  (0b00110 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC2_B_64  (0b000110 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC2_H_32  (0b01110 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC2_H_64  (0b001110 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC2_W_64  (0b011110 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC4_32    (0b11100 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC4_64    (0b111100 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC4_B_32  (0b00100 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC4_B_64  (0b000100 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC4_H_32  (0b01100 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC4_H_64  (0b001100 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC4_W_64  (0b011100 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC8_32    (0b11000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC8_64    (0b111000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC8_H_32  (0b01000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC8_H_64  (0b001000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC8_W_64  (0b011000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC16_32   (0b10000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC16_64   (0b110000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC16_W_64 (0b010000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_ORC32_64   (0b100000 << OP_SH_SHAMT)
 
 static int
 match_opcode (const struct riscv_opcode *op, insn_t insn)
@@ -797,23 +916,11 @@ const struct riscv_opcode riscv_opcodes[] =
 {"zext.h",    32, INSN_CLASS_ZBB,  "d,s",      MATCH_PACK, MASK_PACK | MASK_RS2, match_opcode, 0 },
 {"zext.h",    64, INSN_CLASS_ZBB,  "d,s",      MATCH_PACKW, MASK_PACKW | MASK_RS2, match_opcode, 0 },
 {"zext.h",     0, INSN_CLASS_I,    "d,s",      0, (int) M_ZEXTH, match_never, INSN_MACRO },
-{"andn",       0, INSN_CLASS_ZBB,  "d,s,t",    MATCH_ANDN, MASK_ANDN, match_opcode, 0 },
-{"orn",        0, INSN_CLASS_ZBB,  "d,s,t",    MATCH_ORN, MASK_ORN, match_opcode, 0 },
-{"xnor",       0, INSN_CLASS_ZBB,  "d,s,t",    MATCH_XNOR, MASK_XNOR, match_opcode, 0 },
-{"rol",        0, INSN_CLASS_ZBB,  "d,s,t",    MATCH_ROL, MASK_ROL, match_opcode, 0 },
-{"rori",       0, INSN_CLASS_ZBB,  "d,s,>",    MATCH_RORI, MASK_RORI, match_opcode, 0 },
-{"ror",        0, INSN_CLASS_ZBB,  "d,s,t",    MATCH_ROR, MASK_ROR, match_opcode, 0 },
-{"ror",        0, INSN_CLASS_ZBB,  "d,s,>",    MATCH_RORI, MASK_RORI, match_opcode, INSN_ALIAS },
-{"rev8",      32, INSN_CLASS_ZBB,  "d,s",      MATCH_GREVI|MATCH_SHAMT_REV8_32, MASK_GREVI|MASK_SHAMT, match_opcode, 0 },
-{"rev8",      64, INSN_CLASS_ZBB,  "d,s",      MATCH_GREVI|MATCH_SHAMT_REV8_64, MASK_GREVI|MASK_SHAMT, match_opcode, 0 },
-{"orc.b",      0, INSN_CLASS_ZBB,  "d,s",      MATCH_GORCI|MATCH_SHAMT_ORC_B, MASK_GORCI|MASK_SHAMT, match_opcode, 0 },
 {"clzw",      64, INSN_CLASS_ZBB,  "d,s",      MATCH_CLZW, MASK_CLZW, match_opcode, 0 },
 {"ctzw",      64, INSN_CLASS_ZBB,  "d,s",      MATCH_CTZW, MASK_CTZW, match_opcode, 0 },
 {"cpopw",     64, INSN_CLASS_ZBB,  "d,s",      MATCH_CPOPW, MASK_CPOPW, match_opcode, 0 },
-{"rolw",      64, INSN_CLASS_ZBB,  "d,s,t",    MATCH_ROLW, MASK_ROLW, match_opcode, 0 },
-{"roriw",     64, INSN_CLASS_ZBB,  "d,s,<",    MATCH_RORIW, MASK_RORIW, match_opcode, 0 },
-{"rorw",      64, INSN_CLASS_ZBB,  "d,s,t",    MATCH_RORW, MASK_RORW, match_opcode, 0 },
-{"rorw",      64, INSN_CLASS_ZBB,  "d,s,<",    MATCH_RORIW, MASK_RORIW, match_opcode, 0 },
+{"orc.b",     32, INSN_CLASS_ZBB,  "d,s",      MATCH_GORCI|MATCH_SHAMT_ORC_B_32, MASK_GORCI|MASK_SHAMT, match_opcode, INSN_ALIAS },
+{"orc.b",     64, INSN_CLASS_ZBB,  "d,s",      MATCH_GORCI|MATCH_SHAMT_ORC_B_64, MASK_GORCI|MASK_SHAMT, match_opcode, INSN_ALIAS },
 {"sh1add",     0, INSN_CLASS_ZBA,  "d,s,t",    MATCH_SH1ADD, MASK_SH1ADD, match_opcode, 0 },
 {"sh2add",     0, INSN_CLASS_ZBA,  "d,s,t",    MATCH_SH2ADD, MASK_SH2ADD, match_opcode, 0 },
 {"sh3add",     0, INSN_CLASS_ZBA,  "d,s,t",    MATCH_SH3ADD, MASK_SH3ADD, match_opcode, 0 },
@@ -824,13 +931,45 @@ const struct riscv_opcode riscv_opcodes[] =
 {"zext.w",    64, INSN_CLASS_I,    "d,s",      0, (int) M_ZEXTW, match_never, INSN_MACRO },
 {"add.uw",    64, INSN_CLASS_ZBA,  "d,s,t",    MATCH_ADD_UW, MASK_ADD_UW, match_opcode, 0 },
 {"slli.uw",   64, INSN_CLASS_ZBA,  "d,s,>",    MATCH_SLLI_UW, MASK_SLLI_UW, match_opcode, 0 },
-{"clmul",      0, INSN_CLASS_ZBC,  "d,s,t",    MATCH_CLMUL, MASK_CLMUL, match_opcode, 0 },
-{"clmulh",     0, INSN_CLASS_ZBC,  "d,s,t",    MATCH_CLMULH, MASK_CLMULH, match_opcode, 0 },
 {"clmulr",     0, INSN_CLASS_ZBC,  "d,s,t",    MATCH_CLMULR, MASK_CLMULR, match_opcode, 0 },
+{"bset",       0, INSN_CLASS_ZBS,  "d,s,t",    MATCH_BSET, MASK_BSET, match_opcode, 0 },
+{"bclr",       0, INSN_CLASS_ZBS,  "d,s,t",    MATCH_BCLR, MASK_BCLR, match_opcode, 0 },
+{"binv",       0, INSN_CLASS_ZBS,  "d,s,t",    MATCH_BINV, MASK_BINV, match_opcode, 0 },
+{"bext",       0, INSN_CLASS_ZBS,  "d,s,t",    MATCH_BEXT, MASK_BEXT, match_opcode, 0 },
+{"bseti",      0, INSN_CLASS_ZBS,  "d,s,>",    MATCH_BSETI, MASK_BSETI, match_opcode, 0 },
+{"bclri",      0, INSN_CLASS_ZBS,  "d,s,>",    MATCH_BCLRI, MASK_BCLRI, match_opcode, 0 },
+{"binvi",      0, INSN_CLASS_ZBS,  "d,s,>",    MATCH_BINVI, MASK_BINVI, match_opcode, 0 },
+{"bexti",      0, INSN_CLASS_ZBS,  "d,s,>",    MATCH_BEXTI, MASK_BEXTI, match_opcode, 0 },
+
+/* ZBK* instructions reuse RVB  */
+{"ror",        0, INSN_CLASS_ZBB_OR_ZBKB,  "d,s,t",    MATCH_ROR, MASK_ROR, match_opcode, 0 },
+{"rol",        0, INSN_CLASS_ZBB_OR_ZBKB,  "d,s,t",    MATCH_ROL, MASK_ROL, match_opcode, 0 },
+{"rori",       0, INSN_CLASS_ZBB_OR_ZBKB,  "d,s,>",    MATCH_RORI, MASK_RORI, match_opcode, 0 },
+{"rorw",      64, INSN_CLASS_ZBB_OR_ZBKB,  "d,s,t",    MATCH_RORW, MASK_RORW, match_opcode, 0 },
+{"rolw",      64, INSN_CLASS_ZBB_OR_ZBKB,  "d,s,t",    MATCH_ROLW, MASK_ROLW, match_opcode, 0 },
+{"roriw",     64, INSN_CLASS_ZBB_OR_ZBKB,  "d,s,<",    MATCH_RORIW, MASK_RORIW, match_opcode, 0 },
+{"andn",       0, INSN_CLASS_ZBB_OR_ZBKB,  "d,s,t",    MATCH_ANDN, MASK_ANDN, match_opcode, 0 },
+{"orn",        0, INSN_CLASS_ZBB_OR_ZBKB,  "d,s,t",    MATCH_ORN, MASK_ORN, match_opcode, 0 },
+{"xnor",       0, INSN_CLASS_ZBB_OR_ZBKB,  "d,s,t",    MATCH_XNOR, MASK_XNOR, match_opcode, 0 },
+{"pack",       0, INSN_CLASS_ZBB_OR_ZBKB,  "d,s,t",    MATCH_PACK, MASK_PACK, match_opcode, 0 },
+{"packh",      0, INSN_CLASS_ZBB_OR_ZBKB,  "d,s,t",    MATCH_PACKH, MASK_PACKH, match_opcode, 0 },
+{"packw",     64, INSN_CLASS_ZBB_OR_ZBKB,  "d,s,<",    MATCH_PACKW, MASK_PACKW, match_opcode, 0 },
+{"rev.b",     32, INSN_CLASS_ZBB_OR_ZBKB,  "d,s",      MATCH_GREVI|MATCH_SHAMT_REV_B_32, MASK_GREVI|MASK_SHAMT, match_opcode, INSN_ALIAS },
+{"rev.b",     64, INSN_CLASS_ZBB_OR_ZBKB,  "d,s",      MATCH_GREVI|MATCH_SHAMT_REV_B_64, MASK_GREVI|MASK_SHAMT, match_opcode, INSN_ALIAS },
+{"rev8",      32, INSN_CLASS_ZBB_OR_ZBKB,  "d,s",      MATCH_GREVI|MATCH_SHAMT_REV8_32, MASK_GREVI|MASK_SHAMT, match_opcode, 0 },
+{"rev8",      64, INSN_CLASS_ZBB_OR_ZBKB,  "d,s",      MATCH_GREVI|MATCH_SHAMT_REV8_64, MASK_GREVI|MASK_SHAMT, match_opcode, 0 },
+{"zip",       32, INSN_CLASS_ZBB_OR_ZBKB,  "d,s",      MATCH_SHFLI|MATCH_SHAMT_ZIP_32, MASK_SHFLI|MASK_SHAMT, match_opcode, INSN_ALIAS },
+{"zip",       64, INSN_CLASS_ZBB_OR_ZBKB,  "d,s",      MATCH_SHFLI|MATCH_SHAMT_ZIP_64, MASK_SHFLI|MASK_SHAMT, match_opcode, INSN_ALIAS },
+{"unzip",     32, INSN_CLASS_ZBB_OR_ZBKB,  "d,s",      MATCH_UNSHFLI|MATCH_SHAMT_UNZIP_32, MASK_UNSHFLI|MASK_SHAMT, match_opcode, INSN_ALIAS },
+{"unzip",     64, INSN_CLASS_ZBB_OR_ZBKB,  "d,s",      MATCH_UNSHFLI|MATCH_SHAMT_UNZIP_64, MASK_UNSHFLI|MASK_SHAMT, match_opcode, INSN_ALIAS },
+
+{"clmul",      0, INSN_CLASS_ZBC_OR_ZBKC,  "d,s,t",    MATCH_CLMUL, MASK_CLMUL, match_opcode, 0 },
+{"clmulh",     0, INSN_CLASS_ZBC_OR_ZBKC,  "d,s,t",    MATCH_CLMULH, MASK_CLMULH, match_opcode, 0 },
+
+{"xperm.b",    0, INSN_CLASS_ZBKX,  "d,s,t",    MATCH_XPERM_B, MASK_XPERM_B, match_opcode, 0 },
+{"xperm.n",    0, INSN_CLASS_ZBKX,  "d,s,t",    MATCH_XPERM_N, MASK_XPERM_N, match_opcode, 0 },
 
 /*Scalar Krypoto instructions.  */
-{"pollentropy",  0, INSN_CLASS_ZKR,     "d",  MATCH_POLLENTROPY, MASK_POLLENTROPY, match_opcode, INSN_ALIAS },
-{"getnoise",     0, INSN_CLASS_ZKR,     "d",  MATCH_GETNOISE, MASK_GETNOISE, match_opcode, INSN_ALIAS },
 {"sm3p0",        0, INSN_CLASS_ZKSH,    "d,s",  MATCH_SM3P0, MASK_SM3P0, match_opcode, 0 },
 {"sm3p1",        0, INSN_CLASS_ZKSH,    "d,s",  MATCH_SM3P1, MASK_SM3P1, match_opcode, 0 },
 {"sha512sum0r", 32, INSN_CLASS_ZKNH,    "d,s,t",  MATCH_SHA512SUM0R, MASK_SHA512SUM0R, match_opcode, 0 },

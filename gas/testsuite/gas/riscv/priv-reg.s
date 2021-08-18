@@ -276,7 +276,6 @@
 	csr tinfo
 	csr tcontrol
 	csr mcontext
-	csr mnoise
 	csr scontext
 	csr mcontrol		# 0x7a1, alias to tdata1
 	csr icount		# 0x7a1, alias to tdata1

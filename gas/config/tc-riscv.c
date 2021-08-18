@@ -139,20 +139,21 @@ static const struct riscv_ext_version ext_version_table[] =
 
   {"zihintpause", ISA_SPEC_CLASS_DRAFT, 1, 0},
 
-  {"zbb",   ISA_SPEC_CLASS_DRAFT, 0, 93},
-  {"zba",   ISA_SPEC_CLASS_DRAFT, 0, 93},
-  {"zbc",   ISA_SPEC_CLASS_DRAFT, 0, 93},
+  {"zba",   ISA_SPEC_CLASS_DRAFT, 1, 0},
+  {"zbb",   ISA_SPEC_CLASS_DRAFT, 1, 0},
+  {"zbc",   ISA_SPEC_CLASS_DRAFT, 1, 0},
+  {"zbs",   ISA_SPEC_CLASS_DRAFT, 1, 0},
 
-  {"zbkb",  ISA_SPEC_CLASS_DRAFT, 0, 94},
-  {"zbkc",  ISA_SPEC_CLASS_DRAFT, 0, 94},
-  {"zbkx",  ISA_SPEC_CLASS_DRAFT, 0, 94},
-  {"zknd",  ISA_SPEC_CLASS_DRAFT, 0, 94},
-  {"zkne",  ISA_SPEC_CLASS_DRAFT, 0, 94},
-  {"zknh",  ISA_SPEC_CLASS_DRAFT, 0, 94},
-  {"zkr",   ISA_SPEC_CLASS_DRAFT, 0, 94},
-  {"zksed", ISA_SPEC_CLASS_DRAFT, 0, 94},
-  {"zksh",  ISA_SPEC_CLASS_DRAFT, 0, 94},
-  {"zkt",   ISA_SPEC_CLASS_DRAFT, 0, 94},
+  {"zbkb",  ISA_SPEC_CLASS_DRAFT, 1, 0},
+  {"zbkc",  ISA_SPEC_CLASS_DRAFT, 1, 0},
+  {"zbkx",  ISA_SPEC_CLASS_DRAFT, 1, 0},
+  {"zknd",  ISA_SPEC_CLASS_DRAFT, 1, 0},
+  {"zkne",  ISA_SPEC_CLASS_DRAFT, 1, 0},
+  {"zknh",  ISA_SPEC_CLASS_DRAFT, 1, 0},
+  {"zkr",   ISA_SPEC_CLASS_DRAFT, 1, 0},
+  {"zksed", ISA_SPEC_CLASS_DRAFT, 1, 0},
+  {"zksh",  ISA_SPEC_CLASS_DRAFT, 1, 0},
+  {"zkt",   ISA_SPEC_CLASS_DRAFT, 1, 0},
 
   /* Terminate the list.  */
   {NULL, 0, 0, 0}
@@ -351,11 +352,13 @@ riscv_multi_subset_supports (enum riscv_insn_class insn_class)
       return riscv_subset_supports ("zba");
     case INSN_CLASS_ZBC:
       return riscv_subset_supports ("zbc");
+    case INSN_CLASS_ZBS:
+      return riscv_subset_supports ("zbs");
 
-    case INSN_CLASS_ZBKB:
-      return riscv_subset_supports ("zbkb");
-    case INSN_CLASS_ZBKC:
-      return riscv_subset_supports ("zbkc");
+    case INSN_CLASS_ZBB_OR_ZBKB:
+      return riscv_subset_supports ("zbb") || riscv_subset_supports ("zbkb");
+    case INSN_CLASS_ZBC_OR_ZBKC:
+      return riscv_subset_supports ("zbc") || riscv_subset_supports ("zbkc");
     case INSN_CLASS_ZBKX:
       return riscv_subset_supports ("zbkx");
     case INSN_CLASS_ZKNE:

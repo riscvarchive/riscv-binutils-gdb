@@ -14,7 +14,6 @@ target:
 	xnor	a0, a1, a2
 	rol	a0, a1, a2
 	ror	a0, a1, a2
-	ror	a0, a1, 2
 	rori	a0, a1, 2
 	rev8	a0, a0
 	orc.b	a0, a0

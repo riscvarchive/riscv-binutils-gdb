@@ -1,6 +1,4 @@
 target:
-        pollentropy    a0
-        getnoise    a0
         sm3p0   a0, a0
         sm3p1   a0, a0
         sm4ed   a0, a1, 2
