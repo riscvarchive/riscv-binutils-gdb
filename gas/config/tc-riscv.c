@@ -146,7 +146,6 @@ static const struct riscv_ext_version ext_version_table[] =
   {"zbc",   ISA_SPEC_CLASS_DRAFT, 0, 93},
   
   {"zpn",   ISA_SPEC_CLASS_DRAFT, 2, 0},
-  {"zprv",   ISA_SPEC_CLASS_DRAFT, 2, 0},
   {"zpsf",   ISA_SPEC_CLASS_DRAFT, 2, 0},
   /* Terminate the list.  */
   {NULL, 0, 0, 0}
@@ -348,8 +347,6 @@ riscv_multi_subset_supports (enum riscv_insn_class insn_class)
     
     case INSN_CLASS_ZPN:
       return riscv_subset_supports ("zpn");
-    case INSN_CLASS_ZPRV:
-      return riscv_subset_supports ("zprv");
     case INSN_CLASS_ZPSF:
       return riscv_subset_supports ("zpsf");
 
