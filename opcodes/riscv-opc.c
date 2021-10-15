@@ -831,7 +831,7 @@ const struct riscv_opcode riscv_opcodes[] =
 /* RVP instructions */
 {"add8",        0, INSN_CLASS_ZPN, "d,s,t",     MATCH_ADD8, MASK_ADD8, match_opcode, 0 },
 {"add16",       0, INSN_CLASS_ZPN, "d,s,t",     MATCH_ADD16, MASK_ADD16, match_opcode, 0 },
-{"add64",       0, INSN_CLASS_ZPSF, "nds_rdp,nds_rsp,nds_rtp", MATCH_ADD64, MASK_ADD64, match_opcode, 0 },
+{"add64",       32, INSN_CLASS_ZPSF, "nds_rdp,nds_rsp,nds_rtp", MATCH_ADD64, MASK_ADD64, match_opcode, 0 },
 {"ave",         0, INSN_CLASS_ZPN, "d,s,t",     MATCH_AVE, MASK_AVE, match_opcode, 0 },
 {"bitrev",      0, INSN_CLASS_ZPN, "d,s,t",     MATCH_BITREV, MASK_BITREV, match_opcode, 0 },
 {"bitrevi",     0, INSN_CLASS_ZPN, "d,s,l",     MATCH_BITREVI, MASK_BITREVI, match_opcode, 0 },
@@ -1013,7 +1013,7 @@ const struct riscv_opcode riscv_opcodes[] =
 {"stsa16",      0, INSN_CLASS_ZPN, "d,s,t",     MATCH_STSA16, MASK_STSA16, match_opcode, 0 },
 {"sub8",        0, INSN_CLASS_ZPN, "d,s,t",     MATCH_SUB8, MASK_SUB8, match_opcode, 0 },
 {"sub16",       0, INSN_CLASS_ZPN, "d,s,t",     MATCH_SUB16, MASK_SUB16, match_opcode, 0 },
-{"sub64",       0, INSN_CLASS_ZPSF, "nds_rdp,nds_rsp,nds_rtp", MATCH_SUB64, MASK_SUB64, match_opcode, 0 },
+{"sub64",       32, INSN_CLASS_ZPSF, "nds_rdp,nds_rsp,nds_rtp", MATCH_SUB64, MASK_SUB64, match_opcode, 0 },
 {"sunpkd810",   0, INSN_CLASS_ZPN, "d,s",       MATCH_SUNPKD810, MASK_SUNPKD810, match_opcode, 0 },
 {"sunpkd820",   0, INSN_CLASS_ZPN, "d,s",       MATCH_SUNPKD820, MASK_SUNPKD820, match_opcode, 0 },
 {"sunpkd830",   0, INSN_CLASS_ZPN, "d,s",       MATCH_SUNPKD830, MASK_SUNPKD830, match_opcode, 0 },
