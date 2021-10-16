@@ -1,4 +1,4 @@
-#as: -march=rv32i_zpn_zpsf
+#as: -march=rv32gc_zpn_zpsf
 #source: insn-dsp.s
 #objdump: -d
 
@@ -97,7 +97,6 @@ Disassembly of section .text:
 [ 	]+.*:[ 	]+.*[ 	]+kabs16[ 	]+a1,a2
 [ 	]+.*:[ 	]+.*[ 	]+clrs16[ 	]+a1,a2
 [ 	]+.*:[ 	]+.*[ 	]+clz16[ 	]+a1,a2
-[ 	]+.*:[ 	]+.*[ 	]+clo16[ 	]+a1,a2
 [ 	]+.*:[ 	]+.*[ 	]+pkbt16[ 	]+a1,a2,a2
 [ 	]+.*:[ 	]+.*[ 	]+smin8[ 	]+a1,a2,a3
 [ 	]+.*:[ 	]+.*[ 	]+umin8[ 	]+a1,a2,a3
@@ -110,7 +109,6 @@ Disassembly of section .text:
 [ 	]+.*:[ 	]+.*[ 	]+uclip8[ 	]+a1,a2,3
 [ 	]+.*:[ 	]+.*[ 	]+clrs8[ 	]+a1,a2
 [ 	]+.*:[ 	]+.*[ 	]+clz8[ 	]+a1,a2
-[ 	]+.*:[ 	]+.*[ 	]+clo8[ 	]+a1,a2
 [ 	]+.*:[ 	]+.*[ 	]+swap8[ 	]+a1,a2
 [ 	]+.*:[ 	]+.*[ 	]+sunpkd810[ 	]+a1,a2
 [ 	]+.*:[ 	]+.*[ 	]+sunpkd820[ 	]+a1,a2
@@ -173,7 +171,6 @@ Disassembly of section .text:
 [ 	]+.*:[ 	]+.*[ 	]+uclip32[ 	]+a1,a2,5
 [ 	]+.*:[ 	]+.*[ 	]+clrs32[ 	]+a1,a2
 [ 	]+.*:[ 	]+.*[ 	]+clz32[ 	]+a1,a2
-[ 	]+.*:[ 	]+.*[ 	]+clo32[ 	]+a1,a2
 [ 	]+.*:[ 	]+.*[ 	]+pbsad[ 	]+a1,a2,a3
 [ 	]+.*:[ 	]+.*[ 	]+pbsada[ 	]+a1,a2,a3
 [ 	]+.*:[ 	]+.*[ 	]+smaqa[ 	]+a1,a2,a3

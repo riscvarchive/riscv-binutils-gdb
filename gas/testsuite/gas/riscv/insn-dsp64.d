@@ -1,4 +1,4 @@
-#as: -march=rv64i_zpn_zpsf
+#as: -march=rv64gc_zpn_zpsf
 #source: insn-dsp64.s
 #objdump: -dr
 

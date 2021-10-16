@@ -101,7 +101,6 @@ dsp:
 	kabs16    a1, a2
 	clrs16    a1, a2
 	clz16     a1, a2
-	clo16     a1, a2
 	swap16    a1, a2
 
 	# Table 8. SIMD 8-bit Miscellaneous Instructions (12)
@@ -116,7 +115,6 @@ dsp:
 	uclip8    a1, a2, 3
 	clrs8     a1, a2
 	clz8      a1, a2
-	clo8      a1, a2
 	swap8     a1, a2
 
 	# Table 9. 8-bit Unpacking Instructions (10)
@@ -193,7 +191,6 @@ dsp:
 	uclip32   a1, a2, 5
 	clrs32    a1, a2
 	clz32     a1, a2
-	clo32     a1, a2
 	pbsad     a1, a2, a3
 	pbsada    a1, a2, a3
 

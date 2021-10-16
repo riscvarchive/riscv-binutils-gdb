@@ -78,7 +78,7 @@ dsp64:
 	# Table 31. (RV64 Only) 32-bit Parallel Multiply & Add Instructions (12)
 	kmda32    a1, a2, a3
 	kmxda32   a1, a2, a3
-	kmada32   a1, a2, a3
+	kmar64   a1, a2, a3
 	kmaxda32  a1, a2, a3
 	kmads32   a1, a2, a3
 	kmadrs32  a1, a2, a3
