@@ -92,7 +92,6 @@ Disassembly of section .text:
 [ 	]+[0-9a-f]+:[  	]+14302573[    	]+csrr[        	]+a0,stval
 [ 	]+[0-9a-f]+:[  	]+14402573[    	]+csrr[        	]+a0,sip
 [ 	]+[0-9a-f]+:[  	]+18002573[    	]+csrr[        	]+a0,satp
-[ 	]+[0-9a-f]+:[  	]+54602573[    	]+csrr[        	]+a0,sentropy
 [ 	]+[0-9a-f]+:[  	]+f1102573[    	]+csrr[        	]+a0,mvendorid
 [ 	]+[0-9a-f]+:[  	]+f1202573[    	]+csrr[        	]+a0,marchid
 [ 	]+[0-9a-f]+:[  	]+f1302573[    	]+csrr[        	]+a0,mimpid
@@ -266,3 +265,4 @@ Disassembly of section .text:
 [     	]+[0-9a-f]+:[  	]+7a102573[    	]+csrr[        	]+a0,tdata1
 [     	]+[0-9a-f]+:[  	]+7a302573[    	]+csrr[        	]+a0,tdata3
 [     	]+[0-9a-f]+:[  	]+7a302573[    	]+csrr[        	]+a0,tdata3
+[     	]+[0-9a-f]+:[  	]+01502573[    	]+csrr[        	]+a0,seed

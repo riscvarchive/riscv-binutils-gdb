@@ -954,8 +954,8 @@ const struct riscv_opcode riscv_opcodes[] =
 {"pack",       0, INSN_CLASS_ZBB_OR_ZBKB,  "d,s,t",    MATCH_PACK, MASK_PACK, match_opcode, 0 },
 {"packh",      0, INSN_CLASS_ZBB_OR_ZBKB,  "d,s,t",    MATCH_PACKH, MASK_PACKH, match_opcode, 0 },
 {"packw",     64, INSN_CLASS_ZBB_OR_ZBKB,  "d,s,<",    MATCH_PACKW, MASK_PACKW, match_opcode, 0 },
-{"rev.b",     32, INSN_CLASS_ZBB_OR_ZBKB,  "d,s",      MATCH_GREVI|MATCH_SHAMT_REV_B_32, MASK_GREVI|MASK_SHAMT, match_opcode, INSN_ALIAS },
-{"rev.b",     64, INSN_CLASS_ZBB_OR_ZBKB,  "d,s",      MATCH_GREVI|MATCH_SHAMT_REV_B_64, MASK_GREVI|MASK_SHAMT, match_opcode, INSN_ALIAS },
+{"brev8",     32, INSN_CLASS_ZBB_OR_ZBKB,  "d,s",      MATCH_GREVI|MATCH_SHAMT_REV_B_32, MASK_GREVI|MASK_SHAMT, match_opcode, INSN_ALIAS },
+{"brev8",     64, INSN_CLASS_ZBB_OR_ZBKB,  "d,s",      MATCH_GREVI|MATCH_SHAMT_REV_B_64, MASK_GREVI|MASK_SHAMT, match_opcode, INSN_ALIAS },
 {"rev8",      32, INSN_CLASS_ZBB_OR_ZBKB,  "d,s",      MATCH_GREVI|MATCH_SHAMT_REV8_32, MASK_GREVI|MASK_SHAMT, match_opcode, 0 },
 {"rev8",      64, INSN_CLASS_ZBB_OR_ZBKB,  "d,s",      MATCH_GREVI|MATCH_SHAMT_REV8_64, MASK_GREVI|MASK_SHAMT, match_opcode, 0 },
 {"zip",       32, INSN_CLASS_ZBB_OR_ZBKB,  "d,s",      MATCH_SHFLI|MATCH_SHAMT_ZIP_32, MASK_SHFLI|MASK_SHAMT, match_opcode, INSN_ALIAS },
@@ -966,8 +966,8 @@ const struct riscv_opcode riscv_opcodes[] =
 {"clmul",      0, INSN_CLASS_ZBC_OR_ZBKC,  "d,s,t",    MATCH_CLMUL, MASK_CLMUL, match_opcode, 0 },
 {"clmulh",     0, INSN_CLASS_ZBC_OR_ZBKC,  "d,s,t",    MATCH_CLMULH, MASK_CLMULH, match_opcode, 0 },
 
-{"xperm.b",    0, INSN_CLASS_ZBKX,  "d,s,t",    MATCH_XPERM_B, MASK_XPERM_B, match_opcode, 0 },
-{"xperm.n",    0, INSN_CLASS_ZBKX,  "d,s,t",    MATCH_XPERM_N, MASK_XPERM_N, match_opcode, 0 },
+{"xperm8",     0, INSN_CLASS_ZBKX,  "d,s,t",    MATCH_XPERM8, MASK_XPERM8, match_opcode, 0 },
+{"xperm4",     0, INSN_CLASS_ZBKX,  "d,s,t",    MATCH_XPERM4, MASK_XPERM4, match_opcode, 0 },
 
 /*Scalar Krypoto instructions.  */
 {"sm3p0",        0, INSN_CLASS_ZKSH,    "d,s",  MATCH_SM3P0, MASK_SM3P0, match_opcode, 0 },

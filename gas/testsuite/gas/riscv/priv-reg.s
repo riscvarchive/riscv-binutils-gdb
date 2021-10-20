@@ -93,8 +93,6 @@
 
 	csr satp		# Added in 1.10
 
-	csr sentropy		# Added in crypoto spec 0.93
-
 	csr mvendorid
 	csr marchid
 	csr mimpid
@@ -283,3 +281,6 @@
 	csr etrigger		# 0x7a1, alias to tdata1
 	csr textra32		# 0x7a3, alias to tdata3
 	csr textra64		# 0x7a3, alias to tdata3
+
+	# Scalar cryptography
+	csr seed		# 0x015 Added in scalar cryptography spec 1.0.0-rc4
