@@ -347,6 +347,7 @@ enum riscv_insn_class
   INSN_CLASS_ZBC,
   INSN_CLASS_ZPN,
   INSN_CLASS_ZPSF,
+  INSN_CLASS_ZBPBO,
 };
 
 /* This structure holds information for a particular instruction.  */

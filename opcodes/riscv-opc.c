@@ -84,6 +84,9 @@ const char * const riscv_fpr_names_abi[NFPR] =
 #define MASK_SHAMT (OP_MASK_SHAMT << OP_SH_SHAMT)
 #define MATCH_SHAMT_REV8_32 (0b11000 << OP_SH_SHAMT)
 #define MATCH_SHAMT_REV8_64 (0b111000 << OP_SH_SHAMT)
+#define MATCH_SHAMT_REV_32 (0b11111 << 20)
+#define MATCH_SHAMT_REV_64 (0b111111 << 20)
+#define MATCH_SHAMT_REV8_H (0b1000 << 20)
 #define MATCH_SHAMT_ORC_B (0b00111 << OP_SH_SHAMT)
 
 static int
@@ -783,11 +786,14 @@ const struct riscv_opcode riscv_opcodes[] =
 {"wfi",        0, INSN_CLASS_I,    "",         MATCH_WFI, MASK_WFI, match_opcode, 0 },
 
 /* RVB instructions.  */
+{"clz",        0, INSN_CLASS_ZBPBO,"d,s",      MATCH_CLZ, MASK_CLZ, match_opcode, 0 },
 {"clz",        0, INSN_CLASS_ZBB,  "d,s",      MATCH_CLZ, MASK_CLZ, match_opcode, 0 },
 {"ctz",        0, INSN_CLASS_ZBB,  "d,s",      MATCH_CTZ, MASK_CTZ, match_opcode, 0 },
 {"cpop",       0, INSN_CLASS_ZBB,  "d,s",      MATCH_CPOP, MASK_CPOP, match_opcode, 0 },
 {"min",        0, INSN_CLASS_ZBB,  "d,s,t",    MATCH_MIN, MASK_MIN, match_opcode, 0 },
+{"min",        0, INSN_CLASS_ZBPBO,  "d,s,t",    MATCH_MIN, MASK_MIN, match_opcode, 0 },
 {"max",        0, INSN_CLASS_ZBB,  "d,s,t",    MATCH_MAX, MASK_MAX, match_opcode, 0 },
+{"max",        0, INSN_CLASS_ZBPBO,  "d,s,t",    MATCH_MAX, MASK_MAX, match_opcode, 0 },
 {"minu",       0, INSN_CLASS_ZBB,  "d,s,t",    MATCH_MINU, MASK_MINU, match_opcode, 0 },
 {"maxu",       0, INSN_CLASS_ZBB,  "d,s,t",    MATCH_MAXU, MASK_MAXU, match_opcode, 0 },
 {"sext.b",     0, INSN_CLASS_ZBB,  "d,s",      MATCH_SEXT_B, MASK_SEXT_B, match_opcode, 0 },
@@ -827,6 +833,15 @@ const struct riscv_opcode riscv_opcodes[] =
 {"clmul",      0, INSN_CLASS_ZBC,  "d,s,t",    MATCH_CLMUL, MASK_CLMUL, match_opcode, 0 },
 {"clmulh",     0, INSN_CLASS_ZBC,  "d,s,t",    MATCH_CLMULH, MASK_CLMULH, match_opcode, 0 },
 {"clmulr",     0, INSN_CLASS_ZBC,  "d,s,t",    MATCH_CLMULR, MASK_CLMULR, match_opcode, 0 },
+{"cmix",       0, INSN_CLASS_ZBPBO, "d,t,s,r", MATCH_CMIX, MASK_CMIX, match_opcode, 0 },
+{"rev8.h",     0, INSN_CLASS_ZBPBO, "d,s",     MATCH_GREVI|MATCH_SHAMT_REV8_H, MASK_GREVI|(OP_MASK_SHAMT << 20), match_opcode, 0 },
+{"rev",       32, INSN_CLASS_ZBPBO, "d,s",     MATCH_GREVI|MATCH_SHAMT_REV_32, MASK_GREVI|(OP_MASK_SHAMT << 20), match_opcode, 0 },
+{"rev",       64, INSN_CLASS_ZBPBO, "d,s",     MATCH_GREVI|MATCH_SHAMT_REV_64, MASK_GREVI|(OP_MASK_SHAMT << 20), match_opcode, 0 },
+{"packu",      0, INSN_CLASS_ZBPBO, "d,s,t",   MATCH_PACKU, MASK_PACKU, match_opcode, 0 },
+{"pack",       0, INSN_CLASS_ZBPBO, "d,s,t",   MATCH_PACK, MASK_PACK, match_opcode, 0 },
+{"fsr",       32, INSN_CLASS_ZBPBO, "d,s,r,t", MATCH_FSR, MASK_FSR, match_opcode, 0 },
+{"fsri",      32, INSN_CLASS_ZBPBO, "d,s,r,>", MATCH_FSRI, MASK_FSRI, match_opcode, 0 },
+{"fsrw",      64, INSN_CLASS_ZBPBO, "d,s,r,t", MATCH_FSRW, MASK_FSRW, match_opcode, 0 },
 
 /* RVP instructions */
 {"add8",        0, INSN_CLASS_ZPN, "d,s,t",     MATCH_ADD8, MASK_ADD8, match_opcode, 0 },
@@ -835,12 +850,14 @@ const struct riscv_opcode riscv_opcodes[] =
 {"ave",         0, INSN_CLASS_ZPN, "d,s,t",     MATCH_AVE, MASK_AVE, match_opcode, 0 },
 {"bitrev",      0, INSN_CLASS_ZPN, "d,s,t",     MATCH_BITREV, MASK_BITREV, match_opcode, 0 },
 {"bitrevi",     0, INSN_CLASS_ZPN, "d,s,l",     MATCH_BITREVI, MASK_BITREVI, match_opcode, 0 },
+{"bpick",       0, INSN_CLASS_ZBPBO, "d,s,r,t", MATCH_CMIX, MASK_CMIX, match_opcode, INSN_ALIAS },
 {"bpick",       0, INSN_CLASS_ZPN, "d,s,t,nds_rc", MATCH_BPICK, MASK_BPICK, match_opcode, 0 },
 {"clrs8",       0, INSN_CLASS_ZPN, "d,s",       MATCH_CLRS8, MASK_CLRS8, match_opcode, 0 },
 {"clrs16",      0, INSN_CLASS_ZPN, "d,s",       MATCH_CLRS16, MASK_CLRS16, match_opcode, 0 },
 {"clrs32",      0, INSN_CLASS_ZPN, "d,s",       MATCH_CLRS32, MASK_CLRS32, match_opcode, 0 },
 {"clz8",        0, INSN_CLASS_ZPN, "d,s",       MATCH_CLZ8, MASK_CLZ8, match_opcode, 0 },
 {"clz16",       0, INSN_CLASS_ZPN, "d,s",       MATCH_CLZ16, MASK_CLZ16, match_opcode, 0 },
+{"clz32",       32,INSN_CLASS_ZBPBO,  "d,s",    MATCH_CLZ, MASK_CLZ, match_opcode, INSN_ALIAS },
 {"clz32",       0, INSN_CLASS_ZPN, "d,s",       MATCH_CLZ32, MASK_CLZ32, match_opcode, 0 },
 {"cmpeq8",      0, INSN_CLASS_ZPN, "d,s,t",     MATCH_CMPEQ8, MASK_CMPEQ8, match_opcode, 0 },
 {"cmpeq16",     0, INSN_CLASS_ZPN, "d,s,t",     MATCH_CMPEQ16, MASK_CMPEQ16, match_opcode, 0 },
@@ -922,15 +939,19 @@ const struct riscv_opcode riscv_opcodes[] =
 {"kwmmul",      0, INSN_CLASS_ZPN, "d,s,t",     MATCH_KWMMUL, MASK_KWMMUL, match_opcode, 0 },
 {"kwmmul.u",    0, INSN_CLASS_ZPN, "d,s,t",     MATCH_KWMMUL_U, MASK_KWMMUL_U, match_opcode, 0 },
 {"maddr32",     0, INSN_CLASS_ZPN, "d,s,t",     MATCH_MADDR32, MASK_MADDR32, match_opcode, 0 },
+{"maxw",        0, INSN_CLASS_ZBPBO, "d,s,t",   MATCH_MAX, MASK_MAX, match_opcode, INSN_ALIAS },
 {"maxw",        0, INSN_CLASS_ZPN, "d,s,t",     MATCH_MAXW, MASK_MAXW, match_opcode, 0 },
+{"minw",        0, INSN_CLASS_ZBPBO, "d,s,t",   MATCH_MIN, MASK_MIN, match_opcode, INSN_ALIAS },
 {"minw",        0, INSN_CLASS_ZPN, "d,s,t",     MATCH_MINW, MASK_MINW, match_opcode, 0 },
 {"msubr32",     0, INSN_CLASS_ZPN, "d,s,t",     MATCH_MSUBR32, MASK_MSUBR32, match_opcode, 0 },
 {"mulr64",      0, INSN_CLASS_ZPSF, "nds_rdp,s,t", MATCH_MULR64, MASK_MULR64, match_opcode, 0 },
 {"mulsr64",     0, INSN_CLASS_ZPSF, "nds_rdp,s,t", MATCH_MULSR64, MASK_MULSR64, match_opcode, 0 },
 {"pbsad",       0, INSN_CLASS_ZPN, "d,s,t",     MATCH_PBSAD, MASK_PBSAD, match_opcode, 0 },
 {"pbsada",      0, INSN_CLASS_ZPN, "d,s,t",     MATCH_PBSADA, MASK_PBSADA, match_opcode, 0 },
-{"pkbb16",      0, INSN_CLASS_ZPN, "d,s,t",     MATCH_PKBB16, MASK_PKBB16, match_opcode, 0 },
-{"pkbt16",      0, INSN_CLASS_ZPN, "d,s,t",     MATCH_PKBT16, MASK_PKBT16, match_opcode, 0 },
+{"pkbb16",      32,INSN_CLASS_ZBPBO, "d,s,t",   MATCH_PACKU, MASK_PACKU, match_opcode, INSN_ALIAS },
+{"pkbb16",      0, INSN_CLASS_ZPN,   "d,s,t",   MATCH_PKBB16, MASK_PKBB16, match_opcode, 0 },
+{"pkbt16",      0, INSN_CLASS_ZPN,   "d,s,t",   MATCH_PKBT16, MASK_PKBT16, match_opcode, 0 },
+{"pktt16",      32,INSN_CLASS_ZBPBO, "d,s,t",   MATCH_PACK, MASK_PACK, match_opcode, INSN_ALIAS },
 {"pktt16",      0, INSN_CLASS_ZPN, "d,s,t",     MATCH_PKTT16, MASK_PKTT16, match_opcode, 0 },
 {"pktb16",      0, INSN_CLASS_ZPN, "d,s,t",     MATCH_PKTB16, MASK_PKTB16, match_opcode, 0 },
 {"radd8",       0, INSN_CLASS_ZPN, "d,s,t",     MATCH_RADD8, MASK_RADD8, match_opcode, 0 },
@@ -1019,6 +1040,7 @@ const struct riscv_opcode riscv_opcodes[] =
 {"sunpkd830",   0, INSN_CLASS_ZPN, "d,s",       MATCH_SUNPKD830, MASK_SUNPKD830, match_opcode, 0 },
 {"sunpkd831",   0, INSN_CLASS_ZPN, "d,s",       MATCH_SUNPKD831, MASK_SUNPKD831, match_opcode, 0 },
 {"sunpkd832",   0, INSN_CLASS_ZPN, "d,s",       MATCH_SUNPKD832, MASK_SUNPKD832, match_opcode, 0 },
+{"swap8",       0, INSN_CLASS_ZBPBO, "d,s",     MATCH_GREVI|MATCH_SHAMT_REV8_H, MASK_GREVI|(OP_MASK_SHAMT << 20), match_opcode, INSN_ALIAS },
 {"swap8",       0, INSN_CLASS_ZPN, "d,s",       MATCH_SWAP8, MASK_SWAP8, match_opcode, 0 },
 {"swap16",      0, INSN_CLASS_ZPN, "d,g",       MATCH_PKBT16, MASK_PKBT16, match_opcode, INSN_ALIAS },
 {"uclip8",      0, INSN_CLASS_ZPN, "d,s,nds_i3u", MATCH_UCLIP8, MASK_UCLIP8, match_opcode, 0 },
@@ -1111,8 +1133,10 @@ const struct riscv_opcode riscv_opcodes[] =
 {"kstas32",    64, INSN_CLASS_ZPN, "d,s,t",     MATCH_KSTAS32, MASK_KSTAS32, match_opcode, 0 },
 {"kstsa32",    64, INSN_CLASS_ZPN, "d,s,t",     MATCH_KSTSA32, MASK_KSTSA32, match_opcode, 0 },
 {"ksub32",     64, INSN_CLASS_ZPN, "d,s,t",     MATCH_KSUB32, MASK_KSUB32, match_opcode, 0 },
+{"pkbb32",     64, INSN_CLASS_ZBPBO, "d,s,t",   MATCH_PACK, MASK_PACK, match_opcode, INSN_ALIAS },
 {"pkbb32",     64, INSN_CLASS_ZPN, "d,s,t",     MATCH_PKBB32, MASK_PKBB32, match_opcode, 0 },
 {"pkbt32",     64, INSN_CLASS_ZPN, "d,s,t",     MATCH_PKBT32, MASK_PKBT32, match_opcode, 0 },
+{"pktt32",     64, INSN_CLASS_ZBPBO, "d,s,t",   MATCH_PACKU, MASK_PACKU, match_opcode, INSN_ALIAS },
 {"pktt32",     64, INSN_CLASS_ZPN, "d,s,t",     MATCH_PKTT32, MASK_PKTT32, match_opcode, 0 },
 {"pktb32",     64, INSN_CLASS_ZPN, "d,s,t",     MATCH_PKTB32, MASK_PKTB32, match_opcode, 0 },
 {"radd32",     64, INSN_CLASS_ZPN, "d,s,t",     MATCH_RADD32, MASK_RADD32, match_opcode, 0 },
