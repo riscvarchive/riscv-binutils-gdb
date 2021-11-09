@@ -277,13 +277,10 @@ dsp:
 	bitrevi   a1, a2, 5
 	wext      a1, a2, a3
 	wexti     a1, a2, 5
-	bpick     a1, a2, a3, a4
 	insb      a1, a2, 2
 
 	# New Instructions in ZPSF
 	maddr32   a2, a4, a6
-	maxw      a2, a4, a6
-	minw      a2, a4, a6
 	msubr32   a2, a4, a6
 	mulr64    a2, a4, a6
 	mulsr64   a2, a4, a6

@@ -1160,9 +1160,7 @@ validate_riscv_insn (const struct riscv_opcode *opc, int length)
         char field_name[RVP_MAX_KEYWORD_LEN];
         if (parse_rvp_field (&p, field_name))
           {
-            if (strcmp (field_name, "nds_rc") == 0)
-        USE_BITS (OP_MASK_RC, OP_SH_RC);
-            else if (strcmp (field_name, "nds_rdp") == 0)
+            if (strcmp (field_name, "nds_rdp") == 0)
         USE_BITS (OP_MASK_RD, OP_SH_RD);
             else if (strcmp (field_name, "nds_rsp") == 0)
         USE_BITS (OP_MASK_RD, OP_SH_RS1);
@@ -2496,14 +2494,7 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 		args++;
 		if (parse_rvp_field (&args, field_name))
 		  {
-		    if (strcmp (field_name, "nds_rc") == 0
-			&& reg_lookup (&s, RCLASS_GPR, &regno))
-		      {
-			INSERT_OPERAND (RC, *ip, regno);
-			args--;
-			continue;
-		      }
-		    else if (strcmp (field_name, "nds_rdp") == 0
+		    if (strcmp (field_name, "nds_rdp") == 0
 			     && reg_lookup (&s, RCLASS_GPR, &regno))
 		      {
 			if (xlen == 32 && (regno % 2) != 0)

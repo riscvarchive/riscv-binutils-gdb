@@ -253,8 +253,6 @@ static const char * const riscv_pred_succ[16] =
 #define OP_SH_AQ		26
 #define OP_MASK_RL		0x1
 #define OP_SH_RL		25
-#define OP_MASK_RC		0x1f
-#define OP_SH_RC		27
 
 #define OP_MASK_CSR		0xfffU
 #define OP_SH_CSR		20
