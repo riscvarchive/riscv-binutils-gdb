@@ -1,6 +1,7 @@
 #as: -march=rv32gc_zpn_zpsf
 #source: insn-dsp.s
-#objdump: -d
+#objdump: -d -M no-aliases
+
 
 .*:[ 	]+file format .*
 
@@ -230,8 +231,8 @@ Disassembly of section .text:
 [ 	]+.*:[ 	]+.*[ 	]+uraddw[ 	]+a1,a2,a3
 [ 	]+.*:[ 	]+.*[ 	]+rsubw[ 	]+a1,a2,a3
 [ 	]+.*:[ 	]+.*[ 	]+ursubw[ 	]+a1,a2,a3
-[ 	]+.*:[ 	]+.*[ 	]+csrr[ 	]+a1,satp
-[ 	]+.*:[ 	]+.*[ 	]+csrrci[ 	]+a1,satp,1
+[ 	]+.*:[ 	]+.*[ 	]+csrrs[ 	]+a1,vxsat,zero
+[ 	]+.*:[ 	]+.*[ 	]+csrrci[ 	]+zero,vxsat,1
 [ 	]+.*:[ 	]+.*[ 	]+ave[ 	]+a1,a2,a3
 [ 	]+.*:[ 	]+.*[ 	]+sra.u[ 	]+a1,a2,a3
 [ 	]+.*:[ 	]+.*[ 	]+srai.u[ 	]+a1,a2,5

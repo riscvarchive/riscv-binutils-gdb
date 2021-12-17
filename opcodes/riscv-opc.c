@@ -88,6 +88,9 @@ const char * const riscv_fpr_names_abi[NFPR] =
 #define MATCH_SHAMT_REV_64 (0b111111 << 20)
 #define MATCH_SHAMT_REV8_H (0b1000 << 20)
 #define MATCH_SHAMT_ORC_B (0b00111 << OP_SH_SHAMT)
+#define MATCH_CLROV (MATCH_CSRRCI | (CSR_VXSAT << OP_SH_CSR) | (1 << OP_SH_RS1))
+#define MATCH_RDOV (MATCH_CSRRS|(CSR_VXSAT << OP_SH_CSR))
+#define MASK_RDOV (0xffffffffU ^ MASK_RD)
 
 static int
 match_opcode (const struct riscv_opcode *op, insn_t insn)
@@ -1091,7 +1094,7 @@ const struct riscv_opcode riscv_opcodes[] =
 {"zunpkd831",   0, INSN_CLASS_ZPN, "d,s",       MATCH_ZUNPKD831, MASK_ZUNPKD831, match_opcode, 0 },
 {"zunpkd832",   0, INSN_CLASS_ZPN, "d,s",       MATCH_ZUNPKD832, MASK_ZUNPKD832, match_opcode, 0 },
 {"rdov",        0, INSN_CLASS_ZPN, "d",         MATCH_RDOV, MASK_RDOV, match_opcode, INSN_ALIAS },
-{"clrov",       0, INSN_CLASS_ZPN, "",          MATCH_CLROV, MASK_CLROV, match_opcode, INSN_ALIAS },
+{"clrov",       0, INSN_CLASS_ZPN, "",          MATCH_CLROV, 0xffffffffU, match_opcode, INSN_ALIAS },
 {"add32",      64, INSN_CLASS_ZPN, "d,s,t",     MATCH_ADD32, MASK_ADD32, match_opcode, 0 },
 {"cras32",     64, INSN_CLASS_ZPN, "d,s,t",     MATCH_CRAS32, MASK_CRAS32, match_opcode, 0 },
 {"crsa32",     64, INSN_CLASS_ZPN, "d,s,t",     MATCH_CRSA32, MASK_CRSA32, match_opcode, 0 },

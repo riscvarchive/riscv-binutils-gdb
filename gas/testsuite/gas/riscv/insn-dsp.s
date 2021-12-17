@@ -266,8 +266,8 @@ dsp:
 	ursubw    a1, a2, a3
 
 	# Table 23. OV (Overflow) flag Set/Clear Instructions (2)
-	csrr      a1, satp	#rdov     a1
-	csrrci    a1, satp, 1	#clrov
+	rdov     a1
+	clrov
 
 	# Table 24. Non-SIMD Miscellaneous Instructions (9)
 	ave       a1, a2, a3

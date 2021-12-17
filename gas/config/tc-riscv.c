@@ -64,6 +64,7 @@ enum riscv_csr_class
   CSR_CLASS_I,
   CSR_CLASS_I_32, /* rv32 only */
   CSR_CLASS_F, /* f-ext only */
+  CSR_CLASS_P, /* rvp only */
   CSR_CLASS_DEBUG /* debug CSR */
 };
 
@@ -866,6 +867,10 @@ riscv_csr_address (const char *csr_name,
       break;
     case CSR_CLASS_F:
       result = riscv_subset_supports ("f");
+      need_check_version = FALSE;
+      break;
+    case CSR_CLASS_P:
+      result = riscv_subset_supports ("zpn");
       need_check_version = FALSE;
       break;
     case CSR_CLASS_DEBUG:
