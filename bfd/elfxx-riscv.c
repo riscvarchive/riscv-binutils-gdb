@@ -1598,7 +1598,8 @@ riscv_parse_prefixed_ext (riscv_parse_subset_t *rps,
 
 static const char * const riscv_std_z_ext_strtab[] =
 {
-  "zicsr", "zifencei", "zihintpause", "zba", "zbb", "zbc", NULL
+  "zicsr", "zifencei", "zihintpause", "zba", "zbb", "zbc", 
+  "zbpbo", "zpn", "zpsf",NULL
 };
 
 static const char * const riscv_std_s_ext_strtab[] =
@@ -1767,6 +1768,18 @@ riscv_parse_add_implicit_subsets (riscv_parse_subset_t *rps)
 			      RISCV_UNKNOWN_VERSION,
 			      RISCV_UNKNOWN_VERSION, TRUE);
       riscv_parse_add_subset (rps, "zifencei",
+			      RISCV_UNKNOWN_VERSION,
+			      RISCV_UNKNOWN_VERSION, TRUE);
+    }
+  if (riscv_lookup_subset (rps->subset_list, "p", &subset))
+    {
+      riscv_parse_add_subset (rps, "zpn",
+			      RISCV_UNKNOWN_VERSION,
+			      RISCV_UNKNOWN_VERSION, TRUE);
+      riscv_parse_add_subset (rps, "zpsf",
+			      RISCV_UNKNOWN_VERSION,
+			      RISCV_UNKNOWN_VERSION, TRUE);
+      riscv_parse_add_subset (rps, "zbpbo",
 			      RISCV_UNKNOWN_VERSION,
 			      RISCV_UNKNOWN_VERSION, TRUE);
     }
